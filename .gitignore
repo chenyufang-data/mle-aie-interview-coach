@@ -14,6 +14,7 @@ grader/real_sessions.jsonl
 
 # Local notes and generated reports
 resu01.txt
+suggestion.md
 *.docx
 *.log
 
