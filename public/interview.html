@@ -1,0 +1,54 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Interview Session | MLE/AIE Interview Coach</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="app-shell interview-shell">
+      <section class="interview-page" aria-label="Interview session">
+        <header class="interview-topbar">
+          <a class="back-link" href="/">Back</a>
+          <div>
+            <p class="eyebrow">Live session</p>
+            <h1 id="sessionTitle">Interview question</h1>
+          </div>
+          <div id="statusBadge" class="status-badge">Ready</div>
+        </header>
+
+        <section class="timer-strip" aria-label="Timer">
+          <div>
+            <p class="eyebrow">Elapsed time</p>
+            <div id="timerDisplay" class="timer-display">00:00</div>
+          </div>
+          <div class="timer-actions">
+            <button id="timerToggleBtn" class="secondary-action" type="button">Pause</button>
+            <button id="timerResetBtn" class="ghost-action" type="button">Reset</button>
+          </div>
+        </section>
+
+        <section id="questionCard" class="question-card empty">
+          <p class="empty-state">Loading your question...</p>
+        </section>
+
+        <section class="answer-area">
+          <label for="answer">Your answer</label>
+          <textarea id="answer" rows="10" placeholder="Answer as if you are speaking to an interviewer. Include assumptions, tradeoffs, and how you would validate the approach."></textarea>
+          <div class="answer-actions">
+            <div class="answer-stats">
+              <span id="wordCount">0 words</span>
+              <span id="answerTime">Time used: 00:00</span>
+            </div>
+            <button id="submitBtn" class="primary-action compact-action" type="button">Submit answer</button>
+          </div>
+        </section>
+
+        <section id="evaluation" class="evaluation" hidden></section>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

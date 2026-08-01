@@ -1,0 +1,17 @@
+# Secrets - never commit (.env holds ANTHROPIC_API_KEY)
+.env
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Personal practice logs (contain real interview answers)
+grader/real_sessions.jsonl
+
+# Local notes and generated reports
+resu01.txt
+*.docx
+
+# Claude Code local settings
+.claude/

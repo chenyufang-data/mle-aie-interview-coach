@@ -1,0 +1,95 @@
+# Backend requirements
+
+Scope: `server.py`, `retrieval.py`, the `grader/` package, and the two question
+banks (`rag_ml/`, `rag_ai/`). The backend owns all data, retrieval, AI calls, and
+grading. It knows nothing about presentation.
+
+## Runtime requirements
+
+- Python 3.10+ with the packages in `requirements.txt`
+  (`anthropic`, `scikit-learn`). The standard-library `http.server` is the web
+  server — no web framework.
+- Per grading mode:
+  - **Default (Claude)**: `.env` in the project root with `ANTHROPIC_API_KEY`.
+    Optional: `ANTHROPIC_MODEL` (default `claude-opus-4-8`), `PORT` (default 8000).
+  - **`--ollama [model]`**: a local [Ollama](https://ollama.com) install with the
+    chosen model pulled. No API key.
+  - **`--mock`**: nothing — fully offline. Uses `grader/model.joblib` (the trained
+    local grader) if present, keyword rubric matching otherwise.
+
+## Responsibilities (must)
+
+- Serve the static frontend from `public/` (path-traversal-safe).
+- Own the corpora: load both banks at startup, validate ids are unique across
+  them, and expose module lists via `GET /api/meta` so the frontend stays
+  corpus-agnostic.
+- Question selection: metadata filtering (module + difficulty-by-level) plus BM25
+  ranking (`retrieval.py`) over the requested track's bank, honouring the
+  session's `exclude` list; or Claude-generated questions for general topics.
+- Evaluation: grade against the chunk's rubric (model answer, key points, common
+  mistakes) with structured outputs; grade follow-ups with the parent question,
+  previous answer, and course material as context (rubric as background, not as a
+  checklist). In `--mock` mode, predict with the distilled local grader.
+- Log every real (non-mock) graded session to `grader/real_sessions.jsonl` —
+  these Claude-vs-local gold pairs feed `grader/evaluate_on_real.py`. Logging
+  must never break the response (best-effort, wrapped in try/except).
+- Map failures (bad key, rate limit, network, Ollama down) to JSON errors the
+  frontend can display.
+
+## Must not
+
+- Serve corpus-specific knowledge through any channel other than the API.
+- Let the API key reach the frontend, logs, or version control (`.env` is
+  gitignored; `load_env_file` reads it at startup).
+
+## API contract
+
+### `GET /api/meta`
+
+```json
+{ "kb": { "MLE": { "modules": ["..."], "chunks": 191 },
+          "AIE": { "modules": ["..."], "chunks": 91 } } }
+```
+
+### `POST /api/question`
+
+Request: `role` (`"MLE"` | `"AIE"`), `level`, `topic`, `focus`,
+`source` (`"kb"` to draw from the course bank, otherwise AI-generated),
+`exclude` (list of already-served chunk ids).
+
+Response:
+
+```json
+{ "question": "...",
+  "what_interviewer_is_testing": "...",
+  "answer_guidance": ["..."],
+  "source": "kb",
+  "chunk_id": "06_linear_regression_model__03_..." }
+```
+
+`chunk_id` is present only for knowledge-base questions; `source` is `"ai"` for
+generated ones. In `--mock` mode, general-topic requests are also answered from
+the knowledge base (focus-matched) instead of calling a model.
+
+### `POST /api/evaluate`
+
+Request: `role`, `level`, `topic`, `focus`, `question`, `answer` (required,
+non-empty), `timeUsed`, and — when applicable — `chunk_id`, `source`
+(`"followup"` for follow-up answers), `parent_question`, `parent_answer`.
+
+Response (structured-output schema, enforced server-side):
+
+```json
+{ "overall_score": 7,
+  "scores": { "technical_depth": 7, "structure": 6,
+              "practical_judgment": 7, "communication": 8 },
+  "summary": "...",
+  "strengths": ["..."],
+  "gaps": ["..."],
+  "suggested_answer": "...",
+  "next_steps": ["..."],
+  "follow_up_question": "..." }
+```
+
+Errors are returned as `{ "error": "..." }` with status 400 (missing answer) or
+500 (upstream/API failures).

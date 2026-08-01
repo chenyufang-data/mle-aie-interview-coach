@@ -1,0 +1,117 @@
+[
+  {
+    "corpus": "ml",
+    "query": "test set information leaking into training during preprocessing",
+    "expected_tags": ["data-leakage", "leakage"]
+  },
+  {
+    "corpus": "ml",
+    "query": "handle class imbalance when training a fraud classifier",
+    "expected_tags": ["class-imbalance", "imbalanced-data"]
+  },
+  {
+    "corpus": "ml",
+    "query": "difference between lasso and ridge regularization",
+    "expected_tags": ["regularization", "lasso"]
+  },
+  {
+    "corpus": "ml",
+    "query": "reduce dimensions with principal component analysis before modeling",
+    "expected_tags": ["pca"]
+  },
+  {
+    "corpus": "ml",
+    "query": "encode high cardinality categorical features",
+    "expected_tags": ["high-cardinality", "categorical"]
+  },
+  {
+    "corpus": "ml",
+    "query": "impute missing values without contaminating the test data",
+    "expected_tags": ["missing-data", "imputation"]
+  },
+  {
+    "corpus": "ml",
+    "query": "random forest versus gradient boosting tradeoffs",
+    "expected_module": "Ensemble Methods"
+  },
+  {
+    "corpus": "ml",
+    "query": "train test split for time series forecasting",
+    "expected_tags": ["temporal-split", "time-series"]
+  },
+  {
+    "corpus": "ml",
+    "query": "how k-means works and how to pick the number of clusters",
+    "expected_tags": ["kmeans", "clustering"]
+  },
+  {
+    "corpus": "ml",
+    "query": "interpret r squared and when it is misleading",
+    "expected_tags": ["r2"]
+  },
+  {
+    "corpus": "ml",
+    "query": "svm kernel choice and margin intuition",
+    "expected_tags": ["svm"]
+  },
+  {
+    "corpus": "ml",
+    "query": "overfitting and the bias variance tradeoff",
+    "expected_tags": ["overfitting", "bias-variance"]
+  },
+  {
+    "corpus": "ml",
+    "query": "why wrap preprocessing in a sklearn pipeline",
+    "expected_tags": ["pipeline"]
+  },
+  {
+    "corpus": "ml",
+    "query": "precision recall tradeoff when choosing a classification threshold",
+    "expected_tags": ["precision-recall", "threshold", "recall"]
+  },
+  {
+    "corpus": "ai",
+    "query": "why llms use sub-word tokens and how token counts drive api cost",
+    "expected_tags": ["tokens", "tokenization"]
+  },
+  {
+    "corpus": "ai",
+    "query": "temperature versus top p nucleus sampling to control randomness",
+    "expected_tags": ["temperature", "top-p", "nucleus-sampling"]
+  },
+  {
+    "corpus": "ai",
+    "query": "keyword bm25 versus semantic embedding search and when to combine them",
+    "expected_tags": ["bm25", "semantic-search", "hybrid-retrieval"]
+  },
+  {
+    "corpus": "ai",
+    "query": "let the model call external tools with function calling",
+    "expected_tags": ["function-calling", "tool-use"]
+  },
+  {
+    "corpus": "ai",
+    "query": "when to build a fixed workflow versus an autonomous agent",
+    "expected_tags": ["ai-workflow", "ai-agent"]
+  },
+  {
+    "corpus": "ai",
+    "query": "prompt caching to cut cost and latency",
+    "expected_tags": ["prompt-caching"]
+  },
+  {
+    "corpus": "ai",
+    "query": "llm as judge graders for evaluating agent outputs",
+    "expected_tags": ["graders", "llm-as-judge"]
+  },
+  {
+    "corpus": "ai",
+    "query": "compact the context window when a long agent session grows",
+    "expected_tags": ["compaction", "context-engineering"]
+  },
+  {
+    "corpus": "ai",
+    "query": "reduce hallucinations by grounding answers in retrieved documents",
+    "expected_tags": ["hallucination", "grounding"]
+  }
+]
