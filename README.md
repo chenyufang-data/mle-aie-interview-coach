@@ -61,18 +61,15 @@ python -m venv .venv
 .venv\Scripts\pip install -r requirements.txt
 ```
 
-Create (or check) `.env` in this directory:
+Copy `.env.sample` to `.env` and fill in your Anthropic API key (skip this if
+you only want the free `--mock` or `--ollama` modes):
 
-```text
-ANTHROPIC_API_KEY=sk-ant-...
+```powershell
+copy .env.sample .env
 ```
 
-Optional settings:
-
-```text
-ANTHROPIC_MODEL=claude-opus-4-8
-PORT=8000
-```
+`.env` also accepts the optional `ANTHROPIC_MODEL` (default `claude-opus-4-8`)
+and `PORT` (default `8000`). It is gitignored, so your key never reaches the repo.
 
 ## Run
 
