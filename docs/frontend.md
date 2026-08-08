@@ -18,6 +18,12 @@ the backend's file handler. It owns presentation and session flow — nothing el
 - **Setup page** (`index.html`): collect track (MLE / AIE), level, topic, and
   optional focus text. The "course knowledge base" topic groups are built at load
   time from `GET /api/meta` — module names and chunk counts come from the server.
+  An optional access-key field (stored in `sessionStorage`, sent as the
+  `X-Access-Key` header on every API call) identifies paid users when the server
+  has tiers enabled; a badge under the field shows the current tier and
+  remaining daily Claude quota, and stays hidden when `meta.user.tiers_enabled`
+  is false. The frontend never decides the tier — it only reports what the
+  server said.
 - **Interview page** (`interview.html`): render the question and guidance, run the
   elapsed timer with pause/resume, count words in the answer box, submit the
   answer, and render the evaluation (overall score, four subscores, summary,

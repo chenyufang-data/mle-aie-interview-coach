@@ -122,8 +122,33 @@ Test the app without spending Anthropic API credits:
 .venv\Scripts\python server.py --ollama qwen3:8b   # or pick your model
 ```
 
-Mock-mode evaluations are clearly labeled `[Mock mode - free, no AI]` in the summary.
-Run without flags for the real Claude-graded experience.
+Local evaluations are clearly labeled in the summary (e.g. `[Mock mode - local
+ML grader ...]`). Run without flags for the real Claude-graded experience.
+
+## Free and paid tiers (freemium demo)
+
+The two graders can also serve different users at once — the classic freemium
+cost structure, with the distilled model as the zero-marginal-cost free tier
+and Claude as the metered paid tier:
+
+```powershell
+copy users.sample.json users.json   # then change the key; users.json is gitignored
+.venv\Scripts\python server.py      # Claude mode with tiers ON
+```
+
+With `users.json` present, requests are routed per user instead of per server:
+
+- **Free (no key, or unknown key)**: course-bank questions and instant grading
+  by the distilled local model. Zero API cost, works offline.
+- **Paid (a key listed with `"tier": "paid"`, entered in the setup page's
+  access-key field)**: Claude-generated questions and Claude grading, capped at
+  `PAID_DAILY_QUOTA` LLM calls per day (default 30, question generation and
+  evaluation combined). When the quota runs out, grading degrades gracefully to
+  the local model — labeled as such — rather than failing.
+
+Delete `users.json` (or never create it) and the app behaves exactly as before:
+single-user, every request graded by Claude. In Docker, mount `users.json` into
+the backend service (a commented line in `docker-compose.yml` shows how).
 
 Then open:
 

@@ -1,4 +1,12 @@
 const STORAGE_KEY = "interviewCoachSession";
+const ACCESS_KEY_STORAGE = "interviewCoachAccessKey";
+
+// Freemium tiers: requests carry the access key (if any) so the server can
+// route paid keys to Claude and everyone else to the local distilled grader.
+function authHeaders() {
+  const key = sessionStorage.getItem(ACCESS_KEY_STORAGE) || "";
+  return key ? { "X-Access-Key": key } : {};
+}
 
 const GENERAL_TOPICS = {
   MLE: [
@@ -48,6 +56,8 @@ function initSetupPage() {
   const level = document.querySelector("#level");
   const topic = document.querySelector("#topic");
   const focus = document.querySelector("#focus");
+  const accessKey = document.querySelector("#accessKey");
+  const tierBadge = document.querySelector("#tierBadge");
   const startBtn = document.querySelector("#startBtn");
   const setupStatus = document.querySelector("#setupStatus");
   const sessionTitle = document.querySelector("#sessionTitle");
@@ -145,9 +155,10 @@ function initSetupPage() {
   }
 
   async function loadKbMeta() {
+    let meta;
     try {
-      const response = await fetch("/api/meta");
-      const meta = await response.json();
+      const response = await fetch("/api/meta", { headers: authHeaders() });
+      meta = await response.json();
       Object.entries(meta.kb || {}).forEach(([role, info]) => {
         state.kbModules[role] = info.modules || [];
       });
@@ -156,9 +167,27 @@ function initSetupPage() {
       // offers AI-generated topics without a knowledge-base group.
       return;
     }
+    updateTierBadge(meta.user);
     populateTopics();
     updateSummary();
   }
+
+  function updateTierBadge(user) {
+    if (!user || !user.tiers_enabled) {
+      tierBadge.hidden = true;
+      return;
+    }
+    tierBadge.hidden = false;
+    tierBadge.textContent = user.tier === "paid"
+      ? `Pro (${user.name}): ${user.paid_left_today} of ${user.paid_quota} Claude gradings left today.`
+      : "Free tier: instant local ML grading on course questions. Enter a paid key for Claude grading.";
+  }
+
+  accessKey.value = sessionStorage.getItem(ACCESS_KEY_STORAGE) || "";
+  accessKey.addEventListener("change", () => {
+    sessionStorage.setItem(ACCESS_KEY_STORAGE, accessKey.value.trim());
+    loadKbMeta();
+  });
 
   populateTopics();
   updateSummary();
@@ -349,7 +378,7 @@ function persistSession(session) {
 async function postJson(url, payload) {
   const response = await fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...authHeaders() },
     body: JSON.stringify(payload),
   });
 

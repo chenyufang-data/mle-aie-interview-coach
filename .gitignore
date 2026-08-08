@@ -1,7 +1,9 @@
-# Secrets - never commit (.env holds ANTHROPIC_API_KEY)
+# Secrets - never commit (.env holds ANTHROPIC_API_KEY; users.json holds
+# real access keys - copy users.sample.json instead)
 .env
 .env.*
 !.env.sample
+users.json
 
 # Python
 .venv/
@@ -9,8 +11,9 @@ __pycache__/
 *.pyc
 .pytest_cache/
 
-# Personal practice logs (contain real interview answers)
+# Personal practice logs (contain real interview answers) and quota state
 grader/real_sessions.jsonl
+grader/usage.json
 
 # Local notes and generated reports
 resu01.txt

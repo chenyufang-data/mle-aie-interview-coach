@@ -52,6 +52,12 @@
               <input id="focus" type="text" placeholder="e.g. fraud ranking, RAG latency">
             </div>
 
+            <div class="field">
+              <label for="accessKey">Access key (optional)</label>
+              <input id="accessKey" type="password" placeholder="Paid key for Claude grading" autocomplete="off">
+              <p id="tierBadge" class="inline-status" hidden></p>
+            </div>
+
             <button id="startBtn" class="primary-action" type="button">Start</button>
             <p id="setupStatus" class="inline-status" aria-live="polite"></p>
           </section>

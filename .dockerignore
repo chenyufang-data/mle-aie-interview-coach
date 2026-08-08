@@ -2,6 +2,7 @@
 .env
 .env.*
 !.env.sample
+users.json
 
 # Local environments and caches.
 .git
@@ -15,6 +16,7 @@ __pycache__
 
 # Personal data and local notes.
 grader/real_sessions.jsonl
+grader/usage.json
 resu01.txt
 suggestion.md
 *.docx

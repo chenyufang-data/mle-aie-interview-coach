@@ -8,6 +8,7 @@ import json
 import mimetypes
 import os
 import random
+import threading
 
 import anthropic
 
@@ -115,6 +116,22 @@ REAL_SESSIONS_PATH = Path(
     os.environ.get("REAL_SESSIONS_PATH", BASE_DIR / "grader" / "real_sessions.jsonl")
 )
 
+# Freemium tiers (Claude mode only): a request's X-Access-Key header is looked
+# up in USERS_PATH; keys with tier "paid" get Claude grading, capped at
+# PAID_DAILY_QUOTA Claude calls per day (question generation + evaluation
+# combined). Everyone else gets the distilled local grader. When USERS_PATH
+# does not exist, tiers are disabled and every request grades with Claude —
+# the original single-user behaviour.
+USERS_PATH = Path(os.environ.get("USERS_PATH", BASE_DIR / "users.json"))
+USAGE_PATH = Path(os.environ.get("USAGE_PATH", BASE_DIR / "grader" / "usage.json"))
+PAID_DAILY_QUOTA = int(os.environ.get("PAID_DAILY_QUOTA", "30"))
+USERS = {}
+# True whenever USERS_PATH exists — even if it fails to parse. A present-but-
+# broken users file must fail CLOSED (tiers on, no paid keys -> everyone free),
+# never open (everyone gets Claude), or a corrupt file becomes a cost leak.
+TIERS_ENABLED = False
+_usage_lock = threading.Lock()
+
 # "claude" (default, needs ANTHROPIC_API_KEY), "mock" (free, offline), or
 # "ollama" (free local model, needs Ollama running at localhost:11434).
 MODE = "claude"
@@ -159,11 +176,12 @@ def load_chunks():
         CHUNKS_BY_ID.update({chunk["id"]: chunk for chunk in chunks})
 
 
-def log_real_session(data, result):
+def log_real_session(data, result, user=None):
     """Persist a real graded exchange. Local file only; never breaks a response."""
     try:
         record = {
             "timestamp": datetime.now().isoformat(timespec="seconds"),
+            "user": (user or {}).get("name", "anonymous"),
             "graded_by": MODE,
             "model": (os.environ.get("ANTHROPIC_MODEL", DEFAULT_MODEL)
                       if MODE == "claude" else OLLAMA_MODEL),
@@ -194,6 +212,83 @@ def load_grader():
         GRADER = joblib.load(GRADER_PATH)
     except Exception as exc:
         print(f"Warning: could not load ML grader ({exc}); mock grading uses keyword matching.")
+
+
+def load_users():
+    global USERS, TIERS_ENABLED
+    if not USERS_PATH.exists():
+        return
+    TIERS_ENABLED = True
+    try:
+        # utf-8-sig: tolerate the BOM that Windows editors and PowerShell
+        # (Set-Content -Encoding utf8) prepend.
+        USERS = json.loads(USERS_PATH.read_text(encoding="utf-8-sig"))
+    except Exception as exc:
+        print(
+            f"Warning: could not read {USERS_PATH.name} ({exc}); "
+            "tiers stay ON with no paid keys - every request is free tier."
+        )
+
+
+def resolve_user(handler):
+    key = (handler.headers.get("X-Access-Key") or "").strip()
+    entry = USERS.get(key)
+    if entry and entry.get("tier") == "paid":
+        return {"key": key, "name": entry.get("name", "paid user"), "tier": "paid"}
+    return {"key": None, "name": "anonymous", "tier": "free"}
+
+
+def _read_usage():
+    if not USAGE_PATH.exists():
+        return {}
+    try:
+        return json.loads(USAGE_PATH.read_text(encoding="utf-8-sig"))
+    except Exception:
+        return {}
+
+
+def quota_left(user):
+    if user["tier"] != "paid":
+        return 0
+    today = datetime.now().date().isoformat()
+    with _usage_lock:
+        row = _read_usage().get(user["key"])
+    used = row["used"] if row and row.get("date") == today else 0
+    return max(0, PAID_DAILY_QUOTA - used)
+
+
+def quota_take(user):
+    """Reserve one paid Claude call; False once today's quota is spent."""
+    today = datetime.now().date().isoformat()
+    with _usage_lock:
+        usage = _read_usage()
+        row = usage.get(user["key"])
+        used = row["used"] if row and row.get("date") == today else 0
+        if used >= PAID_DAILY_QUOTA:
+            return False
+        usage[user["key"]] = {"date": today, "used": used + 1}
+        USAGE_PATH.parent.mkdir(parents=True, exist_ok=True)
+        USAGE_PATH.write_text(json.dumps(usage), encoding="utf-8")
+    return True
+
+
+def grading_route(user):
+    """Decide whether this request may spend an LLM call.
+
+    Returns (use_llm, reason); reason says why a request routed local:
+    "mock" (dev mode), "free" (no paid key), "quota" (paid but spent today).
+    """
+    if MODE == "mock":
+        return False, "mock"
+    if MODE == "ollama":
+        return True, None
+    if not TIERS_ENABLED:
+        return True, None  # tiers disabled: single-user setup grades with Claude
+    if user["tier"] != "paid":
+        return False, "free"
+    if not quota_take(user):
+        return False, "quota"
+    return True, None
 
 
 def get_api_key():
@@ -271,7 +366,16 @@ def clamp_score(value):
     return max(1, min(10, value))
 
 
-def mock_evaluation(data, chunk):
+# Why an evaluation was routed to local grading -> (summary label, user hint).
+LOCAL_GRADING_LABELS = {
+    "mock": ("Mock mode", "Run without --mock for real Claude grading."),
+    "free": ("Free tier", "Enter a paid access key for full Claude grading."),
+    "quota": ("Daily Claude quota reached", "Quota resets tomorrow; until then grading is local."),
+}
+
+
+def mock_evaluation(data, chunk, reason="mock"):
+    label, hint = LOCAL_GRADING_LABELS[reason]
     answer = data.get("answer", "")
     answer_tokens = set(tokenize(answer))
     word_count = len(answer.split())
@@ -288,10 +392,9 @@ def mock_evaluation(data, chunk):
             predicted = GRADER["model"].predict([extractor.extract(answer, chunk)])[0]
             overall = clamp_score(round(predicted))
             summary = (
-                f"[Mock mode - local ML grader ({GRADER['model_name']})] "
+                f"[{label} - local ML grader ({GRADER['model_name']})] "
                 f"Predicted {overall}/10; matched {len(hits)} of "
-                f"{len(interview['key_points'])} rubric key points. "
-                "Run without --mock for real Claude grading."
+                f"{len(interview['key_points'])} rubric key points. {hint}"
             )
         else:
             hits, misses = [], []
@@ -302,9 +405,8 @@ def mock_evaluation(data, chunk):
             coverage = len(hits) / max(1, len(interview["key_points"]))
             overall = clamp_score(round(2 + 8 * coverage))
             summary = (
-                f"[Mock mode - free, no AI] Keyword matching found {len(hits)} of "
-                f"{len(interview['key_points'])} rubric key points in your answer. "
-                "Run the server without --mock for real Claude grading."
+                f"[{label} - keyword matching] Found {len(hits)} of "
+                f"{len(interview['key_points'])} rubric key points in your answer. {hint}"
             )
         return {
             "overall_score": overall,
@@ -341,18 +443,15 @@ def mock_evaluation(data, chunk):
             "communication": overall,
         },
         "summary": (
-            "[Mock mode - free, no AI] This question has no knowledge-base rubric, so the score "
-            "is a rough length-based placeholder. Run without --mock for real grading."
+            f"[{label}] This question has no knowledge-base rubric, so the score "
+            f"is a rough length-based placeholder. {hint}"
         ),
-        "strengths": ["Answer recorded in mock mode."],
-        "gaps": ["Mock mode cannot judge content for questions without a rubric."],
-        "suggested_answer": (
-            "Mock mode cannot draft a model answer for this question. "
-            "Restart the server without --mock to get real feedback."
-        ),
+        "strengths": ["Answer recorded with local grading."],
+        "gaps": ["Local grading cannot judge content for questions without a rubric."],
+        "suggested_answer": f"Local grading cannot draft a model answer for this question. {hint}",
         "next_steps": [
-            "Practice knowledge-base topics, which grade against a real rubric even in mock mode.",
-            "Restart without --mock (or with --ollama) for AI feedback on this answer.",
+            "Practice knowledge-base topics, which grade against a real rubric even locally.",
+            hint,
         ],
         "follow_up_question": "How would you measure whether your proposed approach actually works in production?",
     }
@@ -499,10 +598,18 @@ class InterviewCoachHandler(BaseHTTPRequestHandler):
         if path == "/api/meta":
             # The frontend builds the knowledge-base topic groups from this,
             # so the module lists live only in the corpora, not in app.js.
+            user = resolve_user(self)
             json_response(self, 200, {
                 "kb": {
                     role: {"modules": info["modules"], "chunks": len(info["chunks"])}
                     for role, info in KB.items()
+                },
+                "user": {
+                    "name": user["name"],
+                    "tier": user["tier"],
+                    "tiers_enabled": TIERS_ENABLED and MODE == "claude",
+                    "paid_quota": PAID_DAILY_QUOTA,
+                    "paid_left_today": quota_left(user),
                 },
             })
             return
@@ -539,9 +646,11 @@ class InterviewCoachHandler(BaseHTTPRequestHandler):
                     )
                     json_response(self, 200, kb_question_payload(chunk))
                     return
-                if MODE == "mock":
-                    # Free mode: serve a knowledge-base question relevant to the
-                    # chosen general topic instead of calling an AI model.
+                use_llm, _ = grading_route(resolve_user(self))
+                if not use_llm:
+                    # Local route (mock mode, free tier, or spent quota): serve a
+                    # knowledge-base question relevant to the chosen general
+                    # topic instead of spending an LLM call.
                     chunk = select_chunk(
                         data.get("role", "MLE"),
                         "Any course topic",
@@ -560,18 +669,20 @@ class InterviewCoachHandler(BaseHTTPRequestHandler):
                 if not data.get("answer", "").strip():
                     json_response(self, 400, {"error": "Answer is required."})
                     return
+                user = resolve_user(self)
                 chunk = CHUNKS_BY_ID.get(data.get("chunk_id") or "")
-                if MODE == "mock":
+                use_llm, reason = grading_route(user)
+                if not use_llm:
                     # A follow-up has no rubric of its own; keyword-matching the
                     # parent chunk's key points against it would mis-grade.
-                    mock_chunk = None if data.get("source") == "followup" else chunk
-                    json_response(self, 200, mock_evaluation(data, mock_chunk))
+                    local_chunk = None if data.get("source") == "followup" else chunk
+                    json_response(self, 200, mock_evaluation(data, local_chunk, reason))
                     return
                 result = call_model(
                     build_evaluation_prompt(data, chunk),
                     EVALUATION_SCHEMA,
                 )
-                log_real_session(data, result)
+                log_real_session(data, result, user)
                 json_response(self, 200, result)
                 return
 
@@ -624,7 +735,10 @@ def main():
 
     load_env_file()
     load_chunks()
-    if MODE == "mock":
+    load_users()
+    # Claude mode needs the local grader too when tiers are on: it serves
+    # free-tier and over-quota requests.
+    if MODE == "mock" or (MODE == "claude" and TIERS_ENABLED):
         load_grader()
     # HOST=0.0.0.0 is required inside a container; the localhost default keeps
     # a bare `python server.py` private to this machine.
@@ -649,6 +763,15 @@ def main():
         print(f"Backend: Ollama local model '{OLLAMA_MODEL}' (free) at localhost:11434.")
     else:
         print(f"Backend: Anthropic API, model {os.environ.get('ANTHROPIC_MODEL', DEFAULT_MODEL)}.")
+        if TIERS_ENABLED:
+            paid = sum(1 for entry in USERS.values() if entry.get("tier") == "paid")
+            brain = GRADER["model_name"] if GRADER is not None else "keyword matching"
+            print(
+                f"Tiers: ON - {paid} paid key(s), {PAID_DAILY_QUOTA} Claude calls/day each; "
+                f"free tier grades with the local model ({brain})."
+            )
+        else:
+            print("Tiers: off (no users.json) - every request grades with Claude.")
     print("Press Ctrl+C to stop.")
     try:
         server.serve_forever()
