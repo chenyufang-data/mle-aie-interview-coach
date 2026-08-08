@@ -1,0 +1,33 @@
+# Secrets — never in an image layer.
+.env
+.env.*
+!.env.sample
+
+# Local environments and caches.
+.git
+.venv
+.claude
+.vscode
+__pycache__
+**/__pycache__
+*.pyc
+.pytest_cache
+
+# Personal data and local notes.
+grader/real_sessions.jsonl
+resu01.txt
+suggestion.md
+*.docx
+*.log
+
+# Training-only artifacts — not needed at runtime, keep the build context small.
+grader/dataset.jsonl
+grader/labels_teacher.jsonl
+
+# Repo housekeeping.
+docs
+tests
+README.md
+.gitignore
+.dockerignore
+docker-compose.yml

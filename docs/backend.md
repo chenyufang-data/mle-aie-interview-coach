@@ -16,6 +16,15 @@ grading. It knows nothing about presentation.
     chosen model pulled. No API key.
   - **`--mock`**: nothing — fully offline. Uses `grader/model.joblib` (the trained
     local grader) if present, keyword rubric matching otherwise.
+- Environment overrides: `PORT` (default `8000`), `HOST` (default `127.0.0.1`;
+  set to `0.0.0.0` inside a container), `REAL_SESSIONS_PATH` (default
+  `grader/real_sessions.jsonl`; point it at a mounted volume in Docker so
+  practice history survives rebuilds).
+- Docker: `docker/backend.Dockerfile` packages exactly this scope — server,
+  retrieval, grader artifact, and both banks. Training scripts, datasets, gold
+  labels, and `.env` never enter the image; the key is injected at runtime via
+  compose `env_file`. (`--ollama` is not wired for Docker: it expects Ollama on
+  localhost.)
 
 ## Responsibilities (must)
 

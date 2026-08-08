@@ -1,0 +1,45 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    # Default is real Claude grading (needs ANTHROPIC_API_KEY in .env).
+    # For the free offline ML grader instead, uncomment:
+    # command: ["python", "server.py", "--mock"]
+    env_file:
+      - path: .env
+        required: false # not needed in --mock mode
+    environment:
+      HOST: 0.0.0.0
+      REAL_SESSIONS_PATH: /data/real_sessions.jsonl
+    volumes:
+      # Practice history survives container rebuilds.
+      - coach-data:/data
+    expose:
+      - "8000"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/meta', timeout=5)",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  coach-data:

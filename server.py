@@ -110,7 +110,10 @@ GRADER = None
 # Every real (non-mock) graded exchange is appended here: each row is a gold
 # (answer, teacher score) pair for evaluating and later retraining the
 # distilled grader, and the practice history for progress features.
-REAL_SESSIONS_PATH = BASE_DIR / "grader" / "real_sessions.jsonl"
+# Overridable so Docker can point it at a persistent volume.
+REAL_SESSIONS_PATH = Path(
+    os.environ.get("REAL_SESSIONS_PATH", BASE_DIR / "grader" / "real_sessions.jsonl")
+)
 
 # "claude" (default, needs ANTHROPIC_API_KEY), "mock" (free, offline), or
 # "ollama" (free local model, needs Ollama running at localhost:11434).
@@ -623,9 +626,13 @@ def main():
     load_chunks()
     if MODE == "mock":
         load_grader()
+    # HOST=0.0.0.0 is required inside a container; the localhost default keeps
+    # a bare `python server.py` private to this machine.
+    host = os.environ.get("HOST", "127.0.0.1")
     port = int(os.environ.get("PORT", "8000"))
-    server = ThreadingHTTPServer(("127.0.0.1", port), InterviewCoachHandler)
-    print(f"MLE/AIE Interview Coach running at http://127.0.0.1:{port}")
+    server = ThreadingHTTPServer((host, port), InterviewCoachHandler)
+    display_host = "127.0.0.1" if host == "0.0.0.0" else host
+    print(f"MLE/AIE Interview Coach running at http://{display_host}:{port}")
     for role, info in KB.items():
         print(
             f"Knowledge base [{role}]: {len(info['chunks'])} interview chunks "

@@ -7,7 +7,9 @@ the backend's file handler. It owns presentation and session flow — nothing el
 
 - Any modern browser (ES2017+: `async/await`, `fetch`, `sessionStorage`).
 - **Zero dependencies** — no npm, no build step, no framework. The files in
-  `public/` are served as-is by the backend.
+  `public/` are served as-is by the backend — or, in the Docker setup, by a
+  dedicated nginx image (`docker/frontend.Dockerfile`) that serves `public/`
+  and proxies `/api/` to the backend service, keeping everything same-origin.
 - No configuration and no secrets. The frontend never sees an API key and never
   talks to Anthropic or Ollama directly — only to its own backend, same-origin.
 

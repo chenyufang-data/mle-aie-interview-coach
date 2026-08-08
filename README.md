@@ -80,6 +80,31 @@ cd mle-aie-interview-coach
 
 (Or activate first with `.venv\Scripts\Activate.ps1`, then `python server.py`.)
 
+## Run with Docker
+
+The compose setup deploys the two documented halves as separate services:
+a dependency-free nginx image serving `public/` (frontend, the only published
+port) and a Python image with the API, question banks, and grader artifact
+(backend, reachable only through nginx's `/api/` proxy).
+
+```bash
+docker compose up --build -d
+```
+
+Then open http://127.0.0.1:8080. The Anthropic key is read from the same `.env`
+at runtime by compose — it is dockerignored and never baked into an image. For
+the free offline ML grader instead, uncomment the `--mock` command line in
+`docker-compose.yml` (no `.env` needed at all). Practice history persists in
+the `coach-data` volume. `--ollama` mode is not wired for Docker (it expects
+Ollama on localhost).
+
+This fits comfortably on a small host such as an EC2 `t3.micro` (the backend
+peaks around 300-400 MB RAM). Two tips there: build the images off-box or add
+swap (1 GB RAM is tight for `docker build`), and either restrict the security
+group to your own IP or run `--mock` if the instance is publicly reachable —
+the app has no authentication, and in Claude mode every evaluation spends your
+API credits.
+
 ## Free testing modes (no API cost)
 
 Test the app without spending Anthropic API credits:

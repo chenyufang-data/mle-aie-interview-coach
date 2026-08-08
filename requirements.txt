@@ -1,2 +1,4 @@
+# Backend (Python API) dependencies only. The frontend has none: public/ is
+# dependency-free static JS, served by the backend or by nginx in Docker.
 anthropic>=0.119.0
 scikit-learn>=1.4
