@@ -498,30 +498,41 @@ textarea:focus {
 }
 
 .key-input-row {
-  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .key-input-row input {
-  width: 100%;
-  padding-right: 40px;
+  flex: 1;
+  min-width: 0;
 }
 
+/* Filled circle with a knocked-out (white) check or cross inside. */
 .key-status {
-  position: absolute;
-  top: 50%;
-  right: 12px;
-  transform: translateY(-50%);
-  font-size: 15px;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 13px;
   font-weight: 800;
-  pointer-events: none;
+  line-height: 1;
+}
+
+.key-status[hidden] {
+  display: none;
 }
 
 .key-status.valid {
-  color: var(--green);
+  background: var(--green);
 }
 
 .key-status.invalid {
-  color: var(--red);
+  background: var(--red);
 }
 
 .hints .guidance-list {
