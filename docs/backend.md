@@ -52,6 +52,13 @@ grading. It knows nothing about presentation.
 - Log every real (non-mock) graded session to `grader/real_sessions.jsonl` —
   these Claude-vs-local gold pairs feed `grader/evaluate_on_real.py`. Logging
   must never break the response (best-effort, wrapped in try/except).
+- Answer collection is disclosed and opt-out-able: the answer page shows a
+  notice, and any key in `users.json` can set `"log": false` to be excluded
+  from both logs. Free-tier answers (tiered Claude mode only, never `--mock`)
+  go to `grader/free_sessions.jsonl` **unlabeled** — the local model's score
+  is stored for triage but must never be used as a training label
+  (self-distillation would amplify the student's own errors); they become
+  training data only after teacher labeling.
 - Map failures (bad key, rate limit, network, Ollama down) to JSON errors the
   frontend can display.
 

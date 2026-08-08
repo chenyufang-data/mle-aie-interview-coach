@@ -150,6 +150,13 @@ Delete `users.json` (or never create it) and the app behaves exactly as before:
 single-user, every request graded by Claude. In Docker, mount `users.json` into
 the backend service (a commented line in `docker-compose.yml` shows how).
 
+**Answer collection**: the answer page discloses that graded answers are stored
+to improve the grading model; any key can opt out with `"log": false` in
+`users.json`. Claude-graded answers land in `grader/real_sessions.jsonl` as
+gold pairs; free-tier answers land in `grader/free_sessions.jsonl` *unlabeled*
+(the local model's own score is never a training label) until a teacher-labeling
+pass promotes them. Both files are gitignored.
+
 Then open:
 
 ```text

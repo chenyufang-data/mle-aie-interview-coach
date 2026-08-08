@@ -116,6 +116,15 @@ REAL_SESSIONS_PATH = Path(
     os.environ.get("REAL_SESSIONS_PATH", BASE_DIR / "grader" / "real_sessions.jsonl")
 )
 
+# Free-tier answers land here UNLABELED (their only score is the student
+# model's own prediction, which must never be used as a training label -
+# that would be self-distillation of the model's own errors). They become
+# training data only if later graded by the teacher (label_teacher.py-style
+# active learning). Kept separate from the gold-pair log for that reason.
+FREE_SESSIONS_PATH = Path(
+    os.environ.get("FREE_SESSIONS_PATH", BASE_DIR / "grader" / "free_sessions.jsonl")
+)
+
 # Freemium tiers (Claude mode only): a request's X-Access-Key header is looked
 # up in USERS_PATH; keys with tier "paid" get Claude grading, capped at
 # PAID_DAILY_QUOTA Claude calls per day (question generation + evaluation
@@ -178,6 +187,8 @@ def load_chunks():
 
 def log_real_session(data, result, user=None):
     """Persist a real graded exchange. Local file only; never breaks a response."""
+    if user is not None and not user.get("log", True):
+        return
     try:
         record = {
             "timestamp": datetime.now().isoformat(timespec="seconds"),
@@ -199,6 +210,34 @@ def log_real_session(data, result, user=None):
             handle.write(json.dumps(record, ensure_ascii=False) + "\n")
     except Exception as exc:
         print(f"Warning: could not log session ({exc})")
+
+
+def log_free_session(data, result, user, reason):
+    """Persist a free-tier answer, unlabeled. The stored local_score is the
+    student's prediction, recorded for triage only - never a training label."""
+    if not user.get("log", True):
+        return
+    try:
+        record = {
+            "timestamp": datetime.now().isoformat(timespec="seconds"),
+            "user": user["name"],
+            "graded_by": "local_ml",
+            "reason": reason,
+            "role": data.get("role"),
+            "level": data.get("level"),
+            "topic": data.get("topic"),
+            "source": data.get("source"),
+            "chunk_id": data.get("chunk_id"),
+            "question": data.get("question"),
+            "answer": data.get("answer"),
+            "timeUsed": data.get("timeUsed"),
+            "local_score": result.get("overall_score"),
+            "teacher_score": None,
+        }
+        with FREE_SESSIONS_PATH.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(record, ensure_ascii=False) + "\n")
+    except Exception as exc:
+        print(f"Warning: could not log free session ({exc})")
 
 
 def load_grader():
@@ -233,9 +272,15 @@ def load_users():
 def resolve_user(handler):
     key = (handler.headers.get("X-Access-Key") or "").strip()
     entry = USERS.get(key)
-    if entry and entry.get("tier") == "paid":
-        return {"key": key, "name": entry.get("name", "paid user"), "tier": "paid"}
-    return {"key": None, "name": "anonymous", "tier": "free"}
+    if entry:
+        return {
+            "key": key,
+            "name": entry.get("name", "user"),
+            "tier": "paid" if entry.get("tier") == "paid" else "free",
+            # Per-user answer-collection opt-out: {"log": false} in users.json.
+            "log": entry.get("log", True),
+        }
+    return {"key": None, "name": "anonymous", "tier": "free", "log": True}
 
 
 def _read_usage():
@@ -676,7 +721,12 @@ class InterviewCoachHandler(BaseHTTPRequestHandler):
                     # A follow-up has no rubric of its own; keyword-matching the
                     # parent chunk's key points against it would mis-grade.
                     local_chunk = None if data.get("source") == "followup" else chunk
-                    json_response(self, 200, mock_evaluation(data, local_chunk, reason))
+                    result = mock_evaluation(data, local_chunk, reason)
+                    if MODE == "claude":
+                        # Tiered deployment (not --mock dev mode): collect the
+                        # free-tier answer unlabeled for future teacher labeling.
+                        log_free_session(data, result, user, reason)
+                    json_response(self, 200, result)
                     return
                 result = call_model(
                     build_evaluation_prompt(data, chunk),

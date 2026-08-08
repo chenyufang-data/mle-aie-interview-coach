@@ -13,6 +13,7 @@ __pycache__/
 
 # Personal practice logs (contain real interview answers) and quota state
 grader/real_sessions.jsonl
+grader/free_sessions.jsonl
 grader/usage.json
 
 # Local notes and generated reports

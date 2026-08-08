@@ -1,3 +1,4 @@
 {
-  "change-me-to-a-long-random-key": { "name": "Chenyu", "tier": "paid" }
+  "change-me-to-a-long-random-key": { "name": "Chenyu", "tier": "paid" },
+  "another-key-optional": { "name": "Friend", "tier": "free", "log": false }
 }

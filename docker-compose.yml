@@ -12,13 +12,14 @@ services:
     environment:
       HOST: 0.0.0.0
       REAL_SESSIONS_PATH: /data/real_sessions.jsonl
+      FREE_SESSIONS_PATH: /data/free_sessions.jsonl
       USAGE_PATH: /data/usage.json
     volumes:
       # Practice history and quota state survive container rebuilds.
       - coach-data:/data
-      # Freemium tiers: create users.json (copy users.sample.json) and uncomment.
-      # Without it, every request grades with Claude (single-user setup).
-      # - ./users.json:/app/users.json:ro
+      # Freemium tiers: comment this out (or delete users.json) to disable —
+      # without it, every request grades with Claude (single-user setup).
+      - ./users.json:/app/users.json:ro
     expose:
       - "8000"
     healthcheck:
