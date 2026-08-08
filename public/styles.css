@@ -497,6 +497,33 @@ textarea:focus {
   border-bottom: 1px solid var(--line);
 }
 
+.key-input-row {
+  position: relative;
+}
+
+.key-input-row input {
+  width: 100%;
+  padding-right: 40px;
+}
+
+.key-status {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  font-size: 15px;
+  font-weight: 800;
+  pointer-events: none;
+}
+
+.key-status.valid {
+  color: var(--green);
+}
+
+.key-status.invalid {
+  color: var(--red);
+}
+
 .hints .guidance-list {
   padding: 12px 14px 14px 32px;
 }

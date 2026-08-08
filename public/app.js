@@ -57,6 +57,7 @@ function initSetupPage() {
   const topic = document.querySelector("#topic");
   const focus = document.querySelector("#focus");
   const accessKey = document.querySelector("#accessKey");
+  const keyStatus = document.querySelector("#keyStatus");
   const tierBadge = document.querySelector("#tierBadge");
   const startBtn = document.querySelector("#startBtn");
   const setupStatus = document.querySelector("#setupStatus");
@@ -168,8 +169,24 @@ function initSetupPage() {
       return;
     }
     updateTierBadge(meta.user);
+    updateKeyStatus(meta.user);
     populateTopics();
     updateSummary();
+  }
+
+  function updateKeyStatus(user) {
+    const key = sessionStorage.getItem(ACCESS_KEY_STORAGE) || "";
+    if (!key || !user || !user.tiers_enabled) {
+      keyStatus.hidden = true;
+      return;
+    }
+    // The server is the authority: a key is valid only if /api/meta came back
+    // with tier "paid" for it.
+    const valid = user.tier === "paid";
+    keyStatus.hidden = false;
+    keyStatus.textContent = valid ? "✓" : "✕";
+    keyStatus.className = `key-status ${valid ? "valid" : "invalid"}`;
+    keyStatus.title = valid ? `Key recognized (${user.name})` : "Key not recognized";
   }
 
   function updateTierBadge(user) {
@@ -184,9 +201,15 @@ function initSetupPage() {
   }
 
   accessKey.value = sessionStorage.getItem(ACCESS_KEY_STORAGE) || "";
-  accessKey.addEventListener("change", () => {
-    sessionStorage.setItem(ACCESS_KEY_STORAGE, accessKey.value.trim());
-    loadKbMeta();
+  let keyCheckTimer = null;
+  accessKey.addEventListener("input", () => {
+    // Debounced so we re-check against the server once per pause in typing,
+    // not per keystroke.
+    window.clearTimeout(keyCheckTimer);
+    keyCheckTimer = window.setTimeout(() => {
+      sessionStorage.setItem(ACCESS_KEY_STORAGE, accessKey.value.trim());
+      loadKbMeta();
+    }, 400);
   });
 
   populateTopics();

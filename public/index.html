@@ -54,7 +54,10 @@
 
             <div class="field">
               <label for="accessKey">Access key (optional)</label>
-              <input id="accessKey" type="password" placeholder="Paid key for Claude grading" autocomplete="off">
+              <div class="key-input-row">
+                <input id="accessKey" type="password" placeholder="Paid key for Claude grading" autocomplete="off">
+                <span id="keyStatus" class="key-status" aria-live="polite" hidden></span>
+              </div>
               <p id="tierBadge" class="inline-status" hidden></p>
             </div>
 
