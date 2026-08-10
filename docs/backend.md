@@ -30,6 +30,12 @@ grading. It knows nothing about presentation.
   requests get the distilled local grader and knowledge-base questions —
   the free tier. Without `users.json`, tiers are off and every request
   grades with Claude (single-user setup). `--mock`/`--ollama` ignore tiers.
+- Smart cascade (`PAID_CASCADE`, default on): paid evaluations of rubric
+  questions first ask the distilled model; when it is confident by the
+  measured rule (predicted <= 2.5 AND `kp_frac_hit` <= 0.25 — see
+  `grader/cascade_analysis.py`, 100% within-±1 on gold rows), the local
+  result is served and **no quota is taken**. `"force_llm": true` in the
+  request body opts out. Follow-ups and non-KB questions never cascade.
 - Docker: `docker/backend.Dockerfile` packages exactly this scope — server,
   retrieval, grader artifact, and both banks. Training scripts, datasets, gold
   labels, and `.env` never enter the image; the key is injected at runtime via
@@ -109,7 +115,8 @@ the knowledge base (focus-matched) instead of calling a model.
 
 Request: `role`, `level`, `topic`, `focus`, `question`, `answer` (required,
 non-empty), `timeUsed`, and — when applicable — `chunk_id`, `source`
-(`"followup"` for follow-up answers), `parent_question`, `parent_answer`.
+(`"followup"` for follow-up answers), `parent_question`, `parent_answer`,
+`force_llm` (boolean; skip the smart cascade for this request).
 
 Response (structured-output schema, enforced server-side):
 

@@ -41,7 +41,13 @@
               <span id="wordCount">0 words</span>
               <span id="answerTime">Time used: 00:00</span>
             </div>
-            <button id="submitBtn" class="primary-action compact-action" type="button">Submit answer</button>
+            <div class="answer-controls">
+              <button id="micBtn" class="ghost-action" type="button" title="Voice input (works over HTTPS or localhost)">🎤 Speak</button>
+              <label class="force-llm" title="Skip the smart cascade and always grade with Claude (uses quota)">
+                <input type="checkbox" id="forceLlm"> Always Claude
+              </label>
+              <button id="submitBtn" class="primary-action compact-action" type="button">Submit answer</button>
+            </div>
           </div>
           <p class="disclosure-note">Graded answers are stored and may be used to improve the grading model.</p>
         </section>

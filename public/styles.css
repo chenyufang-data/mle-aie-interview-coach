@@ -541,6 +541,27 @@ textarea:focus {
   font-size: 12px;
 }
 
+.answer-controls {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.force-llm {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  color: var(--muted);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+#micBtn.recording {
+  border-color: var(--red);
+  color: var(--red);
+}
+
 .hints .guidance-list {
   padding: 12px 14px 14px 32px;
 }

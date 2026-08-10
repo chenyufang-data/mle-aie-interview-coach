@@ -230,6 +230,9 @@ function initInterviewPage() {
   const timerToggleBtn = document.querySelector("#timerToggleBtn");
   const timerResetBtn = document.querySelector("#timerResetBtn");
 
+  const micBtn = document.querySelector("#micBtn");
+  const forceLlm = document.querySelector("#forceLlm");
+
   const saved = readSavedSession();
   const timer = createTimer((elapsed) => {
     const formatted = formatElapsed(elapsed);
@@ -267,6 +270,9 @@ function initInterviewPage() {
   });
 
   answer.addEventListener("input", () => updateWordCount(answer, wordCount));
+  if (micBtn) {
+    setupVoiceInput(micBtn, answer, () => updateWordCount(answer, wordCount));
+  }
 
   submitBtn.addEventListener("click", async () => {
     if (!answer.value.trim()) return;
@@ -291,6 +297,7 @@ function initInterviewPage() {
         parent_answer: saved.question.parent_answer || null,
         answer: answer.value.trim(),
         timeUsed: formatElapsed(timer.elapsed()),
+        force_llm: Boolean(forceLlm && forceLlm.checked),
       });
       renderEvaluation(evaluation, result, formatElapsed(timer.elapsed()));
       wireNextActions(result);
@@ -369,6 +376,63 @@ function initInterviewPage() {
     persistSession(saved);
     beginQuestion();
   }
+}
+
+// Voice input via the browser's Web Speech API. Client-side only: audio never
+// reaches the server, which keeps the consent story simple. Speech recognition
+// requires a secure context (HTTPS or localhost), so the button hides itself
+// where it cannot work.
+function setupVoiceInput(button, textarea, onText) {
+  const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!Recognition || !window.isSecureContext) {
+    button.hidden = true;
+    return;
+  }
+  const recognizer = new Recognition();
+  recognizer.lang = "en-US";
+  recognizer.continuous = true;
+  recognizer.interimResults = false;
+  let listening = false;
+
+  recognizer.onresult = (event) => {
+    for (let k = event.resultIndex; k < event.results.length; k += 1) {
+      if (event.results[k].isFinal) {
+        const text = event.results[k][0].transcript.trim();
+        if (text) {
+          textarea.value = (textarea.value.trim() ? textarea.value.trim() + " " : "") + text;
+          onText();
+        }
+      }
+    }
+  };
+  // Chrome stops recognition after a pause; restart while the user still
+  // has the mic toggled on.
+  recognizer.onend = () => {
+    if (listening) {
+      try { recognizer.start(); } catch (error) { /* already running */ }
+    }
+  };
+  recognizer.onerror = (event) => {
+    if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+      listening = false;
+      button.textContent = "🎤 Speak";
+      button.classList.remove("recording");
+      button.title = "Microphone permission denied";
+    }
+  };
+
+  button.addEventListener("click", () => {
+    listening = !listening;
+    if (listening) {
+      try { recognizer.start(); } catch (error) { /* already running */ }
+      button.textContent = "⏹ Stop";
+      button.classList.add("recording");
+    } else {
+      recognizer.stop();
+      button.textContent = "🎤 Speak";
+      button.classList.remove("recording");
+    }
+  });
 }
 
 function topicSource(topicSelect) {

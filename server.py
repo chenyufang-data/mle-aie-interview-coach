@@ -141,6 +141,18 @@ USERS = {}
 TIERS_ENABLED = False
 _usage_lock = threading.Lock()
 
+# Smart cascade for paid users: answers the student grades reliably are served
+# locally without spending Claude quota. The rule is MEASURED, not guessed
+# (grader/cascade_analysis.py, 121 held-out gold rows): routing only
+# clearly-below-rubric answers keeps ~12% of evaluations local at 100%
+# within-+/-1 teacher agreement (MAE 0.48). The tempting high-score route
+# measured at 47% agreement — polished-looking answers are exactly where
+# lexical features get fooled — so only the low side ships. A request can
+# force the full Claude evaluation with "force_llm": true.
+PAID_CASCADE = os.environ.get("PAID_CASCADE", "1") != "0"
+CASCADE_PRED_MAX = 2.5
+CASCADE_FRAC_HIT_MAX = 0.25
+
 # "claude" (default, needs ANTHROPIC_API_KEY), "mock" (free, offline), or
 # "ollama" (free local model, needs Ollama running at localhost:11434).
 MODE = "claude"
@@ -416,7 +428,23 @@ LOCAL_GRADING_LABELS = {
     "mock": ("Mock mode", "Run without --mock for real Claude grading."),
     "free": ("Free tier", "Enter a paid access key for full Claude grading."),
     "quota": ("Daily Claude quota reached", "Quota resets tomorrow; until then grading is local."),
+    "cascade": (
+        "Smart cascade",
+        "This answer clearly misses the rubric, so the local grader handled it "
+        "and no Claude quota was spent. Tick 'Always Claude' to force the full "
+        "evaluation.",
+    ),
 }
+
+
+def cascade_confident(answer, chunk):
+    """True when the student's grade is reliable enough to skip the teacher."""
+    if GRADER is None:
+        return False
+    feats = [GRADER["extractor"].extract(answer, chunk)]
+    predicted = float(GRADER["model"].predict(feats)[0])
+    frac_hit = feats[0][GRADER["feature_names"].index("kp_frac_hit")]
+    return predicted <= CASCADE_PRED_MAX and frac_hit <= CASCADE_FRAC_HIT_MAX
 
 
 def mock_evaluation(data, chunk, reason="mock"):
@@ -434,14 +462,24 @@ def mock_evaluation(data, chunk, reason="mock"):
             coverage_scores = extractor.key_point_coverage(answer, chunk)
             hits = [p for p, c in zip(interview["key_points"], coverage_scores) if c >= 0.35]
             misses = [p for p, c in zip(interview["key_points"], coverage_scores) if c < 0.35]
-            predicted = GRADER["model"].predict([extractor.extract(answer, chunk)])[0]
+            feats = [extractor.extract(answer, chunk)]
+            predicted = GRADER["model"].predict(feats)[0]
             overall = clamp_score(round(predicted))
+            # Subscores from the dedicated multi-output models when the
+            # artifact has them (each beats overall-as-proxy on gold rows).
+            sub_models = GRADER.get("subscore_models")
+            predicted_scores = (
+                {name: clamp_score(round(float(m.predict(feats)[0])))
+                 for name, m in sub_models.items()}
+                if sub_models else None
+            )
             summary = (
                 f"[{label} - local ML grader ({GRADER['model_name']})] "
                 f"Predicted {overall}/10; matched {len(hits)} of "
                 f"{len(interview['key_points'])} rubric key points. {hint}"
             )
         else:
+            predicted_scores = None
             hits, misses = [], []
             for point in interview["key_points"]:
                 point_tokens = set(tokenize(point))
@@ -455,7 +493,7 @@ def mock_evaluation(data, chunk, reason="mock"):
             )
         return {
             "overall_score": overall,
-            "scores": {
+            "scores": predicted_scores or {
                 "technical_depth": overall,
                 "structure": clamp_score(overall + (1 if word_count >= 60 else -1)),
                 "practical_judgment": overall,
@@ -716,6 +754,17 @@ class InterviewCoachHandler(BaseHTTPRequestHandler):
                     return
                 user = resolve_user(self)
                 chunk = CHUNKS_BY_ID.get(data.get("chunk_id") or "")
+                # Smart cascade — checked BEFORE grading_route so no quota is
+                # taken for answers the student grades reliably. Only for paid
+                # users on rubric questions; "force_llm": true opts out.
+                if (MODE == "claude" and TIERS_ENABLED and PAID_CASCADE
+                        and user["tier"] == "paid"
+                        and chunk is not None
+                        and data.get("source") != "followup"
+                        and not data.get("force_llm")
+                        and cascade_confident(data.get("answer", ""), chunk)):
+                    json_response(self, 200, mock_evaluation(data, chunk, "cascade"))
+                    return
                 use_llm, reason = grading_route(user)
                 if not use_llm:
                     # A follow-up has no rubric of its own; keyword-matching the
@@ -819,6 +868,11 @@ def main():
             print(
                 f"Tiers: ON - {paid} paid key(s), {PAID_DAILY_QUOTA} Claude calls/day each; "
                 f"free tier grades with the local model ({brain})."
+            )
+            print(
+                "Cascade: "
+                + ("ON - clearly-weak paid answers grade locally, no quota spent."
+                   if PAID_CASCADE and GRADER is not None else "off.")
             )
         else:
             print("Tiers: off (no users.json) - every request grades with Claude.")

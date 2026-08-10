@@ -27,7 +27,11 @@ the backend's file handler. It owns presentation and session flow — nothing el
 - **Interview page** (`interview.html`): render the question and guidance, run the
   elapsed timer with pause/resume, count words in the answer box, submit the
   answer, and render the evaluation (overall score, four subscores, summary,
-  strengths, gaps, suggested answer, next steps, follow-up question).
+  strengths, gaps, suggested answer, next steps, follow-up question). Two
+  answer-box extras: a 🎤 voice-input button (browser Web Speech API,
+  client-side only — audio never reaches the server; the button hides itself
+  outside secure contexts) and an "Always Claude" checkbox that sends
+  `force_llm: true` to skip the smart cascade for that submission.
 - **Session flow**: "Practice the follow-up" keeps the parent question, previous
   answer, and parent `chunk_id` so the backend can grade in context; "New
   question" accumulates served `chunk_id`s and sends them as `exclude` so

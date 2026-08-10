@@ -42,7 +42,9 @@ Nothing corpus-specific is hard-coded in the frontend — module lists come from
     (`retrieval.py`; one of the top matches is chosen at random so sessions stay
     varied). The module lists in the dropdown come from the server (`/api/meta`),
     so the frontend never hard-codes corpus contents.
-- Answer with the elapsed timer running, then submit.
+- Answer with the elapsed timer running — typed, or spoken via the 🎤 button
+  (browser speech recognition, client-side only; needs HTTPS or localhost) —
+  then submit.
 - The coach returns a scored evaluation, strengths, gaps, a stronger sample answer,
   concrete next steps, and a follow-up question. Knowledge-base questions are graded
   against the chunk's model answer, key points, and common mistakes.
@@ -145,6 +147,16 @@ With `users.json` present, requests are routed per user instead of per server:
   `PAID_DAILY_QUOTA` LLM calls per day (default 30, question generation and
   evaluation combined). When the quota runs out, grading degrades gracefully to
   the local model — labeled as such — rather than failing.
+
+**Smart cascade** (paid tier, `PAID_CASCADE=0` to disable): answers the
+distilled model grades reliably are served locally *without* spending quota.
+The routing rule is measured, not guessed — `grader/cascade_analysis.py`
+replays the 121 held-out gold rows and shows that routing only
+clearly-below-rubric answers (predicted <= 2.5, rubric coverage <= 0.25) keeps
+~12% of evaluations local at **100% within-±1 agreement** with Claude, while
+the intuitive "route confident-good answers" rule measured at only 47% — so it
+does not ship. The "Always Claude" checkbox on the answer page opts out per
+request.
 
 Delete `users.json` (or never create it) and the app behaves exactly as before:
 single-user, every request graded by Claude. In Docker, mount `users.json` into

@@ -42,6 +42,7 @@ DATASET_PATH = BASE_DIR / "grader" / "dataset.jsonl"
 TEACHER_PATH = BASE_DIR / "grader" / "labels_teacher.jsonl"
 ARTIFACT_PATH = BASE_DIR / "grader" / "model.joblib"
 TEACHER_WEIGHT = 3.0
+SUBSCORE_NAMES = ("technical_depth", "structure", "practical_judgment", "communication")
 
 
 def clip_scores(values):
@@ -82,21 +83,25 @@ def main():
     with DATASET_PATH.open(encoding="utf-8") as handle:
         rows = [json.loads(line) for line in handle if line.strip()]
 
-    teacher = {}
+    teacher, teacher_sub = {}, {}
     if TEACHER_PATH.exists():
         with TEACHER_PATH.open(encoding="utf-8") as handle:
             for line in handle:
                 if line.strip():
                     record = json.loads(line)
                     teacher[record["row_id"]] = record["teacher_score"]
+                    scores = record.get("scores") or {}
+                    if all(name in scores for name in SUBSCORE_NAMES):
+                        teacher_sub[record["row_id"]] = scores
 
     extractor = FeatureExtractor().fit(chunks_by_id.values())
 
-    X, y, groups, weights, sources = [], [], [], [], []
+    X, y, groups, weights, sources, row_ids = [], [], [], [], [], []
     for row in rows:
         chunk = chunks_by_id.get(row["chunk_id"])
         if chunk is None:
             continue
+        row_ids.append(row["row_id"])
         X.append(extractor.extract(row["answer"], chunk))
         if row["row_id"] in teacher:
             y.append(teacher[row["row_id"]])
@@ -154,6 +159,33 @@ def main():
         print_table(gold_results)
 
     best_name = max(candidates, key=lambda name: results[name]["spearman"])
+
+    # Multi-output subscores: the teacher's four subscores are stored with
+    # every gold label, so per-subscore models can replace the display
+    # heuristics (overall +/- word-count offsets). Trained on teacher rows
+    # only; the "overall-as-proxy" column is what the heuristic effectively
+    # showed, so the model must beat it to earn its place.
+    sub_models, sub_metrics = {}, {}
+    sub_ok = np.array([rid in teacher_sub for rid in row_ids])
+    sub_train = np.array([i for i in train_idx if sub_ok[i]])
+    sub_test = np.array([i for i in test_idx if sub_ok[i]])
+    if len(sub_train) >= 100 and len(sub_test) >= 20:
+        overall_proxy = fitted[best_name].predict(X[sub_test])
+        print(f"\nSubscore models ({len(sub_train)} teacher rows train / {len(sub_test)} test):")
+        for name in SUBSCORE_NAMES:
+            target = np.array([teacher_sub[row_ids[i]][name] for i in sub_train], dtype=float)
+            truth = np.array([teacher_sub[row_ids[i]][name] for i in sub_test], dtype=float)
+            model = HistGradientBoostingRegressor(
+                max_iter=200, learning_rate=0.06, max_leaf_nodes=31,
+                l2_regularization=1.0, random_state=42,
+            )
+            model.fit(X[sub_train], target)
+            mae_model = float(np.mean(np.abs(model.predict(X[sub_test]) - truth)))
+            mae_proxy = float(np.mean(np.abs(overall_proxy - truth)))
+            sub_models[name] = model
+            sub_metrics[name] = {"mae": mae_model, "mae_overall_proxy": mae_proxy}
+            print(f"  {name:20s} MAE {mae_model:.2f}  (overall-as-proxy {mae_proxy:.2f})")
+
     artifact = {
         "model": fitted[best_name],
         "model_name": best_name,
@@ -164,6 +196,8 @@ def main():
         "n_train": int(len(train_idx)),
         "n_test": int(len(test_idx)),
         "label_sources": dict(Counter(sources)),
+        "subscore_models": sub_models or None,
+        "subscore_metrics": sub_metrics or None,
     }
     joblib.dump(artifact, ARTIFACT_PATH)
     print(f"\nSaved {best_name} to {ARTIFACT_PATH.relative_to(BASE_DIR)}")
