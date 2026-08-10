@@ -195,9 +195,12 @@ function initSetupPage() {
       return;
     }
     tierBadge.hidden = false;
+    const proText = user.paid_grader && user.paid_grader !== "claude"
+      ? `Pro (${user.name}): AI grading by ${user.paid_grader}; ${user.paid_left_today} of ${user.paid_quota} Claude gradings left today ("Always Claude").`
+      : `Pro (${user.name}): ${user.paid_left_today} of ${user.paid_quota} Claude gradings left today.`;
     tierBadge.textContent = user.tier === "paid"
-      ? `Pro (${user.name}): ${user.paid_left_today} of ${user.paid_quota} Claude gradings left today.`
-      : "Free tier: instant local ML grading on course questions. Enter a paid key for Claude grading.";
+      ? proText
+      : "Free tier: instant local ML grading on course questions. Enter a paid key for AI grading.";
   }
 
   accessKey.value = sessionStorage.getItem(ACCESS_KEY_STORAGE) || "";
@@ -511,7 +514,10 @@ function renderEvaluation(container, result, elapsed) {
         <p class="eyebrow">Evaluation</p>
         <h3>Overall score: ${result.overall_score}/10</h3>
       </div>
-      <div class="time-chip">Answered in ${escapeHtml(elapsed)}</div>
+      <div class="chip-stack">
+        <div class="time-chip">Answered in ${escapeHtml(elapsed)}</div>
+        ${result.graded_by ? `<div class="time-chip grader-chip">Graded by ${escapeHtml(result.graded_by)}</div>` : ""}
+      </div>
     </div>
     <p>${escapeHtml(result.summary)}</p>
     <div class="score-row">

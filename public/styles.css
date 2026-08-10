@@ -418,6 +418,13 @@ textarea:focus {
   font-weight: 750;
 }
 
+.chip-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
 .time-chip {
   padding: 7px 10px;
   border: 1px solid rgba(47, 102, 179, 0.22);

@@ -20,18 +20,21 @@ the backend's file handler. It owns presentation and session flow — nothing el
   time from `GET /api/meta` — module names and chunk counts come from the server.
   An optional access-key field (stored in `sessionStorage`, sent as the
   `X-Access-Key` header on every API call) identifies paid users when the server
-  has tiers enabled; a badge under the field shows the current tier and
+  has tiers enabled; a badge under the field shows the current tier, the paid
+  tier's default judge (`meta.user.paid_grader`, e.g. DeepSeek Flash), and the
   remaining daily Claude quota, and stays hidden when `meta.user.tiers_enabled`
   is false. The frontend never decides the tier — it only reports what the
   server said.
 - **Interview page** (`interview.html`): render the question and guidance, run the
   elapsed timer with pause/resume, count words in the answer box, submit the
   answer, and render the evaluation (overall score, four subscores, summary,
-  strengths, gaps, suggested answer, next steps, follow-up question). Two
-  answer-box extras: a 🎤 voice-input button (browser Web Speech API,
-  client-side only — audio never reaches the server; the button hides itself
-  outside secure contexts) and an "Always Claude" checkbox that sends
-  `force_llm: true` to skip the smart cascade for that submission.
+  strengths, gaps, suggested answer, next steps, follow-up question, plus a
+  "Graded by" chip naming the model behind the score — the server's
+  `graded_by` field, never inferred client-side). Two answer-box extras: a 🎤
+  voice-input button (browser Web Speech API, client-side only — audio never
+  reaches the server; the button hides itself outside secure contexts) and an
+  "Always Claude" checkbox that sends `force_llm: true` to skip the smart
+  cascade and the DeepSeek workhorse, forcing a metered Claude evaluation.
 - **Session flow**: "Practice the follow-up" keeps the parent question, previous
   answer, and parent `chunk_id` so the backend can grade in context; "New
   question" accumulates served `chunk_id`s and sends them as `exclude` so

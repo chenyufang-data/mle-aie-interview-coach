@@ -143,10 +143,16 @@ With `users.json` present, requests are routed per user instead of per server:
 - **Free (no key, or unknown key)**: course-bank questions and instant grading
   by the distilled local model. Zero API cost, works offline.
 - **Paid (a key listed with `"tier": "paid"`, entered in the setup page's
-  access-key field)**: Claude-generated questions and Claude grading, capped at
-  `PAID_DAILY_QUOTA` LLM calls per day (default 30, question generation and
-  evaluation combined). When the quota runs out, grading degrades gracefully to
-  the local model — labeled as such — rather than failing.
+  access-key field)**: AI-generated questions and real LLM grading. With
+  `DEEPSEEK_API_KEY` in `.env`, the workhorse judge is DeepSeek V4 Flash —
+  quota-free at ~$0.0005 per evaluation, and measured before it shipped
+  (94% within-±1 agreement with the Claude teacher; see the judge table
+  below). Claude handles "Always Claude" requests, capped at
+  `PAID_DAILY_QUOTA` calls per day (default 30); a spent quota degrades to
+  Flash, and a failed Flash call degrades to the local model — labeled as
+  such — rather than failing. Without a DeepSeek key, the paid tier is
+  all-Claude under quota, as before. Every evaluation carries a "Graded by"
+  chip naming the model that scored it.
 
 **Smart cascade** (paid tier, `PAID_CASCADE=0` to disable): answers the
 distilled model grades reliably are served locally *without* spending quota.
@@ -281,6 +287,7 @@ spots (confidently-wrong answers: 100% within ±1 vs 67%; heavy paraphrase: 88 t
 100% vs 25%) — at roughly 1/200th of Opus-tier cost. Their weakness is score
 jitter: regrading the same answer reproduces the exact score only 53-57% of the
 time (vs Claude's 95%), and ~2.6% of calls returned malformed JSON (a retry
-handles it). Conclusion: V4-Flash qualifies as a runtime grading judge (e.g. a
-mid-tier between the free distilled grader and paid Claude), but Claude stays
-the distillation teacher — gold labels need the reproducibility.
+handles it). Conclusion — now shipped: V4-Flash is the paid tier's quota-free
+workhorse judge (see the tiers section above), but Claude stays the
+distillation teacher — gold labels need the reproducibility — and serves
+"Always Claude" requests under the daily quota.

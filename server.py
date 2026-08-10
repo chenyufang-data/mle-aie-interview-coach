@@ -142,7 +142,8 @@ TIERS_ENABLED = False
 _usage_lock = threading.Lock()
 
 # Smart cascade for paid users: answers the student grades reliably are served
-# locally without spending Claude quota. The rule is MEASURED, not guessed
+# locally without spending an LLM call (Claude quota, or a DeepSeek request
+# when that is the paid workhorse). The rule is MEASURED, not guessed
 # (grader/cascade_analysis.py, 121 held-out gold rows): routing only
 # clearly-below-rubric answers keeps ~12% of evaluations local at 100%
 # within-+/-1 teacher agreement (MAE 0.48). The tempting high-score route
@@ -158,6 +159,22 @@ CASCADE_FRAC_HIT_MAX = 0.25
 MODE = "claude"
 OLLAMA_MODEL = "llama3.2"
 OLLAMA_URL = "http://127.0.0.1:11434/api/chat"
+
+# Paid-tier workhorse judge (tiered Claude mode only). With DEEPSEEK_API_KEY
+# in .env, paid evaluations default to DeepSeek V4 Flash - measured against
+# the Claude teacher on the 121 held-out gold rows (grader/judge_agreement.py):
+# 94% within-+/-1, QWK 0.93, at ~1/200th of Opus-tier cost. Claude remains the
+# distillation teacher and serves "Always Claude" requests under the daily
+# quota. Without the key, paid routing behaves exactly as before (all Claude).
+DEEPSEEK_URL = "https://api.deepseek.com/chat/completions"
+
+
+def deepseek_model():
+    return os.environ.get("DEEPSEEK_MODEL", "deepseek-v4-flash")
+
+
+def deepseek_available():
+    return MODE == "claude" and bool(os.environ.get("DEEPSEEK_API_KEY"))
 
 _client = None
 
@@ -197,17 +214,22 @@ def load_chunks():
         CHUNKS_BY_ID.update({chunk["id"]: chunk for chunk in chunks})
 
 
-def log_real_session(data, result, user=None):
-    """Persist a real graded exchange. Local file only; never breaks a response."""
+def log_real_session(data, result, user=None, engine=None):
+    """Persist a real graded exchange. Local file only; never breaks a response.
+
+    graded_by matters downstream: grader/evaluate_on_real.py keeps only
+    "claude" rows as gold pairs, so DeepSeek-graded sessions never leak into
+    the teacher-agreement evaluation.
+    """
     if user is not None and not user.get("log", True):
         return
     try:
+        engine = engine or MODE
         record = {
             "timestamp": datetime.now().isoformat(timespec="seconds"),
             "user": (user or {}).get("name", "anonymous"),
-            "graded_by": MODE,
-            "model": (os.environ.get("ANTHROPIC_MODEL", DEFAULT_MODEL)
-                      if MODE == "claude" else OLLAMA_MODEL),
+            "graded_by": engine,
+            "model": engine_model(engine),
             "role": data.get("role"),
             "level": data.get("level"),
             "topic": data.get("topic"),
@@ -329,23 +351,35 @@ def quota_take(user):
     return True
 
 
-def grading_route(user):
-    """Decide whether this request may spend an LLM call.
+def grading_route(user, force_llm=False):
+    """Decide which grading engine this request gets.
 
-    Returns (use_llm, reason); reason says why a request routed local:
-    "mock" (dev mode), "free" (no paid key), "quota" (paid but spent today).
+    Returns (engine, reason). engine is "claude", "deepseek", "ollama", or
+    "local"; reason says why a request routed local: "mock" (dev mode),
+    "free" (no paid key), "quota" (paid but spent today, no DeepSeek key).
+
+    Paid routing: DeepSeek Flash is the quota-free default workhorse
+    (measured judge, see grader/judge_agreement.py); Claude serves
+    force_llm ("Always Claude") requests and takes quota; an exhausted
+    Claude quota degrades to DeepSeek, and only to the local grader when
+    no DEEPSEEK_API_KEY is configured. Without users.json (single-user
+    setup) everything grades with Claude, as before.
     """
     if MODE == "mock":
-        return False, "mock"
+        return "local", "mock"
     if MODE == "ollama":
-        return True, None
+        return "ollama", None
     if not TIERS_ENABLED:
-        return True, None  # tiers disabled: single-user setup grades with Claude
+        return "claude", None  # tiers disabled: single-user setup
     if user["tier"] != "paid":
-        return False, "free"
-    if not quota_take(user):
-        return False, "quota"
-    return True, None
+        return "local", "free"
+    if not force_llm and deepseek_available():
+        return "deepseek", None
+    if quota_take(user):
+        return "claude", None
+    if deepseek_available():
+        return "deepseek", None  # Claude quota spent: degrade to Flash
+    return "local", "quota"
 
 
 def get_api_key():
@@ -413,10 +447,62 @@ def call_ollama(user_prompt, schema):
     return json.loads(content)
 
 
-def call_model(user_prompt, schema):
-    if MODE == "ollama":
+def call_deepseek(user_prompt, schema):
+    """Grade with DeepSeek via its OpenAI-compatible API.
+
+    Two quirks verified by grader/judge_agreement.py: DeepSeek's
+    Anthropic-compat endpoint silently ignores output_config, so the schema
+    rides in the prompt instead; and ~3% of json_object responses arrive as
+    malformed JSON, so one parse-retry before giving up.
+    """
+    payload = {
+        "model": deepseek_model(),
+        "messages": [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": user_prompt
+             + "\n\nRespond with ONLY a JSON object matching this JSON schema:\n"
+             + json.dumps(schema)},
+        ],
+        "response_format": {"type": "json_object"},
+        "max_tokens": 8000,
+        "temperature": 0,
+    }
+    last_error = None
+    for _attempt in range(2):
+        req = urlrequest.Request(
+            DEEPSEEK_URL,
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json",
+                     "Authorization": f"Bearer {os.environ['DEEPSEEK_API_KEY']}"},
+            method="POST",
+        )
+        try:
+            with urlrequest.urlopen(req, timeout=300) as response:
+                body = json.loads(response.read().decode("utf-8"))
+        except urlerror.URLError as exc:
+            raise RuntimeError(f"Could not reach the DeepSeek API ({exc})") from exc
+        try:
+            return json.loads(body["choices"][0]["message"]["content"])
+        except (KeyError, IndexError, ValueError) as exc:
+            last_error = exc
+    raise RuntimeError(f"DeepSeek returned malformed JSON twice ({last_error})")
+
+
+def call_model(user_prompt, schema, engine):
+    if engine == "ollama":
         return call_ollama(user_prompt, schema)
+    if engine == "deepseek":
+        return call_deepseek(user_prompt, schema)
     return call_claude(user_prompt, schema)
+
+
+def engine_model(engine):
+    """Human-readable model name behind a grading engine, for logs and UI."""
+    return {
+        "claude": os.environ.get("ANTHROPIC_MODEL", DEFAULT_MODEL),
+        "ollama": OLLAMA_MODEL,
+        "deepseek": deepseek_model(),
+    }.get(engine, "local")
 
 
 def clamp_score(value):
@@ -433,6 +519,11 @@ LOCAL_GRADING_LABELS = {
         "This answer clearly misses the rubric, so the local grader handled it "
         "and no Claude quota was spent. Tick 'Always Claude' to force the full "
         "evaluation.",
+    ),
+    "llm_error": (
+        "Grading service unavailable",
+        "The DeepSeek grading call failed, so the local grader stepped in. "
+        "Submit again, or tick 'Always Claude' to grade with Claude instead.",
     ),
 }
 
@@ -492,6 +583,8 @@ def mock_evaluation(data, chunk, reason="mock"):
                 f"{len(interview['key_points'])} rubric key points in your answer. {hint}"
             )
         return {
+            "graded_by": (f"local ML grader ({GRADER['model_name']})"
+                          if GRADER is not None else "local keyword matching"),
             "overall_score": overall,
             "scores": predicted_scores or {
                 "technical_depth": overall,
@@ -518,6 +611,7 @@ def mock_evaluation(data, chunk, reason="mock"):
 
     overall = clamp_score(3 + min(4, word_count // 40))
     return {
+        "graded_by": "local length heuristic (no rubric)",
         "overall_score": overall,
         "scores": {
             "technical_depth": overall,
@@ -693,6 +787,10 @@ class InterviewCoachHandler(BaseHTTPRequestHandler):
                     "tiers_enabled": TIERS_ENABLED and MODE == "claude",
                     "paid_quota": PAID_DAILY_QUOTA,
                     "paid_left_today": quota_left(user),
+                    # Paid tier's default (quota-free) judge; "claude" means
+                    # no DeepSeek key is configured and quota meters everything.
+                    "paid_grader": (deepseek_model() if deepseek_available()
+                                    else "claude"),
                 },
             })
             return
@@ -729,23 +827,30 @@ class InterviewCoachHandler(BaseHTTPRequestHandler):
                     )
                     json_response(self, 200, kb_question_payload(chunk))
                     return
-                use_llm, _ = grading_route(resolve_user(self))
-                if not use_llm:
-                    # Local route (mock mode, free tier, or spent quota): serve a
-                    # knowledge-base question relevant to the chosen general
-                    # topic instead of spending an LLM call.
-                    chunk = select_chunk(
-                        data.get("role", "MLE"),
-                        "Any course topic",
-                        data.get("level", ""),
-                        f"{data.get('topic', '')} {data.get('focus', '')}".strip(),
-                        set(data.get("exclude") or []),
-                    )
-                    json_response(self, 200, kb_question_payload(chunk))
-                    return
-                result = call_model(build_question_prompt(data), QUESTION_SCHEMA)
-                result["source"] = "ai"
-                json_response(self, 200, result)
+                engine, _ = grading_route(resolve_user(self))
+                if engine != "local":
+                    try:
+                        result = call_model(build_question_prompt(data),
+                                            QUESTION_SCHEMA, engine)
+                        result["source"] = "ai"
+                        json_response(self, 200, result)
+                        return
+                    except Exception:
+                        if engine != "deepseek":
+                            raise
+                        # DeepSeek unreachable: fall through to the KB serve
+                        # rather than surprise-spending Claude credits.
+                # Local route (mock mode, free tier, or spent quota): serve a
+                # knowledge-base question relevant to the chosen general
+                # topic instead of spending an LLM call.
+                chunk = select_chunk(
+                    data.get("role", "MLE"),
+                    "Any course topic",
+                    data.get("level", ""),
+                    f"{data.get('topic', '')} {data.get('focus', '')}".strip(),
+                    set(data.get("exclude") or []),
+                )
+                json_response(self, 200, kb_question_payload(chunk))
                 return
 
             if self.path == "/api/evaluate":
@@ -765,23 +870,33 @@ class InterviewCoachHandler(BaseHTTPRequestHandler):
                         and cascade_confident(data.get("answer", ""), chunk)):
                     json_response(self, 200, mock_evaluation(data, chunk, "cascade"))
                     return
-                use_llm, reason = grading_route(user)
-                if not use_llm:
-                    # A follow-up has no rubric of its own; keyword-matching the
-                    # parent chunk's key points against it would mis-grade.
-                    local_chunk = None if data.get("source") == "followup" else chunk
-                    result = mock_evaluation(data, local_chunk, reason)
-                    if MODE == "claude":
-                        # Tiered deployment (not --mock dev mode): collect the
-                        # free-tier answer unlabeled for future teacher labeling.
-                        log_free_session(data, result, user, reason)
-                    json_response(self, 200, result)
-                    return
-                result = call_model(
-                    build_evaluation_prompt(data, chunk),
-                    EVALUATION_SCHEMA,
-                )
-                log_real_session(data, result, user)
+                engine, reason = grading_route(
+                    user, force_llm=bool(data.get("force_llm")))
+                if engine != "local":
+                    try:
+                        result = call_model(
+                            build_evaluation_prompt(data, chunk),
+                            EVALUATION_SCHEMA, engine,
+                        )
+                    except Exception:
+                        if engine != "deepseek":
+                            raise
+                        # DeepSeek down or malformed twice: degrade to the
+                        # local grader rather than surprise-spending Claude.
+                        engine, reason = "local", "llm_error"
+                    else:
+                        result["graded_by"] = engine_model(engine)
+                        log_real_session(data, result, user, engine)
+                        json_response(self, 200, result)
+                        return
+                # A follow-up has no rubric of its own; keyword-matching the
+                # parent chunk's key points against it would mis-grade.
+                local_chunk = None if data.get("source") == "followup" else chunk
+                result = mock_evaluation(data, local_chunk, reason)
+                if MODE == "claude":
+                    # Tiered deployment (not --mock dev mode): collect the
+                    # free-tier answer unlabeled for future teacher labeling.
+                    log_free_session(data, result, user, reason)
                 json_response(self, 200, result)
                 return
 
@@ -868,6 +983,13 @@ def main():
             print(
                 f"Tiers: ON - {paid} paid key(s), {PAID_DAILY_QUOTA} Claude calls/day each; "
                 f"free tier grades with the local model ({brain})."
+            )
+            print(
+                "Paid workhorse: "
+                + (f"{deepseek_model()} (quota-free; Claude on 'Always Claude')."
+                   if deepseek_available()
+                   else "Claude only (set DEEPSEEK_API_KEY in .env to add the "
+                        "measured DeepSeek judge).")
             )
             print(
                 "Cascade: "
