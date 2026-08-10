@@ -261,3 +261,26 @@ the honest one. The third check is real usage: every real (non-mock) graded
 session is logged to `grader/real_sessions.jsonl` (kept out of git), and
 `grader/evaluate_on_real.py` reports Claude-vs-local agreement on your actual
 answers as they accumulate.
+
+### Could a cheaper judge replace Claude? (measured)
+
+`grader/judge_agreement.py` re-grades the same 121 held-out gold rows through
+the same evaluation prompt with candidate judge models (DeepSeek V4, via their
+OpenAI-compatible API — needs `DEEPSEEK_API_KEY` in `.env`; ~$0.35, dry-run by
+default, `--confirm` to spend). August 2026 results:
+
+| Judge | MAE | within ±1 | QWK | regrade consistency (exact) |
+| --- | --- | --- | --- | --- |
+| Distilled student | 1.11 | 70% | 0.78 | deterministic |
+| deepseek-v4-flash | 0.59 | **94%** | 0.93 | 57% |
+| deepseek-v4-pro | 0.57 | **96%** | 0.93 | 53% |
+
+Both V4 judges track the Claude teacher about as closely as the teacher tracks
+itself (95% exact on regrade), and they fix the distilled model's known blind
+spots (confidently-wrong answers: 100% within ±1 vs 67%; heavy paraphrase: 88 to
+100% vs 25%) — at roughly 1/200th of Opus-tier cost. Their weakness is score
+jitter: regrading the same answer reproduces the exact score only 53-57% of the
+time (vs Claude's 95%), and ~2.6% of calls returned malformed JSON (a retry
+handles it). Conclusion: V4-Flash qualifies as a runtime grading judge (e.g. a
+mid-tier between the free distilled grader and paid Claude), but Claude stays
+the distillation teacher — gold labels need the reproducibility.
