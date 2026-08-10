@@ -258,8 +258,30 @@ The teacher itself is near-deterministic (95% exact agreement when regrading
 the same answers), so the remaining gap is real model error, not label noise.
 Known limitation, also measured on the gold set: lexical features judge whether
 an answer covers the right points, not whether its claims are true —
-confidently-wrong answers are the hardest tier, and semantic (embedding)
-features are the planned fix.
+confidently-wrong answers are the hardest tier. The per-key-point distillation
+below is the first bite at that gap.
+
+### Per-key-point distillation (dense supervision)
+
+Overall scores cannot teach the student *which* rubric point it misjudged, so
+`grader/label_keypoints.py` asks the teacher for a hit / partial / miss verdict
+on every rubric key point of every gold-labeled row (598 rows × ~5 points, ~$8;
+one call returns a whole row's verdicts). The labels are themselves
+quality-measured: on a 25-row regrade, 95% exact verdict agreement and **zero**
+hard hit↔miss flips. `train.py` distills them into a per-key-point classifier
+that replaces the fixed 0.35 lexical threshold behind the hit/miss feedback
+lists the app shows (601 held-out labeled points):
+
+| Hit/miss judge | 3-class acc | macro-F1 | hit-F1 |
+| --- | --- | --- | --- |
+| Lexical threshold (0.35/0.6) | 70% | 0.62 | 0.76 |
+| Distilled kp classifier | **78%** | **0.67** | **0.87** |
+
+Honest negative result, same experiment: a stacked overall model fed the
+classifier's coverage aggregates did **not** improve gold agreement (MAE 1.10
+vs 1.11, QWK 0.770 vs 0.784), so `train.py`'s ship-gate declines it and the
+plain model keeps scoring. The dense labels earn their keep in the
+*explanations* — which points you hit, which you only brushed — not the number.
 
 The construction-label metrics `train.py` prints are optimistic (those labels
 partly share signal with the features); the gold-label section of its output is

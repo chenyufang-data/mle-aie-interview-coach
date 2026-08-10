@@ -64,7 +64,11 @@ grading. It knows nothing about presentation.
 - Evaluation: grade against the chunk's rubric (model answer, key points, common
   mistakes) with structured outputs; grade follow-ups with the parent question,
   previous answer, and course material as context (rubric as background, not as a
-  checklist). In `--mock` mode, predict with the distilled local grader.
+  checklist). In `--mock` mode, predict with the distilled local grader; its
+  hit/miss rubric feedback uses a per-key-point classifier distilled from
+  teacher hit/partial/miss verdicts when the artifact carries one
+  (`grader/label_keypoints.py` + `train.py`), with the 0.35 lexical threshold
+  as fallback.
 - Log every real (non-mock) graded session to `grader/real_sessions.jsonl` —
   these Claude-vs-local gold pairs feed `grader/evaluate_on_real.py`. Logging
   must never break the response (best-effort, wrapped in try/except).

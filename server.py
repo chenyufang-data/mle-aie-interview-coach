@@ -547,14 +547,41 @@ def mock_evaluation(data, chunk, reason="mock"):
     if chunk:
         interview = chunk["interview"]
         if GRADER is not None:
-            # Distilled grader: trained model predicts the score; per-key-point
-            # coverage from its feature extractor drives the hit/miss lists.
+            # Distilled grader: trained model predicts the score. The hit/miss
+            # lists come from the semantic key-point classifier when the
+            # artifact has one (trained on teacher hit/partial/miss verdicts;
+            # judges meaning), falling back to the 0.35 lexical threshold.
             extractor = GRADER["extractor"]
-            coverage_scores = extractor.key_point_coverage(answer, chunk)
-            hits = [p for p, c in zip(interview["key_points"], coverage_scores) if c >= 0.35]
-            misses = [p for p, c in zip(interview["key_points"], coverage_scores) if c < 0.35]
+            key_points = interview["key_points"]
+            kp_clf = GRADER.get("kp_classifier")
+            kp_feats = (extractor.keypoint_features(answer, chunk)
+                        if kp_clf is not None else None)
+            partials = []
+            if kp_feats:
+                verdicts = list(kp_clf.predict(kp_feats))
+                hits = [p for p, v in zip(key_points, verdicts) if v == "hit"]
+                partials = [p for p, v in zip(key_points, verdicts) if v == "partial"]
+                misses = [p for p, v in zip(key_points, verdicts) if v == "miss"]
+            else:
+                coverage_scores = extractor.key_point_coverage(answer, chunk)
+                hits = [p for p, c in zip(key_points, coverage_scores) if c >= 0.35]
+                misses = [p for p, c in zip(key_points, coverage_scores) if c < 0.35]
             feats = [extractor.extract(answer, chunk)]
-            predicted = GRADER["model"].predict(feats)[0]
+            stacked = GRADER.get("stacked_model")
+            if stacked is not None and kp_feats:
+                # Stacked scorer: base features + the classifier's coverage
+                # aggregates. The cascade keeps the plain model - its
+                # thresholds were measured against it.
+                classes = list(kp_clf.classes_)
+                hit_col = classes.index("hit")
+                proba = kp_clf.predict_proba(kp_feats)
+                agg = [len(hits) / len(key_points),
+                       len(partials) / len(key_points),
+                       float(proba[:, hit_col].mean()),
+                       float(proba[:, hit_col].min())]
+                predicted = stacked.predict([feats[0] + agg])[0]
+            else:
+                predicted = GRADER["model"].predict(feats)[0]
             overall = clamp_score(round(predicted))
             # Subscores from the dedicated multi-output models when the
             # artifact has them (each beats overall-as-proxy on gold rows).
@@ -571,7 +598,7 @@ def mock_evaluation(data, chunk, reason="mock"):
             )
         else:
             predicted_scores = None
-            hits, misses = [], []
+            hits, misses, partials = [], [], []
             for point in interview["key_points"]:
                 point_tokens = set(tokenize(point))
                 overlap = len(point_tokens & answer_tokens) / max(1, len(point_tokens))
@@ -598,8 +625,9 @@ def mock_evaluation(data, chunk, reason="mock"):
                 or ["You submitted an answer; no rubric key points were detected by keyword matching."]
             ),
             "gaps": (
-                [f"Missed rubric point: {point}" for point in misses[:4]]
-                or ["No rubric gaps detected by keyword matching - compare with the model answer to be sure."]
+                ([f"Missed rubric point: {point}" for point in misses]
+                 + [f"Only partially covered: {point}" for point in partials])[:4]
+                or ["No rubric gaps detected - compare with the model answer to be sure."]
             ),
             "suggested_answer": interview["model_answer"],
             "next_steps": (

@@ -64,6 +64,23 @@ FEATURE_NAMES = [
     "punct_density",
 ]
 
+# Per-(answer, key point) features for the semantic coverage classifier
+# trained on the teacher's hit/partial/miss verdicts (labels_keypoints.jsonl).
+# Both lexical channels are exposed separately: a large char-vs-token gap is
+# itself a paraphrase signal the combined max hides.
+KP_FEATURE_NAMES = [
+    "token_overlap",
+    "char_cosine",
+    "cover_best",
+    "cover_rank_norm",
+    "kp_tokens_log",
+    "kp_idf_mean",
+    "others_cover_mean",
+    "word_count_log",
+    "mistake_sim_max",
+    "question_echo",
+]
+
 
 def split_sentences(text):
     return [part.strip() for part in SENTENCE_SPLIT.split(text) if len(part.strip()) >= 3]
@@ -143,6 +160,56 @@ class FeatureExtractor:
             max(self._best_match(point, sentence_token_sets, answer_tokens), float(char_sim))
             for point, char_sim in zip(key_points, char_best)
         ]
+
+    def keypoint_features(self, answer, chunk):
+        """One vector per rubric key point, aligned with KP_FEATURE_NAMES."""
+        interview = chunk["interview"]
+        key_points = interview["key_points"]
+        if not key_points:
+            return []
+        answer_tokens = set(grader_tokens(answer))
+        sentences = split_sentences(answer)
+        sentence_token_sets = [set(grader_tokens(s)) for s in sentences]
+        sent_matrix = self._char_vec.transform((sentences or [answer]) + [answer])
+        kp_matrix = self._char_vec.transform(key_points)
+        char_best = cosine_similarity(kp_matrix, sent_matrix).max(axis=1)
+        token_best = [
+            self._best_match(point, sentence_token_sets, answer_tokens)
+            for point in key_points
+        ]
+        cover = [max(t, float(c)) for t, c in zip(token_best, char_best)]
+
+        # Rank of each point's coverage within this answer (0 = best covered).
+        order = sorted(range(len(cover)), key=lambda i: -cover[i])
+        rank_norm = [0.0] * len(cover)
+        for rank, idx in enumerate(order):
+            rank_norm[idx] = rank / max(1, len(cover) - 1)
+
+        mistake_max = max(
+            (self._best_match(m, sentence_token_sets, answer_tokens)
+             for m in interview["common_mistakes"]), default=0.0)
+        echo = self._weighted_overlap(
+            set(grader_tokens(interview["question"])), answer_tokens)
+        wc_log = math.log(1 + len(answer.split()))
+
+        rows = []
+        for i, point in enumerate(key_points):
+            target = set(grader_tokens(point))
+            idf_vals = [self._idf.get(t, self._median_idf) for t in target]
+            others = [c for j, c in enumerate(cover) if j != i]
+            rows.append([
+                token_best[i],
+                float(char_best[i]),
+                cover[i],
+                rank_norm[i],
+                math.log(1 + len(target)),
+                (sum(idf_vals) / len(idf_vals)) if idf_vals else 0.0,
+                (sum(others) / len(others)) if others else cover[i],
+                wc_log,
+                mistake_max,
+                echo,
+            ])
+        return rows
 
     def extract(self, answer, chunk):
         """Feature vector aligned with FEATURE_NAMES."""

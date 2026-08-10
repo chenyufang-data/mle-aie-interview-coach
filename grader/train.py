@@ -28,21 +28,24 @@ sys.path.insert(0, str(BASE_DIR))
 import joblib
 import numpy as np
 from scipy.stats import spearmanr
-from sklearn.ensemble import HistGradientBoostingRegressor
+from sklearn.ensemble import HistGradientBoostingClassifier, HistGradientBoostingRegressor
 from sklearn.linear_model import Ridge
-from sklearn.metrics import cohen_kappa_score, mean_absolute_error
+from sklearn.metrics import cohen_kappa_score, f1_score, mean_absolute_error
 from sklearn.model_selection import GroupShuffleSplit
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
-from grader.features import FEATURE_NAMES, FeatureExtractor
+from grader.features import FEATURE_NAMES, KP_FEATURE_NAMES, FeatureExtractor
 
 CORPORA = {"ml": "rag_ml", "ai": "rag_ai"}
 DATASET_PATH = BASE_DIR / "grader" / "dataset.jsonl"
 TEACHER_PATH = BASE_DIR / "grader" / "labels_teacher.jsonl"
+KEYPOINTS_PATH = BASE_DIR / "grader" / "labels_keypoints.jsonl"
 ARTIFACT_PATH = BASE_DIR / "grader" / "model.joblib"
 TEACHER_WEIGHT = 3.0
 SUBSCORE_NAMES = ("technical_depth", "structure", "practical_judgment", "communication")
+KP_AGG_NAMES = ("kp_pred_frac_hit", "kp_pred_frac_partial",
+                "kp_pred_phit_mean", "kp_pred_phit_min")
 
 
 def clip_scores(values):
@@ -96,11 +99,12 @@ def main():
 
     extractor = FeatureExtractor().fit(chunks_by_id.values())
 
-    X, y, groups, weights, sources, row_ids = [], [], [], [], [], []
+    X, y, groups, weights, sources, row_ids, kept = [], [], [], [], [], [], []
     for row in rows:
         chunk = chunks_by_id.get(row["chunk_id"])
         if chunk is None:
             continue
+        kept.append(row)
         row_ids.append(row["row_id"])
         X.append(extractor.extract(row["answer"], chunk))
         if row["row_id"] in teacher:
@@ -186,6 +190,106 @@ def main():
             sub_metrics[name] = {"mae": mae_model, "mae_overall_proxy": mae_proxy}
             print(f"  {name:20s} MAE {mae_model:.2f}  (overall-as-proxy {mae_proxy:.2f})")
 
+    # Per-key-point semantic coverage classifier, trained on the teacher's
+    # hit/partial/miss verdicts (grader/label_keypoints.py). It replaces the
+    # fixed 0.35 lexical threshold behind the hit/miss lists, and its per-row
+    # aggregates feed a stacked overall model. Both must beat their baseline
+    # on the held-out gold rows to ship.
+    kp_classifier = kp_metrics = stacked_model = stacked_metrics = None
+    if KEYPOINTS_PATH.exists():
+        kp_labels = {}
+        with KEYPOINTS_PATH.open(encoding="utf-8") as handle:
+            for line in handle:
+                if line.strip():
+                    record = json.loads(line)
+                    if record.get("pass", "main") == "main":
+                        kp_labels[record["row_id"]] = record["verdicts"]
+
+        train_set, test_set = set(train_idx), set(test_idx)
+        kp_train, kp_test = ([], []), ([], [])
+        for i, row in enumerate(kept):
+            verdicts = kp_labels.get(row["row_id"])
+            chunk = chunks_by_id[row["chunk_id"]]
+            if not verdicts or len(verdicts) != len(chunk["interview"]["key_points"]):
+                continue
+            side = kp_train if i in train_set else kp_test if i in test_set else None
+            if side is None:
+                continue
+            for feats, verdict in zip(
+                    extractor.keypoint_features(row["answer"], chunk), verdicts):
+                side[0].append(feats)
+                side[1].append(verdict)
+
+        if len(kp_train[0]) >= 500 and len(kp_test[0]) >= 100:
+            kp_classifier = HistGradientBoostingClassifier(
+                max_iter=300, learning_rate=0.06, max_leaf_nodes=31,
+                l2_regularization=1.0, random_state=42,
+            )
+            kp_classifier.fit(np.array(kp_train[0]), np.array(kp_train[1]))
+            kp_X_test = np.array(kp_test[0])
+            kp_truth = np.array(kp_test[1])
+            kp_pred = kp_classifier.predict(kp_X_test)
+            cover = kp_X_test[:, KP_FEATURE_NAMES.index("cover_best")]
+            base_pred = np.where(cover >= 0.6, "hit",
+                                 np.where(cover >= 0.35, "partial", "miss"))
+
+            def kp_eval(pred):
+                return {
+                    "acc3": float(np.mean(pred == kp_truth)),
+                    "macro_f1": float(f1_score(kp_truth, pred, average="macro")),
+                    "hit_f1": float(f1_score(kp_truth == "hit", pred == "hit")),
+                }
+
+            kp_metrics = {"classifier": kp_eval(kp_pred),
+                          "lexical_threshold": kp_eval(base_pred),
+                          "n_train": len(kp_train[0]), "n_test": len(kp_test[0])}
+            print(f"\nKey-point coverage ({kp_metrics['n_train']} labeled points "
+                  f"train / {kp_metrics['n_test']} held-out):")
+            for name in ("classifier", "lexical_threshold"):
+                m = kp_metrics[name]
+                print(f"  {name:18s} 3-class acc {m['acc3']:4.0%}  "
+                      f"macro-F1 {m['macro_f1']:.2f}  hit-F1 {m['hit_f1']:.2f}")
+
+            # Stacked overall model: base features + the classifier's per-row
+            # coverage aggregates. Gold rows decide whether it replaces the
+            # plain model for scoring (the cascade keeps the plain model - its
+            # thresholds were measured against it).
+            classes = list(kp_classifier.classes_)
+            hit_col = classes.index("hit")
+            agg = np.zeros((len(kept), len(KP_AGG_NAMES)))
+            for i, row in enumerate(kept):
+                feats = extractor.keypoint_features(
+                    row["answer"], chunks_by_id[row["chunk_id"]])
+                if not feats:
+                    continue
+                proba = kp_classifier.predict_proba(np.array(feats))
+                pred = np.array(classes)[np.argmax(proba, axis=1)]
+                agg[i] = [float(np.mean(pred == "hit")),
+                          float(np.mean(pred == "partial")),
+                          float(proba[:, hit_col].mean()),
+                          float(proba[:, hit_col].min())]
+            X_ext = np.hstack([X, agg])
+            stacked = HistGradientBoostingRegressor(
+                max_iter=300, learning_rate=0.06, max_leaf_nodes=31,
+                l2_regularization=1.0, random_state=42,
+            )
+            stacked.fit(X_ext[train_idx], y[train_idx],
+                        sample_weight=weights[train_idx])
+            if len(gold_idx):
+                plain_gold = gold_results[best_name]
+                stacked_gold = metrics(y[gold_idx], stacked.predict(X_ext[gold_idx]))
+                print(f"\nStacked overall model (gold rows): "
+                      f"MAE {stacked_gold['mae']:.2f} vs {plain_gold['mae']:.2f}, "
+                      f"within+/-1 {stacked_gold['within1']:.0%} vs {plain_gold['within1']:.0%}, "
+                      f"QWK {stacked_gold['qwk']:.3f} vs {plain_gold['qwk']:.3f}")
+                stacked_metrics = {"gold": stacked_gold, "gold_plain": plain_gold}
+                if (stacked_gold["within1"] + stacked_gold["qwk"]
+                        > plain_gold["within1"] + plain_gold["qwk"]):
+                    stacked_model = stacked
+                    print("  -> stacked model SHIPS (scores the UI; cascade keeps the plain model).")
+                else:
+                    print("  -> stacked model does NOT ship (no gold improvement).")
+
     artifact = {
         "model": fitted[best_name],
         "model_name": best_name,
@@ -198,6 +302,12 @@ def main():
         "label_sources": dict(Counter(sources)),
         "subscore_models": sub_models or None,
         "subscore_metrics": sub_metrics or None,
+        "kp_classifier": kp_classifier,
+        "kp_feature_names": KP_FEATURE_NAMES,
+        "kp_metrics": kp_metrics,
+        "kp_agg_names": KP_AGG_NAMES,
+        "stacked_model": stacked_model,
+        "stacked_metrics": stacked_metrics,
     }
     joblib.dump(artifact, ARTIFACT_PATH)
     print(f"\nSaved {best_name} to {ARTIFACT_PATH.relative_to(BASE_DIR)}")
