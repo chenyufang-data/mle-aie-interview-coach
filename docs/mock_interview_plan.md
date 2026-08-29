@@ -338,9 +338,49 @@ rarity in general English. Multi-word terms count once but must fit 20
 characters, so canonical short forms are kept in the lexicon. The policy is
 itself evaluated in Phase 0 (condition 5 vs a naive "first 50" baseline).
 
-**Hidden interview plan** (once, at start): `{role, project, opening,
-probe_targets: [5–8 technical points from the project + role themes],
-rubric_chunks: [...], behavioral_targets, wander_budget, max_turns}`. **Phase machine** enforced in code: warm-up (1) →
+### 7b. Job-description-driven interviewer and the 面经 question bank
+
+Scope decision (2026-08-29): the mock focuses on the **experience / project
+deep-dive round**. Two inputs make it specific to a real target:
+
+**The job description → the interviewer.** A pasted JD is turned by the LLM
+into a structured *role profile*: `{title, level, domain, must_have_skills,
+responsibilities, stack, what_they_evaluate}`. That profile (a) writes the
+interviewer's persona prompt — what this team cares about, which of your
+projects matter to them, the seniority bar; (b) supplies the probe themes;
+(c) seeds the per-session keyterms. Without a JD, the role picker (§7a)
+plays the same part from the resume alone.
+
+**A third question bank from 面经.** Real interview-experience posts
+(一亩三分地 and similar) hand-collected by the user — no crawler — become
+`rag_exp/`, a bank in the same chunk schema the app already serves
+(`id / interview{question, model_answer, key_points, common_mistakes,
+followups} / metadata{company, role_family, round, date, language, source}`).
+Ingest pipeline `grader/ingest_questions.py`: paste file → normalize and
+translate (questions in English for the interview, original text kept) →
+dedupe against all banks by BM25 → **rubric generation with the Claude
+teacher** (key points, model answer, follow-ups — the part 面经 posts never
+contain, and the part grading depends on) → tag `round` (experience /
+technical discussion / behavioral / coding / system design) so the mock
+retrieves only rounds it simulates. Raw pastes stay local and gitignored;
+the bank stores rephrased questions and generated rubrics.
+
+**Retrieval at deep-dive time**: query = role-profile keywords + chosen
+project keywords + the last answer; metadata filter by round (and company
+when the JD names one and the bank has it); BM25 top-k → the interviewer
+chooses adaptively (drill vs move on) → the chunk's rubric grades the answer.
+Probes that come from a bank are marked *rubric-grounded* in the report;
+probes generated from the resume alone are graded against an on-the-fly
+rubric written at plan time (§8a).
+
+Cost: rubric generation ≈ $3–5 per 100 questions with the teacher; retrieval
+is free. Quality filter: 面经 mixes coding and design rounds — those are
+tagged and excluded here, not deleted.
+
+**Hidden interview plan** (once, at start): `{role_profile, project,
+opening, probe_targets: [5–8 technical points from the project + role
+themes], rubric_chunks: [...], on_the_fly_rubrics: {...}, behavioral_targets,
+wander_budget, max_turns}`. **Phase machine** enforced in code: warm-up (1) →
 walkthrough (1) → deep dive (4–6, adaptive) → behavioral (1–2) → closing (1)
 → done. The model chooses content within the phase: follow up on a weakness
 in the last answer or move to the next unprobed target — one question only.
@@ -377,6 +417,42 @@ last-user-audio → first-agent-audio measurement.
   what_was_missing, stronger_answer, score}`; red flags that **quote** the
   candidate; keep-doing; top three actions. Rubric tie-in (P3): Q&A pairs in
   the supplied material act as key points for matching probes.
+
+### 8a. The grading rubric
+
+Two levels, mirroring how a real hiring scorecard works.
+
+**Level A — per question (content).** Every probe carries a rubric: from
+the bank chunk when retrieved (§7b), otherwise written at plan time from the
+resume — the *expected specifics* for that probe: the decision, the
+alternative considered, the metric and its value, the outcome, the lesson.
+Each key point is judged **hit / partial / miss** on meaning (the same
+verdict scheme the app's grader was distilled on), with `common_mistakes`
+checked against the answer → a 1–10 question score and the
+good / missing / stronger-answer lines in the report.
+
+**Level B — session scorecard**, six dimensions scored 1–10 with anchors,
+each justification required to quote the transcript:
+
+| Dimension | 3 looks like | 6 looks like | 9 looks like |
+| --- | --- | --- | --- |
+| Technical depth | buzzwords, no mechanism | correct but stays at "what" | precise "why", trade-offs, limits |
+| Ownership & specificity | "we did", no numbers | own role clear, some numbers | "I decided X because Y", concrete figures, honest about others' parts |
+| Structure | wanders, answers a different question | mostly context → action → result | tight STAR, answers exactly what was asked |
+| Communication clarity | undefined jargon, lost thread | understandable with effort | a smart non-expert follows it |
+| Concision & time management | 3-minute answers to 30-second questions | mostly proportionate | proportionate; computed metrics corroborate |
+| Reflection | no failures, nothing to change | names a problem | what failed, what was learned, what would be done differently |
+
+Plus **red flags** (contradictions between answers, claims that dissolve
+under follow-up, inability to explain one's own resume line, blame-shifting)
+and a hiring-committee style **overall call** — *strong hire / hire / lean
+no / no* — with the two sentences an interviewer would actually write.
+
+Honesty about validity: unlike the course grader there is no gold label for
+"a good mock-interview answer". What can be measured is *consistency*
+(regrade the same session; the app's teacher regrades at 95%) and the
+rubric-grounded share of probes; validity is ultimately judged by the user
+against real interview outcomes.
 
 ## 9. Phases and checklists
 
