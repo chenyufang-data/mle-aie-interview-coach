@@ -1,229 +1,318 @@
-# Plan — AI Mock Interview (resume-tailored, voice, downloadable report)
+# Plan — AI Mock Interview, revision 2 (voice as an evaluation problem)
 
-Status: **planned, not started** (written 2026-08-10; work resumes next
-session). Decision context: the user wants this primarily for their own job
-preparation, secondarily as a portfolio feature. See the assessment summary in
-§1 and the open decisions in §9 before starting.
+Status: **planned, not started.** Revision 1 (2026-08-10) framed this as a
+feature ("add voice I/O to the coach"). Revision 2 (2026-08-29) reframes it
+around the evaluation problem hiding inside voice — and fixes the models,
+APIs, and vendor (ElevenLabs) before any code. Read §1–§5 before starting;
+§6–§9 carry the implementation detail; §10 lists the decisions still open.
 
-## 1. Goal and verdict
+## 1. The reframing
 
-Add a Zara-style mock interview: the AI interviewer reads the user's resume
-plus optional extra material (e.g. [interview_prep.md](interview_prep.md)),
-walks through one experience/project (random or user-chosen), deep-dives with
-adaptive technical probes, checks communication, and ends with a feedback
-report. The user's voice is recorded and downloadable; so is the report.
+The obvious version — add voice I/O — is a feature. The version that matters
+is upstream of the model: **speech-to-text will mangle exactly the words that
+carry the signal.** "QWK", "LightGBM", "MAPE", "quantization", "F1",
+"heteroscedasticity", "Recall@5" — if the transcript is wrong, the grader
+scores a corrupted answer and the candidate is penalized for the pipeline's
+failure, not their own. That is a data-quality problem, it is measurable, and
+deciding whether and how to correct it (keyterm prompting, a domain lexicon,
+post-hoc correction) is a far more interesting result than "I added voice".
 
-Verdict from the assessment: **feasible and worthwhile.** Most building blocks
-exist (structured LLM calls and schemas, engine routing, voice transcription,
-the evaluation UI). The genuinely new piece is a multi-turn interviewer state
-machine — also the portfolio upside, since every LLM call today is single-shot.
-The main risk is diluting the project's "every number is measured" story;
-mitigated by splitting the report into deterministic communication metrics
-(computed, not judged) and rubric-grounded content grading.
+So the plan now has a **Phase 0 that ships before any voice UI**: measure
+word error rate on ML-interview vocabulary across transcription conditions,
+measure the *downstream damage* to grades, and choose a correction policy
+by a pre-registered decision rule (§2). Everything after that (the live
+interviewer, latency, recording, the report) is built on what Phase 0 finds.
 
-## 2. Scope
+Vendor: **ElevenLabs** — Scribe v2 for STT (batch + realtime, keyterm
+prompting), Flash v2.5 / v3 Conversational for TTS, and Speech Engine for the
+live loop (§4). Researched 2026-08-29; facts and prices in §5.
 
-In scope (phase-tagged, see §8):
-- Materials input: paste resume + extra material; `.txt`/`.md` upload. (P1)
-- Project detection and picker (random or chosen). (P1)
-- Adaptive multi-turn interviewer with phases and hard turn caps. (P1)
-- Text and voice answers (existing Web Speech API path). (P1)
-- End-of-session structured report, rendered + downloadable as `.md`. (P1)
-- Interviewer text-to-speech; hands-free mode. (P2)
-- Continuous audio recording of the session, downloadable `.webm`. (P2)
-- Computed communication metrics (WPM, filler rate, latency, balance). (P2)
-- Transcript download; print-to-PDF report view. (P2)
-- Tier routing, consent-aware optional logging, rubric tie-in with the prep
-  doc, README/docs. (P3)
+## 2. Phase 0 — STT on technical vocabulary: the experiment
 
-Out of scope for now: PDF resume parsing (needs `pypdf`; paste first),
-server-side audio storage, multi-user session persistence, video.
+**Question.** How badly do transcription conditions corrupt ML-interview
+vocabulary, how much does that corruption move the grade, and which
+correction policy is worth its cost?
 
-## 3. User flow
+**Test set.**
+- *Sentences* (~80–120): dense technical utterances drawn from three
+  sources — rubric key points and model answers from the two question banks
+  (real domain sentences), answers from `interview_prep.md`, and a curated
+  hard-term set. Reference text is known exactly.
+- *Lexicon* (~150–300 terms, the "signal words"): metric names (QWK, MAE,
+  MAPE, F1, AUC/ROC, RMSE, Recall@5, MRR, QWK spelled out as "quadratic
+  weighted kappa"), models/libraries (LightGBM, XGBoost, scikit-learn,
+  HistGradientBoosting, BM25, PyTorch, DeepSeek, Claude), concepts
+  (quantization, regularization, collinearity, heteroscedasticity, leakage,
+  diarization, tokenization, embeddings, logits, softmax, k-fold, L1/L2,
+  Ridge/Lasso, PCA, SVM, RAG), letter–number mixes (v2.5, t3.micro, int8,
+  4-bit). Built from the corpora + the resume, so it is reproducible.
+- *Audio, two sources, both reported*: **human** — the user reads the
+  sentences once (~10–15 min; the real test distribution: accent, pace,
+  hesitation); **synthetic** — ElevenLabs TTS reads the same sentences in
+  2–3 voices (scalable paired audio, but biased: TTS pronounces terms
+  cleanly). Decisions are made on the human set; synthetic shows scale.
 
-1. **Setup** (`mock.html`): paste resume; optionally paste extra material;
-   choose track (MLE/AIE), target level, interviewer style (neutral /
-   friendly / tough), length preset (short ≈ 8 turns, standard ≈ 12); engine
-   (Claude recommended, DeepSeek Flash cheaper); toggles: voice answers, read
-   questions aloud, record audio. Click **Detect projects** → picker appears
-   (list from the resume) with a **Random** option. **Start**.
-2. **Interview**: one interviewer message at a time (optionally spoken). The
-   user answers by typing or speaking (live transcript, editable before
-   submit). A phase indicator shows warm-up / walkthrough / deep dive /
-   behavioral / closing. **End early** is always available.
-3. **Report**: rendered in-page; download buttons for report (`.md`),
-   transcript (`.md`), recording (`.webm`). Nothing is stored server-side
-   unless the user ticks "save this session" (P3).
+**Conditions.**
+1. Browser Web Speech API (today's path; no vocabulary control) — baseline.
+2. Scribe v2 batch, no keyterms.
+3. Scribe v2 batch + keyterm prompting with the full lexicon (≤1000 terms).
+4. Condition 2 + post-hoc lexicon correction (fuzzy/phonetic match of
+   transcript tokens to lexicon entries) — measures whether cheap
+   post-processing closes the gap, **and its false-correction rate**.
+5. Scribe v2 Realtime + 50 keyterms (the live constraint: 50 terms × 20
+   chars) — and therefore a *policy for choosing the 50*: per-session, from
+   the resume + chosen project. The keyterms are tailored per interview the
+   same way the questions are.
 
-## 4. Backend design (`server.py`, stateless)
+**Metrics.**
+- **WER** — standard word-level Levenshtein after documented normalization
+  (case, punctuation, number/acronym rules).
+- **Term error rate (TER)** — over lexicon-term occurrences in the
+  reference, the fraction not recovered; reported strict (exact) and lenient
+  (canonicalized: "light gbm" ≡ "LightGBM"), with a per-term breakdown of
+  *how* terms fail ("QWK" → "quick"; "MAPE" → "map").
+- **Downstream damage — the number that matters**: grade the reference text
+  and the transcript with the same grader (distilled model: free,
+  deterministic; plus one LLM judge) and report |score(ref) − score(hyp)|,
+  the share of answers whose grade moves ≥1 point *from transcription
+  alone*, and per-key-point verdict flips from the kp classifier. This is
+  "penalized for the pipeline's failure", quantified.
 
-Session state lives client-side (`sessionStorage`) and is sent with each
-request — consistent with the existing stateless server and the frontend
-contract. Three new endpoints plus one helper:
+**Pre-registered decision rule.** Ship the cheapest condition whose
+downstream ≥1-point damage rate is ≤5% and lenient TER is ≤3% on the human
+set; if none qualifies, ship the best and state the residual damage in the
+report to the user. Costs are reported next to every condition.
 
-| Endpoint | Request | Response |
+**Deliverables.** `grader/stt_eval.py` (evidence-script style: dry-run cost
+estimate, `--confirm`), `grader/stt_lexicon.json`, results table committed,
+README section. Estimated cost: well under $5 (Scribe batch $0.22/hr on
+<1 hr of audio; ~10k TTS characters ≈ $0.50–1.00).
+
+## 3. Latency budget and turn-taking
+
+Natural conversational gaps are ~200–600 ms; beyond ~1 s the exchange feels
+laggy, beyond ~2 s awkward. Budget from **end of user speech → first
+interviewer audio**, target p50 ≤ 1.0 s, p95 ≤ 1.8 s, measured in the browser
+(last-user-audio → first-agent-audio) and reported with p50/p95, not means.
+
+| Stage | Typical | Design choice |
 | --- | --- | --- |
-| `POST /api/mock/projects` | `materials {resume, extra}` | `projects: [{name, one_line}]` |
-| `POST /api/mock/start` | `materials, role, level, style, length, project` (name or `"random"`), `force_llm` | `plan` (hidden interview plan), `message` (first interviewer turn), `phase` |
-| `POST /api/mock/turn` | `materials, plan, transcript [{phase, question, answer, seconds}]`, `answer`, `force_llm` | `message, phase, probe_target, done` |
-| `POST /api/mock/report` | `materials, plan, transcript, metrics` (client-computed) | report JSON (§6) |
+| End-of-turn detection | 300–700 ms | **Patient** turn eagerness: candidates pause to think; cutting a thinking pause is the worst possible interviewer behaviour. Turn timeout 10–30 s. |
+| STT finalization (Scribe v2 Realtime) | ~150 ms (30–80 ms inside Agents) | vendor-managed |
+| LLM first token | 300–900 ms | stream tokens; keep interviewer turns to 1–2 sentences |
+| TTS first byte (Flash v2.5) | ~75–150 ms | stream sentence-by-sentence |
+| Network + playback | 100–200 ms | WebRTC via the vendor SDK |
 
-**Hidden interview plan** (generated once at start, steers every turn, bounds
-length): `{project, opening, probe_targets: [5–8 technical points drawn from
-the resume/material — decisions, trade-offs, failures, metrics, the problems
-mentioned], behavioral_targets: [2–3], max_turns}`.
+A design consequence: **a JSON structured-output turn cannot be streamed to
+TTS.** The interviewer's spoken text must stream as plain text. So the turn
+protocol becomes: the model emits the spoken question first, then a trailer
+after a marker (`\n---\n{json}` with `probe_target`, `rationale`) that the
+server strips before TTS and parses afterwards; phase decisions stay
+server-side and deterministic. Filler audio ("mm-hm") only if the LLM exceeds
+a soft timeout (~3 s).
 
-**Phase machine** (enforced in code, not left to the model):
-`warmup (1)` → `walkthrough (1: "walk me through <project>")` →
-`deepdive (4–6, adaptive)` → `behavioral (1–2)` → `closing (1)` → `done`.
-The server decides the phase from turn counts and caps; the model decides the
-*content* of the next question within the phase. Per turn the model receives
-the plan, the transcript, and an instruction to either follow up on a weakness
+**Interruptions.**
+- *Candidate interrupts the interviewer*: allowed. The transcript must
+  record only what was actually spoken — the state machine needs the spoken
+  prefix; if the question was cut before its core clause, re-ask briefly
+  rather than proceed. (Whether Speech Engine reports the spoken prefix is an
+  open verification item, §10.)
+- *Interviewer interrupts the candidate*: never by barge-in. A gentle
+  time-box ("let's move on") is a turn-timeout policy, not an interruption.
+
+## 4. Architecture decision: who runs the loop
+
+Three options were weighed:
+
+| Option | What it gives | What it costs | Verdict |
+| --- | --- | --- | --- |
+| **Hosted ElevenAgents** (agent configured on their platform, optional custom-LLM URL) | Fastest to a demo; telephony; conversation history + audio retrievable | Conversation logic lives in their config; the phase machine would need a custom-LLM server anyway; least loop control | not chosen |
+| **ElevenLabs Speech Engine** (bring-your-own agent: they do STT, turn-taking, barge-in, TTS, playback; your server receives transcripts + history and streams text back; Python and JS SDKs; `engine.serve()` or ASGI integration) | Solved turn-taking and barge-in; the interview state machine, prompts, grading, and report stay entirely in this project; built for exactly this shape | $0.08/min; a browser SDK (first external frontend dependency); some abstraction unknowns (keyterms per session, spoken prefix on interruption) | **chosen for the live loop** |
+| **DIY** (Scribe v2 Realtime WebSocket + own VAD/endpointing + LLM streaming + TTS WebSocket + own barge-in) | Full control and full instrumentation; cheapest per minute (~$0.25 per 15-min session) | Turn-taking and barge-in are the hard part; weeks of tuning | kept as the measured fallback path; Phase 0 is DIY by nature |
+
+Recommendation: **Speech Engine for the live conversation; own server for
+everything that is the product** (state machine, prompts, grading, report).
+Latency is still measured end-to-end from the browser regardless, so the
+budget in §3 is a measured number, not a vendor claim. The existing browser
+Web Speech + `speechSynthesis` path stays as the free/offline fallback and
+is condition 1 of the experiment.
+
+A design element that falls out of the two-transcript reality: record the
+session locally (`MediaRecorder`) and, after the interview, **re-transcribe
+the recording with Scribe v2 batch and the full 1000-term lexicon**. The
+report then grades the *final* transcript (what you said), shows the *live*
+transcript (what the interviewer heard), and quantifies the difference —
+"transcription cost you N points" — as a per-session instance of Phase 0.
+
+## 5. Models and APIs — the complete inventory
+
+| Role | Choice | Fallback / alternative | Cost basis | Status |
+| --- | --- | --- | --- | --- |
+| Interviewer LLM (live turns, streamed) | Claude `claude-opus-4-8` | DeepSeek `deepseek-v4-flash` (paid-tier default per existing routing) | per token; Flash ≈ 1/200th | keys in `.env` |
+| Report / content grading LLM | Claude (teacher) or Flash per routing | distilled grader for rubric-shaped parts | per token | existing |
+| Rubric grading, offline | distilled sklearn `grader/model.joblib` (score + kp classifier) | — | zero | existing |
+| Question/rubric retrieval | BM25 (`retrieval.py`) | — | zero | existing |
+| STT, live | Scribe v2 Realtime, ≤50 keyterms (inside Speech Engine) | browser Web Speech API (free, no vocabulary control) | $0.39/hr direct, or within $0.08/min Speech Engine | new |
+| STT, batch (Phase 0 + post-session re-transcription) | Scribe v2 batch, ≤1000 keyterms | — | $0.22/hr + $0.05/hr keyterms | new |
+| TTS, live | Flash v2.5 (~75 ms) via Speech Engine | v3 Conversational (quality, same price); browser `speechSynthesis` (free fallback) | $0.05 / 1k chars | new |
+| TTS, synthetic test audio | Multilingual v2 or Eleven v3 | — | $0.10 / 1k chars | new (Phase 0) |
+| Turn-taking, barge-in, playback | ElevenLabs Speech Engine (WebRTC browser SDK + Python server SDK) | DIY VAD + WebSockets | $0.08/min (burst $0.16) | new |
+| Session audio | browser `MediaRecorder`, local download | — | zero | new |
+| Lexicon correction | own fuzzy matcher (difflib / rapidfuzz) | — | zero | new (Phase 0) |
+
+ElevenLabs plan facts (2026-08-29): Free — pay-as-you-go, 15 Speech Engine
+minutes, no card; Starter $6/mo — 10k TTS chars, 4.5 hrs STT, 75 minutes;
+Creator $22/mo — 220k chars, 100 hrs STT, 275 minutes. LLM usage is billed
+separately from the per-minute rate. Starter covers Phase 0 plus a handful
+of mock sessions; Creator covers regular practice.
+
+Per-session cost estimate (12 turns, ~15 min): Speech Engine ≈ $1.20 + LLM
+(cents on Flash, tens of cents on Claude) + re-transcription ≈ $0.06.
+
+## 6. User flow (unchanged in shape)
+
+1. **Setup** (`mock.html`): paste resume + optional material; track, level,
+   interviewer style (neutral / friendly / tough), length (short ≈ 8 turns,
+   standard ≈ 12); engine; toggles: live voice (Speech Engine) / browser
+   voice / text; record audio. **Detect projects** → picker with Random.
+2. **Interview**: one interviewer message at a time; phase indicator;
+   **End early** always available.
+3. **Report**: rendered in-page; downloads for report (`.md`), live and
+   final transcripts (`.md`), recording (`.webm`); nothing stored server-side
+   without the opt-in.
+
+## 7. Backend design (`server.py` + a Speech Engine sidecar)
+
+Session state stays client-side and is sent per request (stateless server,
+consistent with the frontend contract).
+
+| Endpoint | Purpose |
+| --- | --- |
+| `POST /api/mock/projects` | detect projects from materials → picker list |
+| `POST /api/mock/start` | build the hidden interview plan; first turn |
+| `POST /api/mock/turn` | next turn (text path); same logic the sidecar calls |
+| `POST /api/mock/report` | final report from transcript(s) + client metrics |
+| `POST /api/mock/keyterms` | choose the ≤50 realtime keyterms for this session from the resume + project (policy from Phase 0) |
+| `POST /api/mock/transcribe` | post-session batch re-transcription of the uploaded recording with the full lexicon |
+
+**Hidden interview plan** (once, at start): `{project, opening,
+probe_targets: [5–8 technical points from the resume/material], behavioral_
+targets, max_turns}`. **Phase machine** enforced in code: warm-up (1) →
+walkthrough (1) → deep dive (4–6, adaptive) → behavioral (1–2) → closing (1)
+→ done. The model chooses content within the phase: follow up on a weakness
 in the last answer or move to the next unprobed target — one question only.
 
-**Turn schema** (structured output, enforced):
-`{interviewer_message, probe_target, rationale (hidden, ≤20 words), done}`.
+**Turn protocol**: spoken text streamed first; trailer `\n---\n{json}`
+stripped before TTS, parsed after. **Speech Engine sidecar**: a small ASGI
+process using the Python SDK (`on_transcript` → the same turn function →
+`session.send_response(stream)`), so the text path and the voice path share
+one state machine. **Engine routing** reuses `grading_route()`; free tier
+cannot run a mock (needs an LLM). **Logging** off by default (resumes are
+personal data); P3 opt-in writes `grader/mock_sessions.jsonl` under the
+existing consent policy.
 
-**Engine**: reuse `grading_route()` — paid default → DeepSeek Flash,
-`force_llm` → Claude under quota; free tier cannot run a mock (needs an LLM),
-the page says so. Recommendation: **Claude by default for the interviewer and
-the report** — adaptive probing (catching a contradiction with an answer two
-turns ago) is where its edge over Flash shows; Flash remains the cheap option.
-P3 optimization: mark the materials + plan block as a cached prompt prefix so
-the growing transcript is the only uncached input per turn.
+## 8. Frontend (`public/mock.html`, `public/mock.js`) and the report
 
-**Prompts**: a dedicated interviewer system prompt (persona, one question per
-turn, never answer for the candidate, adapt to what was actually said, do not
-invent facts about the resume), plus a report prompt that must quote the
-candidate when citing a weakness (anti-hallucination) and grade content
-against the plan's probe targets and any rubric-like material supplied.
+Vanilla JS as elsewhere. The ElevenLabs browser SDK is loaded only on the
+mock page and only when live voice is enabled — the documented exception to
+the zero-dependency rule. Browser voice (Web Speech + `speechSynthesis`)
+and text remain dependency-free. `MediaRecorder` runs for the whole session
+→ one `.webm`; per-answer timestamps in the transcript locate moments.
+Timings captured: answer duration, response latency, and the §3
+last-user-audio → first-agent-audio measurement.
 
-**Logging**: off by default for mock sessions (the resume is personal data).
-With the P3 opt-in, sessions go to a separate `grader/mock_sessions.jsonl`
-under the existing consent policy (`"log": false` honored).
+**Report** — three visibly separate blocks:
+- *Computed communication metrics* (deterministic): words per minute, filler
+  words per minute, average answer seconds, longest/shortest, response
+  latency, answer-length balance.
+- *Transcription quality* (from the two transcripts): term corrections
+  applied, WER between live and final, grade difference attributable to
+  transcription.
+- *LLM assessment* (enforced schema): overall impression; scores 1–10 for
+  communication clarity, structure, technical depth, ownership/specificity,
+  concision; per-turn `{question, answer_summary, what_was_good,
+  what_was_missing, stronger_answer, score}`; red flags that **quote** the
+  candidate; keep-doing; top three actions. Rubric tie-in (P3): Q&A pairs in
+  the supplied material act as key points for matching probes.
 
-## 5. Frontend design (`public/mock.html`, `public/mock.js`)
+## 9. Phases and checklists
 
-Zero dependencies, same conventions as `app.js`. State in `sessionStorage`:
-materials, plan, transcript with timings, settings. Audio blobs stay in
-memory for the session (downloaded by the user; not persisted).
+**Phase 0 — STT evaluation (ships first; the centerpiece)**
+- [ ] `grader/stt_lexicon.json` built from corpora + resume; sentence set
+- [ ] user records the human set (~15 min); synthetic set via TTS
+- [ ] `grader/stt_eval.py`: conditions 1–5, WER/TER/downstream damage, costs
+- [ ] keyterm selection policy for the 50-term realtime limit
+- [ ] results table + README section; decision recorded
 
-- **Voice answers**: reuse the `setupVoiceInput` pattern (Web Speech API,
-  continuous, hidden outside secure contexts — needs HTTPS or localhost).
-  Live transcript lands in the textarea; the user can edit before submit.
-- **Recording (P2)**: one continuous `MediaRecorder` for the whole session
-  (start at interview start, stop at end) → a single `.webm` download.
-  Per-answer start/stop timestamps are kept in the transcript so a moment can
-  be located in the recording. (Per-answer clips are possible but concatenating
-  separate `.webm` blobs is unreliable; the continuous recorder is the robust
-  choice.)
-- **TTS (P2)**: `speechSynthesis.speak(message)`; pause recognition while
-  speaking so the interviewer's voice is not transcribed; in hands-free mode,
-  start listening when TTS ends.
-- **Timings**: answer duration (question shown / TTS ended → submit) and
-  response latency (→ first recognized word). Both feed the metrics.
-- **Downloads**: `a[download]` with blob URLs — works in a normal browser
-  tab (the app is served by nginx/Python, not a sandbox).
-- **Report view**: rendered sections (§6); a print stylesheet so
-  "Print → Save as PDF" produces a clean document.
+**Phase 1 — core loop, text + browser voice**
+- [ ] `mock.html` setup, materials, project picker
+- [ ] `/api/mock/projects|start|turn|report`, plan, phase machine, turn protocol
+- [ ] report rendering + downloads; offline unit tests (fake engine); one
+      Flash smoke session
 
-## 6. Report structure
+**Phase 2 — live loop on Speech Engine**
+- [ ] Python sidecar + browser SDK; token endpoint; patient turn-taking
+- [ ] per-session keyterms; interruption policy (verify spoken-prefix)
+- [ ] latency instrumentation, p50/p95 reported
+- [ ] local recording + post-session re-transcription; two-transcript report
 
-Two kinds of content, kept visibly separate:
+**Phase 3 — polish and portfolio**
+- [ ] consent-aware opt-in logging; prompt-cached materials prefix
+- [ ] rubric tie-in with prep-doc Q&A; README + interview_prep additions
 
-**Computed communication metrics** (deterministic, client-side, P2):
-words per minute; filler words per minute (regex list: um, uh, like, you
-know, sort of, kind of, basically, actually, right?); average answer seconds;
-longest/shortest answer; average response latency; answer-length balance
-(coefficient of variation).
+## 10. Open decisions and verification items
 
-**LLM assessment** (structured output, enforced schema):
-```json
-{ "overall_impression": "...",
-  "scores": { "communication_clarity": 7, "structure": 6,
-              "technical_depth": 7, "ownership_specificity": 8, "concision": 5 },
-  "per_turn": [ { "phase": "deepdive", "question": "...", "answer_summary": "...",
-                  "what_was_good": ["..."], "what_was_missing": ["..."],
-                  "stronger_answer": "...", "score": 6 } ],
-  "red_flags": ["contradiction or vague claim, quoting the candidate"],
-  "keep_doing": ["..."], "top_actions": ["...", "...", "..."] }
-```
-Scores 1–10; `stronger_answer` concise and interview-ready; every weakness
-must quote or closely paraphrase what was said.
+Decisions:
+1. ElevenLabs plan: Starter ($6) is enough to start.
+2. The human test set: the user records ~100 sentences (~15 min).
+3. Include an open-source STT baseline (Whisper, local) as condition 6? Adds
+   comparison value; costs setup time. Recommendation: yes if time allows.
+4. Accept the ElevenLabs browser SDK as the mock page's one dependency.
+5. Default interviewer LLM: Claude (recommended) vs Flash.
+6. Decision-rule thresholds (≤5% damage, ≤3% lenient TER) — confirm.
 
-Rubric tie-in (P3): if the extra material contains Q&A pairs (as
-`interview_prep.md` does), the report prompt treats them as the key points a
-strong answer should hit for matching probes — the same rubric-grounded
-grading the app already does for course questions.
+Verify against ElevenLabs docs before Phase 2 (not answered by the docs read
+on 2026-08-29): whether Speech Engine accepts per-session STT keyterms;
+whether the server learns the spoken prefix on interruption; whether the
+TTS voice/model is selectable per session; whether session audio is
+retrievable (local recording makes this non-blocking).
 
-## 7. Testing plan
+## 11. Risks and mitigations
 
-- **Offline unit tests** (fake engine via monkeypatched `call_model`):
-  phase progression and caps for both length presets; `done` set exactly at
-  the cap or when the model signals closing; turn/report schema validation;
-  metrics functions (WPM, filler rate, latency) on fixed transcripts;
-  free-tier refusal; logging stays off without opt-in.
-- **Live smoke**: one short session on DeepSeek Flash (cents; already
-  authorized for DeepSeek). A Claude session needs fresh spend authorization
-  (a standard session is on the order of tens of cents on Opus-tier).
-- **UI**: headless Edge screenshots of setup, mid-interview, and report
-  states via a sessionStorage-seeded harness (established pattern).
+- Transcription corrupts grades → Phase 0 measures it; the report shows it;
+  the final transcript uses the full lexicon.
+- Keyterm limit (50 realtime) → per-session selection policy, evaluated.
+- Endpointing cuts thinking pauses → patient eagerness, long turn timeout,
+  measured barge-in and cut-off rates.
+- Vendor abstraction leaks (keyterms, spoken prefix) → verification list;
+  DIY path kept as fallback.
+- Browser support: Web Speech is Chromium-only; Speech Engine SDK needs
+  WebRTC → typing always works.
+- HTTPS for the microphone → local runs for prep; public demo waits on the
+  domain/HTTPS item.
+- Personal data (resume, voice) → client-side by default; logging opt-in;
+  ElevenLabs sees the audio in the live path (state this in the UI).
 
-## 8. Phases and checklists
+## 12. Next-session start checklist
 
-**Phase 1 — core loop (the bulk of the prep value)**
-- [ ] `mock.html` setup form + materials paste/upload + project picker
-- [ ] `/api/mock/projects`, `/start`, `/turn`, `/report` + schemas + prompts
-- [ ] phase machine with caps; single-question enforcement
-- [ ] text + voice answers; end-early
-- [ ] report rendering + `.md` download
-- [ ] offline unit tests; one Flash smoke session
-- [ ] docs/frontend.md + docs/backend.md contract updates
+- Start with Phase 0: say "build phase 0"; confirm the §10 decisions or
+  accept the recommendations. Have an ElevenLabs API key ready (Starter
+  plan or credits) — it goes in `.env` as `ELEVENLABS_API_KEY`.
+- Phase 0 needs ~15 minutes of the user's time to record the human set.
+- `.env` already holds `ANTHROPIC_API_KEY` and `DEEPSEEK_API_KEY`; DeepSeek
+  spend is authorized; any Claude live test needs fresh authorization;
+  ElevenLabs spend needs authorization once the key exists.
 
-**Phase 2 — Zara-style polish**
-- [ ] interviewer TTS + hands-free mode (pause recognition while speaking)
-- [ ] continuous session recording + `.webm` download
-- [ ] computed communication metrics in the report
-- [ ] transcript download; print-to-PDF report view
+## Sources (ElevenLabs, read 2026-08-29)
 
-**Phase 3 — portfolio integration**
-- [ ] consent-aware opt-in logging to `grader/mock_sessions.jsonl`
-- [ ] prompt-cached materials prefix
-- [ ] rubric tie-in with prep-doc Q&A
-- [ ] README section + interview_prep additions (this is itself a talking point)
-
-## 9. Open decisions (confirm at the start of next session)
-
-1. Default engine for the interviewer: **Claude (recommended)** vs Flash.
-2. Length presets: short ≈ 8 turns / standard ≈ 12 — adjust?
-3. Recording: continuous session recording (recommended) vs per-answer clips.
-4. Interviewer styles offered: neutral / friendly / tough — enough?
-5. Should the mock be paid-tier only (recommended: yes, it needs an LLM) or
-   also usable in single-user mode without `users.json` (yes, that already
-   routes to Claude)?
-6. PDF resume upload now (adds `pypdf`) or paste-only first (recommended).
-
-## 10. Risks and mitigations
-
-- Browser support: Web Speech API is Chromium-only in practice → note in UI;
-  typing always works.
-- HTTPS requirement for mic → run locally for personal prep; public demo
-  waits on the domain/HTTPS item.
-- Token growth over long sessions → turn caps; P3 caching; if needed,
-  summarize early turns.
-- TTS feeding back into the mic → pause recognition while speaking.
-- Model asking several questions per turn or drifting off the resume →
-  schema enforces one message; hidden plan and probe targets anchor it.
-- Report hallucinating claims the candidate never made → "quote when citing a
-  weakness" rule + a per-turn `answer_summary` the user can check.
-- Personal data (resume) → client-side only by default; logging opt-in.
-
-## 11. Next-session start checklist
-
-- Say "build phase 1" and confirm the §9 decisions (or accept the
-  recommendations).
-- Run locally (`python server.py` with `users.json` present, open
-  http://127.0.0.1:8000/mock.html) so the microphone works.
-- `.env` already holds both `ANTHROPIC_API_KEY` and `DEEPSEEK_API_KEY`.
-- Any Claude-engine live test needs explicit spend authorization; Flash
-  smoke tests are covered by the existing DeepSeek authorization.
+- API pricing: https://elevenlabs.io/pricing/api — Agents pricing:
+  https://elevenlabs.io/pricing/agents
+- Scribe v2 launch and features: https://elevenlabs.io/blog/introducing-scribe-v2 ;
+  https://elevenlabs.io/blog/scribe-v2-just-got-an-upgrade ;
+  STT capabilities: https://elevenlabs.io/docs/overview/capabilities/speech-to-text ;
+  batch endpoint reference: https://elevenlabs.io/docs/api-reference/speech-to-text/convert
+- Speech Engine: https://elevenlabs.io/docs/overview/capabilities/speech-engine ;
+  quickstart: https://elevenlabs.io/docs/eleven-api/guides/cookbooks/speech-engine
+- Conversation flow (turn-taking, interruptions):
+  https://elevenlabs.io/docs/eleven-agents/customization/conversation-flow
+- TTS models: https://elevenlabs.io/docs/overview/models
