@@ -279,6 +279,41 @@ only in a heavy Level-1 month; plans are monthly and cancellable, so the
 hedge is cheap. Verification item: confirm that Free-plan pay-as-you-go
 covers Scribe, TTS, and Speech Engine minutes beyond the 15 included (§10).
 
+### 5c. One live session, by setup
+
+Assumptions (standard session, 12 turns ≈ 15 min; short 8-turn ≈ 10 min
+scales to ~⅔): per turn ≈ 4k input tokens (persona + plan + resume + growing
+transcript) and ~150 output; start (roles + plan) ≈ 7k in / 1.5k out;
+report ≈ 8.5k in / ~4k out incl. thinking. Prices: Claude opus-4-8 $5 / $25
+per M (cache reads ≈ 10%); DeepSeek Flash $0.14 / $0.28 per M; Speech Engine
+$0.08/min; Scribe Realtime + keyterms ≈ $0.44/hr; Flash v2.5 TTS $0.05 per
+1k chars (≈ 2.5k chars of interviewer speech per session); Scribe batch
+final transcript with keyterms ≈ $0.07 per session.
+
+LLM component: all-Claude ≈ $0.50 (≈ $0.34 with prompt caching); Flash
+turns + Claude report ≈ $0.15; all-Flash ≈ $0.01; Ollama $0.
+
+| Setup | Audio + loop | LLM | Final transcript | ≈ per session |
+| --- | --- | --- | --- | --- |
+| A. Level 1, all Claude | Speech Engine $1.20 | $0.50 | Scribe $0.07 | **$1.77** (≈ $1.60 cached) |
+| B. Level 1, recommended (Flash turns, Claude report) | $1.20 | $0.15 | $0.07 | **$1.42** |
+| C. Level 1, all Flash | $1.20 | $0.01 | $0.07 | $1.28 |
+| D. "Level 1.5": DIY loop on cloud audio (Scribe Realtime + Flash TTS), Flash turns, Claude report | $0.11 + $0.13 | $0.15 | $0.07 | **$0.46** |
+| E. Level 2 (local audio), Flash turns, Claude report, Scribe final transcript | $0 | $0.15 | $0.07 | **$0.22** |
+| F. Level 2, Flash turns, Claude report, local final transcript | $0 | $0.15 | $0 | $0.15 |
+| G. Level 2, all Flash, local final transcript | $0 | $0.01 | $0 | $0.01 |
+| H. Level 3, fully offline (Ollama) | $0 | $0 | $0 | $0 |
+| I. Text-only mock (no voice), Flash turns, Claude report | — | $0.15 | — | $0.15 |
+
+Readings: the Speech Engine minute rate is ~85% of a Level 1 session — the
+LLM is never the cost driver unless everything runs on Claude. Setup D falls
+out of the Level 2 build almost for free (the DIY loop with cloud audio
+endpoints) and is ~3× cheaper than Speech Engine for the same models, at
+the price of our own turn-taking. At 12 sessions a month: B ≈ $17, D ≈ $5.5,
+E ≈ $2.6, G ≈ $0.12. The current $10 ElevenLabs balance covers Phase 0
+(≈ $5) plus roughly 3–4 Level 1 sessions, or Phase 0 plus ~70 sessions of
+Scribe final transcripts on Level 2.
+
 ## 6. User flow (unchanged in shape)
 
 1. **Setup** (`mock.html`): paste resume + optional material; track, level,
