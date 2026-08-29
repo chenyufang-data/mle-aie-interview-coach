@@ -152,17 +152,24 @@ The right shape is the same idea one layer over — a local, OpenAI-compatible
 | STT | **faster-whisper** `large-v3-turbo` (CTranslate2; realtime on an RTX 5080; word timestamps; `initial_prompt` for vocabulary bias) | best accuracy/speed trade-off among open models; NVIDIA Parakeet-TDT is the faster English-only alternative | browser Web Speech API (note: Chromium sends audio to Google — it is *free*, not *local*) |
 | TTS | **Kokoro-82M** (Apache-2.0; near-realtime even on CPU; natural enough for an interviewer) | Piper is faster but robotic; XTTS/Chatterbox heavier, only needed for voice cloning | browser `speechSynthesis` |
 | Endpointing / VAD | **Silero VAD** (tiny, MIT) | standard; drives end-of-turn and barge-in in the DIY loop | fixed silence timer |
-| LLM | Ollama (`--ollama`, already supported) | existing path | — |
+| LLM | **DeepSeek V4 Flash** (cloud; already the paid-tier workhorse; ≈ $0.01 per session) | far better adaptive probing than a local 8–14B model, at negligible cost; needs streaming and thinking-off for low first-token latency (verification item, §10) | Ollama (`--ollama`) — the true offline fallback when there is no internet |
 | Packaging | **Speaches** (formerly faster-whisper-server): one Docker image exposing OpenAI-style `/v1/audio/transcriptions` and `/v1/audio/speech` backed by faster-whisper + Kokoro | one container, one env var (`AUDIO_BASE_URL`); the server code talks to ElevenLabs or Speaches through the same two calls | direct Python libs if Docker is unwanted |
 
-Cost: $0 per session (GPU time). Latency is comparable to the cloud path on
-the user's GPU (Whisper turbo ≈ 200–400 ms per utterance, Kokoro first audio
-≈ 150–300 ms). What local mode gives up: Speech Engine's tuned turn-taking
-and barge-in (the DIY loop is ours to tune), and Scribe's keyterm prompting
+So "local mode" is precisely **local audio + cloud LLM**: the microphone
+audio, the transcripts, and the recording never leave the machine; only the
+text of the conversation (which includes resume content) goes to DeepSeek.
+Cost ≈ $0.01 per session (GPU time otherwise). Latency is comparable to the
+cloud path (Whisper turbo ≈ 200–400 ms per utterance, Kokoro first audio
+≈ 150–300 ms; DeepSeek first token ≈ 300–800 ms streamed, with thinking
+disabled for turns — with V4's hybrid thinking left on, a turn can add
+seconds, which is why it must be off for conversation and on only for the
+report). What local mode gives up: Speech Engine's tuned turn-taking and
+barge-in (the DIY loop is ours to tune), and Scribe's keyterm prompting
 (Whisper's `initial_prompt` is weaker — condition 6 measures how much).
 
-The fallback chain per capability, in order: ElevenLabs → local server →
-browser API → text. Every level is measured in Phase 0 rather than assumed.
+Fallback chains, in order — audio: ElevenLabs → local server → browser API
+→ text; LLM: Claude → DeepSeek Flash → Ollama. Every level is measured in
+Phase 0 rather than assumed.
 
 A design element that falls out of the two-transcript reality: record the
 session locally (`MediaRecorder`) and, after the interview, **re-transcribe
@@ -213,7 +220,7 @@ sentences × 3 voices ≈ 40 min of audio and ≈ 36k TTS characters.
 | --- | --- | --- | --- | --- |
 | Speech Engine | $1.20 [$0.80] | Flash ≈ $0.01; Claude ≈ $0.30 | $0.07 | **≈ $1.30–1.60** [$0.90–1.15] |
 | DIY cloud (Scribe Realtime + Flash v2.5 TTS) | $0.11 + $0.13 | same | $0.07 | ≈ $0.30–0.60 |
-| Local mode (§4a) | $0 | Ollama $0 | local Whisper $0 | **$0** |
+| Local audio mode (§4a) | $0 | Flash ≈ $0.01 (Ollama $0) | local Whisper $0 | **≈ $0.01** |
 
 **Monthly, Speech Engine path** (plan minutes are the binding constraint;
 STT hours in every plan cover re-transcription many times over; LLM extra).
@@ -366,6 +373,12 @@ Decisions:
 4. Accept the ElevenLabs browser SDK as the mock page's one dependency.
 5. Default interviewer LLM: Claude (recommended) vs Flash.
 6. Decision-rule thresholds (≤5% damage, ≤3% lenient TER) — confirm.
+
+Verify against DeepSeek docs before Phase 1: the streaming (`stream: true`,
+SSE) path for the OpenAI-compatible endpoint — `call_deepseek` is currently
+non-streaming — and the parameter that disables V4's hybrid thinking per
+request, so interviewer turns get a fast first token while the report keeps
+thinking on. Measure first-token latency both ways.
 
 Verify against ElevenLabs docs before Phase 2 (not answered by the docs read
 on 2026-08-29): whether Speech Engine accepts per-session STT keyterms;
