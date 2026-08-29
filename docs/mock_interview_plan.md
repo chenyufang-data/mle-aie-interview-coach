@@ -61,8 +61,12 @@ correction policy is worth its cost?
    post-processing closes the gap, **and its false-correction rate**.
 5. Scribe v2 Realtime + 50 keyterms (the live constraint: 50 terms × 20
    chars) — and therefore a *policy for choosing the 50*: per-session, from
-   the resume + chosen project. The keyterms are tailored per interview the
-   same way the questions are.
+   the target role + chosen project (§7a). The keyterms are tailored per
+   interview the same way the questions are.
+6. **Local Whisper** (faster-whisper `large-v3-turbo` on the user's GPU, with
+   `initial_prompt` vocabulary biasing — Whisper's weak form of keyterm
+   prompting). This is the offline fallback stack's STT (§4a), so the
+   experiment answers "is local good enough?" with the same numbers.
 
 **Metrics.**
 - **WER** — standard word-level Levenshtein after documented normalization
@@ -137,6 +141,29 @@ budget in §3 is a measured number, not a vendor claim. The existing browser
 Web Speech + `speechSynthesis` path stays as the free/offline fallback and
 is condition 1 of the experiment.
 
+### 4a. Local mode — the offline fallback for the audio models
+
+Ollama cannot serve this: it is an LLM runtime and has no STT/TTS models.
+The right shape is the same idea one layer over — a local, OpenAI-compatible
+**audio** server — plus the LLM the project already runs on Ollama:
+
+| Role | Local choice | Why | Zero-install fallback |
+| --- | --- | --- | --- |
+| STT | **faster-whisper** `large-v3-turbo` (CTranslate2; realtime on an RTX 5080; word timestamps; `initial_prompt` for vocabulary bias) | best accuracy/speed trade-off among open models; NVIDIA Parakeet-TDT is the faster English-only alternative | browser Web Speech API (note: Chromium sends audio to Google — it is *free*, not *local*) |
+| TTS | **Kokoro-82M** (Apache-2.0; near-realtime even on CPU; natural enough for an interviewer) | Piper is faster but robotic; XTTS/Chatterbox heavier, only needed for voice cloning | browser `speechSynthesis` |
+| Endpointing / VAD | **Silero VAD** (tiny, MIT) | standard; drives end-of-turn and barge-in in the DIY loop | fixed silence timer |
+| LLM | Ollama (`--ollama`, already supported) | existing path | — |
+| Packaging | **Speaches** (formerly faster-whisper-server): one Docker image exposing OpenAI-style `/v1/audio/transcriptions` and `/v1/audio/speech` backed by faster-whisper + Kokoro | one container, one env var (`AUDIO_BASE_URL`); the server code talks to ElevenLabs or Speaches through the same two calls | direct Python libs if Docker is unwanted |
+
+Cost: $0 per session (GPU time). Latency is comparable to the cloud path on
+the user's GPU (Whisper turbo ≈ 200–400 ms per utterance, Kokoro first audio
+≈ 150–300 ms). What local mode gives up: Speech Engine's tuned turn-taking
+and barge-in (the DIY loop is ours to tune), and Scribe's keyterm prompting
+(Whisper's `initial_prompt` is weaker — condition 6 measures how much).
+
+The fallback chain per capability, in order: ElevenLabs → local server →
+browser API → text. Every level is measured in Phase 0 rather than assumed.
+
 A design element that falls out of the two-transcript reality: record the
 session locally (`MediaRecorder`) and, after the interview, **re-transcribe
 the recording with Scribe v2 batch and the full 1000-term lexicon**. The
@@ -166,15 +193,52 @@ Creator $22/mo — 220k chars, 100 hrs STT, 275 minutes. LLM usage is billed
 separately from the per-minute rate. Starter covers Phase 0 plus a handful
 of mock sessions; Creator covers regular practice.
 
-Per-session cost estimate (12 turns, ~15 min): Speech Engine ≈ $1.20 + LLM
-(cents on Flash, tens of cents on Claude) + re-transcription ≈ $0.06.
+### 5a. Cost estimates (ElevenLabs list prices, 2026-08-29)
+
+**Phase 0, one-time.** Human set ≈ 15 min of audio; synthetic set = 100
+sentences × 3 voices ≈ 40 min of audio and ≈ 36k TTS characters.
+
+| Item | Quantity | Rate | Cost |
+| --- | --- | --- | --- |
+| Synthetic test audio (Multilingual v2 / v3 quality voices) | 36k chars | $0.10 / 1k | $3.60 |
+| Scribe v2 batch, no keyterms | 0.92 hr | $0.22 / hr | $0.20 |
+| Scribe v2 batch + keyterms | 0.92 hr | $0.27 / hr | $0.25 |
+| Scribe v2 Realtime + keyterms | 0.92 hr | ≈ $0.44 / hr | $0.40 |
+| Consistency re-runs | ×2 of the STT rows | | ≈ $0.85 |
+| **Total** | | | **≈ $5.30 pay-as-you-go**; ≈ $8.60 on Starter ($6 + 26k chars over the included 10k) |
+
+**Per mock session** (12 turns ≈ 15 min; short 8-turn ≈ 10 min in brackets).
+
+| Path | STT / TTS / loop | LLM | Re-transcription | Total |
+| --- | --- | --- | --- | --- |
+| Speech Engine | $1.20 [$0.80] | Flash ≈ $0.01; Claude ≈ $0.30 | $0.07 | **≈ $1.30–1.60** [$0.90–1.15] |
+| DIY cloud (Scribe Realtime + Flash v2.5 TTS) | $0.11 + $0.13 | same | $0.07 | ≈ $0.30–0.60 |
+| Local mode (§4a) | $0 | Ollama $0 | local Whisper $0 | **$0** |
+
+**Monthly, Speech Engine path** (plan minutes are the binding constraint;
+STT hours in every plan cover re-transcription many times over; LLM extra).
+
+| Sessions / month | Minutes | Best plan | ≈ Cost |
+| --- | --- | --- | --- |
+| 5 | 75 | Starter ($6, 75 min included) | $6 |
+| 10 | 150 | Starter + 75 overage min × $0.08 | $12 |
+| 18 | 270 | Creator ($22, 275 min; $11 first month) | $22 |
+| 30 | 450 | Creator + 175 × $0.08 | $36 |
+| 60 | 900 | Creator + 625 × $0.08 = $72, or Pro $99 (1,238 min) | $72–99 |
+
+Reading: for personal prep at a few sessions a week, **Creator at $22/month
+is the realistic ceiling**; Phase 0 plus the first sessions fit in Starter.
+Local mode makes unlimited practice free once the experiment says it is
+good enough.
 
 ## 6. User flow (unchanged in shape)
 
 1. **Setup** (`mock.html`): paste resume + optional material; track, level,
    interviewer style (neutral / friendly / tough), length (short ≈ 8 turns,
    standard ≈ 12); engine; toggles: live voice (Speech Engine) / browser
-   voice / text; record audio. **Detect projects** → picker with Random.
+   voice / text; record audio. **Detect roles** → pick a target role (or
+   paste a job description) → pick a supporting project or "interviewer's
+   choice" (§7a).
 2. **Interview**: one interviewer message at a time; phase indicator;
    **End early** always available.
 3. **Report**: rendered in-page; downloads for report (`.md`), live and
@@ -188,16 +252,47 @@ consistent with the frontend contract).
 
 | Endpoint | Purpose |
 | --- | --- |
-| `POST /api/mock/projects` | detect projects from materials → picker list |
+| `POST /api/mock/roles` | propose target roles from the resume / job description, each with supporting projects and probe themes (§7a) |
 | `POST /api/mock/start` | build the hidden interview plan; first turn |
 | `POST /api/mock/turn` | next turn (text path); same logic the sidecar calls |
 | `POST /api/mock/report` | final report from transcript(s) + client metrics |
 | `POST /api/mock/keyterms` | choose the ≤50 realtime keyterms for this session from the resume + project (policy from Phase 0) |
 | `POST /api/mock/transcribe` | post-session batch re-transcription of the uploaded recording with the full lexicon |
 
-**Hidden interview plan** (once, at start): `{project, opening,
-probe_targets: [5–8 technical points from the resume/material], behavioral_
-targets, max_turns}`. **Phase machine** enforced in code: warm-up (1) →
+### 7a. Role-driven sessions and the 50-keyterm policy
+
+Instead of "pick a project at random", the session is organized the way a
+real interview is — **around a target role**:
+
+1. `POST /api/mock/roles`: from the resume (and an optional pasted job
+   description, which overrides), the LLM proposes 3–5 plausible target
+   roles ("fraud-detection MLE", "LLM application engineer", "forecasting
+   data scientist"…), each with the resume projects that support it, ranked
+   by relevance, and the role's typical probe themes (fraud detection: class
+   imbalance, precision/recall at a threshold, label delay, leakage, drift).
+2. The user picks the role, then a supporting project — or "interviewer's
+   choice". The interviewer persona is set by the role (company type,
+   seniority), not just by tone.
+3. The hidden plan draws probe targets from the chosen project **and** the
+   role's themes, and keeps a small "wander" budget (1–2 probes from adjacent
+   areas) so the mock is not perfectly predictable — real interviewers drift.
+4. Where a role theme matches a question-bank chunk (BM25 over
+   `rag_ml`/`rag_ai`), that chunk's rubric seeds the probe and grades the
+   answer — rubric-grounded grading for the technical part of the mock, the
+   same mechanism the app already has.
+
+The same choice fixes the **50-keyterm selection** for Scribe Realtime.
+Candidate terms = union(role vocabulary, chosen-project vocabulary, resume
+terms, lexicon). Rank by: (a) Phase 0 measured failure rate *without*
+keyterms — the 50 slots go to terms that demonstrably need help, not to
+words Scribe already gets right; (b) presence in the resume/project; (c)
+rarity in general English. Multi-word terms count once but must fit 20
+characters, so canonical short forms are kept in the lexicon. The policy is
+itself evaluated in Phase 0 (condition 5 vs a naive "first 50" baseline).
+
+**Hidden interview plan** (once, at start): `{role, project, opening,
+probe_targets: [5–8 technical points from the project + role themes],
+rubric_chunks: [...], behavioral_targets, wander_budget, max_turns}`. **Phase machine** enforced in code: warm-up (1) →
 walkthrough (1) → deep dive (4–6, adaptive) → behavioral (1–2) → closing (1)
 → done. The model chooses content within the phase: follow up on a weakness
 in the last answer or move to the next unprobed target — one question only.
@@ -265,8 +360,9 @@ last-user-audio → first-agent-audio measurement.
 Decisions:
 1. ElevenLabs plan: Starter ($6) is enough to start.
 2. The human test set: the user records ~100 sentences (~15 min).
-3. Include an open-source STT baseline (Whisper, local) as condition 6? Adds
-   comparison value; costs setup time. Recommendation: yes if time allows.
+3. Local fallback stack (§4a): Speaches container (faster-whisper + Kokoro)
+   vs direct Python libraries — recommendation: Speaches, one container.
+   Condition 6 (local Whisper) is now in the experiment by default.
 4. Accept the ElevenLabs browser SDK as the mock page's one dependency.
 5. Default interviewer LLM: Claude (recommended) vs Flash.
 6. Decision-rule thresholds (≤5% damage, ≤3% lenient TER) — confirm.
