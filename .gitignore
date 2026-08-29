@@ -31,3 +31,9 @@ suggestion.md
 Thumbs.db
 Desktop.ini
 .DS_Store
+
+# Personal inputs and mock-interview data - never committed
+private/
+grader/stt_audio/
+grader/mock_sessions.jsonl
+interview_exp/

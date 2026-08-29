@@ -2,3 +2,6 @@
 # dependency-free static JS, served by the backend or by nginx in Docker.
 anthropic>=0.119.0
 scikit-learn>=1.4
+
+# Resume parsing (PDF); .docx is parsed with the standard library.
+pypdf>=4.0

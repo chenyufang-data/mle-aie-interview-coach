@@ -181,6 +181,22 @@ Then open:
 http://127.0.0.1:8000
 ```
 
+## Resume files → text
+
+The upcoming mock-interview feature (see `docs/mock_interview_plan.md`) and
+its transcription experiment need your resume as plain text. `resume_parser.py`
+converts PDF and Word files:
+
+```powershell
+.venv\Scripts\python resume_parser.py path\to\resume.pdf      # or .docx / .txt / .md
+```
+
+Output goes to `private/<name>.txt` (gitignored) with a preview so you can
+check the extraction. PDFs are read with `pypdf`; `.docx` is parsed from its
+XML with the standard library (paragraphs and tables in order); ligatures,
+bullet glyphs and wrapped hyphens are normalized. Legacy `.doc` and scanned
+(image-only) PDFs are not supported — save as `.docx` or export a text PDF.
+
 ## How grading works
 
 For knowledge-base questions, the server sends Claude the chunk's `model_answer`,
