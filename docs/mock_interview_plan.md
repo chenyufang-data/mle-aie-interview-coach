@@ -380,7 +380,42 @@ tagged and excluded here, not deleted.
 **Hidden interview plan** (once, at start): `{role_profile, project,
 opening, probe_targets: [5–8 technical points from the project + role
 themes], rubric_chunks: [...], on_the_fly_rubrics: {...}, behavioral_targets,
-wander_budget, max_turns}`. **Phase machine** enforced in code: warm-up (1) →
+wander_budget, max_turns}`.
+
+### 7c. Default job descriptions
+
+When no JD is pasted, the session still runs through the JD path: a small
+library of **default JD templates** (`public/jd_templates.json` or served
+from the backend), one per role family × level — Machine Learning Engineer,
+AI / LLM Application Engineer, Data Scientist, ML Platform / Infra, Applied
+Scientist; junior / mid / senior. Each is a short, realistic posting
+(responsibilities, must-haves, stack, what the team evaluates) written from
+common real postings, with an optional *domain* slot the resume fills
+("fraud detection", "recommendations", "forecasting") so probe themes stay
+specific. The role picker (§7a) maps each proposed role to a template; the
+user can edit the template text before starting, and the UI labels it as a
+generic default. One code path — JD text → role profile — whether the JD
+was pasted or defaulted, which is the point: the persona and probe structure
+are always built the same way.
+
+### 7d. Which model does what
+
+"The grader" is four different jobs in the mock, and they do not all want
+the same model:
+
+| Job | Level 1 / 2 default | On demand ("Always Claude") | Level 3 (offline) | Why |
+| --- | --- | --- | --- | --- |
+| Live interviewer turns (12 × per session, latency-critical) | DeepSeek Flash | Claude | Ollama | cheap, fast, measured 94% agreement with the teacher as a judge |
+| End-of-session report / scorecard (1 × per session, quality-critical) | **Claude** when a key is present, else Flash | — | Ollama (labelled lower-confidence) | one call, tens of cents; the scorecard is tracked across sessions, and Claude's 95% regrade consistency vs Flash's 53–57% is what makes session-to-session comparison meaningful |
+| Per-key-point verdicts on bank-grounded probes | distilled kp classifier (free, deterministic) with the LLM's verdicts alongside | — | same | reuse of the measured classifier; also the instrument for the transcription-damage number |
+| Communication metrics | computed, no model | — | same | deterministic by design |
+
+The distilled sklearn grader is *not* a general grader for the mock — it was
+distilled on course rubrics — so it plays the supporting roles above rather
+than replacing the scorecard. Phase 1 includes a small consistency test
+(regrade 5 sessions twice with Flash and with Claude) so the report default
+is a measured choice: Flash takes over the report only if its scorecard
+consistency comes within a few points of Claude's. **Phase machine** enforced in code: warm-up (1) →
 walkthrough (1) → deep dive (4–6, adaptive) → behavioral (1–2) → closing (1)
 → done. The model chooses content within the phase: follow up on a weakness
 in the last answer or move to the next unprobed target — one question only.
@@ -447,6 +482,22 @@ Plus **red flags** (contradictions between answers, claims that dissolve
 under follow-up, inability to explain one's own resume line, blame-shifting)
 and a hiring-committee style **overall call** — *strong hire / hire / lean
 no / no* — with the two sentences an interviewer would actually write.
+
+**Layering — global rubric + role layer.** The six dimensions above are the
+**global rubric** and never change: a stable scorecard is what lets progress
+be tracked across sessions (the same dimension, the same anchors, week over
+week). On top of it, a **role layer** is generated once the resume and the
+role are chosen, from the role profile's "what they evaluate": 1–3 extra
+*role signals* with their own anchors — e.g. MLE: production judgement
+(serving, monitoring, failure modes) and experimentation rigor; AI/LLM
+engineer: evaluation design, prompt/agent robustness, cost–latency
+trade-offs; Data Scientist: statistical rigor and business framing; Applied
+Scientist: novelty and literature awareness — plus a **level shift** in what
+"9" means (senior: scope, ambiguity, influence on others; junior: correctness
+and learning speed). Role signals are scored and shown separately from the
+global six and folded into the overall call, so the global scores stay
+comparable across roles. Per-question rubrics (Level A) are inherently
+role-specific already.
 
 Honesty about validity: unlike the course grader there is no gold label for
 "a good mock-interview answer". What can be measured is *consistency*
