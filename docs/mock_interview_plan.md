@@ -134,18 +134,39 @@ Three options were weighed:
 | **ElevenLabs Speech Engine** (bring-your-own agent: they do STT, turn-taking, barge-in, TTS, playback; your server receives transcripts + history and streams text back; Python and JS SDKs; `engine.serve()` or ASGI integration) | Solved turn-taking and barge-in; the interview state machine, prompts, grading, and report stay entirely in this project; built for exactly this shape | $0.08/min; a browser SDK (first external frontend dependency); some abstraction unknowns (keyterms per session, spoken prefix on interruption) | **chosen for the live loop** |
 | **DIY** (Scribe v2 Realtime WebSocket + own VAD/endpointing + LLM streaming + TTS WebSocket + own barge-in) | Full control and full instrumentation; cheapest per minute (~$0.25 per 15-min session) | Turn-taking and barge-in are the hard part; weeks of tuning | kept as the measured fallback path; Phase 0 is DIY by nature |
 
-Recommendation: **Speech Engine for the live conversation; own server for
-everything that is the product** (state machine, prompts, grading, report).
-Latency is still measured end-to-end from the browser regardless, so the
-budget in §3 is a measured number, not a vendor claim. The existing browser
-Web Speech + `speechSynthesis` path stays as the free/offline fallback and
-is condition 1 of the experiment.
+Recommendation: **ElevenLabs Speech Engine is Level 1 — the reference loop
+and the premium option; own server for everything that is the product**
+(state machine, prompts, grading, report). The expected *main* usage is
+Level 2 (local audio + DeepSeek Flash, §4a) **if** the equivalence test in
+Phase 2 shows it performs like Level 1; Level 1 then remains the benchmark
+and the occasional premium session. Latency is measured end-to-end from the
+browser on every level, so the budget in §3 is a measured number, not a
+vendor claim.
 
-### 4a. Local mode — the offline fallback for the audio models
+### 4a. Fallback levels for the ElevenLabs stack
 
-Ollama cannot serve this: it is an LLM runtime and has no STT/TTS models.
-The right shape is the same idea one layer over — a local, OpenAI-compatible
-**audio** server — plus the LLM the project already runs on Ollama:
+Degradation is organized in **levels**, each a complete working
+configuration, not per component:
+
+| Level | Audio (STT / TTS / turn-taking) | LLM | Needs | ≈ Cost / session | Role |
+| --- | --- | --- | --- | --- | --- |
+| **1** | ElevenLabs: Scribe v2 Realtime (+50 keyterms), Flash v2.5 TTS, Speech Engine loop | Claude or DeepSeek Flash | internet, ElevenLabs credits | $1.30–1.60 | reference loop; premium sessions |
+| **2** | Local audio server (Speaches: faster-whisper turbo + Kokoro) + Silero VAD, DIY loop | DeepSeek Flash | GPU; internet for the LLM only | $0.01 | **expected main usage** if the equivalence test passes |
+| **3** | same local audio | Ollama | nothing — fully offline | $0 | offline |
+| degraded | browser Web Speech + `speechSynthesis`, or text only | any | a browser | — | last resort |
+
+All levels share one loop implementation and one turn function; only the
+endpoints differ (`AUDIO_BACKEND`, `LLM_ENGINE`). The *final* transcript
+(the one the report grades) is where accuracy matters most, and Scribe
+batch with the 1000-term lexicon costs ≈ $0.07 per session — so a Level-2
+session with a Level-1 final transcript is the cheapest high-accuracy
+combination whenever the machine is online; Level 3 uses local Whisper for
+the final transcript too.
+
+Why the local audio layer is not "Ollama for audio": Ollama is an LLM
+runtime with no STT/TTS models. The right shape is the same idea one layer
+over — a local, OpenAI-compatible **audio** server. The components of
+Levels 2–3:
 
 | Role | Local choice | Why | Zero-install fallback |
 | --- | --- | --- | --- |
@@ -167,9 +188,10 @@ report). What local mode gives up: Speech Engine's tuned turn-taking and
 barge-in (the DIY loop is ours to tune), and Scribe's keyterm prompting
 (Whisper's `initial_prompt` is weaker — condition 6 measures how much).
 
-Fallback chains, in order — audio: ElevenLabs → local server → browser API
-→ text; LLM: Claude → DeepSeek Flash → Ollama. Every level is measured in
-Phase 0 rather than assumed.
+Whether Level 2 is "as good as" Level 1 is not assumed: Phase 0 measures
+the STT half, and the Phase 2 **equivalence test** (§9) measures the whole
+loop — latency, cut-offs, barge-in, live term accuracy, TTS preference —
+under a pre-registered rule.
 
 A design element that falls out of the two-transcript reality: record the
 session locally (`MediaRecorder`) and, after the interview, **re-transcribe
@@ -233,10 +255,29 @@ STT hours in every plan cover re-transcription many times over; LLM extra).
 | 30 | 450 | Creator + 175 × $0.08 | $36 |
 | 60 | 900 | Creator + 625 × $0.08 = $72, or Pro $99 (1,238 min) | $72–99 |
 
-Reading: for personal prep at a few sessions a week, **Creator at $22/month
-is the realistic ceiling**; Phase 0 plus the first sessions fit in Starter.
-Local mode makes unlimited practice free once the experiment says it is
-good enough.
+Reading: for personal prep at a few sessions a week on Level 1, **Creator at
+$22/month is the realistic ceiling**; Phase 0 plus the first sessions fit in
+Starter. Level 2 makes unlimited practice essentially free once the
+experiments say it is good enough.
+
+### 5b. Plan or pay-as-you-go?
+
+Plans are prepaid bundles at a discount; overage and the Free plan's
+pay-as-you-go use the same list rates. Starter's $6 buys ≈ $8 of list value
+(75 Speech Engine minutes ≈ $6, 4.5 STT hours ≈ $1, 10k TTS chars ≈ $1) —
+but only if all three are used. So the answer follows the usage level:
+
+| If main usage is… | ElevenLabs consumption | Better choice |
+| --- | --- | --- |
+| Level 1 (Speech Engine sessions) | ≥ 75 min/month | Starter; Creator above ~275 min |
+| Level 2 (local audio + DeepSeek) | Phase 0 once (≈ $5); optional Scribe final transcripts ($0.07/session); occasional Level-1 benchmark sessions ($1.27 each) | **Pay-as-you-go** — no monthly fee; a typical month is under $3 |
+
+Break-even is one line: Starter pays for itself only in a month with more
+than 75 Speech Engine minutes (75 × $0.08 = $6). Since the expected main
+usage is Level 2, **start on pay-as-you-go** and move to Starter/Creator
+only in a heavy Level-1 month; plans are monthly and cancellable, so the
+hedge is cheap. Verification item: confirm that Free-plan pay-as-you-go
+covers Scribe, TTS, and Speech Engine minutes beyond the 15 included (§10).
 
 ## 6. User flow (unchanged in shape)
 
@@ -352,11 +393,25 @@ last-user-audio → first-agent-audio measurement.
 - [ ] report rendering + downloads; offline unit tests (fake engine); one
       Flash smoke session
 
-**Phase 2 — live loop on Speech Engine**
-- [ ] Python sidecar + browser SDK; token endpoint; patient turn-taking
-- [ ] per-session keyterms; interruption policy (verify spoken-prefix)
-- [ ] latency instrumentation, p50/p95 reported
+**Phase 2 — live loops and the Level 1 vs Level 2 equivalence test**
+- [ ] DIY loop (Levels 2–3): browser audio WebSocket, Silero VAD endpointing
+      (patient), streaming LLM → sentence chunking → TTS, barge-in with
+      spoken-prefix truncation; `AUDIO_BACKEND` / `LLM_ENGINE` switches
+- [ ] Speaches container (faster-whisper turbo + Kokoro); `initial_prompt`
+      from the session keyterms
+- [ ] Level 1: Speech Engine sidecar + browser SDK; per-session keyterms;
+      interruption policy (verify spoken-prefix)
+- [ ] latency instrumentation on every level, p50/p95 last-user-audio →
+      first-agent-audio
 - [ ] local recording + post-session re-transcription; two-transcript report
+- [ ] **Equivalence test**: the same scripted 10-turn interview run on
+      Level 1 and Level 2 (and 3), measuring live TER on lexicon terms,
+      downstream grade damage, p50/p95 latency, cut-off rate (interviewer
+      interrupting a thinking pause), barge-in success, and a blind TTS
+      preference on 10 sentences. Pre-registered rule: **adopt Level 2 as
+      main usage if its downstream damage is within 2 points of Level 1,
+      p95 latency ≤ 2.0 s, and cut-off rate ≤ 5%**; otherwise iterate on the
+      DIY loop and re-test, with Level 1 as main usage meanwhile.
 
 **Phase 3 — polish and portfolio**
 - [ ] consent-aware opt-in logging; prompt-cached materials prefix
@@ -365,7 +420,9 @@ last-user-audio → first-agent-audio measurement.
 ## 10. Open decisions and verification items
 
 Decisions:
-1. ElevenLabs plan: Starter ($6) is enough to start.
+1. ElevenLabs billing: start pay-as-you-go (§5b); a plan only in a heavy
+   Level-1 month. Verify that Free-plan pay-as-you-go covers Scribe,
+   TTS, and Speech Engine minutes.
 2. The human test set: the user records ~100 sentences (~15 min).
 3. Local fallback stack (§4a): Speaches container (faster-whisper + Kokoro)
    vs direct Python libraries — recommendation: Speaches, one container.
@@ -405,8 +462,8 @@ retrievable (local recording makes this non-blocking).
 ## 12. Next-session start checklist
 
 - Start with Phase 0: say "build phase 0"; confirm the §10 decisions or
-  accept the recommendations. Have an ElevenLabs API key ready (Starter
-  plan or credits) — it goes in `.env` as `ELEVENLABS_API_KEY`.
+  accept the recommendations. Have an ElevenLabs API key ready
+  (pay-as-you-go, or credits) — it goes in `.env` as `ELEVENLABS_API_KEY`.
 - Phase 0 needs ~15 minutes of the user's time to record the human set.
 - `.env` already holds `ANTHROPIC_API_KEY` and `DEEPSEEK_API_KEY`; DeepSeek
   spend is authorized; any Claude live test needs fresh authorization;
