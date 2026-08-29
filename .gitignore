@@ -11,11 +11,6 @@ __pycache__/
 *.pyc
 .pytest_cache/
 
-# Personal practice logs (contain real interview answers) and quota state
-grader/real_sessions.jsonl
-grader/free_sessions.jsonl
-grader/usage.json
-
 # Local notes and generated reports
 resu01.txt
 suggestion.md
@@ -32,8 +27,8 @@ Thumbs.db
 Desktop.ini
 .DS_Store
 
-# Personal inputs and mock-interview data - never committed
-private/
-grader/stt_audio/
-grader/mock_sessions.jsonl
-interview_exp/
+# All personal and runtime data lives under data/ (see data/README.md):
+# resume text, gathered interview questions, practice/session logs, quota
+# state, recordings. Only the README is tracked.
+data/*
+!data/README.md

@@ -18,7 +18,7 @@ grading. It knows nothing about presentation.
     local grader) if present, keyword rubric matching otherwise.
 - Environment overrides: `PORT` (default `8000`), `HOST` (default `127.0.0.1`;
   set to `0.0.0.0` inside a container), `REAL_SESSIONS_PATH` (default
-  `grader/real_sessions.jsonl`; point it at a mounted volume in Docker so
+  `data/sessions/real_sessions.jsonl`; point it at a mounted volume in Docker so
   practice history survives rebuilds), `USERS_PATH` / `USAGE_PATH` /
   `PAID_DAILY_QUOTA` (freemium tiers, below).
 - Freemium tiers (Claude mode only): if `users.json` exists (copy
@@ -34,7 +34,7 @@ grading. It knows nothing about presentation.
   is measured, not assumed (`grader/judge_agreement.py`: 94% within-±1,
   QWK 0.93 vs the Claude teacher on the 121 held-out gold rows). Claude
   serves `"force_llm": true` ("Always Claude") requests, capped at
-  `PAID_DAILY_QUOTA` calls per day (state in `grader/usage.json`); an
+  `PAID_DAILY_QUOTA` calls per day (state in `data/usage.json`); an
   exhausted quota degrades to DeepSeek, and a failed DeepSeek call (two
   malformed responses or network error) degrades to the local grader —
   never silently to Claude, so Anthropic spend stays strictly quota-bound.
@@ -69,13 +69,13 @@ grading. It knows nothing about presentation.
   teacher hit/partial/miss verdicts when the artifact carries one
   (`grader/label_keypoints.py` + `train.py`), with the 0.35 lexical threshold
   as fallback.
-- Log every real (non-mock) graded session to `grader/real_sessions.jsonl` —
+- Log every real (non-mock) graded session to `data/sessions/real_sessions.jsonl` —
   these Claude-vs-local gold pairs feed `grader/evaluate_on_real.py`. Logging
   must never break the response (best-effort, wrapped in try/except).
 - Answer collection is disclosed and opt-out-able: the answer page shows a
   notice, and any key in `users.json` can set `"log": false` to be excluded
   from both logs. Free-tier answers (tiered Claude mode only, never `--mock`)
-  go to `grader/free_sessions.jsonl` **unlabeled** — the local model's score
+  go to `data/sessions/free_sessions.jsonl` **unlabeled** — the local model's score
   is stored for triage but must never be used as a training label
   (self-distillation would amplify the student's own errors); they become
   training data only after teacher labeling.

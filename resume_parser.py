@@ -1,7 +1,7 @@
 """Extract plain text from a resume file (PDF, Word .docx, .txt/.md).
 
 CLI:   .venv\\Scripts\\python resume_parser.py path\\to\\resume.pdf [-o out.txt]
-       (default output: private/<name>.txt - the private/ folder is gitignored)
+       (default output: data/resume/<name>.txt - data/ is gitignored)
 
 Library:  from resume_parser import extract_text, extract_text_from_bytes
 
@@ -26,7 +26,7 @@ from pathlib import Path
 from xml.etree import ElementTree
 
 BASE_DIR = Path(__file__).resolve().parent
-DEFAULT_OUT_DIR = BASE_DIR / "private"
+DEFAULT_OUT_DIR = BASE_DIR / "data" / "resume"
 
 SUPPORTED = (".pdf", ".docx", ".txt", ".md")
 
@@ -137,7 +137,7 @@ def main():
     parser = argparse.ArgumentParser(description="Resume file -> plain text")
     parser.add_argument("file", help="resume (.pdf, .docx, .txt, .md)")
     parser.add_argument("-o", "--out", help="output .txt path "
-                        "(default: private/<name>.txt, gitignored)")
+                        "(default: data/resume/<name>.txt, gitignored)")
     parser.add_argument("--print", action="store_true",
                         help="print the full text instead of a preview")
     args = parser.parse_args()

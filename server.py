@@ -113,7 +113,7 @@ GRADER = None
 # distilled grader, and the practice history for progress features.
 # Overridable so Docker can point it at a persistent volume.
 REAL_SESSIONS_PATH = Path(
-    os.environ.get("REAL_SESSIONS_PATH", BASE_DIR / "grader" / "real_sessions.jsonl")
+    os.environ.get("REAL_SESSIONS_PATH", BASE_DIR / "data" / "sessions" / "real_sessions.jsonl")
 )
 
 # Free-tier answers land here UNLABELED (their only score is the student
@@ -122,7 +122,7 @@ REAL_SESSIONS_PATH = Path(
 # training data only if later graded by the teacher (label_teacher.py-style
 # active learning). Kept separate from the gold-pair log for that reason.
 FREE_SESSIONS_PATH = Path(
-    os.environ.get("FREE_SESSIONS_PATH", BASE_DIR / "grader" / "free_sessions.jsonl")
+    os.environ.get("FREE_SESSIONS_PATH", BASE_DIR / "data" / "sessions" / "free_sessions.jsonl")
 )
 
 # Freemium tiers (Claude mode only): a request's X-Access-Key header is looked
@@ -132,7 +132,7 @@ FREE_SESSIONS_PATH = Path(
 # does not exist, tiers are disabled and every request grades with Claude —
 # the original single-user behaviour.
 USERS_PATH = Path(os.environ.get("USERS_PATH", BASE_DIR / "users.json"))
-USAGE_PATH = Path(os.environ.get("USAGE_PATH", BASE_DIR / "grader" / "usage.json"))
+USAGE_PATH = Path(os.environ.get("USAGE_PATH", BASE_DIR / "data" / "usage.json"))
 PAID_DAILY_QUOTA = int(os.environ.get("PAID_DAILY_QUOTA", "30"))
 USERS = {}
 # True whenever USERS_PATH exists — even if it fails to parse. A present-but-
@@ -240,6 +240,7 @@ def log_real_session(data, result, user=None, engine=None):
             "timeUsed": data.get("timeUsed"),
             "evaluation": result,
         }
+        REAL_SESSIONS_PATH.parent.mkdir(parents=True, exist_ok=True)
         with REAL_SESSIONS_PATH.open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(record, ensure_ascii=False) + "\n")
     except Exception as exc:
@@ -268,6 +269,7 @@ def log_free_session(data, result, user, reason):
             "local_score": result.get("overall_score"),
             "teacher_score": None,
         }
+        FREE_SESSIONS_PATH.parent.mkdir(parents=True, exist_ok=True)
         with FREE_SESSIONS_PATH.open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(record, ensure_ascii=False) + "\n")
     except Exception as exc:

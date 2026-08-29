@@ -389,7 +389,7 @@ plays the same part from the resume alone.
 **A third question bank from 面经.** Real interview-experience posts
 (一亩三分地 and similar) hand-collected by the user — no crawler — become
 `rag_exp/`, a bank in the same chunk schema the app already serves
-(the first source already exists: `interview_exp/`, gitignored because it
+(the first source already exists: `data/interview_exp/`, gitignored because it
 names a third party, holds the live interview questions the user gathers —
 a question-frequency log with columns question / frequency / interviewee /
 company / industry / round, and a per-interview record with JD links and
@@ -467,7 +467,7 @@ process using the Python SDK (`on_transcript` → the same turn function →
 `session.send_response(stream)`), so the text path and the voice path share
 one state machine. **Engine routing** reuses `grading_route()`; free tier
 cannot run a mock (needs an LLM). **Logging** off by default (resumes are
-personal data); P3 opt-in writes `grader/mock_sessions.jsonl` under the
+personal data); P3 opt-in writes `data/sessions/mock_sessions.jsonl` under the
 existing consent policy.
 
 ## 8. Frontend (`public/mock.html`, `public/mock.js`) and the report
@@ -634,7 +634,7 @@ retrievable (local recording makes this non-blocking).
   (pay-as-you-go, or credits) — it goes in `.env` as `ELEVENLABS_API_KEY`.
 - Phase 0 needs ~15 minutes of the user's time to record the human set.
 - Resume as text: `.venv\Scripts\python resume_parser.py <resume.pdf|.docx>`
-  → `private/<name>.txt` (gitignored). Phase 0's lexicon and Phase 1's role
+  → `data/resume/<name>.txt` (gitignored). Phase 0's lexicon and Phase 1's role
   picker read it from there; the setup page will accept the same upload.
 - `.env` already holds `ANTHROPIC_API_KEY` and `DEEPSEEK_API_KEY`; DeepSeek
   spend is authorized; any Claude live test needs fresh authorization;

@@ -40,7 +40,8 @@ mle-aie-interview-coach/
 ├── .env.sample                           documented environment variables
 ├── docker-compose.yml                    two-service deployment
 ├── docker/                 (3 files)     backend.Dockerfile, frontend.Dockerfile, nginx.conf
-├── docs/                   (4 files)     backend.md, frontend.md, specification.md, interview_prep.md
+├── docs/                   (6 files)     contracts, specification, interview prep (en/zh), mock-interview plan
+├── data/                   (gitignored)  personal + runtime data; only data/README.md is tracked
 ├── public/                 (4 files)     dependency-free frontend
 ├── grader/                 (14 files)    the distillation subsystem (see §5)
 ├── tests/                  (3 files)     retrieval + grader regression suites
@@ -49,9 +50,10 @@ mle-aie-interview-coach/
 ```
 
 Runtime-only files (gitignored, never committed): `.env` (API keys),
-`users.json` (real access keys), `grader/usage.json` (quota state),
-`grader/real_sessions.jsonl` and `grader/free_sessions.jsonl` (collected
-answers).
+`users.json` (real access keys), and everything under `data/` — resume text,
+gathered interview questions, `data/sessions/*.jsonl` (collected answers),
+`data/usage.json` (quota state), recordings. `data/README.md` documents the
+layout; in Docker the same tree is the `coach-data` volume at `/data`.
 
 ## 3. Backend — `server.py`
 

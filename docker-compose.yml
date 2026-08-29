@@ -11,11 +11,12 @@ services:
         required: false # not needed in --mock mode
     environment:
       HOST: 0.0.0.0
-      REAL_SESSIONS_PATH: /data/real_sessions.jsonl
-      FREE_SESSIONS_PATH: /data/free_sessions.jsonl
+      REAL_SESSIONS_PATH: /data/sessions/real_sessions.jsonl
+      FREE_SESSIONS_PATH: /data/sessions/free_sessions.jsonl
       USAGE_PATH: /data/usage.json
     volumes:
-      # Practice history and quota state survive container rebuilds.
+      # Practice history and quota state survive container rebuilds
+      # (same layout as the local data/ folder - see data/README.md).
       - coach-data:/data
       # Freemium tiers: comment this out (or delete users.json) to disable —
       # without it, every request grades with Claude (single-user setup).

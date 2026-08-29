@@ -170,8 +170,8 @@ the backend service (a commented line in `docker-compose.yml` shows how).
 
 **Answer collection**: the answer page discloses that graded answers are stored
 to improve the grading model; any key can opt out with `"log": false` in
-`users.json`. Claude-graded answers land in `grader/real_sessions.jsonl` as
-gold pairs; free-tier answers land in `grader/free_sessions.jsonl` *unlabeled*
+`users.json`. Claude-graded answers land in `data/sessions/real_sessions.jsonl` as
+gold pairs; free-tier answers land in `data/sessions/free_sessions.jsonl` *unlabeled*
 (the local model's own score is never a training label) until a teacher-labeling
 pass promotes them. Both files are gitignored.
 
@@ -191,7 +191,7 @@ converts PDF and Word files:
 .venv\Scripts\python resume_parser.py path\to\resume.pdf      # or .docx / .txt / .md
 ```
 
-Output goes to `private/<name>.txt` (gitignored) with a preview so you can
+Output goes to `data/resume/<name>.txt` (gitignored) with a preview so you can
 check the extraction. PDFs are read with `pypdf`; `.docx` is parsed from its
 XML with the standard library (paragraphs and tables in order); ligatures,
 bullet glyphs and wrapped hyphens are normalized. Legacy `.doc` and scanned
@@ -302,7 +302,7 @@ plain model keeps scoring. The dense labels earn their keep in the
 The construction-label metrics `train.py` prints are optimistic (those labels
 partly share signal with the features); the gold-label section of its output is
 the honest one. The third check is real usage: every real (non-mock) graded
-session is logged to `grader/real_sessions.jsonl` (kept out of git), and
+session is logged to `data/sessions/real_sessions.jsonl` (kept out of git), and
 `grader/evaluate_on_real.py` reports Claude-vs-local agreement on your actual
 answers as they accumulate.
 

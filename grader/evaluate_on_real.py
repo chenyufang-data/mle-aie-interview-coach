@@ -2,7 +2,7 @@
 
 Run:  .venv\\Scripts\\python grader\\evaluate_on_real.py
 
-Reads grader/real_sessions.jsonl (written automatically by server.py whenever
+Reads data/sessions/real_sessions.jsonl (written by server.py whenever
 a real, non-mock evaluation happens) and compares the local distilled grader's
 prediction against the score Claude actually gave for the same answer. This is
 the honest test-distribution evaluation: your writing style, under time
@@ -24,7 +24,7 @@ import joblib
 
 from grader import features  # noqa: F401  (unpickling needs FeatureExtractor importable)
 
-LOG_PATH = BASE_DIR / "grader" / "real_sessions.jsonl"
+LOG_PATH = BASE_DIR / "data" / "sessions" / "real_sessions.jsonl"
 ARTIFACT_PATH = BASE_DIR / "grader" / "model.joblib"
 MIN_ROWS_FOR_RANK = 5
 

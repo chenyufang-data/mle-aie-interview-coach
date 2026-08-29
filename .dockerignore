@@ -14,10 +14,8 @@ __pycache__
 *.pyc
 .pytest_cache
 
-# Personal data and local notes.
-grader/real_sessions.jsonl
-grader/free_sessions.jsonl
-grader/usage.json
+# Personal data and local notes (all runtime data mounts at /data).
+data
 resu01.txt
 suggestion.md
 *.docx

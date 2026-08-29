@@ -13,7 +13,7 @@ answers (within +/-1, MAE).
 
 Pick the operating point, then keep the chosen thresholds in server.py in
 sync. Rules are measured on synthetic answers - the population is not real
-users, so re-run against real_sessions.jsonl once it has volume.
+users, so re-run against data/sessions/real_sessions.jsonl once it has volume.
 """
 
 import json
