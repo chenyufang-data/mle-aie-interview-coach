@@ -585,6 +585,10 @@ against real interview outcomes.
 - [ ] consent-aware opt-in logging; prompt-cached materials prefix
 - [ ] rubric tie-in with prep-doc Q&A; README + interview_prep additions
 
+**Infra track — private RAG service (§13)**: see the checklist there; it
+runs alongside Phases 1–3 and is the prerequisite for sharing the mock with
+authorized users.
+
 ## 10. Open decisions and verification items
 
 Decisions:
@@ -598,6 +602,11 @@ Decisions:
 4. Accept the ElevenLabs browser SDK as the mock page's one dependency.
 5. Default interviewer LLM: Claude (recommended) vs Flash.
 6. Decision-rule thresholds (≤5% damage, ≤3% lenient TER) — confirm.
+7. Private service access shape (§13): Tailscale private network
+   (recommended for "me plus a few people") vs public HTTPS + access keys
+   (needed for a public demo and browser voice on EC2). Both can coexist.
+8. Private data storage: the private git repository (now) vs a versioned S3
+   bucket (when data outgrows git or others need deploy-time access).
 
 Verify against DeepSeek docs before Phase 1: the streaming (`stream: true`,
 SSE) path for the OpenAI-compatible endpoint — `call_deepseek` is currently
@@ -639,6 +648,58 @@ retrievable (local recording makes this non-blocking).
 - `.env` already holds `ANTHROPIC_API_KEY` and `DEEPSEEK_API_KEY`; DeepSeek
   spend is authorized; any Claude live test needs fresh authorization;
   ElevenLabs spend needs authorization once the key exists.
+
+## 13. Private RAG service — data private, code public, service gated
+
+Decision (2026-08-29): the retrieval-and-grading backend becomes a **private
+service** that the author and authorized users reach, while the code stays
+public. This is the industry pattern the repo split already set up: code in
+the public repository, data in private storage, secrets in the environment,
+and a deployed instance that is authenticated — not a new component.
+
+**What is actually private at runtime.** The app never needs a chunk's
+lesson text (`content`) to serve — the public banks are sufficient for the
+course tracks. The private data the service exists to serve is (a) the
+`rag_exp/` bank built from gathered 面经 (§7b), (b) per-user data (session
+logs, mock-interview sessions, resumes in flight), and (c) access keys. So
+the private service = the existing backend + `rag_exp/` mounted from private
+storage + authentication. The complete course banks stay in the private
+repository for training only.
+
+**Design.**
+- *Data registry*: private banks and the grader dataset live in the private
+  repository (or a versioned private S3 bucket later); a deploy step pulls
+  the current version into the `coach-data` volume. Data is versioned
+  separately from code; the public image contains no private data.
+- *Service boundary*: a `POST /api/retrieve` endpoint (`{track, query,
+  filters, k}` → ranked chunks with rubric fields) so every client — the
+  practice page, the mock interviewer, a future MCP connector for claude.ai —
+  uses the same retrieval; grading stays behind `/api/evaluate`.
+- *Access*, one of two shapes, chosen in §10:
+  - **Private network**: Tailscale on the EC2 host — no public port, invited
+    users join the tailnet; zero exposure, free for personal use.
+  - **Public but gated**: HTTPS (domain + Caddy/Let's Encrypt) with the
+    existing access keys, optionally Cloudflare Access in front. Required
+    anyway for browser voice on the public deployment.
+- *Per-user authorization*: `users.json` grows a `banks` allow-list (which
+  private banks a key may query) — the same fail-closed loader.
+- *Observability*: per-request log line (engine, bank, latency, cost
+  estimate) into `data/`, and the `/api/meta` health check already in compose.
+
+**What it is not.** No vector database or managed RAG service: at 282 chunks
+BM25 measures 100% Recall@5, and adding an index without a number asking for
+it would contradict the project's own evidence. The trigger is measured — the
+retrieval suite showing BM25 recall dropping as `rag_exp/` grows, or the mock
+needing semantic matching from JD themes to probes — and the first response
+is embeddings + a local index (pgvector or Qdrant), not a hosted service.
+
+**Checklist (infra track, can run alongside Phases 1–3).**
+- [ ] `POST /api/retrieve` + contract entry in docs/backend.md
+- [ ] deploy step that pulls private banks into the volume (script +
+      compose mount); public image verified to contain no private data
+- [ ] access shape chosen and set up (Tailscale, or domain + HTTPS + keys)
+- [ ] `users.json` bank allow-list, fail-closed, unit-tested
+- [ ] request log line; `docs/deployment.md` runbook
 
 ## Sources (ElevenLabs, read 2026-08-29)
 
