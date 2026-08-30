@@ -358,3 +358,83 @@ handles it). Conclusion — now shipped: V4-Flash is the paid tier's quota-free
 workhorse judge (see the tiers section above), but Claude stays the
 distillation teacher — gold labels need the reproducibility — and serves
 "Always Claude" requests under the daily quota.
+
+## STT on technical vocabulary (mock-interview Phase 0, measured)
+
+A voice mock interview is only as fair as its transcript. Speech-to-text
+mangles exactly the words that carry the signal — "QWK" → "quick", "MAE" →
+"may", "LightGBM" → "light GBM" — and the grader then penalizes the candidate
+for the pipeline's failure. So before any voice loop is built, this experiment
+measures that damage under every transcription condition the app could ship,
+with a pre-registered decision rule (ship the cheapest condition with ≤5% of
+grades moved ≥1 point and ≤3% lenient term error rate on the human set).
+
+- `grader/stt_testset.py` builds `grader/stt_lexicon.json` (339 signal terms:
+  metrics, models, libraries, concepts, letter-number mixes, with spoken
+  aliases) and `grader/stt_sentences.jsonl` (88 reading items: 68 term-dense
+  sentences plus 20 whole rubric-graded answers, ~16 min to read).
+- `public/stt_record.html` records the human set — one take per item, with the
+  browser Web Speech API run on the same microphone so today's voice path is
+  condition 1 for free.
+- `grader/stt_eval.py` runs the conditions (dry-run cost first, `--confirm` to
+  spend) and reports WER, **term error rate** (strict = the written form came
+  back; lenient = the meaning did, "light gbm" ≡ LightGBM) with a per-term
+  "what it became" table, **downstream damage** (the distilled grader scores
+  the reference and the transcript; ≥1-point moves count), per-key-point
+  verdict flips, realtime finalization latency and measured credits.
+  `pip install -r requirements-stt.txt` adds the SDK and faster-whisper.
+
+Results on the synthetic set (ElevenLabs Flash v2.5 reading the items, 16.9
+min — clean pronunciation, so an optimistic bound; the human set decides):
+
+| Condition | WER | TER strict | TER lenient | grade moved ≥1 | word errors only | cost / 17 min |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Scribe v2 batch | 4.1% | 12.4% | 7.0% | 15% | 5% | $0.19 measured |
+| Scribe v2 batch + 339 keyterms | **2.0%** | **3.3%** | **2.3%** | 20% | 10% | ≈ $0.13 |
+| batch + post-hoc lexicon fix | 4.7% | 7.7% | 6.7% | 25% | 10% | $0 |
+| Scribe v2 Realtime, no keyterms | 4.4% | 16.7% | 9.0% | 30% | 15% | $0.11 measured |
+| Realtime + naive first-50 keyterms | 3.3% | 10.4% | 5.7% | 25% | 10% | $0.09 |
+| Realtime + policy-chosen 50 | 3.2% | 10.0% | 6.0% | 20% | 5% | $0.08 |
+| local faster-whisper large-v3-turbo | 5.6% | 23.4% | 14.7% | 30% | 10% | $0 |
+| local Whisper + 50-term `initial_prompt` | 4.9% | 20.1% | 13.0% | 30% | 5% | $0 |
+
+Full tables, per-term failures and the keyterm lists: `docs/stt_evaluation.md`
+(generated; `grader/stt_eval_results.json` is the machine copy).
+
+What it says so far:
+
+1. **WER hides the problem.** 2–5% WER, but 7–15% of technical terms lost
+   (12–23% in their written form). A term error is worth far more than a
+   word error here.
+2. **Keyterm prompting is the lever.** The full lexicon cuts Scribe batch's
+   lenient term loss from 7.0% to 2.3% (strict 12.4% → 3.3%); Realtime's 50
+   slots cut 9.0% to ~6%. The measured-failure policy and the naive first-50
+   list overlap in 33–35 slots on this set (the lexicon starts with the
+   metric acronyms, which are exactly what fails), so they tie here.
+3. **Post-hoc fuzzy correction is a negative result**: 64 rewrites, 47 of them
+   false (73%), WER up, term loss barely down. Dropped — the keyterms do the
+   job upstream.
+4. **Local Whisper loses about twice the terms of Scribe batch** and 1.5× of
+   Realtime; the prompt helps a little. The offline levels of the mock must
+   re-transcribe with keyterms whenever the machine is online.
+5. **Downstream damage is real and, at n = 20 answers, coarse**: 15–30% of
+   grades move ≥1 point. Two findings the plan did not anticipate: the
+   distilled grader moves **50% of grades when the untouched reference is
+   merely lowercased and stripped of punctuation** — surface-form brittleness
+   that inflates the raw column and that the mock report must neutralize (grade
+   normalized text on both sides, or harden the grader on style); and the
+   DeepSeek Flash judge's **noise floor is 35%** moved ≥1 on identical text,
+   consistent with its 57% exact self-agreement above, so it cannot measure
+   damage at this scale.
+6. **Latency**: Scribe Realtime finalizes 0.11 s p50 / 0.25 s p95 after the
+   commit — the ~150 ms claim holds. **Cost**: batch STT on 10-second clips
+   billed ~3× the list price (per-request minimums; irrelevant for one long
+   session file), Realtime matched the list price, and Flash TTS billed ~0.1
+   credit per character. The whole experiment so far cost $0.91 of credits.
+
+Decision: **deferred to the human set** as pre-registered — no condition meets
+the rule on synthetic audio (batch + keyterms clears the term bar; nothing
+clears the damage bar). The provisional shape is the one the numbers point at:
+Scribe batch + full-lexicon keyterms for the final transcript, Realtime + 50
+policy keyterms live, no post-hoc correction, and normalized text on both sides
+of the grader.

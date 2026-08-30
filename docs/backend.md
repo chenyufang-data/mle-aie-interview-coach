@@ -157,3 +157,19 @@ Claude-graded rows as gold pairs):
 
 Errors are returned as `{ "error": "..." }` with status 400 (missing answer) or
 500 (upstream/API failures).
+
+### Developer routes: `/api/stt/*` (localhost only)
+
+Used by `public/stt_record.html` to record the Phase 0 STT test set
+(`grader/stt_sentences.jsonl`). They answer only loopback clients — behind
+nginx in Docker every request arrives from the proxy and gets 403 — because
+they write under `data/stt_audio/human/` (override the root with
+`STT_AUDIO_DIR`).
+
+- `GET /api/stt/items` → `{ items, recorded, dir }`: the sentence set plus the
+  manifest of takes already saved.
+- `POST /api/stt/record` with `{ id, mime, audio_base64, duration_ms,
+  web_speech: { text, supported, error }, user_agent }` → saves
+  `audio/<id>.<ext>` and updates `manifest.json`; re-recording replaces the
+  take and bumps its `take` counter.
+- `GET /api/stt/audio/<id>` → the saved take, for playback.

@@ -15,7 +15,15 @@ data/
 │                                            for grader/evaluate_on_real.py)
 │                      free_sessions.jsonl   free-tier answers, stored UNLABELED
 │                      mock_sessions.jsonl   mock-interview sessions (opt-in, planned)
-├── stt_audio/       Phase 0 transcription-experiment recordings (planned)
+├── stt_audio/       Phase 0 transcription experiment (grader/stt_eval.py), one
+│                    folder per audio set:
+│                      human/            takes from public/stt_record.html
+│                      synth_<voice>/    ElevenLabs TTS readings of the same items
+│                    each with audio/, manifest.json (durations, browser transcript),
+│                    transcripts.jsonl (every condition's output, the re-run cache)
+│                    and judge.jsonl (cached DeepSeek grades)
+├── stt/             lexicon_extra.json — private terms (resume, employers,
+│                    product names) merged into grader/stt_lexicon.json when present
 └── usage.json       per-key daily Claude quota state
 ```
 

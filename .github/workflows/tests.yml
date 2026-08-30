@@ -18,3 +18,6 @@ jobs:
       - run: python tests/test_retrieval.py
       # Distilled grader artifact: ordering invariants on probe answers.
       - run: python tests/test_grader.py
+      # STT experiment text layer: normalization, WER, term error rate,
+      # post-hoc correction audit, keyterm policy (pure Python).
+      - run: python tests/test_stt_text.py

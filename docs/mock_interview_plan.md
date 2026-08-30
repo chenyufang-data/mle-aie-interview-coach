@@ -92,6 +92,26 @@ estimate, `--confirm`), `grader/stt_lexicon.json`, results table committed,
 README section. Estimated cost: well under $5 (Scribe batch $0.22/hr on
 <1 hr of audio; ~10k TTS characters ≈ $0.50–1.00).
 
+**Status (2026-08-30).** Everything above is built and has run end to end on
+the synthetic set (`synth_matilda`, 88 items, 16.9 min; ≈ $0.9 of credits for
+TTS + every Scribe condition). Results: `docs/stt_evaluation.md` and the README
+section. Headline numbers (synthetic audio, so optimistic): Scribe batch loses
+7.0% of lexicon terms (lenient) at 4.1% WER; the full-lexicon keyterms cut that
+to 2.3% (strict 12.4% → 3.3%); Realtime + 50 keyterms 9.0% → 5.7–6.0%; local
+Whisper turbo 14.7% (13.0% with `initial_prompt`); post-hoc fuzzy correction is a
+**negative result** (73% of its rewrites were false); Scribe Realtime finalizes
+in 0.11 s p50 / 0.25 s p95. Downstream damage under the distilled grader is
+15–30% of answers moved ≥ 1 point (5–15% when both sides are normalized) — and
+no condition meets the pre-registered rule on this set. Two things the
+experiment surfaced that were not in the plan: the **grader itself moves 50% of
+grades when the untouched reference is merely lowercased and stripped of
+punctuation** (surface-form brittleness the mock report must neutralize by
+grading normalized text on both sides, or by hardening the grader), and the
+**Flash judge's noise floor is 35%** moved ≥ 1 on identical text, so it cannot
+measure damage at this scale. **The decision waits for the human set**: run
+`python server.py --mock`, open http://localhost:8000/stt_record.html, read the
+88 items (~16 min), then `python grader/stt_eval.py --set human --confirm --judge`.
+
 ## 3. Latency budget and turn-taking
 
 Natural conversational gaps are ~200–600 ms; beyond ~1 s the exchange feels
@@ -229,10 +249,10 @@ sentences × 3 voices ≈ 40 min of audio and ≈ 36k TTS characters.
 
 | Item | Quantity | Rate | Cost |
 | --- | --- | --- | --- |
-| Synthetic test audio (Multilingual v2 / v3 quality voices) | 36k chars | $0.10 / 1k | $3.60 |
+| Synthetic test audio (Multilingual v2 / v3 quality voices) | 36k chars | $0.10 / 1k | $3.60 — *measured 2026-08-30: Flash v2.5 on pay-as-you-go bills ≈ 0.1 credit/char, so one 88-item voice cost $0.38* |
 | Scribe v2 batch, no keyterms | 0.92 hr | $0.22 / hr | $0.20 |
-| Scribe v2 batch + keyterms | 0.92 hr | $0.27 / hr | $0.25 |
-| Scribe v2 Realtime + keyterms | 0.92 hr | ≈ $0.44 / hr | $0.40 |
+| Scribe v2 batch + keyterms | 0.92 hr | $0.27 / hr (SDK: +20% surcharge; >100 keyterms ⇒ 20 s minimum per request) | $0.25 |
+| Scribe v2 Realtime + keyterms | 0.92 hr | ≈ $0.44 / hr (measured: 410 credits ≈ $0.11 per 17-min pass, i.e. ≈ $0.39/hr, keyterms free) | $0.40 |
 | Consistency re-runs | ×2 of the STT rows | | ≈ $0.85 |
 | **Total** | | | **≈ $5.30 pay-as-you-go**; ≈ $8.60 on Starter ($6 + 26k chars over the included 10k) |
 
@@ -549,11 +569,28 @@ against real interview outcomes.
 ## 9. Phases and checklists
 
 **Phase 0 — STT evaluation (ships first; the centerpiece)**
-- [ ] `grader/stt_lexicon.json` built from corpora + resume; sentence set
-- [ ] user records the human set (~15 min); synthetic set via TTS
-- [ ] `grader/stt_eval.py`: conditions 1–5, WER/TER/downstream damage, costs
-- [ ] keyterm selection policy for the 50-term realtime limit
-- [ ] results table + README section; decision recorded
+- [x] `grader/stt_testset.py` → `grader/stt_lexicon.json` (339 terms: 215
+      curated + 124 from the banks; private overlay `data/stt/lexicon_extra.json`)
+      and `grader/stt_sentences.jsonl` (88 items: 32 curated hard-term
+      sentences, 36 bank sentences, 20 whole answers for downstream damage;
+      ~2,400 words ≈ 16 min of reading)
+- [x] recording page `public/stt_record.html` (MediaRecorder take per item +
+      Web Speech in parallel = condition 1; localhost-only `/api/stt/*` routes)
+- [ ] **user records the human set** (`python server.py --mock`, open
+      http://localhost:8000/stt_record.html, ~16 min)
+- [x] synthetic set via TTS: `synth_matilda` (Flash v2.5, 88 items, 16.9 min,
+      1,438 credits ≈ $0.38 — pay-as-you-go TTS bills ~0.1 credit/char, not 0.5)
+- [x] `grader/stt_eval.py`: all conditions incl. 6 (faster-whisper
+      large-v3-turbo on the RTX 5080, float16 via pip CUDA wheels), WER, strict /
+      lenient term error rate with a per-term "became" table, downstream damage
+      (distilled grader on the raw transcript + DeepSeek Flash judge with its
+      measured noise floor), post-hoc correction with false-correction audit,
+      realtime finalization latency, measured credits; dry-run cost + `--confirm`
+- [x] keyterm policy (`stt_text.select_keyterms`, cross-fitted by fold) vs the
+      naive first-50 — evaluated as conditions `scribe_rt_policy50` /
+      `scribe_rt_naive50`
+- [x] results: `grader/stt_eval_results.json` + `docs/stt_evaluation.md` +
+      README section (synthetic set); **decision waits for the human set**
 
 **Phase 1 — core loop, text + browser voice**
 - [ ] `mock.html` setup, materials, project picker
@@ -601,7 +638,11 @@ Decisions:
    Condition 6 (local Whisper) is now in the experiment by default.
 4. Accept the ElevenLabs browser SDK as the mock page's one dependency.
 5. Default interviewer LLM: Claude (recommended) vs Flash.
-6. Decision-rule thresholds (≤5% damage, ≤3% lenient TER) — confirm.
+6. Decision-rule thresholds (≤5% damage, ≤3% lenient TER) — confirm. On the
+   synthetic set only batch + keyterms clears the TER bar (2.3%); the damage bar
+   is not met by any condition and is entangled with grader brittleness (§2
+   status). Decide after the human set whether the damage bar is measured on
+   normalized text (word errors only) — the recommendation — or on raw text.
 7. Private service access shape (§13): Tailscale private network
    (recommended for "me plus a few people") vs public HTTPS + access keys
    (needed for a public demo and browser voice on EC2). Both can coexist.

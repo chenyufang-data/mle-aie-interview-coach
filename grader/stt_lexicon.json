@@ -1,0 +1,3209 @@
+{
+ "built_from": "curated + rag_ml/rag_ai banks",
+ "count": 339,
+ "terms": [
+  {
+   "term": "QWK",
+   "category": "metric",
+   "aliases": [
+    "quadratic weighted kappa"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "MAE",
+   "category": "metric",
+   "aliases": [
+    "mean absolute error"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "MAPE",
+   "category": "metric",
+   "aliases": [
+    "mean absolute percentage error"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "RMSE",
+   "category": "metric",
+   "aliases": [
+    "root mean squared error",
+    "root mean square error"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "MSE",
+   "category": "metric",
+   "aliases": [
+    "mean squared error"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "F1",
+   "category": "metric",
+   "aliases": [
+    "f1 score",
+    "f one"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "macro-F1",
+   "category": "metric",
+   "aliases": [
+    "macro f1"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "AUC",
+   "category": "metric",
+   "aliases": [
+    "area under the curve"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "ROC",
+   "category": "metric",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "AUC-ROC",
+   "category": "metric",
+   "aliases": [
+    "roc auc",
+    "auc roc"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "PR-AUC",
+   "category": "metric",
+   "aliases": [
+    "precision recall auc",
+    "pr auc"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "log-loss",
+   "category": "metric",
+   "aliases": [
+    "logloss",
+    "logarithmic loss"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "cross-entropy",
+   "category": "metric",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "Recall@5",
+   "category": "metric",
+   "aliases": [
+    "recall at five",
+    "recall at 5"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "Recall@k",
+   "category": "metric",
+   "aliases": [
+    "recall at k"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "MRR",
+   "category": "metric",
+   "aliases": [
+    "mean reciprocal rank"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "NDCG",
+   "category": "metric",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "R2",
+   "category": "metric",
+   "aliases": [
+    "r squared",
+    "r square"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "p-value",
+   "category": "metric",
+   "aliases": [
+    "p value"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "p95",
+   "category": "metric",
+   "aliases": [
+    "p 95",
+    "ninety fifth percentile"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "p50",
+   "category": "metric",
+   "aliases": [
+    "p 50",
+    "median latency"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "TTFT",
+   "category": "metric",
+   "aliases": [
+    "time to first token"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "WER",
+   "category": "metric",
+   "aliases": [
+    "word error rate"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "Brier score",
+   "category": "metric",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "KL divergence",
+   "category": "metric",
+   "aliases": [
+    "kullback leibler divergence"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "precision",
+   "category": "metric",
+   "aliases": [],
+   "short": null,
+   "common": true,
+   "source": "curated"
+  },
+  {
+   "term": "recall",
+   "category": "metric",
+   "aliases": [],
+   "short": null,
+   "common": true,
+   "source": "curated"
+  },
+  {
+   "term": "accuracy",
+   "category": "metric",
+   "aliases": [],
+   "short": null,
+   "common": true,
+   "source": "curated"
+  },
+  {
+   "term": "calibration",
+   "category": "metric",
+   "aliases": [],
+   "short": null,
+   "common": true,
+   "source": "curated"
+  },
+  {
+   "term": "LightGBM",
+   "category": "model",
+   "aliases": [
+    "light gbm"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "XGBoost",
+   "category": "model",
+   "aliases": [
+    "xg boost",
+    "extreme gradient boosting"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "CatBoost",
+   "category": "model",
+   "aliases": [
+    "cat boost"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "HistGradientBoosting",
+   "category": "model",
+   "aliases": [
+    "hist gradient boosting",
+    "histogram gradient boosting"
+   ],
+   "short": "HistGradientBoost",
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "random forest",
+   "category": "model",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "gradient boosting",
+   "category": "model",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "logistic regression",
+   "category": "model",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "linear regression",
+   "category": "model",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "Ridge",
+   "category": "model",
+   "aliases": [
+    "ridge regression"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "Lasso",
+   "category": "model",
+   "aliases": [
+    "lasso regression"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "ElasticNet",
+   "category": "model",
+   "aliases": [
+    "elastic net"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "SVM",
+   "category": "model",
+   "aliases": [
+    "support vector machine"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "SVC",
+   "category": "model",
+   "aliases": [
+    "support vector classifier"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "KNN",
+   "category": "model",
+   "aliases": [
+    "k nearest neighbors",
+    "k nearest neighbours",
+    "k nn"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "k-means",
+   "category": "model",
+   "aliases": [
+    "kmeans",
+    "k means"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "DBSCAN",
+   "category": "model",
+   "aliases": [
+    "db scan"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "PCA",
+   "category": "model",
+   "aliases": [
+    "principal component analysis"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "SVD",
+   "category": "model",
+   "aliases": [
+    "singular value decomposition"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "t-SNE",
+   "category": "model",
+   "aliases": [
+    "tsne",
+    "t sne"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "UMAP",
+   "category": "model",
+   "aliases": [
+    "u map"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "ARIMA",
+   "category": "model",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "SARIMAX",
+   "category": "model",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "Prophet",
+   "category": "model",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "LSTM",
+   "category": "model",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "transformer",
+   "category": "model",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "BERT",
+   "category": "model",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "Sentence-BERT",
+   "category": "model",
+   "aliases": [
+    "sentence bert",
+    "sbert"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "GPT-4o",
+   "category": "model",
+   "aliases": [
+    "gpt 4 o",
+    "gpt four o"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "Claude Opus",
+   "category": "model",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "Claude",
+   "category": "model",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "DeepSeek",
+   "category": "model",
+   "aliases": [
+    "deep seek"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "DeepSeek V4 Flash",
+   "category": "model",
+   "aliases": [
+    "deepseek v4 flash",
+    "deepseek v 4 flash"
+   ],
+   "short": "DeepSeek V4 Flash",
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "Qwen3",
+   "category": "model",
+   "aliases": [
+    "qwen 3",
+    "qwen three"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "Llama 3",
+   "category": "model",
+   "aliases": [
+    "llama three"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "Mistral",
+   "category": "model",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "Whisper",
+   "category": "model",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "faster-whisper",
+   "category": "model",
+   "aliases": [
+    "faster whisper"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "large-v3-turbo",
+   "category": "model",
+   "aliases": [
+    "large v3 turbo",
+    "large v 3 turbo"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "Kokoro",
+   "category": "model",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "Silero VAD",
+   "category": "model",
+   "aliases": [
+    "silero"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "Scribe v2",
+   "category": "model",
+   "aliases": [
+    "scribe v 2",
+    "scribe version 2"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "MiniLM",
+   "category": "model",
+   "aliases": [
+    "mini lm"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "bge-m3",
+   "category": "model",
+   "aliases": [
+    "bge m3",
+    "b g e m 3"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "scikit-learn",
+   "category": "library",
+   "aliases": [
+    "sklearn",
+    "sci kit learn"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "PyTorch",
+   "category": "library",
+   "aliases": [
+    "py torch"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "TensorFlow",
+   "category": "library",
+   "aliases": [
+    "tensor flow"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "NumPy",
+   "category": "library",
+   "aliases": [
+    "numpy"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "pandas",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "DataFrame",
+   "category": "library",
+   "aliases": [
+    "data frame"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "GridSearchCV",
+   "category": "library",
+   "aliases": [
+    "grid search cv",
+    "grid search c v"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "RandomizedSearchCV",
+   "category": "library",
+   "aliases": [
+    "randomized search cv"
+   ],
+   "short": "RandomizedSearch",
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "TimeSeriesSplit",
+   "category": "library",
+   "aliases": [
+    "time series split"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "GroupKFold",
+   "category": "library",
+   "aliases": [
+    "group k fold"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "StandardScaler",
+   "category": "library",
+   "aliases": [
+    "standard scaler"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "ColumnTransformer",
+   "category": "library",
+   "aliases": [
+    "column transformer"
+   ],
+   "short": "ColumnTransformer",
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "Pipeline",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": true,
+   "source": "curated"
+  },
+  {
+   "term": "Optuna",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "MLflow",
+   "category": "library",
+   "aliases": [
+    "ml flow"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "Airflow",
+   "category": "library",
+   "aliases": [
+    "air flow"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "Spark",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "Kafka",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "Docker",
+   "category": "tool",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "Kubernetes",
+   "category": "tool",
+   "aliases": [
+    "k8s"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "EC2",
+   "category": "tool",
+   "aliases": [
+    "ec 2",
+    "e c 2"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "t3.micro",
+   "category": "tool",
+   "aliases": [
+    "t3 micro",
+    "t 3 micro"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "S3",
+   "category": "tool",
+   "aliases": [
+    "s 3"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "SageMaker",
+   "category": "tool",
+   "aliases": [
+    "sage maker"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "nginx",
+   "category": "tool",
+   "aliases": [
+    "engine x"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "WebSocket",
+   "category": "tool",
+   "aliases": [
+    "web socket",
+    "websockets"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "FastAPI",
+   "category": "tool",
+   "aliases": [
+    "fast api"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "SQL",
+   "category": "tool",
+   "aliases": [
+    "sequel"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "JSON",
+   "category": "tool",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "JSON schema",
+   "category": "tool",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "CUDA",
+   "category": "tool",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "cuDNN",
+   "category": "tool",
+   "aliases": [
+    "cu dnn"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "GPU",
+   "category": "tool",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "VRAM",
+   "category": "tool",
+   "aliases": [
+    "v ram"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "RTX 5080",
+   "category": "tool",
+   "aliases": [
+    "rtx fifty eighty",
+    "rtx 50 80"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "vLLM",
+   "category": "tool",
+   "aliases": [
+    "v llm"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "ONNX",
+   "category": "tool",
+   "aliases": [
+    "onyx"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "TensorRT",
+   "category": "tool",
+   "aliases": [
+    "tensor rt"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "CTranslate2",
+   "category": "tool",
+   "aliases": [
+    "ctranslate 2",
+    "c translate 2"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "Ollama",
+   "category": "tool",
+   "aliases": [
+    "o llama"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "Hugging Face",
+   "category": "tool",
+   "aliases": [
+    "huggingface"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "LangChain",
+   "category": "tool",
+   "aliases": [
+    "lang chain"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "LangGraph",
+   "category": "tool",
+   "aliases": [
+    "lang graph"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "LlamaIndex",
+   "category": "tool",
+   "aliases": [
+    "llama index"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "FAISS",
+   "category": "tool",
+   "aliases": [
+    "face",
+    "fais"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "HNSW",
+   "category": "tool",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "pgvector",
+   "category": "tool",
+   "aliases": [
+    "pg vector"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "Pinecone",
+   "category": "tool",
+   "aliases": [
+    "pine cone"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "BM25",
+   "category": "tool",
+   "aliases": [
+    "bm 25",
+    "b m 25"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "ElevenLabs",
+   "category": "product",
+   "aliases": [
+    "eleven labs"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "Anthropic",
+   "category": "product",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "OpenAI",
+   "category": "product",
+   "aliases": [
+    "open ai"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "MCP",
+   "category": "tool",
+   "aliases": [
+    "model context protocol"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "ReAct",
+   "category": "concept",
+   "aliases": [
+    "re act"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "GGUF",
+   "category": "tool",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "LoRA",
+   "category": "concept",
+   "aliases": [
+    "low rank adaptation",
+    "lora"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "QLoRA",
+   "category": "concept",
+   "aliases": [
+    "q lora"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "RLHF",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "DPO",
+   "category": "concept",
+   "aliases": [
+    "direct preference optimization"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "PPO",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "SFT",
+   "category": "concept",
+   "aliases": [
+    "supervised fine tuning"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "RAG",
+   "category": "concept",
+   "aliases": [
+    "retrieval augmented generation"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "quantization",
+   "category": "concept",
+   "aliases": [
+    "quantisation"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "regularization",
+   "category": "concept",
+   "aliases": [
+    "regularisation"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "collinearity",
+   "category": "concept",
+   "aliases": [
+    "colinearity"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "multicollinearity",
+   "category": "concept",
+   "aliases": [
+    "multi collinearity"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "heteroscedasticity",
+   "category": "concept",
+   "aliases": [
+    "heteroskedasticity"
+   ],
+   "short": "heteroscedasticity",
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "leakage",
+   "category": "concept",
+   "aliases": [
+    "data leakage"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "diarization",
+   "category": "concept",
+   "aliases": [
+    "diarisation",
+    "speaker diarization"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "tokenization",
+   "category": "concept",
+   "aliases": [
+    "tokenisation"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "tokenizer",
+   "category": "concept",
+   "aliases": [
+    "tokeniser"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "embeddings",
+   "category": "concept",
+   "aliases": [
+    "embedding"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "logits",
+   "category": "concept",
+   "aliases": [
+    "logit"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "softmax",
+   "category": "concept",
+   "aliases": [
+    "soft max"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "sigmoid",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "k-fold",
+   "category": "concept",
+   "aliases": [
+    "kfold",
+    "k fold"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "cross-validation",
+   "category": "concept",
+   "aliases": [
+    "cross validation",
+    "cv"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "stratified",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "L1",
+   "category": "concept",
+   "aliases": [
+    "l one",
+    "l 1"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "L2",
+   "category": "concept",
+   "aliases": [
+    "l two",
+    "l 2"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "one-hot",
+   "category": "concept",
+   "aliases": [
+    "one hot"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "target encoding",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "bias-variance",
+   "category": "concept",
+   "aliases": [
+    "bias variance"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "overfitting",
+   "category": "concept",
+   "aliases": [
+    "over fitting"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "underfitting",
+   "category": "concept",
+   "aliases": [
+    "under fitting"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "hyperparameter",
+   "category": "concept",
+   "aliases": [
+    "hyper parameter"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "Bayesian",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "bootstrap",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "SMOTE",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "class imbalance",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "SHAP",
+   "category": "concept",
+   "aliases": [
+    "shapley"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "Box-Cox",
+   "category": "concept",
+   "aliases": [
+    "box cox"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "Yeo-Johnson",
+   "category": "concept",
+   "aliases": [
+    "yeo johnson"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "VIF",
+   "category": "concept",
+   "aliases": [
+    "variance inflation factor"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "stationarity",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "autocorrelation",
+   "category": "concept",
+   "aliases": [
+    "auto correlation"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "ACF",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "PACF",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "A/B test",
+   "category": "concept",
+   "aliases": [
+    "ab test",
+    "a b test",
+    "a/b testing"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "CUPED",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "confidence interval",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "drift",
+   "category": "concept",
+   "aliases": [
+    "data drift",
+    "concept drift"
+   ],
+   "short": null,
+   "common": true,
+   "source": "curated"
+  },
+  {
+   "term": "attention",
+   "category": "concept",
+   "aliases": [
+    "self attention"
+   ],
+   "short": null,
+   "common": true,
+   "source": "curated"
+  },
+  {
+   "term": "KV cache",
+   "category": "concept",
+   "aliases": [
+    "kv cache",
+    "key value cache"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "RoPE",
+   "category": "concept",
+   "aliases": [
+    "rope"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "context window",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "chunking",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "reranker",
+   "category": "concept",
+   "aliases": [
+    "re ranker",
+    "reranking"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "cross-encoder",
+   "category": "concept",
+   "aliases": [
+    "cross encoder"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "bi-encoder",
+   "category": "concept",
+   "aliases": [
+    "bi encoder"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "cosine similarity",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "top-p",
+   "category": "concept",
+   "aliases": [
+    "top p",
+    "nucleus sampling"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "temperature",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": true,
+   "source": "curated"
+  },
+  {
+   "term": "hallucination",
+   "category": "concept",
+   "aliases": [
+    "hallucinations"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "function calling",
+   "category": "concept",
+   "aliases": [
+    "tool calling",
+    "tool use"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "chain-of-thought",
+   "category": "concept",
+   "aliases": [
+    "chain of thought"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "few-shot",
+   "category": "concept",
+   "aliases": [
+    "few shot"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "zero-shot",
+   "category": "concept",
+   "aliases": [
+    "zero shot"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "system prompt",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "prompt caching",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "speculative decoding",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "mixed precision",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "distillation",
+   "category": "concept",
+   "aliases": [
+    "knowledge distillation"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "endpointing",
+   "category": "concept",
+   "aliases": [
+    "end pointing"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "barge-in",
+   "category": "concept",
+   "aliases": [
+    "barge in"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "latency",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": true,
+   "source": "curated"
+  },
+  {
+   "term": "throughput",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": true,
+   "source": "curated"
+  },
+  {
+   "term": "int8",
+   "category": "mixed",
+   "aliases": [
+    "int 8",
+    "8 bit integer"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "int4",
+   "category": "mixed",
+   "aliases": [
+    "int 4"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "4-bit",
+   "category": "mixed",
+   "aliases": [
+    "4 bit",
+    "four bit"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "fp16",
+   "category": "mixed",
+   "aliases": [
+    "fp 16",
+    "float 16",
+    "half precision"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "bf16",
+   "category": "mixed",
+   "aliases": [
+    "bf 16",
+    "bfloat 16"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "float32",
+   "category": "mixed",
+   "aliases": [
+    "float 32"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "v2.5",
+   "category": "mixed",
+   "aliases": [
+    "v 2.5",
+    "version 2.5"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "v3",
+   "category": "mixed",
+   "aliases": [
+    "v 3",
+    "version 3"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "14B",
+   "category": "mixed",
+   "aliases": [
+    "14 b",
+    "14 billion"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "7B",
+   "category": "mixed",
+   "aliases": [
+    "7 b",
+    "7 billion"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "82M",
+   "category": "mixed",
+   "aliases": [
+    "82 m",
+    "82 million"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "128k",
+   "category": "mixed",
+   "aliases": [
+    "128 k",
+    "128 thousand"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "1e-4",
+   "category": "mixed",
+   "aliases": [
+    "1 e 4",
+    "1e 4",
+    "10 to the minus 4"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "seed 42",
+   "category": "mixed",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "5-fold",
+   "category": "mixed",
+   "aliases": [
+    "5 fold",
+    "five fold"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "80/20 split",
+   "category": "mixed",
+   "aliases": [
+    "80 20 split",
+    "eighty twenty split"
+   ],
+   "short": null,
+   "common": false,
+   "source": "curated"
+  },
+  {
+   "term": "TransformerMixin",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 16
+  },
+  {
+   "term": "OLS",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 15
+  },
+  {
+   "term": "ANN",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 14
+  },
+  {
+   "term": "MinMaxScaler",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 14
+  },
+  {
+   "term": "BaseEstimator",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 12
+  },
+  {
+   "term": "top-k",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 12
+  },
+  {
+   "term": "RBF",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 11
+  },
+  {
+   "term": "FPR",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 8
+  },
+  {
+   "term": "HyDE",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 8
+  },
+  {
+   "term": "LabelEncoder",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 8
+  },
+  {
+   "term": "TPR",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 8
+  },
+  {
+   "term": "log-odds",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 8
+  },
+  {
+   "term": "OOB",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 7
+  },
+  {
+   "term": "DatetimeIndex",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 6
+  },
+  {
+   "term": "GBM",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 6
+  },
+  {
+   "term": "cross-attention",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 6
+  },
+  {
+   "term": "ChatGPT",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 5
+  },
+  {
+   "term": "CountVectorizer",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 5
+  },
+  {
+   "term": "KeyError",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 5
+  },
+  {
+   "term": "LinearRegression",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 5
+  },
+  {
+   "term": "RL",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 5
+  },
+  {
+   "term": "StringDtype",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 5
+  },
+  {
+   "term": "TPOT",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 5
+  },
+  {
+   "term": "decoder-only",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 5
+  },
+  {
+   "term": "self-attention",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 5
+  },
+  {
+   "term": "AttributeError",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 4
+  },
+  {
+   "term": "GIL",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 4
+  },
+  {
+   "term": "GitHub",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 4
+  },
+  {
+   "term": "ICL",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 4
+  },
+  {
+   "term": "LSH",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 4
+  },
+  {
+   "term": "LangSmith",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 4
+  },
+  {
+   "term": "OpenClaw",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 4
+  },
+  {
+   "term": "PC1",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 4
+  },
+  {
+   "term": "in-context",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 4
+  },
+  {
+   "term": "log2",
+   "category": "mixed",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 4
+  },
+  {
+   "term": "ADF",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 3
+  },
+  {
+   "term": "AIC",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 3
+  },
+  {
+   "term": "DummyClassifier",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 3
+  },
+  {
+   "term": "F-beta",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 3
+  },
+  {
+   "term": "FunctionTransformer",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 3
+  },
+  {
+   "term": "LinearSVC",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 3
+  },
+  {
+   "term": "MultiLabelBinarizer",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 3
+  },
+  {
+   "term": "SVR",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 3
+  },
+  {
+   "term": "SettingWithCopyWarning",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 3
+  },
+  {
+   "term": "bag-of-words",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 3
+  },
+  {
+   "term": "datetime64",
+   "category": "mixed",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 3
+  },
+  {
+   "term": "efSearch",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 3
+  },
+  {
+   "term": "min-max",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 3
+  },
+  {
+   "term": "out-of-fold",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 3
+  },
+  {
+   "term": "ADASYN",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 2
+  },
+  {
+   "term": "BGE",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 2
+  },
+  {
+   "term": "BIC",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 2
+  },
+  {
+   "term": "BLAS",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 2
+  },
+  {
+   "term": "CRUD",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 2
+  },
+  {
+   "term": "ConvergenceWarning",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 2
+  },
+  {
+   "term": "GBT",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 2
+  },
+  {
+   "term": "HTTP",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 2
+  },
+  {
+   "term": "IQR",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 2
+  },
+  {
+   "term": "IVF",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 2
+  },
+  {
+   "term": "IndexError",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 2
+  },
+  {
+   "term": "KDE",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 2
+  },
+  {
+   "term": "LSA",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 2
+  },
+  {
+   "term": "LassoCV",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 2
+  },
+  {
+   "term": "LiteLLM",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 2
+  },
+  {
+   "term": "MKL",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 2
+  },
+  {
+   "term": "MTEB",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 2
+  },
+  {
+   "term": "OOV",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 2
+  },
+  {
+   "term": "OpenCode",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 2
+  },
+  {
+   "term": "OpenRouter",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 2
+  },
+  {
+   "term": "OpenTelemetry",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 2
+  },
+  {
+   "term": "PolynomialFeatures",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 2
+  },
+  {
+   "term": "RangeIndex",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 2
+  },
+  {
+   "term": "RobustScaler",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 2
+  },
+  {
+   "term": "SARIMA",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 2
+  },
+  {
+   "term": "SSE",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 2
+  },
+  {
+   "term": "ScaNN",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 2
+  },
+  {
+   "term": "TruncatedSVD",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 2
+  },
+  {
+   "term": "YAML",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 2
+  },
+  {
+   "term": "cost-complexity",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 2
+  },
+  {
+   "term": "encoder-decoder",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 2
+  },
+  {
+   "term": "expm1",
+   "category": "mixed",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 2
+  },
+  {
+   "term": "leave-one-out",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 2
+  },
+  {
+   "term": "max-margin",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 2
+  },
+  {
+   "term": "out-of-bag",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 2
+  },
+  {
+   "term": "soft-margin",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 2
+  },
+  {
+   "term": "AWS",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 1
+  },
+  {
+   "term": "AsyncOpenAI",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 1
+  },
+  {
+   "term": "AutoRegressive",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 1
+  },
+  {
+   "term": "BPE",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 1
+  },
+  {
+   "term": "DataFrames",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 1
+  },
+  {
+   "term": "DecisionTreeRegressor",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 1
+  },
+  {
+   "term": "DummyRegressor",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 1
+  },
+  {
+   "term": "EDA",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 1
+  },
+  {
+   "term": "FFN",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 1
+  },
+  {
+   "term": "HDBSCAN",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 1
+  },
+  {
+   "term": "IDF",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 1
+  },
+  {
+   "term": "ISO",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 1
+  },
+  {
+   "term": "Jinja2",
+   "category": "mixed",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 1
+  },
+  {
+   "term": "KPSS",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 1
+  },
+  {
+   "term": "LOO",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 1
+  },
+  {
+   "term": "LogisticRegression",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 1
+  },
+  {
+   "term": "MLE",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 1
+  },
+  {
+   "term": "MinMax",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 1
+  },
+  {
+   "term": "NLU",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 1
+  },
+  {
+   "term": "OneHotEncoder",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 1
+  },
+  {
+   "term": "OpenSearch",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 1
+  },
+  {
+   "term": "OrdinalEncoder",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 1
+  },
+  {
+   "term": "PC2",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 1
+  },
+  {
+   "term": "PEFT",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 1
+  },
+  {
+   "term": "PaLM",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 1
+  },
+  {
+   "term": "QPS",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 1
+  },
+  {
+   "term": "RLAIF",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 1
+  },
+  {
+   "term": "RNN",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 1
+  },
+  {
+   "term": "RRF",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 1
+  },
+  {
+   "term": "RandomizedSearch",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 1
+  },
+  {
+   "term": "SLA",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 1
+  },
+  {
+   "term": "STT",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 1
+  },
+  {
+   "term": "StratifiedKFold",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 1
+  },
+  {
+   "term": "TTS",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 1
+  },
+  {
+   "term": "TfidfVectorizer",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 1
+  },
+  {
+   "term": "UndefinedMetricWarning",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 1
+  },
+  {
+   "term": "XGB",
+   "category": "concept",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 1
+  },
+  {
+   "term": "arXiv",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 1
+  },
+  {
+   "term": "efConstruction",
+   "category": "library",
+   "aliases": [],
+   "short": null,
+   "common": false,
+   "source": "corpus",
+   "bank_count": 1
+  }
+ ]
+}

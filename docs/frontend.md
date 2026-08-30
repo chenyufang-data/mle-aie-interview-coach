@@ -59,3 +59,10 @@ frontend uses exactly three endpoints:
 | `GET /api/meta` | Setup page load — builds knowledge-base topic groups |
 | `POST /api/question` | Start of a session and "New question" |
 | `POST /api/evaluate` | Answer submission (first answers and follow-ups) |
+
+`public/stt_record.html` + `stt_record.js` is a separate developer page (not
+linked from the app) for recording the Phase 0 STT test set: one
+`MediaRecorder` take per item, saved through the localhost-only
+`/api/stt/*` routes, with the browser Web Speech API run on the same take so
+condition 1 of the experiment ("today's voice path") is captured for free. It
+shares `styles.css` and the same no-dependency rule.

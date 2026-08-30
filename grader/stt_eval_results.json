@@ -1,0 +1,1221 @@
+{
+ "synth_matilda": {
+  "audio_items": 88,
+  "audio_minutes": 16.932066666666667,
+  "recorded_with": "Matilda",
+  "conditions": [
+   {
+    "condition": "scribe_batch",
+    "n": 88,
+    "wer": 0.04110135674381484,
+    "occurrences": 299,
+    "ter_strict": 0.12374581939799334,
+    "ter_lenient": 0.07023411371237454,
+    "worst_terms": [
+     {
+      "term": "AUC",
+      "count": 7,
+      "lenient_misses": 2,
+      "strict_misses": 2,
+      "became": {
+       "prauc": 2
+      }
+     },
+     {
+      "term": "QWK",
+      "count": 3,
+      "lenient_misses": 2,
+      "strict_misses": 2,
+      "became": {
+       "q2uk maypay": 1,
+       "qwkme": 1
+      }
+     },
+     {
+      "term": "14B",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "qwen 314b": 1
+      }
+     },
+     {
+      "term": "5-fold",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "fivefold time series split": 1
+      }
+     },
+     {
+      "term": "BM25",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "bn25": 1
+      }
+     },
+     {
+      "term": "Claude",
+      "count": 4,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "clod": 1
+      }
+     },
+     {
+      "term": "HistGradientBoosting",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "histgradientboostingclassifier": 1
+      }
+     },
+     {
+      "term": "JSON",
+      "count": 5,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "jacson": 1
+      }
+     },
+     {
+      "term": "JSON schema",
+      "count": 2,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "jacson schema": 1
+      }
+     },
+     {
+      "term": "LiteLLM",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "lightllm": 1
+      }
+     },
+     {
+      "term": "MAE",
+      "count": 4,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "qwkme": 1
+      }
+     },
+     {
+      "term": "MAPE",
+      "count": 2,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "q2uk maypay": 1
+      }
+     }
+    ],
+    "damage": {
+     "n": 20,
+     "local_mean_abs": 0.15,
+     "local_ge1_rate": 0.15,
+     "norm_mean_abs": 0.05,
+     "norm_ge1_rate": 0.05,
+     "kp_flip_rate": 0.04040404040404041,
+     "judge_n": 20,
+     "judge_mean_abs": 0.95,
+     "judge_ge1_rate": 0.65
+    },
+    "latency_s_median": null,
+    "latency_s_p95": null,
+    "corrections": null,
+    "cost_est_usd": 0.06208424444444445,
+    "cost_measured_usd": 0.1892079419299744
+   },
+   {
+    "condition": "scribe_batch_kt",
+    "n": 88,
+    "wer": 0.019952114924181964,
+    "occurrences": 299,
+    "ter_strict": 0.03344481605351168,
+    "ter_lenient": 0.02341137123745818,
+    "worst_terms": [
+     {
+      "term": "BM25",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "bn25": 1
+      }
+     },
+     {
+      "term": "HistGradientBoosting",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "histgradientboostingclassifier": 1
+      }
+     },
+     {
+      "term": "MAE",
+      "count": 4,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "mse": 1
+      }
+     },
+     {
+      "term": "QWK",
+      "count": 3,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "q2uk": 1
+      }
+     },
+     {
+      "term": "RMSE",
+      "count": 2,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "rse": 1
+      }
+     },
+     {
+      "term": "ROC",
+      "count": 2,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "auc": 1
+      }
+     },
+     {
+      "term": "one-hot",
+      "count": 3,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "onehotencoding": 1
+      }
+     }
+    ],
+    "damage": {
+     "n": 20,
+     "local_mean_abs": 0.2,
+     "local_ge1_rate": 0.2,
+     "norm_mean_abs": 0.1,
+     "norm_ge1_rate": 0.1,
+     "kp_flip_rate": 0.04040404040404041,
+     "judge_n": 20,
+     "judge_mean_abs": 0.65,
+     "judge_ge1_rate": 0.65
+    },
+    "latency_s_median": null,
+    "latency_s_p95": null,
+    "corrections": null,
+    "cost_est_usd": 0.12906666666666666,
+    "cost_measured_usd": null
+   },
+   {
+    "condition": "scribe_batch_fix",
+    "n": 88,
+    "wer": 0.047086991221069435,
+    "occurrences": 299,
+    "ter_strict": 0.07692307692307687,
+    "ter_lenient": 0.06688963210702337,
+    "worst_terms": [
+     {
+      "term": "AUC",
+      "count": 7,
+      "lenient_misses": 2,
+      "strict_misses": 2,
+      "became": {
+       "prauc": 2
+      }
+     },
+     {
+      "term": "QWK",
+      "count": 3,
+      "lenient_misses": 2,
+      "strict_misses": 2,
+      "became": {
+       "q2uk": 1,
+       "qwkme": 1
+      }
+     },
+     {
+      "term": "14B",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "314b": 1
+      }
+     },
+     {
+      "term": "5-fold",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "fivefold": 1
+      }
+     },
+     {
+      "term": "BM25",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "bn25": 1
+      }
+     },
+     {
+      "term": "Claude",
+      "count": 4,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "clod": 1
+      }
+     },
+     {
+      "term": "HistGradientBoosting",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "histgradientboostingclassifier": 1
+      }
+     },
+     {
+      "term": "LinearRegression",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "linearsvc regression": 1
+      }
+     },
+     {
+      "term": "MAE",
+      "count": 4,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "qwkme": 1
+      }
+     },
+     {
+      "term": "MSE",
+      "count": 2,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "msrsnr2": 1
+      }
+     },
+     {
+      "term": "R2",
+      "count": 2,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "msrsnr2": 1
+      }
+     },
+     {
+      "term": "RMSE",
+      "count": 2,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "msrsnr2": 1
+      }
+     }
+    ],
+    "damage": {
+     "n": 20,
+     "local_mean_abs": 0.3,
+     "local_ge1_rate": 0.25,
+     "norm_mean_abs": 0.1,
+     "norm_ge1_rate": 0.1,
+     "kp_flip_rate": 0.04040404040404041,
+     "judge_n": 20,
+     "judge_mean_abs": 0.6,
+     "judge_ge1_rate": 0.6
+    },
+    "latency_s_median": null,
+    "latency_s_p95": null,
+    "corrections": {
+     "applied": 64,
+     "false": 47
+    },
+    "cost_est_usd": 0.0,
+    "cost_measured_usd": null
+   },
+   {
+    "condition": "scribe_rt_0",
+    "n": 88,
+    "wer": 0.044293695131683956,
+    "occurrences": 299,
+    "ter_strict": 0.16722408026755853,
+    "ter_lenient": 0.09030100334448166,
+    "worst_terms": [
+     {
+      "term": "MAE",
+      "count": 4,
+      "lenient_misses": 2,
+      "strict_misses": 2,
+      "became": {
+       "me ms rs": 1,
+       "qwkme": 1
+      }
+     },
+     {
+      "term": "QWK",
+      "count": 3,
+      "lenient_misses": 2,
+      "strict_misses": 2,
+      "became": {
+       "q2uk maypay": 1,
+       "qwkme": 1
+      }
+     },
+     {
+      "term": "14B",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "qwen 314b": 1
+      }
+     },
+     {
+      "term": "ANN",
+      "count": 3,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "knn": 1,
+       "ann": 1
+      }
+     },
+     {
+      "term": "AUC",
+      "count": 7,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "prauc": 1
+      }
+     },
+     {
+      "term": "BM25",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "bn25": 1
+      }
+     },
+     {
+      "term": "CUPED",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "q ped": 1
+      }
+     },
+     {
+      "term": "FAISS",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "phaze": 1
+      }
+     },
+     {
+      "term": "JSON",
+      "count": 5,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "jakeson": 1
+      }
+     },
+     {
+      "term": "JSON schema",
+      "count": 2,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "jakeson schema": 1
+      }
+     },
+     {
+      "term": "MAPE",
+      "count": 2,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "q2uk maypay": 1
+      }
+     },
+     {
+      "term": "MSE",
+      "count": 2,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "me ms rs": 1
+      }
+     }
+    ],
+    "damage": {
+     "n": 20,
+     "local_mean_abs": 0.3,
+     "local_ge1_rate": 0.3,
+     "norm_mean_abs": 0.2,
+     "norm_ge1_rate": 0.15,
+     "kp_flip_rate": 0.020202020202020204,
+     "judge_n": 20,
+     "judge_mean_abs": 0.6,
+     "judge_ge1_rate": 0.35
+    },
+    "latency_s_median": 0.1065,
+    "latency_s_p95": 0.254,
+    "corrections": null,
+    "cost_est_usd": 0.11005843333333334,
+    "cost_measured_usd": 0.10941502988898379
+   },
+   {
+    "condition": "scribe_rt_naive50",
+    "n": 88,
+    "wer": 0.03312051077414206,
+    "occurrences": 299,
+    "ter_strict": 0.10367892976588633,
+    "ter_lenient": 0.05685618729096986,
+    "worst_terms": [
+     {
+      "term": "BM25",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "bn25": 1
+      }
+     },
+     {
+      "term": "CUPED",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "q ped": 1
+      }
+     },
+     {
+      "term": "FAISS",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "phaze": 1
+      }
+     },
+     {
+      "term": "HistGradientBoosting",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "histgradientboostingclassifier": 1
+      }
+     },
+     {
+      "term": "JSON",
+      "count": 5,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "jacis": 1
+      }
+     },
+     {
+      "term": "JSON schema",
+      "count": 2,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "jacis schema": 1
+      }
+     },
+     {
+      "term": "LiteLLM",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "lightllm": 1
+      }
+     },
+     {
+      "term": "MSE",
+      "count": 2,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "ms": 1
+      }
+     },
+     {
+      "term": "PACF",
+      "count": 2,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "paef": 1
+      }
+     },
+     {
+      "term": "RAG",
+      "count": 5,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "raggy": 1
+      }
+     },
+     {
+      "term": "RLHF",
+      "count": 2,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "our lhf": 1
+      }
+     },
+     {
+      "term": "RMSE",
+      "count": 2,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "ms": 1
+      }
+     }
+    ],
+    "damage": {
+     "n": 20,
+     "local_mean_abs": 0.25,
+     "local_ge1_rate": 0.25,
+     "norm_mean_abs": 0.15,
+     "norm_ge1_rate": 0.1,
+     "kp_flip_rate": 0.020202020202020204,
+     "judge_n": 20,
+     "judge_mean_abs": 0.55,
+     "judge_ge1_rate": 0.3
+    },
+    "latency_s_median": 0.1215,
+    "latency_s_p95": 0.244,
+    "corrections": null,
+    "cost_est_usd": 0.11005843333333334,
+    "cost_measured_usd": 0.08833262169086252
+   },
+   {
+    "condition": "scribe_rt_policy50",
+    "n": 88,
+    "wer": 0.03192338387869114,
+    "occurrences": 299,
+    "ter_strict": 0.10033444816053516,
+    "ter_lenient": 0.06020066889632103,
+    "worst_terms": [
+     {
+      "term": "ANN",
+      "count": 3,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "knn": 1,
+       "ann": 1
+      }
+     },
+     {
+      "term": "BM25",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "bn25": 1
+      }
+     },
+     {
+      "term": "CUPED",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "q ped": 1
+      }
+     },
+     {
+      "term": "FAISS",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "phaze": 1
+      }
+     },
+     {
+      "term": "HistGradientBoosting",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "histgradientboostingclassifier": 1
+      }
+     },
+     {
+      "term": "JSON",
+      "count": 5,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "jacis": 1
+      }
+     },
+     {
+      "term": "JSON schema",
+      "count": 2,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "jacis schema": 1
+      }
+     },
+     {
+      "term": "LiteLLM",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "lightllm": 1
+      }
+     },
+     {
+      "term": "MSE",
+      "count": 2,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "ms": 1
+      }
+     },
+     {
+      "term": "PACF",
+      "count": 2,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "paef": 1
+      }
+     },
+     {
+      "term": "RAG",
+      "count": 5,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "raggy": 1
+      }
+     },
+     {
+      "term": "RLHF",
+      "count": 2,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "our lhf": 1
+      }
+     }
+    ],
+    "damage": {
+     "n": 20,
+     "local_mean_abs": 0.2,
+     "local_ge1_rate": 0.2,
+     "norm_mean_abs": 0.05,
+     "norm_ge1_rate": 0.05,
+     "kp_flip_rate": 0.020202020202020204,
+     "judge_n": 20,
+     "judge_mean_abs": 0.6,
+     "judge_ge1_rate": 0.35
+    },
+    "latency_s_median": 0.1055,
+    "latency_s_p95": 0.227,
+    "corrections": null,
+    "cost_est_usd": 0.11005843333333334,
+    "cost_measured_usd": 0.07765798462852264
+   },
+   {
+    "condition": "whisper_local",
+    "n": 88,
+    "wer": 0.05626496408619314,
+    "occurrences": 299,
+    "ter_strict": 0.2341137123745819,
+    "ter_lenient": 0.14715719063545152,
+    "worst_terms": [
+     {
+      "term": "Claude",
+      "count": 4,
+      "lenient_misses": 3,
+      "strict_misses": 3,
+      "became": {
+       "claudecode": 2,
+       "clod": 1
+      }
+     },
+     {
+      "term": "MAE",
+      "count": 4,
+      "lenient_misses": 3,
+      "strict_misses": 3,
+      "became": {
+       "may ms rsnr2": 1,
+       "may": 1,
+       "qwkme": 1
+      }
+     },
+     {
+      "term": "AUC",
+      "count": 7,
+      "lenient_misses": 2,
+      "strict_misses": 2,
+      "became": {
+       "prauc": 2
+      }
+     },
+     {
+      "term": "KNN",
+      "count": 3,
+      "lenient_misses": 2,
+      "strict_misses": 2,
+      "became": {
+       "k n": 2
+      }
+     },
+     {
+      "term": "QWK",
+      "count": 3,
+      "lenient_misses": 2,
+      "strict_misses": 2,
+      "became": {
+       "qduk maype": 1,
+       "qwkme": 1
+      }
+     },
+     {
+      "term": "14B",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "qen314b": 1
+      }
+     },
+     {
+      "term": "BGE",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "bgem3": 1
+      }
+     },
+     {
+      "term": "BM25",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "bn25": 1
+      }
+     },
+     {
+      "term": "Brier score",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "breyer score": 1
+      }
+     },
+     {
+      "term": "CUPED",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "qped": 1
+      }
+     },
+     {
+      "term": "DeepSeek",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "deepseq": 1
+      }
+     },
+     {
+      "term": "DeepSeek V4 Flash",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "deepseq v4 flash": 1
+      }
+     }
+    ],
+    "damage": {
+     "n": 20,
+     "local_mean_abs": 0.3,
+     "local_ge1_rate": 0.3,
+     "norm_mean_abs": 0.1,
+     "norm_ge1_rate": 0.1,
+     "kp_flip_rate": 0.06060606060606061,
+     "judge_n": 20,
+     "judge_mean_abs": 0.45,
+     "judge_ge1_rate": 0.45
+    },
+    "latency_s_median": null,
+    "latency_s_p95": null,
+    "corrections": null,
+    "cost_est_usd": 0.0,
+    "cost_measured_usd": null
+   },
+   {
+    "condition": "whisper_local_prompt",
+    "n": 88,
+    "wer": 0.04908220271348763,
+    "occurrences": 299,
+    "ter_strict": 0.2006688963210702,
+    "ter_lenient": 0.13043478260869568,
+    "worst_terms": [
+     {
+      "term": "Claude",
+      "count": 4,
+      "lenient_misses": 3,
+      "strict_misses": 3,
+      "became": {
+       "claudecode": 2,
+       "clod": 1
+      }
+     },
+     {
+      "term": "AUC",
+      "count": 7,
+      "lenient_misses": 2,
+      "strict_misses": 2,
+      "became": {
+       "prauc": 2
+      }
+     },
+     {
+      "term": "14B",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "qwen314b": 1
+      }
+     },
+     {
+      "term": "BGE",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "bgem3": 1
+      }
+     },
+     {
+      "term": "BM25",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "bn25": 1
+      }
+     },
+     {
+      "term": "Brier score",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "breyer score": 1
+      }
+     },
+     {
+      "term": "CUPED",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "qped": 1
+      }
+     },
+     {
+      "term": "FAISS",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "faze": 1
+      }
+     },
+     {
+      "term": "GGUF",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "ggf": 1
+      }
+     },
+     {
+      "term": "JSON",
+      "count": 5,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "jakeson": 1
+      }
+     },
+     {
+      "term": "JSON schema",
+      "count": 2,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "jakeson schema": 1
+      }
+     },
+     {
+      "term": "Kokoro",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "cocoro": 1
+      }
+     }
+    ],
+    "damage": {
+     "n": 20,
+     "local_mean_abs": 0.3,
+     "local_ge1_rate": 0.3,
+     "norm_mean_abs": 0.05,
+     "norm_ge1_rate": 0.05,
+     "kp_flip_rate": 0.030303030303030304,
+     "judge_n": 20,
+     "judge_mean_abs": 0.75,
+     "judge_ge1_rate": 0.5
+    },
+    "latency_s_median": null,
+    "latency_s_p95": null,
+    "corrections": null,
+    "cost_est_usd": 0.0,
+    "cost_measured_usd": null
+   }
+  ],
+  "keyterms": {
+   "policy": {
+    "0": [
+     "QWK",
+     "ROC",
+     "p50",
+     "JSON",
+     "vLLM",
+     "FAISS",
+     "BM25",
+     "barge-in",
+     "int8",
+     "Silero VAD",
+     "JSON schema",
+     "MAE",
+     "MAPE",
+     "RAG",
+     "RMSE",
+     "MSE",
+     "F1",
+     "macro-F1",
+     "AUC-ROC",
+     "PR-AUC",
+     "log-loss",
+     "cross-entropy",
+     "Recall@5",
+     "Recall@k",
+     "MRR",
+     "NDCG",
+     "R2",
+     "p-value",
+     "p95",
+     "TTFT",
+     "WER",
+     "XGBoost",
+     "CatBoost",
+     "HistGradientBoost",
+     "ElasticNet",
+     "SVC",
+     "k-means",
+     "DBSCAN",
+     "SVD",
+     "t-SNE",
+     "UMAP",
+     "ARIMA",
+     "SARIMAX",
+     "Prophet",
+     "LSTM",
+     "BERT",
+     "Sentence-BERT",
+     "GPT-4o",
+     "DeepSeek",
+     "Qwen3"
+    ],
+    "1": [
+     "RMSE",
+     "MSE",
+     "Qwen3",
+     "RLHF",
+     "CUPED",
+     "14B",
+     "TPOT",
+     "MAE",
+     "TTFT",
+     "PACF",
+     "ANN",
+     "AUC",
+     "QWK",
+     "MAPE",
+     "F1",
+     "macro-F1",
+     "ROC",
+     "AUC-ROC",
+     "cross-entropy",
+     "Recall@5",
+     "Recall@k",
+     "MRR",
+     "NDCG",
+     "R2",
+     "p-value",
+     "p95",
+     "p50",
+     "WER",
+     "LightGBM",
+     "XGBoost",
+     "CatBoost",
+     "HistGradientBoost",
+     "Ridge",
+     "Lasso",
+     "ElasticNet",
+     "SVM",
+     "SVC",
+     "KNN",
+     "k-means",
+     "DBSCAN",
+     "SVD",
+     "UMAP",
+     "SARIMAX",
+     "Prophet",
+     "LSTM",
+     "transformer",
+     "BERT",
+     "Sentence-BERT",
+     "GPT-4o",
+     "DeepSeek"
+    ]
+   },
+   "naive": [
+    "QWK",
+    "MAE",
+    "MAPE",
+    "RMSE",
+    "MSE",
+    "F1",
+    "macro-F1",
+    "AUC",
+    "ROC",
+    "AUC-ROC",
+    "PR-AUC",
+    "log-loss",
+    "cross-entropy",
+    "Recall@5",
+    "Recall@k",
+    "MRR",
+    "NDCG",
+    "R2",
+    "p-value",
+    "p95",
+    "p50",
+    "TTFT",
+    "WER",
+    "Brier score",
+    "KL divergence",
+    "precision",
+    "recall",
+    "accuracy",
+    "calibration",
+    "LightGBM",
+    "XGBoost",
+    "CatBoost",
+    "HistGradientBoost",
+    "random forest",
+    "gradient boosting",
+    "logistic regression",
+    "linear regression",
+    "Ridge",
+    "Lasso",
+    "ElasticNet",
+    "SVM",
+    "SVC",
+    "KNN",
+    "k-means",
+    "DBSCAN",
+    "PCA",
+    "SVD",
+    "t-SNE",
+    "UMAP",
+    "ARIMA"
+   ],
+   "priority": []
+  },
+  "decision": "no condition meets the rule; best is `scribe_batch` (damage 15.0%, lenient TER 7.0%) - residual damage must be stated in the report to the user",
+  "rule": {
+   "damage_ge1_max": 0.05,
+   "ter_lenient_max": 0.03
+  },
+  "judge_noise": {
+   "n": 20,
+   "ge1_rate": 0.35,
+   "mean_abs": 0.45
+  }
+ }
+}
