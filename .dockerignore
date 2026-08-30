@@ -28,6 +28,9 @@ grader/labels_teacher.jsonl
 # Repo housekeeping.
 docs
 tests
+tools
+.github
+LICENSE
 README.md
 .gitignore
 .dockerignore

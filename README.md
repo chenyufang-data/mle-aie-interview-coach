@@ -4,10 +4,16 @@ A local interview practice app for Machine Learning Engineer and AI Engineer int
 powered by Claude and two curated, rubric-grounded question banks with real questions,
 model answers, and grading rubrics:
 
-- `rag_ml/` (191 chunks) - built from course notebooks;
+- `rag_ml/` (191 chunks over 20 modules of classical ML and data analysis) -
   serves the **MLE** track.
-- `rag_ai/` (91 chunks) - built from an AI Engineer course slide
-  decks; serves the **AIE** track.
+- `rag_ai/` (91 chunks over 6 modules of LLM and agent engineering) - serves
+  the **AIE** track.
+
+Both banks are derived from course material I studied; the public repository
+ships the interview questions, model answers, and rubrics only. The complete
+edition — with each chunk's lesson text and the builder scripts — lives in a
+private repository, and `tools/strip_chunks.py` regenerates the public banks
+from it (see [Data and privacy](#data-and-privacy)).
 
 Both banks share the same chunk schema (`id` / `interview` / `metadata`), so the
 server treats them uniformly and routes by track.
@@ -197,13 +203,30 @@ XML with the standard library (paragraphs and tables in order); ligatures,
 bullet glyphs and wrapped hyphens are normalized. Legacy `.doc` and scanned
 (image-only) PDFs are not supported — save as `.docx` or export a text PDF.
 
+## Data and privacy
+
+Three kinds of data, three treatments:
+
+- **Public** — code, the public-edition question banks (interview fields and
+  retrieval metadata), the trained grader artifact, gold label files, and
+  experiment results.
+- **Private repository** — the complete banks with course-derived lesson text
+  and the builder scripts, plus `grader/dataset.jsonl`. `tools/strip_chunks.py`
+  turns the complete banks into the public ones; `RAG_FULL_DIR` points the
+  training scripts at that checkout.
+- **Never committed** — `.env`, `users.json`, and everything under `data/`
+  (resume text, gathered interview questions, practice logs, quota state,
+  recordings). See `data/README.md`.
+
+This project was built with Claude Code as a pair programmer; the evaluation
+design, every ship/no-ship decision, and the negative results are mine.
+
 ## How grading works
 
 For knowledge-base questions, the server sends Claude the chunk's `model_answer`,
 `key_points` (used as the rubric), `common_mistakes`, and `followups` alongside your
 answer, so feedback is grounded in what the course actually teaches. See
-`rag_ml/README.md` and `rag_ai/README.md` for the corpus schemas and how to rebuild
-them.
+`rag_ml/README.md` and `rag_ai/README.md` for the chunk schema.
 
 For follow-up questions, the same chunk is kept but its key points are provided as
 background context rather than a strict checklist (they belong to the original
@@ -234,10 +257,16 @@ stats), and a scikit-learn regressor trained on those features predicts the
 Build or rebuild it (free, no API calls):
 
 ```powershell
+# generate_answers needs the complete banks (lesson text) from the private repository:
+$env:RAG_FULL_DIR = "..\mle-aie-interview-coach-private"
 .venv\Scripts\python grader\generate_answers.py   # synthetic answers with construction-known labels
 .venv\Scripts\python grader\train.py              # train, evaluate, save grader\model.joblib
 .venv\Scripts\python tests\test_grader.py         # sanity-check the artifact
 ```
+
+`grader/dataset.jsonl` (the synthetic answers) is private too — its
+content_extract tier quotes lesson text — so retraining needs that checkout;
+the shipped `grader/model.joblib` and the gold label files are public.
 
 The training data is manufactured from the corpora themselves: reference
 answers (9), lesson-text extracts and key-point recalls (7), sentence subsets

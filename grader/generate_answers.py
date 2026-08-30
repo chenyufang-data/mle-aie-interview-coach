@@ -41,6 +41,7 @@ must not be the generator that writes, or agreement metrics inflate.
 
 import argparse
 import json
+import os
 import random
 import re
 import sys
@@ -265,14 +266,23 @@ def main():
     args = parser.parse_args()
 
     rng = random.Random(SEED)
+    # The content_extract tier needs each chunk's lesson text (`content`),
+    # which only the complete banks in the private repository carry. Point
+    # RAG_FULL_DIR at a checkout of it; the public banks lack that field.
+    full_dir = Path(os.environ.get("RAG_FULL_DIR", BASE_DIR))
     chunks = []
     for corpus, folder in CORPORA.items():
-        with (BASE_DIR / folder / "all_chunks.jsonl").open(encoding="utf-8") as handle:
+        with (full_dir / folder / "all_chunks.jsonl").open(encoding="utf-8") as handle:
             for line in handle:
                 if line.strip():
                     chunk = json.loads(line)
                     chunk["_corpus"] = corpus
                     chunks.append(chunk)
+    if not any("content" in chunk for chunk in chunks):
+        print("These banks have no `content` field (public edition). Set "
+              "RAG_FULL_DIR to the private repository's checkout to generate "
+              "the dataset.")
+        return 1
 
     rows = list(construction_rows(chunks, rng))
     if args.ollama:
