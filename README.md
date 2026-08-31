@@ -432,9 +432,52 @@ What it says so far:
    session file), Realtime matched the list price, and Flash TTS billed ~0.1
    credit per character. The whole experiment so far cost $0.91 of credits.
 
-Decision: **deferred to the human set** as pre-registered — no condition meets
-the rule on synthetic audio (batch + keyterms clears the term bar; nothing
-clears the damage bar). The provisional shape is the one the numbers point at:
-Scribe batch + full-lexicon keyterms for the final transcript, Realtime + 50
-policy keyterms live, no post-hoc correction, and normalized text on both sides
-of the grader.
+And on the human set — the author reading all 88 items once, natural pace,
+26.5 min, the set the rule is decided on:
+
+| Condition | WER | TER strict | TER lenient | grade moved ≥1 | word errors only | cost / 27 min |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| browser Web Speech (the app's old voice path) | 19.9% | 38.8% | **29.4%** | 60% | 45% | $0 |
+| Scribe v2 batch | 8.9% | 15.7% | 8.7% | 40% | 25% | $0.07 measured |
+| Scribe v2 batch + 339 keyterms | **5.9%** | **4.0%** | **3.0%** | 35% | 25% | $0.09 measured |
+| batch + post-hoc lexicon fix | 8.8% | 8.4% | 8.0% | 35% | 20% | $0 |
+| Scribe v2 Realtime, no keyterms | 13.6% | 21.1% | 15.4% | 40% | 40% | $0.13 measured |
+| Realtime + naive first-50 keyterms | 12.6% | 17.4% | 11.7% | 35% | 35% | $0.13 measured |
+| Realtime + policy-chosen 50 | 12.0% | 14.7% | **9.7%** | 35% | 35% | $0.14 measured |
+| local faster-whisper large-v3-turbo | 9.2% | 22.7% | 16.1% | 25% | 20% | $0 |
+| local Whisper + 50-term `initial_prompt` | 8.4% | 17.7% | 13.4% | 20% | 15% | $0 |
+
+What the human set adds:
+
+1. **The current voice path is disqualified by measurement.** Web Speech loses
+   29.4% of technical terms — "AUC" → "change you see", "Claude" → "cloud",
+   "GridSearchCV" → "great search cv", "SARIMAX" → "cerimax". Nearly one
+   signal word in three never reaches the grader. This number is why the
+   mock interview needs a real STT stack at all.
+2. Real speech roughly **doubles every error rate** versus the clean TTS
+   audio — accent, pace and hesitation are the test distribution, which is
+   why the decision was pre-registered on this set.
+3. **The keyterm ordering holds, and the policy now earns its keep**: batch
+   7.0%→3.0% lenient loss with the full lexicon; Realtime 15.4% → 11.7%
+   (naive 50) → 9.7% (policy 50) — on human audio the measured-failure
+   policy beats the naive list, where on TTS audio they tied.
+4. Post-hoc fuzzy correction stays dropped: 63% of its rewrites were false.
+5. Local Whisper posts the *lowest grade damage* (its fluent, well-punctuated
+   smoothing suits the surface-form-sensitive grader) while losing the *most
+   terms* after Web Speech — a warning against reading one metric alone.
+6. The Flash judge's noise floor reached 50% on these answers; only the
+   deterministic distilled grader can measure damage at this scale.
+
+**Decision (pre-registered fallback: no condition met the ≤5%-damage +
+≤3%-TER rule, so ship the best and state the residual damage).** The shipped
+pair: **Scribe v2 batch + full-lexicon keyterms for the final transcript**
+(the one the report grades: 3.0% lenient term loss, strict 4.0%, ≈ $0.09 per
+session) and **Scribe v2 Realtime + policy-50 keyterms for the live loop**
+(9.7% lenient loss, 0.15 s p50 finalization), with local Whisper as the
+offline fallback that re-transcribes via batch + keyterms when back online.
+Residual damage, stated: ~3% of technical terms are still lost in the final
+transcript, and 25–35% of spoken answers grade ≥1 point away from their
+written reference — a floor that mixes true transcription damage with
+speaking-vs-writing deviation and the grader's surface-form brittleness, so
+the mock report grades normalized text on both sides and shows the live and
+final transcripts side by side.

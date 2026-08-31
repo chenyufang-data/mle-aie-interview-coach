@@ -1217,5 +1217,1387 @@
    "ge1_rate": 0.35,
    "mean_abs": 0.45
   }
+ },
+ "human": {
+  "audio_items": 88,
+  "audio_minutes": 26.53785,
+  "recorded_with": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+  "conditions": [
+   {
+    "condition": "web_speech",
+    "n": 88,
+    "wer": 0.19872306464485234,
+    "occurrences": 299,
+    "ter_strict": 0.38795986622073575,
+    "ter_lenient": 0.29431438127090304,
+    "worst_terms": [
+     {
+      "term": "AUC",
+      "count": 7,
+      "lenient_misses": 7,
+      "strict_misses": 7,
+      "became": {
+       "euc": 2,
+       "raw kuc": 1,
+       "change you see": 1,
+       "preuc": 1
+      }
+     },
+     {
+      "term": "Claude",
+      "count": 4,
+      "lenient_misses": 4,
+      "strict_misses": 4,
+      "became": {
+       "cloud": 2,
+       "cloud ops": 1,
+       "cloud teeter": 1
+      }
+     },
+     {
+      "term": "RAG",
+      "count": 5,
+      "lenient_misses": 4,
+      "strict_misses": 4,
+      "became": {
+       "red": 1,
+       "rack": 1,
+       "(dropped)": 1,
+       "rack contaminates": 1
+      }
+     },
+     {
+      "term": "ANN",
+      "count": 3,
+      "lenient_misses": 2,
+      "strict_misses": 2,
+      "became": {
+       "a n": 1,
+       "(dropped)": 1
+      }
+     },
+     {
+      "term": "GridSearchCV",
+      "count": 2,
+      "lenient_misses": 2,
+      "strict_misses": 2,
+      "became": {
+       "great search cv": 2
+      }
+     },
+     {
+      "term": "MAPE",
+      "count": 2,
+      "lenient_misses": 2,
+      "strict_misses": 2,
+      "became": {
+       "mave": 1,
+       "map": 1
+      }
+     },
+     {
+      "term": "PR-AUC",
+      "count": 2,
+      "lenient_misses": 2,
+      "strict_misses": 2,
+      "became": {
+       "preuc": 1,
+       "preoc": 1
+      }
+     },
+     {
+      "term": "Ridge",
+      "count": 3,
+      "lenient_misses": 2,
+      "strict_misses": 2,
+      "became": {
+       "bridge as": 1,
+       "region": 1
+      }
+     },
+     {
+      "term": "SARIMAX",
+      "count": 2,
+      "lenient_misses": 2,
+      "strict_misses": 2,
+      "became": {
+       "cerimax": 1,
+       "in ceramax as": 1
+      }
+     },
+     {
+      "term": "Scribe v2",
+      "count": 2,
+      "lenient_misses": 2,
+      "strict_misses": 2,
+      "became": {
+       "square version 2 key terms": 1,
+       "11 lab subscribe v2": 1
+      }
+     },
+     {
+      "term": "1e-4",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "10 to the negative 4": 1
+      }
+     },
+     {
+      "term": "80/20 split",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "80 20 speed": 1
+      }
+     }
+    ],
+    "damage": {
+     "n": 20,
+     "local_mean_abs": 0.85,
+     "local_ge1_rate": 0.6,
+     "norm_mean_abs": 0.7,
+     "norm_ge1_rate": 0.45,
+     "kp_flip_rate": 0.1414141414141414,
+     "judge_n": 20,
+     "judge_mean_abs": 1.65,
+     "judge_ge1_rate": 0.9
+    },
+    "latency_s_median": null,
+    "latency_s_p95": null,
+    "corrections": null,
+    "cost_est_usd": 0.0,
+    "cost_measured_usd": null
+   },
+   {
+    "condition": "scribe_batch",
+    "n": 88,
+    "wer": 0.0893854748603352,
+    "occurrences": 299,
+    "ter_strict": 0.15719063545150502,
+    "ter_lenient": 0.08695652173913049,
+    "worst_terms": [
+     {
+      "term": "Claude",
+      "count": 4,
+      "lenient_misses": 4,
+      "strict_misses": 4,
+      "became": {
+       "cloud": 3,
+       "cloud ops": 1
+      }
+     },
+     {
+      "term": "Scribe v2",
+      "count": 2,
+      "lenient_misses": 2,
+      "strict_misses": 2,
+      "became": {
+       "squirp version 2 key terms": 1,
+       "scrap v2": 1
+      }
+     },
+     {
+      "term": "1e-4",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "10 to the negative 4": 1
+      }
+     },
+     {
+      "term": "7B",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "7bl llamas": 1
+      }
+     },
+     {
+      "term": "ANN",
+      "count": 3,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "relann": 1
+      }
+     },
+     {
+      "term": "AUC",
+      "count": 7,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "prauc": 1
+      }
+     },
+     {
+      "term": "Brier score",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "barrier score": 1
+      }
+     },
+     {
+      "term": "CUPED",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "cupid": 1
+      }
+     },
+     {
+      "term": "Claude Opus",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "cloud ops": 1
+      }
+     },
+     {
+      "term": "DeepSeek V4 Flash",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "deepseek version 4 flash": 1
+      }
+     },
+     {
+      "term": "FPR",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "false positive rate": 1
+      }
+     },
+     {
+      "term": "HistGradientBoosting",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "histgradientboostingclassifier": 1
+      }
+     }
+    ],
+    "damage": {
+     "n": 20,
+     "local_mean_abs": 0.5,
+     "local_ge1_rate": 0.4,
+     "norm_mean_abs": 0.3,
+     "norm_ge1_rate": 0.25,
+     "kp_flip_rate": 0.08080808080808081,
+     "judge_n": 20,
+     "judge_mean_abs": 0.95,
+     "judge_ge1_rate": 0.5
+    },
+    "latency_s_median": null,
+    "latency_s_p95": null,
+    "corrections": null,
+    "cost_est_usd": 0.09730545,
+    "cost_measured_usd": 0.06805081127241674
+   },
+   {
+    "condition": "scribe_batch_kt",
+    "n": 88,
+    "wer": 0.05905826017557861,
+    "occurrences": 299,
+    "ter_strict": 0.04013377926421402,
+    "ter_lenient": 0.030100334448160515,
+    "worst_terms": [
+     {
+      "term": "Claude",
+      "count": 4,
+      "lenient_misses": 2,
+      "strict_misses": 2,
+      "became": {
+       "cloudcode": 2
+      }
+     },
+     {
+      "term": "1e-4",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "10 to the negative 4": 1
+      }
+     },
+     {
+      "term": "DeepSeek V4 Flash",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "deepseek version 4 flash": 1
+      }
+     },
+     {
+      "term": "FPR",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "false positive rate": 1
+      }
+     },
+     {
+      "term": "RAG",
+      "count": 5,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "react": 1
+      }
+     },
+     {
+      "term": "TPR",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "the true positive rate": 1
+      }
+     },
+     {
+      "term": "bias-variance",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "bias variance": 1
+      }
+     },
+     {
+      "term": "one-hot",
+      "count": 3,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "onehotencoder": 1
+      }
+     }
+    ],
+    "damage": {
+     "n": 20,
+     "local_mean_abs": 0.45,
+     "local_ge1_rate": 0.35,
+     "norm_mean_abs": 0.3,
+     "norm_ge1_rate": 0.25,
+     "kp_flip_rate": 0.08080808080808081,
+     "judge_n": 20,
+     "judge_mean_abs": 0.85,
+     "judge_ge1_rate": 0.45
+    },
+    "latency_s_median": null,
+    "latency_s_p95": null,
+    "corrections": null,
+    "cost_est_usd": 0.12906666666666666,
+    "cost_measured_usd": 0.09020068317677199
+   },
+   {
+    "condition": "scribe_batch_fix",
+    "n": 88,
+    "wer": 0.08778930566640064,
+    "occurrences": 299,
+    "ter_strict": 0.08361204013377932,
+    "ter_lenient": 0.08026755852842804,
+    "worst_terms": [
+     {
+      "term": "Scribe v2",
+      "count": 2,
+      "lenient_misses": 2,
+      "strict_misses": 2,
+      "became": {
+       "squirp version 2 key terms": 1,
+       "scrap v2": 1
+      }
+     },
+     {
+      "term": "1e-4",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "10 to the negative 4": 1
+      }
+     },
+     {
+      "term": "7B",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "7bl": 1
+      }
+     },
+     {
+      "term": "ANN",
+      "count": 3,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "relann": 1
+      }
+     },
+     {
+      "term": "AUC",
+      "count": 7,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "prauc": 1
+      }
+     },
+     {
+      "term": "Brier score",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "barrier score": 1
+      }
+     },
+     {
+      "term": "Claude Opus",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "claude ops": 1
+      }
+     },
+     {
+      "term": "DeepSeek V4 Flash",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "deepseek version 4 flash": 1
+      }
+     },
+     {
+      "term": "FPR",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "false positive rate": 1
+      }
+     },
+     {
+      "term": "HistGradientBoosting",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "histgradientboostingclassifier": 1
+      }
+     },
+     {
+      "term": "KV cache",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "kiwi cache": 1
+      }
+     },
+     {
+      "term": "LinearRegression",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "linearsvc regression": 1
+      }
+     }
+    ],
+    "damage": {
+     "n": 20,
+     "local_mean_abs": 0.45,
+     "local_ge1_rate": 0.35,
+     "norm_mean_abs": 0.2,
+     "norm_ge1_rate": 0.2,
+     "kp_flip_rate": 0.08080808080808081,
+     "judge_n": 20,
+     "judge_mean_abs": 1.3,
+     "judge_ge1_rate": 0.8
+    },
+    "latency_s_median": null,
+    "latency_s_p95": null,
+    "corrections": {
+     "applied": 71,
+     "false": 45
+    },
+    "cost_est_usd": 0.0,
+    "cost_measured_usd": null
+   },
+   {
+    "condition": "scribe_rt_0",
+    "n": 88,
+    "wer": 0.13567438148443736,
+    "occurrences": 299,
+    "ter_strict": 0.21070234113712372,
+    "ter_lenient": 0.15384615384615385,
+    "worst_terms": [
+     {
+      "term": "AUC",
+      "count": 7,
+      "lenient_misses": 4,
+      "strict_misses": 4,
+      "became": {
+       "raw kuc": 1,
+       "change kuc": 1,
+       "pruc": 1,
+       "uc": 1
+      }
+     },
+     {
+      "term": "Claude",
+      "count": 4,
+      "lenient_misses": 4,
+      "strict_misses": 4,
+      "became": {
+       "cloud": 3,
+       "cloudops": 1
+      }
+     },
+     {
+      "term": "GridSearchCV",
+      "count": 2,
+      "lenient_misses": 2,
+      "strict_misses": 2,
+      "became": {
+       "great search cv": 2
+      }
+     },
+     {
+      "term": "PR-AUC",
+      "count": 2,
+      "lenient_misses": 2,
+      "strict_misses": 2,
+      "became": {
+       "pruc": 1,
+       "pr uc": 1
+      }
+     },
+     {
+      "term": "RAG",
+      "count": 5,
+      "lenient_misses": 2,
+      "strict_misses": 2,
+      "became": {
+       "rec": 1,
+       "rack": 1
+      }
+     },
+     {
+      "term": "1e-4",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "10 to the 4": 1
+      }
+     },
+     {
+      "term": "BGE",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "bgem3": 1
+      }
+     },
+     {
+      "term": "Brier score",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "barrier score": 1
+      }
+     },
+     {
+      "term": "CUPED",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "qpid": 1
+      }
+     },
+     {
+      "term": "Claude Opus",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "cloudops": 1
+      }
+     },
+     {
+      "term": "DeepSeek V4 Flash",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "deepseek version 4 flash": 1
+      }
+     },
+     {
+      "term": "FAISS",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "fass": 1
+      }
+     }
+    ],
+    "damage": {
+     "n": 20,
+     "local_mean_abs": 0.4,
+     "local_ge1_rate": 0.4,
+     "norm_mean_abs": 0.45,
+     "norm_ge1_rate": 0.4,
+     "kp_flip_rate": 0.08080808080808081,
+     "judge_n": 20,
+     "judge_mean_abs": 0.95,
+     "judge_ge1_rate": 0.55
+    },
+    "latency_s_median": 0.1565,
+    "latency_s_p95": 0.229,
+    "corrections": null,
+    "cost_est_usd": 0.172496025,
+    "cost_measured_usd": 0.12889624252775406
+   },
+   {
+    "condition": "scribe_rt_naive50",
+    "n": 88,
+    "wer": 0.12609736632083002,
+    "occurrences": 299,
+    "ter_strict": 0.17391304347826086,
+    "ter_lenient": 0.117056856187291,
+    "worst_terms": [
+     {
+      "term": "Claude",
+      "count": 4,
+      "lenient_misses": 4,
+      "strict_misses": 4,
+      "became": {
+       "cloud": 3,
+       "cloudops": 1
+      }
+     },
+     {
+      "term": "AUC",
+      "count": 7,
+      "lenient_misses": 2,
+      "strict_misses": 2,
+      "became": {
+       "raw kuc": 1,
+       "change you see": 1
+      }
+     },
+     {
+      "term": "1e-4",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "10 to the 4": 1
+      }
+     },
+     {
+      "term": "BGE",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "bgem3": 1
+      }
+     },
+     {
+      "term": "Brier score",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "barrier score": 1
+      }
+     },
+     {
+      "term": "CUPED",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "qpid": 1
+      }
+     },
+     {
+      "term": "Claude Opus",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "cloudops": 1
+      }
+     },
+     {
+      "term": "DeepSeek V4 Flash",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "deepseek version 4 flash": 1
+      }
+     },
+     {
+      "term": "FAISS",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "fass": 1
+      }
+     },
+     {
+      "term": "FPR",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "false positive rate": 1
+      }
+     },
+     {
+      "term": "HistGradientBoosting",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "histgradientboostingclassifier": 1
+      }
+     },
+     {
+      "term": "KV cache",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "kiwi cache": 1
+      }
+     }
+    ],
+    "damage": {
+     "n": 20,
+     "local_mean_abs": 0.35,
+     "local_ge1_rate": 0.35,
+     "norm_mean_abs": 0.4,
+     "norm_ge1_rate": 0.35,
+     "kp_flip_rate": 0.09090909090909091,
+     "judge_n": 20,
+     "judge_mean_abs": 1.1,
+     "judge_ge1_rate": 0.6
+    },
+    "latency_s_median": 0.1735,
+    "latency_s_p95": 0.26,
+    "corrections": null,
+    "cost_est_usd": 0.172496025,
+    "cost_measured_usd": 0.1334329632792485
+   },
+   {
+    "condition": "scribe_rt_policy50",
+    "n": 88,
+    "wer": 0.12011173184357542,
+    "occurrences": 299,
+    "ter_strict": 0.14715719063545152,
+    "ter_lenient": 0.09698996655518399,
+    "worst_terms": [
+     {
+      "term": "1e-4",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "10 4": 1
+      }
+     },
+     {
+      "term": "BGE",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "bgem3": 1
+      }
+     },
+     {
+      "term": "Brier score",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "barrier score": 1
+      }
+     },
+     {
+      "term": "CUPED",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "cupid": 1
+      }
+     },
+     {
+      "term": "Claude Opus",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "claude ops": 1
+      }
+     },
+     {
+      "term": "DeepSeek V4 Flash",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "deepseek version 4 flash": 1
+      }
+     },
+     {
+      "term": "FAISS",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "fass": 1
+      }
+     },
+     {
+      "term": "FPR",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "false positive rate": 1
+      }
+     },
+     {
+      "term": "HistGradientBoosting",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "histgradientboostingclassifier": 1
+      }
+     },
+     {
+      "term": "KV cache",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "kiwi cache": 1
+      }
+     },
+     {
+      "term": "Kokoro",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "cocoro": 1
+      }
+     },
+     {
+      "term": "LiteLLM",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "lightlm": 1
+      }
+     }
+    ],
+    "damage": {
+     "n": 20,
+     "local_mean_abs": 0.35,
+     "local_ge1_rate": 0.35,
+     "norm_mean_abs": 0.4,
+     "norm_ge1_rate": 0.35,
+     "kp_flip_rate": 0.10101010101010101,
+     "judge_n": 20,
+     "judge_mean_abs": 1.15,
+     "judge_ge1_rate": 0.6
+    },
+    "latency_s_median": 0.155,
+    "latency_s_p95": 0.253,
+    "corrections": null,
+    "cost_est_usd": 0.172496025,
+    "cost_measured_usd": 0.1345004269854825
+   },
+   {
+    "condition": "whisper_local",
+    "n": 88,
+    "wer": 0.09217877094972067,
+    "occurrences": 299,
+    "ter_strict": 0.22742474916387956,
+    "ter_lenient": 0.1605351170568562,
+    "worst_terms": [
+     {
+      "term": "Claude",
+      "count": 4,
+      "lenient_misses": 4,
+      "strict_misses": 4,
+      "became": {
+       "cloud": 2,
+       "cloudops": 1,
+       "cloudcode": 1
+      }
+     },
+     {
+      "term": "RAG",
+      "count": 5,
+      "lenient_misses": 3,
+      "strict_misses": 3,
+      "became": {
+       "rack": 2,
+       "red": 1
+      }
+     },
+     {
+      "term": "AUC",
+      "count": 7,
+      "lenient_misses": 2,
+      "strict_misses": 2,
+      "became": {
+       "prauc": 2
+      }
+     },
+     {
+      "term": "1e-4",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "10 to the negative 4": 1
+      }
+     },
+     {
+      "term": "Anthropic",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "anthropik": 1
+      }
+     },
+     {
+      "term": "BGE",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "bgem3": 1
+      }
+     },
+     {
+      "term": "Brier score",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "barrier score": 1
+      }
+     },
+     {
+      "term": "CUPED",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "cupid": 1
+      }
+     },
+     {
+      "term": "Claude Opus",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "cloudops": 1
+      }
+     },
+     {
+      "term": "DeepSeek",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "deepsec version 4": 1
+      }
+     },
+     {
+      "term": "DeepSeek V4 Flash",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "deepsec version 4 flash": 1
+      }
+     },
+     {
+      "term": "ElevenLabs",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "11 lab": 1
+      }
+     }
+    ],
+    "damage": {
+     "n": 20,
+     "local_mean_abs": 0.25,
+     "local_ge1_rate": 0.25,
+     "norm_mean_abs": 0.2,
+     "norm_ge1_rate": 0.2,
+     "kp_flip_rate": 0.030303030303030304,
+     "judge_n": 20,
+     "judge_mean_abs": 1.3,
+     "judge_ge1_rate": 0.8
+    },
+    "latency_s_median": null,
+    "latency_s_p95": null,
+    "corrections": null,
+    "cost_est_usd": 0.0,
+    "cost_measured_usd": null
+   },
+   {
+    "condition": "whisper_local_prompt",
+    "n": 88,
+    "wer": 0.08379888268156424,
+    "occurrences": 299,
+    "ter_strict": 0.17725752508361203,
+    "ter_lenient": 0.13377926421404684,
+    "worst_terms": [
+     {
+      "term": "Claude",
+      "count": 4,
+      "lenient_misses": 3,
+      "strict_misses": 3,
+      "became": {
+       "cloudcode": 2,
+       "cloudops": 1
+      }
+     },
+     {
+      "term": "RAG",
+      "count": 5,
+      "lenient_misses": 3,
+      "strict_misses": 3,
+      "became": {
+       "rack": 2,
+       "rec": 1
+      }
+     },
+     {
+      "term": "AUC",
+      "count": 7,
+      "lenient_misses": 2,
+      "strict_misses": 2,
+      "became": {
+       "prauc": 2
+      }
+     },
+     {
+      "term": "Scribe v2",
+      "count": 2,
+      "lenient_misses": 2,
+      "strict_misses": 2,
+      "became": {
+       "screp v2": 1,
+       "elevenlavscribev2": 1
+      }
+     },
+     {
+      "term": "1e-4",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "10 to the negative 4": 1
+      }
+     },
+     {
+      "term": "BGE",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "bgem3": 1
+      }
+     },
+     {
+      "term": "Brier score",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "barrier score": 1
+      }
+     },
+     {
+      "term": "CUPED",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "cupid": 1
+      }
+     },
+     {
+      "term": "Claude Opus",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "cloudops": 1
+      }
+     },
+     {
+      "term": "DeepSeek",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "deepseq": 1
+      }
+     },
+     {
+      "term": "DeepSeek V4 Flash",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "deepseq v4 flash": 1
+      }
+     },
+     {
+      "term": "ElevenLabs",
+      "count": 1,
+      "lenient_misses": 1,
+      "strict_misses": 1,
+      "became": {
+       "elevenlavscribev2": 1
+      }
+     }
+    ],
+    "damage": {
+     "n": 20,
+     "local_mean_abs": 0.2,
+     "local_ge1_rate": 0.2,
+     "norm_mean_abs": 0.15,
+     "norm_ge1_rate": 0.15,
+     "kp_flip_rate": 0.06060606060606061,
+     "judge_n": 20,
+     "judge_mean_abs": 1.1,
+     "judge_ge1_rate": 0.7
+    },
+    "latency_s_median": null,
+    "latency_s_p95": null,
+    "corrections": null,
+    "cost_est_usd": 0.0,
+    "cost_measured_usd": null
+   }
+  ],
+  "keyterms": {
+   "policy": {
+    "0": [
+     "AUC",
+     "ROC",
+     "HistGradientBoost",
+     "Claude",
+     "Kokoro",
+     "GridSearchCV",
+     "GroupKFold",
+     "FAISS",
+     "SHAP",
+     "barge-in",
+     "1e-4",
+     "FPR",
+     "TPR",
+     "LiteLLM",
+     "Brier score",
+     "Claude Opus",
+     "DeepSeek V4 Flash",
+     "Silero VAD",
+     "LightGBM",
+     "RAG",
+     "cross-validation",
+     "Scribe v2",
+     "PCA",
+     "precision",
+     "RMSE",
+     "MSE",
+     "F1",
+     "macro-F1",
+     "AUC-ROC",
+     "PR-AUC",
+     "log-loss",
+     "cross-entropy",
+     "Recall@5",
+     "Recall@k",
+     "MRR",
+     "NDCG",
+     "R2",
+     "p-value",
+     "p95",
+     "p50",
+     "TTFT",
+     "WER",
+     "XGBoost",
+     "CatBoost",
+     "ElasticNet",
+     "SVC",
+     "k-means",
+     "DBSCAN",
+     "SVD",
+     "t-SNE"
+    ],
+    "1": [
+     "PR-AUC",
+     "Ridge",
+     "Claude",
+     "Qwen3",
+     "Whisper",
+     "heteroscedasticity",
+     "logits",
+     "bias-variance",
+     "SMOTE",
+     "CUPED",
+     "fp16",
+     "BGE",
+     "KV cache",
+     "AUC",
+     "SFT",
+     "QWK",
+     "MAPE",
+     "RMSE",
+     "MSE",
+     "F1",
+     "macro-F1",
+     "ROC",
+     "AUC-ROC",
+     "cross-entropy",
+     "Recall@5",
+     "Recall@k",
+     "MRR",
+     "NDCG",
+     "R2",
+     "p-value",
+     "p95",
+     "p50",
+     "WER",
+     "LightGBM",
+     "XGBoost",
+     "CatBoost",
+     "HistGradientBoost",
+     "Lasso",
+     "ElasticNet",
+     "SVM",
+     "SVC",
+     "KNN",
+     "k-means",
+     "DBSCAN",
+     "SVD",
+     "UMAP",
+     "SARIMAX",
+     "Prophet",
+     "LSTM",
+     "transformer"
+    ]
+   },
+   "naive": [
+    "QWK",
+    "MAE",
+    "MAPE",
+    "RMSE",
+    "MSE",
+    "F1",
+    "macro-F1",
+    "AUC",
+    "ROC",
+    "AUC-ROC",
+    "PR-AUC",
+    "log-loss",
+    "cross-entropy",
+    "Recall@5",
+    "Recall@k",
+    "MRR",
+    "NDCG",
+    "R2",
+    "p-value",
+    "p95",
+    "p50",
+    "TTFT",
+    "WER",
+    "Brier score",
+    "KL divergence",
+    "precision",
+    "recall",
+    "accuracy",
+    "calibration",
+    "LightGBM",
+    "XGBoost",
+    "CatBoost",
+    "HistGradientBoost",
+    "random forest",
+    "gradient boosting",
+    "logistic regression",
+    "linear regression",
+    "Ridge",
+    "Lasso",
+    "ElasticNet",
+    "SVM",
+    "SVC",
+    "KNN",
+    "k-means",
+    "DBSCAN",
+    "PCA",
+    "SVD",
+    "t-SNE",
+    "UMAP",
+    "ARIMA"
+   ],
+   "priority": []
+  },
+  "decision": "no condition meets the rule; best is `whisper_local_prompt` (damage 20.0%, lenient TER 13.4%) - residual damage must be stated in the report to the user",
+  "rule": {
+   "damage_ge1_max": 0.05,
+   "ter_lenient_max": 0.03
+  },
+  "judge_noise": {
+   "n": 20,
+   "ge1_rate": 0.5,
+   "mean_abs": 0.65
+  }
  }
 }

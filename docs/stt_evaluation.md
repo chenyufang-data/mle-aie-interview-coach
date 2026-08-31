@@ -163,3 +163,174 @@ Post-hoc correction: 64 rewrites, 47 false (73% false-correction rate).
 - naive first-50: QWK, MAE, MAPE, RMSE, MSE, F1, macro-F1, AUC, ROC, AUC-ROC, PR-AUC, log-loss, cross-entropy, Recall@5, Recall@k, MRR, NDCG, R2, p-value, p95, p50, TTFT, WER, Brier score, KL divergence, precision, recall, accuracy, calibration, LightGBM, XGBoost, CatBoost, HistGradientBoost, random forest, gradient boosting, logistic regression, linear regression, Ridge, Lasso, ElasticNet, SVM, SVC, KNN, k-means, DBSCAN, PCA, SVD, t-SNE, UMAP, ARIMA
 - priority (resume) terms: (none - no resume text in data/resume/)
 
+## Set `human`
+
+88 items, 26.5 min of audio; recorded Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36.
+
+| Condition | n | WER | TER strict | TER lenient | grade moved >= 1 (local, raw text) | mean abs move | word errors only: moved >= 1 | kp verdict flips | Flash moved >= 1 | finalize latency p50/p95 | cost measured | cost est. | rule |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | :---: |
+| web_speech | 88 | 19.9% | 38.8% | 29.4% | 60.0% | 0.85 | 45.0% | 14.1% | 90.0% | - | - | $0.000 | fail |
+| scribe_batch | 88 | 8.9% | 15.7% | 8.7% | 40.0% | 0.50 | 25.0% | 8.1% | 50.0% | - | $0.068 | $0.097 | fail |
+| scribe_batch_kt | 88 | 5.9% | 4.0% | 3.0% | 35.0% | 0.45 | 25.0% | 8.1% | 45.0% | - | $0.090 | $0.129 | fail |
+| scribe_batch_fix | 88 | 8.8% | 8.4% | 8.0% | 35.0% | 0.45 | 20.0% | 8.1% | 80.0% | - | - | $0.000 | fail |
+| scribe_rt_0 | 88 | 13.6% | 21.1% | 15.4% | 40.0% | 0.40 | 40.0% | 8.1% | 55.0% | 0.16/0.23 s | $0.129 | $0.172 | fail |
+| scribe_rt_naive50 | 88 | 12.6% | 17.4% | 11.7% | 35.0% | 0.35 | 35.0% | 9.1% | 60.0% | 0.17/0.26 s | $0.133 | $0.172 | fail |
+| scribe_rt_policy50 | 88 | 12.0% | 14.7% | 9.7% | 35.0% | 0.35 | 35.0% | 10.1% | 60.0% | 0.15/0.25 s | $0.135 | $0.172 | fail |
+| whisper_local | 88 | 9.2% | 22.7% | 16.1% | 25.0% | 0.25 | 20.0% | 3.0% | 80.0% | - | - | $0.000 | fail |
+| whisper_local_prompt | 88 | 8.4% | 17.7% | 13.4% | 20.0% | 0.20 | 15.0% | 6.1% | 70.0% | - | - | $0.000 | fail |
+
+Downstream damage is measured on the whole-answer items only: the same
+grader scores the reference text and the transcript *as the STT returned
+it* (cased, punctuated), and a grade that moves by >= 1 point counts as
+damaged. "Word errors only" grades both sides after normalization, so the
+grader's own sensitivity to punctuation and case cancels out. The kp
+column is the share of per-key-point hit/partial/miss verdicts that flipped.
+
+DeepSeek Flash judge noise floor: regrading the *same* reference text moved the
+grade by >= 1 point 50.0% of the time (mean abs 0.65, n=20); the Flash column cannot
+resolve damage below that floor.
+
+**Decision for this set:** no condition meets the rule; best is `whisper_local_prompt` (damage 20.0%, lenient TER 13.4%) - residual damage must be stated in the report to the user
+
+### web_speech: terms that failed most
+
+| Term | said | lenient misses | strict misses | became |
+| --- | ---: | ---: | ---: | --- |
+| AUC | 7 | 7 | 7 | "euc" x2, "raw kuc" x1, "change you see" x1, "preuc" x1 |
+| Claude | 4 | 4 | 4 | "cloud" x2, "cloud ops" x1, "cloud teeter" x1 |
+| RAG | 5 | 4 | 4 | "red" x1, "rack" x1, "(dropped)" x1, "rack contaminates" x1 |
+| ANN | 3 | 2 | 2 | "a n" x1, "(dropped)" x1 |
+| GridSearchCV | 2 | 2 | 2 | "great search cv" x2 |
+| MAPE | 2 | 2 | 2 | "mave" x1, "map" x1 |
+| PR-AUC | 2 | 2 | 2 | "preuc" x1, "preoc" x1 |
+| Ridge | 3 | 2 | 2 | "bridge as" x1, "region" x1 |
+| SARIMAX | 2 | 2 | 2 | "cerimax" x1, "in ceramax as" x1 |
+| Scribe v2 | 2 | 2 | 2 | "square version 2 key terms" x1, "11 lab subscribe v2" x1 |
+
+### scribe_batch: terms that failed most
+
+| Term | said | lenient misses | strict misses | became |
+| --- | ---: | ---: | ---: | --- |
+| Claude | 4 | 4 | 4 | "cloud" x3, "cloud ops" x1 |
+| Scribe v2 | 2 | 2 | 2 | "squirp version 2 key terms" x1, "scrap v2" x1 |
+| 1e-4 | 1 | 1 | 1 | "10 to the negative 4" x1 |
+| 7B | 1 | 1 | 1 | "7bl llamas" x1 |
+| ANN | 3 | 1 | 1 | "relann" x1 |
+| AUC | 7 | 1 | 1 | "prauc" x1 |
+| Brier score | 1 | 1 | 1 | "barrier score" x1 |
+| CUPED | 1 | 1 | 1 | "cupid" x1 |
+| Claude Opus | 1 | 1 | 1 | "cloud ops" x1 |
+| DeepSeek V4 Flash | 1 | 1 | 1 | "deepseek version 4 flash" x1 |
+
+### scribe_batch_kt: terms that failed most
+
+| Term | said | lenient misses | strict misses | became |
+| --- | ---: | ---: | ---: | --- |
+| Claude | 4 | 2 | 2 | "cloudcode" x2 |
+| 1e-4 | 1 | 1 | 1 | "10 to the negative 4" x1 |
+| DeepSeek V4 Flash | 1 | 1 | 1 | "deepseek version 4 flash" x1 |
+| FPR | 1 | 1 | 1 | "false positive rate" x1 |
+| RAG | 5 | 1 | 1 | "react" x1 |
+| TPR | 1 | 1 | 1 | "the true positive rate" x1 |
+| bias-variance | 1 | 1 | 1 | "bias variance" x1 |
+| one-hot | 3 | 1 | 1 | "onehotencoder" x1 |
+
+### scribe_batch_fix: terms that failed most
+
+| Term | said | lenient misses | strict misses | became |
+| --- | ---: | ---: | ---: | --- |
+| Scribe v2 | 2 | 2 | 2 | "squirp version 2 key terms" x1, "scrap v2" x1 |
+| 1e-4 | 1 | 1 | 1 | "10 to the negative 4" x1 |
+| 7B | 1 | 1 | 1 | "7bl" x1 |
+| ANN | 3 | 1 | 1 | "relann" x1 |
+| AUC | 7 | 1 | 1 | "prauc" x1 |
+| Brier score | 1 | 1 | 1 | "barrier score" x1 |
+| Claude Opus | 1 | 1 | 1 | "claude ops" x1 |
+| DeepSeek V4 Flash | 1 | 1 | 1 | "deepseek version 4 flash" x1 |
+| FPR | 1 | 1 | 1 | "false positive rate" x1 |
+| HistGradientBoosting | 1 | 1 | 1 | "histgradientboostingclassifier" x1 |
+
+Post-hoc correction: 71 rewrites, 45 false (63% false-correction rate).
+
+### scribe_rt_0: terms that failed most
+
+| Term | said | lenient misses | strict misses | became |
+| --- | ---: | ---: | ---: | --- |
+| AUC | 7 | 4 | 4 | "raw kuc" x1, "change kuc" x1, "pruc" x1, "uc" x1 |
+| Claude | 4 | 4 | 4 | "cloud" x3, "cloudops" x1 |
+| GridSearchCV | 2 | 2 | 2 | "great search cv" x2 |
+| PR-AUC | 2 | 2 | 2 | "pruc" x1, "pr uc" x1 |
+| RAG | 5 | 2 | 2 | "rec" x1, "rack" x1 |
+| 1e-4 | 1 | 1 | 1 | "10 to the 4" x1 |
+| BGE | 1 | 1 | 1 | "bgem3" x1 |
+| Brier score | 1 | 1 | 1 | "barrier score" x1 |
+| CUPED | 1 | 1 | 1 | "qpid" x1 |
+| Claude Opus | 1 | 1 | 1 | "cloudops" x1 |
+
+### scribe_rt_naive50: terms that failed most
+
+| Term | said | lenient misses | strict misses | became |
+| --- | ---: | ---: | ---: | --- |
+| Claude | 4 | 4 | 4 | "cloud" x3, "cloudops" x1 |
+| AUC | 7 | 2 | 2 | "raw kuc" x1, "change you see" x1 |
+| 1e-4 | 1 | 1 | 1 | "10 to the 4" x1 |
+| BGE | 1 | 1 | 1 | "bgem3" x1 |
+| Brier score | 1 | 1 | 1 | "barrier score" x1 |
+| CUPED | 1 | 1 | 1 | "qpid" x1 |
+| Claude Opus | 1 | 1 | 1 | "cloudops" x1 |
+| DeepSeek V4 Flash | 1 | 1 | 1 | "deepseek version 4 flash" x1 |
+| FAISS | 1 | 1 | 1 | "fass" x1 |
+| FPR | 1 | 1 | 1 | "false positive rate" x1 |
+
+### scribe_rt_policy50: terms that failed most
+
+| Term | said | lenient misses | strict misses | became |
+| --- | ---: | ---: | ---: | --- |
+| 1e-4 | 1 | 1 | 1 | "10 4" x1 |
+| BGE | 1 | 1 | 1 | "bgem3" x1 |
+| Brier score | 1 | 1 | 1 | "barrier score" x1 |
+| CUPED | 1 | 1 | 1 | "cupid" x1 |
+| Claude Opus | 1 | 1 | 1 | "claude ops" x1 |
+| DeepSeek V4 Flash | 1 | 1 | 1 | "deepseek version 4 flash" x1 |
+| FAISS | 1 | 1 | 1 | "fass" x1 |
+| FPR | 1 | 1 | 1 | "false positive rate" x1 |
+| HistGradientBoosting | 1 | 1 | 1 | "histgradientboostingclassifier" x1 |
+| KV cache | 1 | 1 | 1 | "kiwi cache" x1 |
+
+### whisper_local: terms that failed most
+
+| Term | said | lenient misses | strict misses | became |
+| --- | ---: | ---: | ---: | --- |
+| Claude | 4 | 4 | 4 | "cloud" x2, "cloudops" x1, "cloudcode" x1 |
+| RAG | 5 | 3 | 3 | "rack" x2, "red" x1 |
+| AUC | 7 | 2 | 2 | "prauc" x2 |
+| 1e-4 | 1 | 1 | 1 | "10 to the negative 4" x1 |
+| Anthropic | 1 | 1 | 1 | "anthropik" x1 |
+| BGE | 1 | 1 | 1 | "bgem3" x1 |
+| Brier score | 1 | 1 | 1 | "barrier score" x1 |
+| CUPED | 1 | 1 | 1 | "cupid" x1 |
+| Claude Opus | 1 | 1 | 1 | "cloudops" x1 |
+| DeepSeek | 1 | 1 | 1 | "deepsec version 4" x1 |
+
+### whisper_local_prompt: terms that failed most
+
+| Term | said | lenient misses | strict misses | became |
+| --- | ---: | ---: | ---: | --- |
+| Claude | 4 | 3 | 3 | "cloudcode" x2, "cloudops" x1 |
+| RAG | 5 | 3 | 3 | "rack" x2, "rec" x1 |
+| AUC | 7 | 2 | 2 | "prauc" x2 |
+| Scribe v2 | 2 | 2 | 2 | "screp v2" x1, "elevenlavscribev2" x1 |
+| 1e-4 | 1 | 1 | 1 | "10 to the negative 4" x1 |
+| BGE | 1 | 1 | 1 | "bgem3" x1 |
+| Brier score | 1 | 1 | 1 | "barrier score" x1 |
+| CUPED | 1 | 1 | 1 | "cupid" x1 |
+| Claude Opus | 1 | 1 | 1 | "cloudops" x1 |
+| DeepSeek | 1 | 1 | 1 | "deepseq" x1 |
+
+### Realtime keyterm lists (50 x <= 20 chars)
+
+- policy, fold 0 (from fold-1 failures): AUC, ROC, HistGradientBoost, Claude, Kokoro, GridSearchCV, GroupKFold, FAISS, SHAP, barge-in, 1e-4, FPR, TPR, LiteLLM, Brier score, Claude Opus, DeepSeek V4 Flash, Silero VAD, LightGBM, RAG, cross-validation, Scribe v2, PCA, precision, RMSE, MSE, F1, macro-F1, AUC-ROC, PR-AUC, log-loss, cross-entropy, Recall@5, Recall@k, MRR, NDCG, R2, p-value, p95, p50, TTFT, WER, XGBoost, CatBoost, ElasticNet, SVC, k-means, DBSCAN, SVD, t-SNE
+- policy, fold 1 (from fold-0 failures): PR-AUC, Ridge, Claude, Qwen3, Whisper, heteroscedasticity, logits, bias-variance, SMOTE, CUPED, fp16, BGE, KV cache, AUC, SFT, QWK, MAPE, RMSE, MSE, F1, macro-F1, ROC, AUC-ROC, cross-entropy, Recall@5, Recall@k, MRR, NDCG, R2, p-value, p95, p50, WER, LightGBM, XGBoost, CatBoost, HistGradientBoost, Lasso, ElasticNet, SVM, SVC, KNN, k-means, DBSCAN, SVD, UMAP, SARIMAX, Prophet, LSTM, transformer
+- naive first-50: QWK, MAE, MAPE, RMSE, MSE, F1, macro-F1, AUC, ROC, AUC-ROC, PR-AUC, log-loss, cross-entropy, Recall@5, Recall@k, MRR, NDCG, R2, p-value, p95, p50, TTFT, WER, Brier score, KL divergence, precision, recall, accuracy, calibration, LightGBM, XGBoost, CatBoost, HistGradientBoost, random forest, gradient boosting, logistic regression, linear regression, Ridge, Lasso, ElasticNet, SVM, SVC, KNN, k-means, DBSCAN, PCA, SVD, t-SNE, UMAP, ARIMA
+- priority (resume) terms: (none - no resume text in data/resume/)
+

@@ -108,9 +108,25 @@ grades when the untouched reference is merely lowercased and stripped of
 punctuation** (surface-form brittleness the mock report must neutralize by
 grading normalized text on both sides, or by hardening the grader), and the
 **Flash judge's noise floor is 35%** moved ≥ 1 on identical text, so it cannot
-measure damage at this scale. **The decision waits for the human set**: run
-`python server.py --mock`, open http://localhost:8000/stt_record.html, read the
-88 items (~16 min), then `python grader/stt_eval.py --set human --confirm --judge`.
+measure damage at this scale.
+
+**Human set run and decision recorded (2026-08-30).** 88/88 items read once at
+natural pace (26.5 min; run cost ≈ $0.56, Phase 0 total ≈ $1.5 of $10). Real
+speech doubles every error rate vs TTS audio. Web Speech — the app's old voice
+path — loses 29.4% of lexicon terms (WER 19.9%): disqualified by measurement.
+Scribe batch + full keyterms: 3.0% lenient / 4.0% strict. Realtime: 15.4% →
+11.7% (naive 50) → 9.7% (policy 50) — the policy beats naive on human audio.
+Post-hoc fix stays dropped (63% false). Whisper: lowest grade damage (fluent
+smoothing suits the brittle grader) but 13.4–16.1% term loss. Flash judge noise
+floor 50% on these answers. No condition met the pre-registered rule, so per
+its fallback the best ships with residual damage stated: **final transcript =
+Scribe v2 batch + full-lexicon keyterms; live transcript = Scribe v2 Realtime +
+policy-50 keyterms; local Whisper offline, re-transcribed via batch + keyterms
+when online; the report grades normalized text on both sides and shows both
+transcripts.** Residual: ~3% of terms lost in the final transcript; 25–35% of
+spoken answers grade ≥ 1 point off their written reference (mixes true damage
+with speaking-vs-writing deviation and grader surface-form brittleness —
+hardening the grader on style is a follow-up for Phase 1).
 
 ## 3. Latency budget and turn-taking
 
@@ -576,8 +592,7 @@ against real interview outcomes.
       ~2,400 words ≈ 16 min of reading)
 - [x] recording page `public/stt_record.html` (MediaRecorder take per item +
       Web Speech in parallel = condition 1; localhost-only `/api/stt/*` routes)
-- [ ] **user records the human set** (`python server.py --mock`, open
-      http://localhost:8000/stt_record.html, ~16 min)
+- [x] human set recorded (88/88, 26.5 min) and evaluated
 - [x] synthetic set via TTS: `synth_matilda` (Flash v2.5, 88 items, 16.9 min,
       1,438 credits ≈ $0.38 — pay-as-you-go TTS bills ~0.1 credit/char, not 0.5)
 - [x] `grader/stt_eval.py`: all conditions incl. 6 (faster-whisper
@@ -590,7 +605,8 @@ against real interview outcomes.
       naive first-50 — evaluated as conditions `scribe_rt_policy50` /
       `scribe_rt_naive50`
 - [x] results: `grader/stt_eval_results.json` + `docs/stt_evaluation.md` +
-      README section (synthetic set); **decision waits for the human set**
+      README section (both sets); **decision recorded** (§2 status: batch +
+      keyterms final, Realtime + policy-50 live, Whisper offline)
 
 **Phase 1 — core loop, text + browser voice**
 - [ ] `mock.html` setup, materials, project picker
@@ -643,6 +659,8 @@ Decisions:
    is not met by any condition and is entangled with grader brittleness (§2
    status). Decide after the human set whether the damage bar is measured on
    normalized text (word errors only) — the recommendation — or on raw text.
+   → RESOLVED with the human set (§2 status): rule not met by any condition;
+   pre-registered fallback applied; the report grades normalized text.
 7. Private service access shape (§13): Tailscale private network
    (recommended for "me plus a few people") vs public HTTPS + access keys
    (needed for a public demo and browser voice on EC2). Both can coexist.
