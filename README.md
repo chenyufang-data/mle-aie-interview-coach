@@ -30,7 +30,8 @@ Frontend and backend have strictly separated requirements — see
 [`docs/frontend.md`](docs/frontend.md) and [`docs/backend.md`](docs/backend.md)
 for the full contracts, including the three-endpoint JSON API between them.
 In short: the frontend (`public/`, dependency-free vanilla JS, no build step)
-owns presentation and session flow; the backend (`server.py`, Python stdlib HTTP
+owns presentation and session flow; the backend (`server.py` entrypoint over
+the layered `coach/` package, Python stdlib HTTP
 server) owns the corpora, retrieval, AI calls, grading, and session logging.
 Nothing corpus-specific is hard-coded in the frontend — module lists come from
 `GET /api/meta`.

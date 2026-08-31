@@ -9,6 +9,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Runtime files only — training scripts, datasets, and gold labels stay out.
 COPY server.py retrieval.py ./
+COPY coach/ coach/
 COPY grader/__init__.py grader/features.py grader/model.joblib grader/
 COPY rag_ml/all_chunks.jsonl rag_ml/
 COPY rag_ai/all_chunks.jsonl rag_ai/

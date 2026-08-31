@@ -1,6 +1,7 @@
 # Backend requirements
 
-Scope: `server.py`, `retrieval.py`, the `grader/` package, and the two question
+Scope: `server.py` + the `coach/` package, `retrieval.py`, the `grader/`
+package, and the two question
 banks (`rag_ml/`, `rag_ai/`). The backend owns all data, retrieval, AI calls, and
 grading. It knows nothing about presentation.
 
@@ -51,6 +52,19 @@ grading. It knows nothing about presentation.
   labels, and `.env` never enter the image; the key is injected at runtime via
   compose `env_file`. (`--ollama` is not wired for Docker: it expects Ollama on
   localhost.)
+
+## Code layout
+
+`server.py` is the entrypoint (arg parsing, wiring, `main()`) and a
+backwards-compatible facade — scripts may `import server` and use any
+backend name. The implementation lives in `coach/`, one module per concern:
+`config` (env, paths, mode flags), `kb` (corpora + chunk selection),
+`users` (tiers/quota, fail-closed), `llm` (Claude/DeepSeek/Ollama calls),
+`prompts` (system prompt, builders, schemas), `grading` (routing, cascade,
+local distilled grader), `sessions` (logging), `web` (JSON helpers),
+`stt_dev` (localhost-only recording routes), `http` (the handler).
+Convention: startup-reassigned globals (`config.MODE`, `users.TIERS_ENABLED`,
+`grading.GRADER`, …) are read as module attributes, never `from`-imported.
 
 ## Responsibilities (must)
 
