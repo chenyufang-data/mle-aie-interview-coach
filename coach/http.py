@@ -6,6 +6,7 @@ from http.server import BaseHTTPRequestHandler
 import anthropic
 
 from coach import config, grading, kb, sessions, stt_dev, users
+from coach.mock import routes as mock_routes
 from coach.config import PAID_CASCADE, PAID_DAILY_QUOTA, PUBLIC_DIR
 from coach.llm import call_model, engine_model
 from coach.prompts import (EVALUATION_SCHEMA, QUESTION_SCHEMA,
@@ -41,6 +42,9 @@ class InterviewCoachHandler(BaseHTTPRequestHandler):
         if path.startswith("/api/stt/"):
             stt_dev.stt_get(self, path)
             return
+        if path.startswith("/api/mock/"):
+            mock_routes.handle_get(self, path)
+            return
         if path == "/":
             path = "/index.html"
 
@@ -65,6 +69,9 @@ class InterviewCoachHandler(BaseHTTPRequestHandler):
             data = read_json(self)
             if self.path == "/api/stt/record":
                 stt_dev.stt_record(self, data)
+                return
+            if self.path.startswith("/api/mock/"):
+                mock_routes.handle_post(self, self.path, data)
                 return
             if self.path == "/api/question":
                 if data.get("source") == "kb":

@@ -482,3 +482,38 @@ written reference — a floor that mixes true transcription damage with
 speaking-vs-writing deviation and the grader's surface-form brittleness, so
 the mock report grades normalized text on both sides and shows the live and
 final transcripts side by side.
+
+## AI mock interview (Phase 1: text mode)
+
+`/mock.html` runs the experience/project deep-dive round the way a real one
+works: around a target role, against your own resume.
+
+1. **Setup** — paste your resume (and optionally the real JD you are
+   interviewing for; otherwise a default JD template for the role family is
+   used and labelled as such). Pick interviewer style (neutral / friendly /
+   tough) and length (short ≈ 7 questions, standard ≈ 11).
+2. **Role detection** — the model proposes 3–5 target roles with the resume
+   projects that support each and the probe themes an interviewer for that
+   role would drill into. Pick the role and the project to defend.
+3. **The interview** — a hidden plan is built once (persona, probe targets
+   with *expected specifics* — the decision, the alternative, the metric and
+   its value, the outcome). A phase machine enforced in code runs warm-up →
+   walkthrough → deep dive → behavioral → closing; the model only chooses
+   content within a phase: follow up on the weakest part of your last answer,
+   or move to the next unprobed target. Probes that match a question-bank
+   chunk (BM25, thresholded) are graded against that real rubric.
+4. **The report** — three visibly separate blocks: the LLM scorecard (six
+   anchored dimensions, per-question feedback, red flags that must quote you,
+   a hiring call), deterministic communication metrics (words/min, filler
+   words, answer-length balance), and hit/partial/miss verdicts from the
+   distilled key-point classifier on rubric-grounded probes. Downloadable as
+   markdown, transcript included.
+
+Engines follow the measured tiering above: **DeepSeek Flash** runs the
+interviewer turns (with thinking disabled — measured ~0.8 s vs ~1.4 s to
+first token), **Claude** writes the report when a key is present (its 95%
+regrade consistency is what makes scorecards comparable across sessions),
+and `--mock` mode runs a deterministic offline demo interviewer — the same
+path `tests/test_mock.py` and CI exercise. The free tier cannot run a mock
+(it needs a real LLM); paid turns are quota-free on Flash at ~$0.01 per
+session. Nothing is stored server-side: the session lives in the page.

@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mock Interview | MLE/AIE Interview Coach</title>
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+      .mock-shell { width: min(980px, calc(100vw - 32px)); }
+      .mock-page { padding: 30px; }
+      .mock-two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+      @media (max-width: 760px) { .mock-two { grid-template-columns: 1fr; } }
+      .role-card { border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; margin-bottom: 10px; cursor: pointer; background: #fff; }
+      .role-card.active { border-color: var(--green); box-shadow: 0 0 0 3px rgba(23, 108, 95, 0.12); }
+      .role-card h3 { margin: 0 0 4px; font-size: 16px; }
+      .role-card p { margin: 0 0 8px; color: var(--muted); font-size: 13px; }
+      .role-card select { height: 36px; }
+      .theme-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+      .theme-chips span { font-size: 12px; font-weight: 750; color: var(--green-dark); background: rgba(23, 108, 95, 0.1); border-radius: 999px; padding: 3px 9px; }
+      .chat-log { display: flex; flex-direction: column; gap: 12px; margin: 18px 0; }
+      .bubble { max-width: 85%; padding: 12px 15px; border-radius: 12px; line-height: 1.5; white-space: pre-wrap; }
+      .bubble.interviewer { background: var(--panel); border: 1px solid var(--line); align-self: flex-start; border-bottom-left-radius: 4px; }
+      .bubble.candidate { background: rgba(23, 108, 95, 0.1); align-self: flex-end; border-bottom-right-radius: 4px; }
+      .bubble .who { display: block; font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+      .phase-strip { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; }
+      .score-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 12px 0; }
+      .score-tile { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; background: #fff; }
+      .score-tile b { font-size: 22px; color: var(--green-dark); }
+      .score-tile span { display: block; font-size: 12px; color: var(--muted); font-weight: 750; }
+      .report-block { border: 1px solid var(--line); border-radius: 8px; background: #fff; padding: 18px 20px; margin-bottom: 16px; }
+      .report-block h3 { margin-top: 0; }
+      .turn-detail { border-top: 1px solid var(--line); padding: 12px 0; }
+      .turn-detail p { margin: 4px 0; font-size: 14px; }
+      .metrics-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+      .metrics-table td { padding: 5px 8px; border-bottom: 1px solid var(--line); }
+      .metrics-table td:last-child { text-align: right; font-weight: 750; }
+      .kp-list { margin: 6px 0 0 0; padding-left: 18px; font-size: 14px; }
+      .kp-hit { color: var(--green-dark); }
+      .kp-partial { color: var(--gold); }
+      .kp-miss { color: var(--red); }
+      .call-badge { display: inline-block; padding: 6px 14px; border-radius: 999px; font-weight: 800; background: rgba(23, 108, 95, 0.12); color: var(--green-dark); }
+      .muted-note { color: var(--muted); font-size: 13px; }
+      .danger-note { color: var(--red); font-size: 14px; font-weight: 750; }
+      .dl-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+      textarea.answer-box { min-height: 130px; }
+      .view[hidden] { display: none; }
+    </style>
+  </head>
+  <body>
+    <main class="app-shell mock-shell">
+      <section class="setup-page mock-page">
+        <div class="brand setup-brand">
+          <div class="logo-mark">IC</div>
+          <div>
+            <p class="eyebrow">Mock interview &middot; experience deep-dive round</p>
+            <h1 id="pageTitle">Set up your interview</h1>
+          </div>
+        </div>
+
+        <!-- ============================== SETUP ============================== -->
+        <div id="setupView" class="view">
+          <div class="mock-two">
+            <div>
+              <div class="field">
+                <label for="resume">Resume (paste as text; <code>resume_parser.py</code> converts PDF/.docx)</label>
+                <textarea id="resume" placeholder="Paste your resume text here. It stays on this machine and is sent only to the grading model you choose."></textarea>
+              </div>
+            </div>
+            <div>
+              <div class="field">
+                <label for="jd">Job description (optional &mdash; paste a real one, or pick a default template)</label>
+                <textarea id="jd" placeholder="Paste the JD you are interviewing for. Leave empty to use a default template for the role you pick."></textarea>
+              </div>
+              <div class="field">
+                <label for="jdTemplate">Default JD template (used only when the box above is empty)</label>
+                <select id="jdTemplate"></select>
+              </div>
+            </div>
+          </div>
+
+          <div class="mock-two">
+            <div class="field">
+              <label for="style">Interviewer style</label>
+              <select id="style">
+                <option value="neutral" selected>Neutral</option>
+                <option value="friendly">Friendly</option>
+                <option value="tough">Tough</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="length">Length</label>
+              <select id="length">
+                <option value="short">Short (~7 questions)</option>
+                <option value="standard" selected>Standard (~11 questions)</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label for="accessKey">Access key (paid key &rarr; DeepSeek Flash turns + Claude report; in --mock mode a free offline demo runs)</label>
+            <input id="accessKey" type="password" placeholder="Access key" autocomplete="off">
+          </div>
+
+          <button id="detectBtn" class="primary-action" type="button">Detect target roles</button>
+          <p id="setupStatus" class="inline-status" aria-live="polite"></p>
+
+          <div id="rolesArea" hidden>
+            <div class="section-heading" style="margin-top:18px">
+              <p class="eyebrow">Step 2</p>
+              <h2>Pick the role and the project to defend</h2>
+            </div>
+            <div id="roleCards"></div>
+            <button id="startBtn" class="primary-action" type="button">Start the interview</button>
+          </div>
+        </div>
+
+        <!-- ============================ INTERVIEW ============================ -->
+        <div id="interviewView" class="view" hidden>
+          <div class="phase-strip">
+            <span id="phaseBadge" class="status-badge">warm-up</span>
+            <span id="turnBadge" class="status-badge">turn 1</span>
+            <span id="engineBadge" class="status-badge"></span>
+            <button id="endBtn" class="ghost-action" type="button" style="margin-left:auto">End early &rarr; report</button>
+          </div>
+          <div id="chatLog" class="chat-log"></div>
+          <div class="field">
+            <label for="answerBox">Your answer</label>
+            <textarea id="answerBox" class="answer-box" placeholder="Answer aloud in your head, then type it the way you would say it. Ctrl+Enter sends."></textarea>
+          </div>
+          <button id="sendBtn" class="primary-action" type="button">Send answer</button>
+          <p id="interviewStatus" class="inline-status" aria-live="polite"></p>
+        </div>
+
+        <!-- ============================= REPORT ============================= -->
+        <div id="reportView" class="view" hidden>
+          <div id="reportBody"></div>
+          <div class="dl-row">
+            <button id="dlReport" class="secondary-action" type="button">Download report (.md)</button>
+            <button id="dlTranscript" class="ghost-action" type="button">Download transcript (.md)</button>
+            <button id="againBtn" class="ghost-action" type="button">New session</button>
+          </div>
+        </div>
+
+        <p class="muted-note" style="margin-top:22px">
+          Nothing is stored server-side: the session lives in this page and is sent to the
+          grading model per request. <a class="back-link" href="/" style="min-height:0;padding:0;border:0">Back to the coach</a>
+        </p>
+      </section>
+    </main>
+    <script src="/mock.js"></script>
+  </body>
+</html>

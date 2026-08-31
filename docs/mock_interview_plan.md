@@ -609,10 +609,21 @@ against real interview outcomes.
       keyterms final, Realtime + policy-50 live, Whisper offline)
 
 **Phase 1 — core loop, text + browser voice**
-- [ ] `mock.html` setup, materials, project picker
-- [ ] `/api/mock/projects|start|turn|report`, plan, phase machine, turn protocol
-- [ ] report rendering + downloads; offline unit tests (fake engine); one
-      Flash smoke session
+- [x] `coach/mock/` package (templates, schemas, engine+fake, planning,
+      turns, metrics, report, routes) + `public/mock.html`/`mock.js`
+- [x] `/api/mock/templates|roles|start|turn|report`; hidden plan with
+      BM25 rubric grounding (live smoke: 7/7 probes matched bank chunks at
+      scores 12.8–19.7); phase machine in code; `---` JSON trailer protocol
+- [x] report rendering + `.md` downloads; offline tests
+      (`tests/test_mock.py`, fake engine, in CI); live Flash smoke session
+      (turn latency 1.5–2.1 s; the tough persona produced adaptive
+      follow-ups quoting the candidate). Report cap fix: V4 thinking spends
+      completion tokens, 8k truncated a 7-turn report — now 12k + a
+      finish_reason==length retry
+- [ ] browser voice (Web Speech dictation + speechSynthesis) — moved to the
+      Phase 2 audio work where the loop code lives
+- [ ] report-consistency test (regrade 5 sessions twice, Flash vs Claude) —
+      needs fresh Claude authorization; report default stays Claude (§7d)
 
 **Phase 2 — live loops and the Level 1 vs Level 2 equivalence test**
 - [ ] DIY loop (Levels 2–3): browser audio WebSocket, Silero VAD endpointing
@@ -672,6 +683,10 @@ SSE) path for the OpenAI-compatible endpoint — `call_deepseek` is currently
 non-streaming — and the parameter that disables V4's hybrid thinking per
 request, so interviewer turns get a fast first token while the report keeps
 thinking on. Measure first-token latency both ways.
+→ MEASURED 2026-08-30: SSE streaming works; `thinking: {"type": "disabled"}`
+gives ~0.8 s to first content token vs ~1.4 s enabled (short prompt, n=3
+each); `coach/llm.py call_chat()` implements the switch and the mock's turns
+run with thinking off, the report with it on.
 
 Verify against ElevenLabs docs before Phase 2 (not answered by the docs read
 on 2026-08-29): whether Speech Engine accepts per-session STT keyterms;

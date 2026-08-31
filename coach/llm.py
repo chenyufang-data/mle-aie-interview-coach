@@ -97,7 +97,11 @@ def call_deepseek(user_prompt, schema):
              + json.dumps(schema)},
         ],
         "response_format": {"type": "json_object"},
-        "max_tokens": 8000,
+        # V4's hybrid thinking spends completion tokens on reasoning before
+        # the JSON: the mock's 7-turn report measured ~6.2k completion tokens
+        # with run-to-run variance even at temperature 0, so 8k truncated
+        # occasionally. 12k is accepted by the API and leaves headroom.
+        "max_tokens": 12000,
         "temperature": 0,
     }
     last_error = None
@@ -115,10 +119,72 @@ def call_deepseek(user_prompt, schema):
         except urlerror.URLError as exc:
             raise RuntimeError(f"Could not reach the DeepSeek API ({exc})") from exc
         try:
-            return json.loads(body["choices"][0]["message"]["content"])
+            choice = body["choices"][0]
+            if choice.get("finish_reason") == "length":
+                raise ValueError("output truncated at max_tokens")
+            return json.loads(choice["message"]["content"])
         except (KeyError, IndexError, ValueError) as exc:
             last_error = exc
     raise RuntimeError(f"DeepSeek returned malformed JSON twice ({last_error})")
+
+
+def call_chat(system, messages, engine, thinking=False, max_tokens=700, temperature=0.7):
+    """Plain-text chat, for the mock interviewer's conversational turns.
+
+    Unlike call_model there is no output schema: the turn protocol wants
+    spoken text first (streamable to TTS later) with a `\\n---\\n{json}`
+    trailer the caller strips. `thinking` maps to each vendor's control —
+    measured on DeepSeek V4 Flash: first content token ~0.8 s with thinking
+    disabled vs ~1.4 s enabled on a short prompt, and the gap grows with
+    prompt size, so interviewer turns run with thinking off while the
+    report keeps it on.
+    """
+    if engine == "ollama":
+        payload = {
+            "model": config.OLLAMA_MODEL,
+            "stream": False,
+            "think": bool(thinking),
+            "messages": [{"role": "system", "content": system}] + messages,
+        }
+        req = urlrequest.Request(
+            OLLAMA_URL, data=json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json"}, method="POST")
+        try:
+            with urlrequest.urlopen(req, timeout=300) as response:
+                body = json.loads(response.read().decode("utf-8"))
+        except urlerror.URLError as exc:
+            raise RuntimeError("Could not reach Ollama at localhost:11434.") from exc
+        return body.get("message", {}).get("content", "").strip()
+    if engine == "deepseek":
+        payload = {
+            "model": config.deepseek_model(),
+            "messages": [{"role": "system", "content": system}] + messages,
+            "thinking": {"type": "enabled" if thinking else "disabled"},
+            "max_tokens": max_tokens,
+            "temperature": temperature,
+        }
+        req = urlrequest.Request(
+            DEEPSEEK_URL, data=json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json",
+                     "Authorization": f"Bearer {os.environ['DEEPSEEK_API_KEY']}"},
+            method="POST")
+        try:
+            with urlrequest.urlopen(req, timeout=300) as response:
+                body = json.loads(response.read().decode("utf-8"))
+        except urlerror.URLError as exc:
+            raise RuntimeError(f"Could not reach the DeepSeek API ({exc})") from exc
+        return (body["choices"][0]["message"].get("content") or "").strip()
+    response = get_client().messages.create(
+        model=os.environ.get("ANTHROPIC_MODEL", DEFAULT_MODEL),
+        max_tokens=max_tokens if not thinking else max(max_tokens, 4000),
+        system=system,
+        thinking={"type": "adaptive"} if thinking else {"type": "disabled"},
+        temperature=temperature,
+        messages=messages,
+    )
+    if response.stop_reason == "refusal":
+        raise RuntimeError("The model declined this request.")
+    return next((block.text for block in response.content if block.type == "text"), "").strip()
 
 
 def call_model(user_prompt, schema, engine):

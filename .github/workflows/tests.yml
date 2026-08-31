@@ -21,3 +21,6 @@ jobs:
       # STT experiment text layer: normalization, WER, term error rate,
       # post-hoc correction audit, keyterm policy (pure Python).
       - run: python tests/test_stt_text.py
+      # Mock interview: phase machine, turn protocol, metrics, full offline
+      # flow on the fake engine (roles -> plan -> turns -> report).
+      - run: python tests/test_mock.py

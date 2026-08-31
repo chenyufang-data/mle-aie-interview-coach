@@ -60,6 +60,15 @@ frontend uses exactly three endpoints:
 | `POST /api/question` | Start of a session and "New question" |
 | `POST /api/evaluate` | Answer submission (first answers and follow-ups) |
 
+`public/mock.html` + `mock.js` is the mock-interview page (Phase 1: text
+mode): setup (resume + JD or default template, style, length) → role cards
+from `/api/mock/roles` → chat interview driven by `/api/mock/turn` with
+per-answer timing (`answer_ms`, measured question-shown → send) → report
+rendered in three blocks (LLM scorecard, computed metrics, rubric-grounded
+verdicts) with `.md` downloads. Dependency-free like the rest; session state
+lives in the page and is lost on reload (documented tradeoff of the
+stateless server).
+
 `public/stt_record.html` + `stt_record.js` is a separate developer page (not
 linked from the app) for recording the Phase 0 STT test set: one
 `MediaRecorder` take per item, saved through the localhost-only

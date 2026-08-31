@@ -66,6 +66,23 @@ class Retriever:
                 score += self._idf[term] * freq * (BM25_K1 + 1) / (freq + BM25_K1 * length_norm)
         return score
 
+    def top_scored(self, query, level=None, limit=3):
+        """(score, chunk) pairs, best first — for callers that need the BM25
+        score itself (the mock's probe→rubric matching applies a threshold,
+        unlike search(), which serves *some* question no matter what)."""
+        query_tokens = list(dict.fromkeys(tokenize(query))) if query else []
+        if not self.chunks or not query_tokens:
+            return []
+        candidates = list(enumerate(self.chunks))
+        allowed = LEVEL_DIFFICULTY.get(level)
+        if allowed:
+            leveled = [(i, c) for i, c in candidates if c["metadata"]["difficulty"] in allowed]
+            if leveled:
+                candidates = leveled
+        scored = sorted(((self._bm25(i, query_tokens), i, c) for i, c in candidates),
+                        key=lambda item: (-item[0], item[1]))
+        return [(score, chunk) for score, _, chunk in scored[:limit] if score > 0]
+
     def search(self, query="", module=None, level=None, exclude_ids=(), limit=5):
         """Return candidate chunks, best first.
 

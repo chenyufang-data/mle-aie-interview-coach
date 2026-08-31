@@ -172,6 +172,37 @@ Claude-graded rows as gold pairs):
 Errors are returned as `{ "error": "..." }` with status 400 (missing answer) or
 500 (upstream/API failures).
 
+### Mock interview: `/api/mock/*` (coach/mock/)
+
+Stateless like the rest of the API: the client holds `{plan, transcript,
+settings}` and sends them per request. Engine selection reuses
+`grading_route()` — paid keys get DeepSeek Flash turns (quota-free, "Always
+Claude" via `force_llm`), the free tier gets 403 (a mock needs a real LLM),
+and `--mock` mode serves a deterministic offline demo engine (also what
+`tests/test_mock.py` and CI run).
+
+- `GET /api/mock/templates` → default JD templates (§7c), styles, lengths.
+- `POST /api/mock/roles` `{resume, jd_text?}` → `{profile, roles[]}` (§7a).
+- `POST /api/mock/start` `{resume, jd_text?, role, project?, settings}` →
+  `{plan, jd_text, jd_is_default, turn, total_turns}`. The hidden plan
+  carries probe targets with on-the-fly rubrics; targets that BM25-match a
+  bank chunk (score ≥ 10) also carry `chunk_id` + `bank_key_points` —
+  rubric-grounded probes. Note: the plan travels to the client, so a curious
+  user can read it in devtools; acceptable for a personal practice tool.
+- `POST /api/mock/turn` `{plan, role, transcript}` → the next interviewer
+  message. The phase machine (warm-up → walkthrough → deep dive →
+  behavioral → closing) is enforced in code; the model only chooses content
+  within the phase, with thinking disabled (measured ~0.8 s vs ~1.4 s first
+  token). Turn protocol: spoken text, then a `---` line and a JSON trailer
+  `{probe_id, rationale}` that is stripped server-side.
+- `POST /api/mock/report` `{plan, role, transcript, report_engine?}` →
+  `{assessment, metrics, kp_verdicts, engine}`: the §8a scorecard (six
+  anchored dimensions, per-turn feedback, red flags that quote, hiring
+  call), deterministic communication metrics, and distilled-classifier
+  hit/partial/miss verdicts for rubric-grounded probes. Report engine
+  defaults to Claude when a key is present (regrade consistency), else the
+  turn engine.
+
 ### Developer routes: `/api/stt/*` (localhost only)
 
 Used by `public/stt_record.html` to record the Phase 0 STT test set
