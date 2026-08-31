@@ -202,3 +202,87 @@ def engine_model(engine):
         "ollama": config.OLLAMA_MODEL,
         "deepseek": config.deepseek_model(),
     }.get(engine, "local")
+
+
+def _sse_events(lines):
+    """Parse an iterable of raw SSE lines ("data: {...}") into JSON events.
+    Stops at [DONE]; skips keep-alives and malformed lines. Factored out so
+    tests can feed canned bytes."""
+    for raw in lines:
+        line = raw.decode("utf-8", "replace") if isinstance(raw, bytes) else raw
+        line = line.strip()
+        if not line.startswith("data:"):
+            continue
+        payload = line[5:].strip()
+        if payload == "[DONE]":
+            return
+        try:
+            yield json.loads(payload)
+        except ValueError:
+            continue
+
+
+def call_chat_stream(system, messages, engine, thinking=False, max_tokens=700,
+                     temperature=0.7):
+    """call_chat, streamed: yields text deltas as they arrive.
+
+    The voice loop pipes these through the sentence chunker to TTS so the
+    first audio never waits for the full turn (plan section 3). Deltas are
+    raw - the `---` trailer is stripped downstream (coach/voice/chunker.py).
+    DeepSeek: SSE with stream=true (verified 2026-08-30; reasoning_content
+    deltas are skipped - with thinking disabled there are none anyway).
+    """
+    if engine == "deepseek":
+        payload = {
+            "model": config.deepseek_model(),
+            "messages": [{"role": "system", "content": system}] + messages,
+            "thinking": {"type": "enabled" if thinking else "disabled"},
+            "max_tokens": max_tokens,
+            "temperature": temperature,
+            "stream": True,
+        }
+        req = urlrequest.Request(
+            DEEPSEEK_URL, data=json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json",
+                     "Authorization": f"Bearer {os.environ['DEEPSEEK_API_KEY']}"},
+            method="POST")
+        try:
+            with urlrequest.urlopen(req, timeout=300) as response:
+                for event in _sse_events(response):
+                    for choice in event.get("choices") or []:
+                        piece = (choice.get("delta") or {}).get("content")
+                        if piece:
+                            yield piece
+        except urlerror.URLError as exc:
+            raise RuntimeError(f"Could not reach the DeepSeek API ({exc})") from exc
+        return
+    if engine == "ollama":
+        payload = {"model": config.OLLAMA_MODEL, "stream": True, "think": bool(thinking),
+                   "messages": [{"role": "system", "content": system}] + messages}
+        req = urlrequest.Request(OLLAMA_URL, data=json.dumps(payload).encode("utf-8"),
+                                 headers={"Content-Type": "application/json"}, method="POST")
+        try:
+            with urlrequest.urlopen(req, timeout=300) as response:
+                for raw in response:
+                    if not raw.strip():
+                        continue
+                    body = json.loads(raw.decode("utf-8"))
+                    piece = body.get("message", {}).get("content")
+                    if piece:
+                        yield piece
+                    if body.get("done"):
+                        return
+        except urlerror.URLError as exc:
+            raise RuntimeError("Could not reach Ollama at localhost:11434.") from exc
+        return
+    with get_client().messages.stream(
+        model=os.environ.get("ANTHROPIC_MODEL", DEFAULT_MODEL),
+        max_tokens=max_tokens if not thinking else max(max_tokens, 4000),
+        system=system,
+        thinking={"type": "adaptive"} if thinking else {"type": "disabled"},
+        temperature=temperature,
+        messages=messages,
+    ) as stream:
+        for piece in stream.text_stream:
+            if piece:
+                yield piece

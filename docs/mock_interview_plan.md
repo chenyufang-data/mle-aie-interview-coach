@@ -620,30 +620,56 @@ against real interview outcomes.
       follow-ups quoting the candidate). Report cap fix: V4 thinking spends
       completion tokens, 8k truncated a 7-turn report — now 12k + a
       finish_reason==length retry
-- [ ] browser voice (Web Speech dictation + speechSynthesis) — moved to the
-      Phase 2 audio work where the loop code lives
+- [x] browser voice (Web Speech dictation + speechSynthesis) — shipped with
+      the Phase 2 voice UI (mock.js voice modes)
 - [ ] report-consistency test (regrade 5 sessions twice, Flash vs Claude) —
       needs fresh Claude authorization; report default stays Claude (§7d)
 
 **Phase 2 — live loops and the Level 1 vs Level 2 equivalence test**
-- [ ] DIY loop (Levels 2–3): browser audio WebSocket, Silero VAD endpointing
-      (patient), streaming LLM → sentence chunking → TTS, barge-in with
-      spoken-prefix truncation; `AUDIO_BACKEND` / `LLM_ENGINE` switches
-- [ ] Speaches container (faster-whisper turbo + Kokoro); `initial_prompt`
-      from the session keyterms
-- [ ] Level 1: Speech Engine sidecar + browser SDK; per-session keyterms;
-      interruption policy (verify spoken-prefix)
-- [ ] latency instrumentation on every level, p50/p95 last-user-audio →
-      first-agent-audio
-- [ ] local recording + post-session re-transcription; two-transcript report
-- [ ] **Equivalence test**: the same scripted 10-turn interview run on
-      Level 1 and Level 2 (and 3), measuring live TER on lexicon terms,
-      downstream grade damage, p50/p95 latency, cut-off rate (interviewer
-      interrupting a thinking pause), barge-in success, and a blind TTS
-      preference on 10 sentences. Pre-registered rule: **adopt Level 2 as
-      main usage if its downstream damage is within 2 points of Level 1,
-      p95 latency ≤ 2.0 s, and cut-off rate ≤ 5%**; otherwise iterate on the
-      DIY loop and re-test, with Level 1 as main usage meanwhile.
+- [x] DIY loop (Levels 2–3): coach/voice/ — browser audio over one
+      WebSocket per session (`server.py --voice`; mock.js AudioWorklet mic
+      + per-sentence playback with `played` acks), Silero VAD patient
+      endpointing (end-silence measured below), streaming LLM
+      (coach/llm.call_chat_stream, thinking off) → sentence chunker → TTS,
+      barge-in with spoken-prefix truncation; `AUDIO_BACKEND` switch
+      local / speaches / elevenlabs. Live smoke on real audio + real Flash:
+      Whisper 0.85 s → first token 0.70 s → Kokoro 0.54 s = 2.3 s
+      end-of-speech → first agent audio, adaptive tough-persona follow-up
+- [x] Speaches container verified (faster-whisper turbo CT2 + Kokoro:
+      warm STT 1.6 s per 31 s answer, TTS 0.36 s); local backend passes the
+      session keyterms as Whisper's `initial_prompt`
+- [x] latency instrumentation on every level: server per-stage (stt / llm
+      first token / tts first byte / first audio) + client
+      last-user-audio → first-agent-audio; session p50/p95 in `done`
+- [x] local per-answer recording + POST /api/mock/transcribe (Scribe batch
+      + full lexicon when keyed, local Whisper otherwise); two-transcript
+      report block: WER live-vs-final, terms recovered, kp-verdict flips —
+      both sides normalized per the Phase 0 decision
+- [x] **Equivalence test, Level 2/3 half** (grader/loop_eval.py; the 20
+      real Phase 0 answers as the scripted candidate, 12.4 min, deterministic
+      fake-engine interviewer so only the audio path varies). Endpointing
+      iterated per the rule: 1.2 s end-silence cut 50% of answers
+      mid-thought, 1.8 s cut 15%, 2.0 s ships at **cut-off 5%** (= the bar).
+      Shipped-config numbers: live TER 5.6% lenient (54 occurrences), WER
+      7.1%, stt p50 0.37 s, **first-audio p50 0.83 s / p95 1.74 s** (≤ 2.0 s
+      bar), distilled-grader movement 3/18 answers (16.7%, both sides
+      normalized; Phase 0 context: 25–35% spoken-vs-written). The harness
+      caught two real bugs now fixed: the Silero v5 context-window omission
+      (VAD scored real speech ~0.0) and the answer-continuation stall
+      (candidate talks past the committed answer → appended as an
+      afterthought, interviewer regenerates)
+- [ ] Level 1 live run: the Speech Engine sidecar is BUILT
+      (coach/voice/sidecar.py — upstream protocol; `--setup` configures
+      scribe_realtime keywords, Flash v2.5 voice, patient turn) but a live
+      session needs a public `ws_url` (tunnel) + a browser-SDK page + fresh
+      ElevenLabs spend; the rule's damage comparison ("within 2 points of
+      Level 1") and the blind TTS preference wait on it. Also pending: the
+      harness's `--backend elevenlabs` pass (Scribe Realtime + Flash TTS,
+      ≈ $0.15) for the DIY-cloud row
+- [ ] barge-in scripted probe: the mechanism is verified end to end (a
+      fault-injection run produced `interrupted` + clean spoken-prefix
+      recovery), but the probe cannot reliably hit the fake engine's ~1 s
+      speaking window; re-probe under real LLM turns (3–8 s windows)
 
 **Phase 3 — polish and portfolio**
 - [ ] consent-aware opt-in logging; prompt-cached materials prefix
@@ -693,6 +719,16 @@ on 2026-08-29): whether Speech Engine accepts per-session STT keyterms;
 whether the server learns the spoken prefix on interruption; whether the
 TTS voice/model is selectable per session; whether session audio is
 retrievable (local recording makes this non-blocking).
+-> RESOLVED 2026-08-30 against SDK 2.65's typed API (speech_engine.create/
+update): STT keyterms YES (`asr.keywords`, provider `scribe_realtime`); TTS
+voice/model YES (`tts.voice_id`, `tts.model_id`); turn-taking YES
+(`turn.turn_eagerness: patient`, `turn_timeout` up to 30 s). Spoken prefix
+NO - the upstream protocol is text-only (init / user_transcript in,
+agent_response out; verified from the SDK's protocol types), so on barge-in
+a Speech Engine server never learns how much of its question was actually
+spoken, while the DIY loop knows exactly (sentence `played` acks). Also:
+`ws_url` must be publicly reachable, so a local Level 1 session needs a
+tunnel. Both findings push the expected main usage further toward Level 2.
 
 ## 11. Risks and mitigations
 

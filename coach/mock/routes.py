@@ -20,6 +20,19 @@ def handle_get(handler, path):
                                      "lengths": {name: turns.total_turns(name)
                                                  for name in turns.PHASE_QUOTAS}})
         return
+    if path == "/api/mock/voice":
+        # Voice capabilities: whether the ws loop is up, which audio stack
+        # it runs, and which final-transcript engine this deployment offers.
+        from coach import config
+        from coach.voice import loop as voice_loop
+        from coach.voice.final_transcript import available_engine
+        json_response(handler, 200, {
+            "enabled": config.VOICE_ENABLED,
+            "ws_port": voice_loop.VOICE_PORT if config.VOICE_ENABLED else None,
+            "audio_backend": voice_loop.audio_backend(),
+            "final_stt": available_engine(),
+        })
+        return
     json_response(handler, 404, {"error": "Unknown endpoint."})
 
 
@@ -79,6 +92,37 @@ def handle_post(handler, path, data):
             grading.load_grader()  # kp verdicts want the artifact even in Claude mode
         result = report.build_report(data, report_engine)
         result["engine"] = report_engine
+        json_response(handler, 200, result)
+        return
+
+    if path == "/api/mock/keyterms":
+        # Deterministic (no LLM): the measured section-7a policy picks the
+        # <= 50 realtime keyterms from this session's own material.
+        from coach.voice import keyterms as keyterms_module
+        chosen = keyterms_module.session_keyterms(
+            resume=(data.get("resume") or ""),
+            role=data.get("role"), project=data.get("project"))
+        json_response(handler, 200, {"keyterms": chosen})
+        return
+
+    if path == "/api/mock/transcribe":
+        # Final-transcript re-transcription of one answer clip (plan 4a).
+        audio_b64 = data.get("audio_base64") or ""
+        if not audio_b64:
+            json_response(handler, 400, {"error": "audio_base64 is required."})
+            return
+        if len(audio_b64) > 34_000_000:  # ~25 MB decoded
+            json_response(handler, 400, {"error": "audio too large (25 MB cap)."})
+            return
+        import base64
+        from coach.voice import final_transcript
+        try:
+            audio = base64.b64decode(audio_b64)
+            result = final_transcript.transcribe_final(
+                audio, data.get("mime") or "audio/webm")
+        except Exception as exc:
+            json_response(handler, 500, {"error": f"re-transcription failed: {exc}"})
+            return
         json_response(handler, 200, result)
         return
 

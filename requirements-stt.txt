@@ -1,11 +1,19 @@
 # Extra dependencies for the Phase 0 STT experiment (grader/stt_eval.py) and
-# the local audio fallback stack. Not needed by the app itself and not
-# installed in the Docker image:
+# the voice loop's local audio stack (coach/voice, Levels 2-3). Not needed
+# by the text-mode app and not installed in the Docker image:
 #   pip install -r requirements-stt.txt
 elevenlabs>=2.65          # Scribe v2 batch + Realtime (WebSocket), Flash v2.5 TTS
-websockets>=13            # used by the SDK's realtime client
-faster-whisper>=1.2       # condition 6: local large-v3-turbo (CTranslate2); PyAV decodes webm/mp3
+websockets>=13            # SDK realtime client + the coach/voice loop server
+faster-whisper>=1.2       # local large-v3-turbo (CTranslate2); PyAV decodes webm/mp3
 # GPU inference on Windows/Linux without a system CUDA install: the wheels
-# carry the DLLs and stt_eval.py adds them to the DLL search path.
+# carry the DLLs and stt_eval.py / coach/voice/stt.py add them to the DLL
+# search path.
 nvidia-cublas-cu12
 nvidia-cudnn-cu12==9.*
+# Local voice loop (plan section 4a): Silero VAD runs on onnxruntime
+# (data/models/silero_vad.onnx, auto-downloaded); Kokoro-82M TTS via
+# kokoro-onnx (download kokoro-v1.0.onnx + voices-v1.0.bin into
+# data/models/ - see coach/voice/tts.py for the release URL).
+onnxruntime>=1.20
+kokoro-onnx>=0.6
+soundfile>=0.13

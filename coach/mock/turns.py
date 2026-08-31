@@ -101,6 +101,24 @@ def _transcript_messages(state):
     return messages
 
 
+def turn_prompt(state, phase, turn_number):
+    """(system, messages) for an LLM interviewer turn — shared by next_turn
+    (blocking, /api/mock/turn) and the voice loop's streamed variant
+    (coach/voice/loop.py), so both paths run the same interview."""
+    asked_ids = {entry.get("probe_id") for entry in state.get("transcript", [])
+                 if entry.get("probe_id")}
+    system = persona_system(state["plan"], state.get("role", {}))
+    instruction = (
+        f"[Interview control — invisible to the candidate]\n"
+        f"You are now on interviewer turn {turn_number} of "
+        f"{total_turns(state['plan'].get('settings', {}).get('length', 'standard'))}, "
+        f"phase: {phase.upper()}.\n{PHASE_INSTRUCTIONS[phase]}\n\n"
+        f"The hidden plan:\n{_plan_digest(state['plan'], asked_ids)}\n\n"
+        f"Reply with your next spoken question, then the --- trailer.")
+    messages = _transcript_messages(state) + [{"role": "user", "content": instruction}]
+    return system, messages
+
+
 def next_turn(state, engine):
     """The next interviewer message. state = {plan, role, transcript:[{question,
     answer, probe_id, ...}]} — stateless server, the client sends it back
@@ -116,17 +134,7 @@ def next_turn(state, engine):
         # Turn 1 is the plan's opening, written at start time - no LLM call.
         spoken, meta = state["plan"].get("opening", ""), {}
     else:
-        asked_ids = {entry.get("probe_id") for entry in state.get("transcript", [])
-                     if entry.get("probe_id")}
-        system = persona_system(state["plan"], state.get("role", {}))
-        instruction = (
-            f"[Interview control — invisible to the candidate]\n"
-            f"You are now on interviewer turn {turn_number} of "
-            f"{total_turns(state['plan'].get('settings', {}).get('length', 'standard'))}, "
-            f"phase: {phase.upper()}.\n{PHASE_INSTRUCTIONS[phase]}\n\n"
-            f"The hidden plan:\n{_plan_digest(state['plan'], asked_ids)}\n\n"
-            f"Reply with your next spoken question, then the --- trailer.")
-        messages = _transcript_messages(state) + [{"role": "user", "content": instruction}]
+        system, messages = turn_prompt(state, phase, turn_number)
         # Thinking off: measured ~0.8 s to first token vs ~1.4 s+ with it on.
         text = engines.chat(system, messages, engine, thinking=False, max_tokens=400)
         spoken, meta = parse_turn_output(text)

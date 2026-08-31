@@ -56,6 +56,9 @@ CASCADE_FRAC_HIT_MAX = 0.25
 # "ollama" (free local model, needs Ollama running at localhost:11434).
 # Reassigned by server.main(); always read as config.MODE.
 MODE = "claude"
+# True when server.py was started with --voice (the live loop WebSocket is
+# up); read as config.VOICE_ENABLED by GET /api/mock/voice.
+VOICE_ENABLED = False
 OLLAMA_MODEL = "llama3.2"
 OLLAMA_URL = "http://127.0.0.1:11434/api/chat"
 

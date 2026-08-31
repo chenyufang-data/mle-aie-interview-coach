@@ -60,14 +60,29 @@ frontend uses exactly three endpoints:
 | `POST /api/question` | Start of a session and "New question" |
 | `POST /api/evaluate` | Answer submission (first answers and follow-ups) |
 
-`public/mock.html` + `mock.js` is the mock-interview page (Phase 1: text
-mode): setup (resume + JD or default template, style, length) → role cards
-from `/api/mock/roles` → chat interview driven by `/api/mock/turn` with
-per-answer timing (`answer_ms`, measured question-shown → send) → report
-rendered in three blocks (LLM scorecard, computed metrics, rubric-grounded
-verdicts) with `.md` downloads. Dependency-free like the rest; session state
-lives in the page and is lost on reload (documented tradeoff of the
-stateless server).
+`public/mock.html` + `mock.js` is the mock-interview page: setup (resume +
+JD or default template, style, length, voice mode) → role cards from
+`/api/mock/roles` → the interview → report rendered in blocks (LLM
+scorecard, computed metrics, rubric-grounded verdicts, and — for voice
+sessions — the live-vs-final transcription-quality block) with `.md`
+downloads. Three voice modes:
+
+- **text** — the Phase 1 chat flow over `/api/mock/turn` (`answer_ms`
+  measured question-shown → send);
+- **browser** — Web Speech dictation into the answer box plus
+  `speechSynthesis` questions; free, Chromium-only, still dependency-free;
+- **live** — the `coach/voice` WebSocket loop: `mock-audio-worklet.js`
+  captures the microphone (AudioWorklet, downsampled to 16 kHz PCM16),
+  the server VAD/STT/LLM/TTS pipeline streams back per-sentence audio the
+  page plays and acks (`played` messages are the ground truth for what an
+  interruption actually cut off). The page shows loop state and measured
+  end-of-speech → first-audio latency.
+
+In browser and live modes each answer is also recorded (`MediaRecorder`,
+opt-out checkbox) and re-transcribed via `POST /api/mock/transcribe`; the
+result rides on the transcript entry as `answer_final`, which the report
+grades. Session state lives in the page and is lost on reload (documented
+tradeoff of the stateless server).
 
 `public/stt_record.html` + `stt_record.js` is a separate developer page (not
 linked from the app) for recording the Phase 0 STT test set: one

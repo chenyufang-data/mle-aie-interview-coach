@@ -37,8 +37,10 @@ def load_users():
         )
 
 
-def resolve_user(handler):
-    key = (handler.headers.get("X-Access-Key") or "").strip()
+def resolve_key(key):
+    """User record for a bare access key (the voice WebSocket has no
+    request headers; everything else goes through resolve_user)."""
+    key = (key or "").strip()
     entry = USERS.get(key)
     if entry:
         return {
@@ -49,6 +51,10 @@ def resolve_user(handler):
             "log": entry.get("log", True),
         }
     return {"key": None, "name": "anonymous", "tier": "free", "log": True}
+
+
+def resolve_user(handler):
+    return resolve_key(handler.headers.get("X-Access-Key") or "")
 
 
 def _read_usage():

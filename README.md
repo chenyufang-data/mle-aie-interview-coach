@@ -483,7 +483,7 @@ speaking-vs-writing deviation and the grader's surface-form brittleness, so
 the mock report grades normalized text on both sides and shows the live and
 final transcripts side by side.
 
-## AI mock interview (Phase 1: text mode)
+## AI mock interview (text + live voice)
 
 `/mock.html` runs the experience/project deep-dive round the way a real one
 works: around a target role, against your own resume.
@@ -517,3 +517,40 @@ and `--mock` mode runs a deterministic offline demo interviewer — the same
 path `tests/test_mock.py` and CI exercise. The free tier cannot run a mock
 (it needs a real LLM); paid turns are quota-free on Flash at ~$0.01 per
 session. Nothing is stored server-side: the session lives in the page.
+
+### Live voice (Phase 2: the DIY loop, measured)
+
+`python server.py --voice` adds a WebSocket voice loop (`coach/voice/`)
+beside the HTTP API, and `/mock.html` grows three modes: **text**,
+**browser voice** (Web Speech dictation + spoken questions, free), and
+**live voice** — server-side Silero VAD with patient endpointing, live STT,
+the same streamed interviewer (sentence-by-sentence to TTS, so first audio
+never waits for the full turn), and barge-in that records exactly the
+sentences you actually heard. One loop, three audio stacks via
+`AUDIO_BACKEND`: `local` (faster-whisper turbo on the GPU + Kokoro-82M on
+CPU — the expected main usage, ≈ $0.01/session with Flash turns),
+`speaches` (the same models in one Docker container; verified: warm STT
+1.6 s per 31 s answer, TTS 0.36 s), and `elevenlabs` (Scribe Realtime with
+the measured per-session keyterm policy + Flash v2.5 TTS). In voice modes
+each answer is also recorded and re-transcribed
+(`POST /api/mock/transcribe`: Scribe batch + the full 339-term lexicon,
+the Phase 0 winner at 3.0% term loss); the report grades that final
+transcript, shows both, and prices the difference — "transcription cost
+you N terms / flipped M rubric verdicts".
+
+Measured, not assumed (`grader/loop_eval.py`: the 20 real Phase 0 answer
+recordings replayed through the live loop, with a deterministic
+interviewer so only the audio path varies). The end-of-turn silence
+threshold was chosen by sweep — 1.2 s cut 50% of real answers mid-thought,
+2.0 s ships at 5% — and the shipped config measures live term loss 5.6%
+lenient, WER 7.1%, first-agent-audio p50 0.83 s / p95 1.74 s, and
+distilled-grader movement on 3/18 answers (both sides normalized, per the
+Phase 0 decision). Live smoke with real models end to end: 2.3 s from
+end-of-speech to first agent audio (Whisper 0.85 + Flash first token
+0.70 + Kokoro 0.54). The harness caught two real bugs before any user
+could: a Silero v5 context-window omission that scored real speech at
+~0.0, and a stall when a candidate keeps talking past an already-committed
+answer (now appended as an afterthought; the interviewer regenerates).
+Level 1 (ElevenLabs Speech Engine) is built as a sidecar
+(`coach/voice/sidecar.py`) but its live run — and the pre-registered
+Level 1 vs Level 2 comparison — waits on a public tunnel and fresh spend.

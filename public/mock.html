@@ -40,6 +40,8 @@
       .kp-miss { color: var(--red); }
       .call-badge { display: inline-block; padding: 6px 14px; border-radius: 999px; font-weight: 800; background: rgba(23, 108, 95, 0.12); color: var(--green-dark); }
       .muted-note { color: var(--muted); font-size: 13px; }
+      .status-badge.live-listening { background: rgba(23, 108, 95, 0.15); }
+      .status-badge.live-speaking { background: rgba(200, 150, 30, 0.2); }
       .danger-note { color: var(--red); font-size: 14px; font-weight: 750; }
       .dl-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
       textarea.answer-box { min-height: 130px; }
@@ -95,6 +97,25 @@
               </select>
             </div>
           </div>
+
+          <div class="mock-two">
+            <div class="field">
+              <label for="voiceMode">Voice</label>
+              <select id="voiceMode">
+                <option value="text" selected>Text only &mdash; type your answers</option>
+                <option value="browser">Browser voice &mdash; dictation + spoken questions</option>
+                <option value="live">Live voice &mdash; server loop</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="recordAnswers">Final transcript</label>
+              <label class="muted-note" style="display:flex;gap:8px;align-items:center;min-height:44px;font-weight:400">
+                <input id="recordAnswers" type="checkbox" style="width:auto;height:auto">
+                record each answer &amp; re-transcribe for the report
+                <span id="voiceCaps"></span>
+              </label>
+            </div>
+          </div>
           <div class="field">
             <label for="accessKey">Access key (paid key &rarr; DeepSeek Flash turns + Claude report; in --mock mode a free offline demo runs)</label>
             <input id="accessKey" type="password" placeholder="Access key" autocomplete="off">
@@ -119,14 +140,21 @@
             <span id="phaseBadge" class="status-badge">warm-up</span>
             <span id="turnBadge" class="status-badge">turn 1</span>
             <span id="engineBadge" class="status-badge"></span>
+            <span id="stateBadge" class="status-badge"></span>
+            <span id="latencyBadge" class="status-badge"></span>
             <button id="endBtn" class="ghost-action" type="button" style="margin-left:auto">End early &rarr; report</button>
           </div>
           <div id="chatLog" class="chat-log"></div>
-          <div class="field">
-            <label for="answerBox">Your answer</label>
-            <textarea id="answerBox" class="answer-box" placeholder="Answer aloud in your head, then type it the way you would say it. Ctrl+Enter sends."></textarea>
+          <div id="answerArea">
+            <div class="field">
+              <label for="answerBox">Your answer</label>
+              <textarea id="answerBox" class="answer-box" placeholder="Answer aloud in your head, then type it the way you would say it. Ctrl+Enter sends."></textarea>
+            </div>
+            <div class="dl-row">
+              <button id="sendBtn" class="primary-action" type="button">Send answer</button>
+              <button id="dictateBtn" class="secondary-action" type="button" hidden>🎤 Dictate</button>
+            </div>
           </div>
-          <button id="sendBtn" class="primary-action" type="button">Send answer</button>
           <p id="interviewStatus" class="inline-status" aria-live="polite"></p>
         </div>
 
@@ -142,7 +170,9 @@
 
         <p class="muted-note" style="margin-top:22px">
           Nothing is stored server-side: the session lives in this page and is sent to the
-          grading model per request. <a class="back-link" href="/" style="min-height:0;padding:0;border:0">Back to the coach</a>
+          grading model per request. Voice modes send audio only to the configured STT
+          backend (local Whisper by default; ElevenLabs when configured server-side).
+          <a class="back-link" href="/" style="min-height:0;padding:0;border:0">Back to the coach</a>
         </p>
       </section>
     </main>

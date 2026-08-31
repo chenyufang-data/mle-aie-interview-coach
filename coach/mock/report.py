@@ -13,6 +13,7 @@
 from coach import grading
 from coach.mock import engine as engines
 from coach.mock import metrics as metrics_module
+from coach.mock import transcription
 from coach.mock.schemas import REPORT_SCHEMA
 
 ANCHORS = """Score each dimension 1-10 against these anchors:
@@ -33,8 +34,19 @@ def transcript_text(transcript):
     for entry in transcript:
         lines.append(f"Interviewer (turn {entry.get('turn', '?')}, "
                      f"{entry.get('phase', '?')}): {entry.get('question', '')}")
-        lines.append(f"Candidate: {entry.get('answer', '(no answer)')}")
+        answer = entry.get("answer_final") or entry.get("answer") or "(no answer)"
+        lines.append(f"Candidate: {answer}")
     return "\n".join(lines)
+
+
+def voice_note(transcript):
+    """A grading caveat when answers arrived by voice."""
+    if any(entry.get("answer_final") or entry.get("stt_seconds") is not None
+           for entry in transcript):
+        return ("Answers are speech transcripts (best available "
+                "re-transcription): judge content and structure, never "
+                "punctuation, casing or small transcription artifacts.\n\n")
+    return ""
 
 
 def kp_verdicts(plan, transcript):
@@ -50,7 +62,9 @@ def kp_verdicts(plan, transcript):
     results = []
     for entry in transcript:
         target = targets.get(entry.get("probe_id"))
-        answer = (entry.get("answer") or "").strip()
+        # Final transcript when present; normalized for voice answers (the
+        # Phase 0 surface-form decision), raw for typed ones.
+        answer = transcription.grading_answer_text(entry)
         if not target or not answer:
             continue
         chunk = kb.CHUNKS_BY_ID.get(target["chunk_id"])
@@ -86,6 +100,11 @@ def build_report(data, engine):
     transcript = data.get("transcript") or []
     computed = metrics_module.compute(transcript)
     verdicts = kp_verdicts(plan, transcript)
+    trans = transcription.compare(transcript)
+    if trans:
+        flips = transcription.kp_flips(plan, transcript)
+        if flips:
+            trans["kp_flips"] = flips
 
     prompt = f"""Write the hiring-committee report for this mock interview
 (experience/project deep-dive round) for a {data.get('role', {}).get('level', 'Mid-level')}
@@ -99,7 +118,7 @@ The interviewer's per-probe rubrics (what a strong answer contained):
 Deterministic communication metrics (use them to corroborate concision_time,
 do not restate them all): {computed}
 
-Transcript:
+{voice_note(transcript)}Transcript:
 {transcript_text(transcript)}
 
 per_turn must cover every interviewer question in order, with every field at
@@ -110,4 +129,7 @@ first."""
     assessment = engines.structured(prompt, REPORT_SCHEMA, engine)
     for name, value in list((assessment.get("scores") or {}).items()):
         assessment["scores"][name] = grading.clamp_score(int(value))
-    return {"assessment": assessment, "metrics": computed, "kp_verdicts": verdicts}
+    result = {"assessment": assessment, "metrics": computed, "kp_verdicts": verdicts}
+    if trans:
+        result["transcription"] = trans
+    return result

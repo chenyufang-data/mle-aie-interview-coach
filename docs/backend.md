@@ -59,10 +59,12 @@ grading. It knows nothing about presentation.
 backwards-compatible facade — scripts may `import server` and use any
 backend name. The implementation lives in `coach/`, one module per concern:
 `config` (env, paths, mode flags), `kb` (corpora + chunk selection),
-`users` (tiers/quota, fail-closed), `llm` (Claude/DeepSeek/Ollama calls),
-`prompts` (system prompt, builders, schemas), `grading` (routing, cascade,
-local distilled grader), `sessions` (logging), `web` (JSON helpers),
-`stt_dev` (localhost-only recording routes), `http` (the handler).
+`users` (tiers/quota, fail-closed), `llm` (Claude/DeepSeek/Ollama calls,
+blocking and streamed), `prompts` (system prompt, builders, schemas),
+`grading` (routing, cascade, local distilled grader), `sessions` (logging),
+`web` (JSON helpers), `stt_dev` (localhost-only recording routes), `http`
+(the handler). `coach/mock/` is the mock interview; `coach/voice/` is the
+live voice loop (below).
 Convention: startup-reassigned globals (`config.MODE`, `users.TIERS_ENABLED`,
 `grading.GRADER`, …) are read as module attributes, never `from`-imported.
 
@@ -202,6 +204,52 @@ and `--mock` mode serves a deterministic offline demo engine (also what
   hit/partial/miss verdicts for rubric-grounded probes. Report engine
   defaults to Claude when a key is present (regrade consistency), else the
   turn engine.
+
+- `GET /api/mock/voice` → `{enabled, ws_port, audio_backend, final_stt}`:
+  whether the live loop WebSocket is up (`--voice`), which audio stack it
+  runs, and which final-transcript engine this deployment offers
+  (`scribe_batch_kt` with an ElevenLabs key, `whisper_local` with
+  faster-whisper installed, else null).
+- `POST /api/mock/keyterms` `{resume?, role?, project?}` → `{keyterms}`:
+  the ≤ 50 realtime STT keyterms for this session, chosen deterministically
+  by the measured §7a policy (failure rates from
+  `grader/stt_failure_rates.json` + presence in the session's own material
+  + rarity; the policy measured 9.7% vs naive-50's 11.7% lenient TER).
+- `POST /api/mock/transcribe` `{audio_base64, mime}` → `{text, engine,
+  seconds}`: final-transcript re-transcription of one recorded answer clip
+  (≤ 25 MB) — Scribe v2 batch + the full lexicon when `ELEVENLABS_API_KEY`
+  is set (the Phase 0 winner: 3.0% lenient TER), local Whisper otherwise.
+  The client attaches the result as `answer_final` on the transcript entry;
+  the report grades it (normalized both sides for the kp classifier) and
+  reports live-vs-final drift as the `transcription` block.
+
+### Live voice loop: `coach/voice/` (`python server.py --voice`)
+
+One WebSocket per interview session on `VOICE_PORT` (default 8765), beside
+the HTTP server. REST still owns setup, keyterms and the report; the
+socket runs only the audio loop, holding `{plan, role, transcript}` for
+its own lifetime and mirroring every entry to the client. Modules: `vad`
+(Silero VAD on onnxruntime — `data/models/silero_vad.onnx`, auto-downloaded
+— plus the patient endpointer: 1.2 s end-of-turn silence, 30 s turn
+timeout, barge-in via speech-during-speaking), `chunker` (trailer-safe
+sentence chunking of the streamed LLM turn), `stt` / `tts` (backends),
+`keyterms` (the §7a policy), `final_transcript`, `loop` (the session
+server; the protocol is documented in its docstring).
+
+`AUDIO_BACKEND` selects the audio stack — all three drive the same loop:
+
+| Backend | STT | TTS | Needs |
+| --- | --- | --- | --- |
+| `local` (default) | faster-whisper `large-v3-turbo` in-process (GPU), keyterms via `initial_prompt` | Kokoro-82M via kokoro-onnx (CPU, RTF ≈ 0.3–0.45) | `requirements-stt.txt` + model files in `data/models/` |
+| `speaches` | the same models inside a [Speaches](https://speaches.ai) container | ↑ | Docker; `SPEACHES_URL` (default `http://127.0.0.1:8969/v1`) |
+| `elevenlabs` | Scribe v2 Realtime, one session-long connection, MANUAL commits, policy-50 keyterms | Flash v2.5 (`pcm_24000`) | `ELEVENLABS_API_KEY` |
+
+The turn LLM streams (`coach/llm.py call_chat_stream`, thinking off) →
+sentence chunker → per-sentence TTS, so first audio does not wait for the
+full turn. Interruption truncates the recorded question to the sentences
+actually played (`cut: true`) — observability the hosted Speech Engine
+loop cannot offer (its upstream protocol is text-only; verified against
+SDK 2.65 types, plan §10).
 
 ### Developer routes: `/api/stt/*` (localhost only)
 

@@ -47,6 +47,13 @@ def parse_args():
         help="Use a free local Ollama model instead of the Anthropic API (default: llama3.2). "
         "Requires Ollama running at localhost:11434.",
     )
+    parser.add_argument(
+        "--voice",
+        action="store_true",
+        help="Also start the live voice-loop WebSocket server (coach/voice) on "
+        "VOICE_PORT (default 8765). AUDIO_BACKEND picks the audio stack: local "
+        "(faster-whisper + Kokoro, default), speaches, or elevenlabs.",
+    )
     return parser.parse_args()
 
 
@@ -109,6 +116,18 @@ def main():
             )
         else:
             print("Tiers: off (no users.json) - every request grades with Claude.")
+    if args.voice:
+        import threading
+
+        from coach.voice import loop as voice_loop
+
+        config.VOICE_ENABLED = True
+        threading.Thread(target=voice_loop.run_in_thread,
+                         kwargs={"host": host}, daemon=True).start()
+        print(
+            f"Voice loop: ws://{display_host}:{voice_loop.VOICE_PORT} "
+            f"(AUDIO_BACKEND={voice_loop.audio_backend()})"
+        )
     print("Press Ctrl+C to stop.")
     try:
         server.serve_forever()
