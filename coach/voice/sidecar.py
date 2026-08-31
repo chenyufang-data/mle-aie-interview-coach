@@ -43,6 +43,9 @@ from coach.voice.chunker import TurnStream
 
 SIDECAR_PORT = int(os.environ.get("SIDECAR_PORT", "3001"))
 _PENDING = {"plan": None, "role": None, "engine": None}
+# The most recent conversation's state, so the mock page can mirror the
+# transcript (GET /api/mock/level1/transcript) and build the report.
+LAST = {"state": None, "conversation_id": None}
 
 
 def register_plan(plan, role, engine):
@@ -71,6 +74,8 @@ class SidecarSession:
                 self.state = {"plan": _PENDING["plan"],
                               "role": _PENDING["role"], "transcript": []}
                 self.engine = _PENDING["engine"]
+                LAST["state"] = self.state
+                LAST["conversation_id"] = data.get("conversation_id")
                 await self.agent_turn()
             elif kind == "user_transcript":
                 if self.state is None:
@@ -154,27 +159,41 @@ async def serve(port):
         await asyncio.Future()
 
 
-def setup(ws_url, keyterms=(), voice_id=None):
-    """Create or update the Speech Engine agent config via the API."""
+def setup(ws_url, keyterms=(), voice_id="XrExE9yKIg1WjnnlVkGX"):
+    """Create or update the Speech Engine agent config via the API.
+
+    Verified live 2026-08-31: `asr.keywords` and the patient turn config
+    are accepted; English agents must use eleven_turbo_v2 / eleven_flash_v2
+    for TTS (flash v2.5 is rejected with a 400 - it serves non-English
+    agents), and creating with an invalid tts block 500s, so configure
+    stepwise-compatible fields only.
+    """
     from elevenlabs import ElevenLabs
     client = ElevenLabs(api_key=os.environ["ELEVENLABS_API_KEY"], timeout=60)
     kwargs = {
-        "speech_engine": {"ws_url": ws_url},
-        "name": "mock-interviewer",
         "asr": {"provider": "scribe_realtime",
                 "keywords": list(keyterms)[:50]},
-        "tts": {"model_id": "eleven_flash_v2_5",
+        "tts": {"model_id": "eleven_flash_v2",
                 **({"voice_id": voice_id} if voice_id else {})},
         # Patient turn-taking: candidates pause to think (plan section 3).
         "turn": {"turn_eagerness": "patient", "turn_timeout": 30},
     }
     engine_id = os.environ.get("SPEECH_ENGINE_ID")
     if engine_id:
-        result = client.speech_engine.update(engine_id, **kwargs)
+        result = client.speech_engine.update(
+            engine_id, speech_engine={"ws_url": ws_url}, **kwargs)
     else:
-        result = client.speech_engine.create(**kwargs)
-    print("SPEECH_ENGINE_ID =", getattr(result, "speech_engine_id", result))
-    return result
+        result = client.speech_engine.create(
+            speech_engine={"ws_url": ws_url}, name="mock-interviewer", **kwargs)
+        engine_id = getattr(result, "speech_engine_id", None)
+        if not engine_id:  # the create response hides the id; list() has it
+            listing = client.speech_engine.list()
+            for item in getattr(listing, "speech_engines", []) or []:
+                if item.name == "mock-interviewer":
+                    engine_id = item.speech_engine_id
+    print("SPEECH_ENGINE_ID =", engine_id)
+    return result if not engine_id else type(
+        "Result", (), {"speech_engine_id": engine_id})()
 
 
 def main():

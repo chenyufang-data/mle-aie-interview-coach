@@ -128,6 +128,21 @@ def main():
             f"Voice loop: ws://{display_host}:{voice_loop.VOICE_PORT} "
             f"(AUDIO_BACKEND={voice_loop.audio_backend()})"
         )
+        if os.environ.get("ELEVENLABS_API_KEY"):
+            # Level 1 sidecar in the same process, so /api/mock/level1/start
+            # can register the plan with it (module state is shared).
+            import asyncio
+
+            from coach.voice import sidecar
+
+            threading.Thread(
+                target=lambda: asyncio.run(sidecar.serve(sidecar.SIDECAR_PORT)),
+                daemon=True,
+            ).start()
+            print(
+                f"Speech Engine sidecar: ws://0.0.0.0:{sidecar.SIDECAR_PORT} "
+                "(needs a public tunnel as ws_url; see coach/voice/sidecar.py)"
+            )
     print("Press Ctrl+C to stop.")
     try:
         server.serve_forever()

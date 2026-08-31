@@ -622,8 +622,11 @@ against real interview outcomes.
       finish_reason==length retry
 - [x] browser voice (Web Speech dictation + speechSynthesis) — shipped with
       the Phase 2 voice UI (mock.js voice modes)
-- [ ] report-consistency test (regrade 5 sessions twice, Flash vs Claude) —
-      needs fresh Claude authorization; report default stays Claude (§7d)
+- [x] report-consistency test (grader/report_consistency.py, run
+      2026-08-31, ~$1.50): 5 identical sessions regraded twice per engine —
+      Claude 73.3% exact dimension scores / MAE 0.3, Flash 43.3% / MAE 0.8;
+      the hiring call was stable 5/5 for both. Claude stays the report
+      default (§7d) — now a measured choice, not an assumption
 
 **Phase 2 — live loops and the Level 1 vs Level 2 equivalence test**
 - [x] DIY loop (Levels 2–3): coach/voice/ — browser audio over one
@@ -650,22 +653,37 @@ against real interview outcomes.
       fake-engine interviewer so only the audio path varies). Endpointing
       iterated per the rule: 1.2 s end-silence cut 50% of answers
       mid-thought, 1.8 s cut 15%, 2.0 s ships at **cut-off 5%** (= the bar).
-      Shipped-config numbers: live TER 5.6% lenient (54 occurrences), WER
-      7.1%, stt p50 0.37 s, **first-audio p50 0.83 s / p95 1.74 s** (≤ 2.0 s
-      bar), distilled-grader movement 3/18 answers (16.7%, both sides
-      normalized; Phase 0 context: 25–35% spoken-vs-written). The harness
+      Shipped-config numbers: live TER 5.6–9.3% lenient across runs (54
+      occurrences — small-n variance), WER ~7%, stt p50 0.35 s,
+      **first-audio p50 0.77–0.83 s / p95 ≤ 1.74 s** (≤ 2.0 s bar),
+      distilled-grader movement 3/18 answers (16.7%, both sides
+      normalized; Phase 0 context: 25–35% spoken-vs-written); re-verified
+      under the final non-blocking-commit architecture. The harness
       caught two real bugs now fixed: the Silero v5 context-window omission
       (VAD scored real speech ~0.0) and the answer-continuation stall
       (candidate talks past the committed answer → appended as an
       afterthought, interviewer regenerates)
-- [ ] Level 1 live run: the Speech Engine sidecar is BUILT
-      (coach/voice/sidecar.py — upstream protocol; `--setup` configures
-      scribe_realtime keywords, Flash v2.5 voice, patient turn) but a live
-      session needs a public `ws_url` (tunnel) + a browser-SDK page + fresh
-      ElevenLabs spend; the rule's damage comparison ("within 2 points of
-      Level 1") and the blind TTS preference wait on it. Also pending: the
-      harness's `--backend elevenlabs` pass (Scribe Realtime + Flash TTS,
-      ≈ $0.15) for the DIY-cloud row
+- [x] DIY-cloud row measured (`--backend elevenlabs`, 2026-08-31, ~$0.68
+      across the debug series): live TER 3.7% lenient / WER 7.6%, Scribe
+      finalize p50 0.11 s, first-audio p50 0.48 / p95 0.63 s, cut-off 5%,
+      grader movement 5/18 — cloud audio wins terms and latency, local
+      wins grader stability (Whisper's fluent smoothing: the Phase 0
+      finding, reproduced through the whole live loop). Getting here
+      surfaced and fixed FIVE production bugs in the loop/STT path: a
+      blocking commit and a blocking connect in the receive path (deaf
+      VAD), protocol-ping starvation tearing the socket down during slow
+      commits, Scribe's empty-commit handshake race, and Scribe's
+      unsolicited multi-segment commits (only the final clause of long
+      answers survived — 68% WER until segments were accumulated). Under
+      the rule with this as the closest Level-1 proxy, **Level 2 stays
+      main usage**: its grader damage beats the cloud path's
+- [ ] Level 1 live run: sidecar + tunnel + page + engine are all wired and
+      config-verified (engine created; `asr.keywords` and patient turn
+      accepted; quirk: English agents take eleven_flash_v2 — v2_5 is a
+      400 on update and a 500 inside create). `tools/level1_up.py` brings
+      the tunnel + engine config up in one command and the mock page has
+      the "Level 1 — hosted voice" mode; the session itself needs a human
+      speaking. The blind TTS preference test rides on that session
 - [ ] barge-in scripted probe: the mechanism is verified end to end (a
       fault-injection run produced `interrupted` + clean spoken-prefix
       recovery), but the probe cannot reliably hit the fake engine's ~1 s

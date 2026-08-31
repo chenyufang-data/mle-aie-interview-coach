@@ -52,6 +52,7 @@ from coach.voice.chunker import TurnStream, split_sentences
 from coach.voice.vad import FRAME_BYTES, Endpointer, SileroVAD
 
 VOICE_PORT = int(os.environ.get("VOICE_PORT", "8765"))
+VOICE_DEBUG = bool(os.environ.get("VOICE_DEBUG"))
 # End-of-turn silence, measured not guessed: on the 20 real Phase 0 answer
 # recordings (each with a 1.0 s thinking pause injected mid-answer), the
 # live loop cut 50% of answers mid-thought at 1.2 s, 15% at 1.8 s, and 5%
@@ -81,6 +82,7 @@ class VoiceSession:
         self.played_seq = -1
         self.interrupted = False
         self.pending_entry = None    # question entry awaiting its answer
+        self.commit_lock = asyncio.Lock()   # one STT commit at a time
         self.end_of_speech_at = None # perf_counter at VAD end-of-turn
         self.e2e_latencies = []
         self.turn_latency = {}
@@ -166,6 +168,11 @@ class VoiceSession:
                 await self.stt.close()
 
     async def on_audio(self, data):
+        if VOICE_DEBUG:
+            self._bytes_in = getattr(self, "_bytes_in", 0) + len(data)
+            if self._bytes_in // 500000 > (self._bytes_in - len(data)) // 500000:
+                print(f"voice[{id(self) % 10000}]: {self._bytes_in} audio bytes in",
+                      flush=True)
         self.inbuf.extend(data)
         while len(self.inbuf) >= FRAME_BYTES:
             frame = bytes(self.inbuf[:FRAME_BYTES])
@@ -180,6 +187,8 @@ class VoiceSession:
 
     async def on_vad_event(self, event):
         kind = event[0]
+        if VOICE_DEBUG:
+            print(f"voice[{id(self) % 10000}]: vad {kind}", flush=True)
         agent_busy = self.agent_task is not None and not self.agent_task.done()
         if kind == "speech_start":
             await self.send_json(type="speech", value="start")
@@ -190,7 +199,11 @@ class VoiceSession:
             if agent_busy:
                 return              # backchannel while the agent still talks
             self.end_of_speech_at = time.perf_counter()
-            await self.on_answer(event[1])
+            # A commit can take tens of seconds on a broken STT session; it
+            # must NEVER block this receive path - a stalled reader stops
+            # pong replies and the client tears the socket down (found by
+            # the equivalence harness as silent mid-session disconnects).
+            asyncio.create_task(self.on_answer(event[1]))
         elif kind == "timeout" and not agent_busy and not self.nudged:
             self.nudged = True
             await self.speak_text(NUDGE_TEXT)
@@ -220,9 +233,16 @@ class VoiceSession:
     # ------------------------------------------------------------- answers
 
     async def on_answer(self, pcm):
+        if VOICE_DEBUG:
+            print(f"voice[{id(self) % 10000}]: commit {len(pcm)} bytes",
+                  flush=True)
         await self.set_state("transcribing")
         try:
-            text, stt_seconds = await self.stt.commit(pcm)
+            async with self.commit_lock:
+                text, stt_seconds = await self.stt.commit(pcm)
+            if VOICE_DEBUG:
+                print(f"voice[{id(self) % 10000}]: commit ok "
+                      f"{stt_seconds:.2f}s {len(text)} chars", flush=True)
         except Exception as exc:
             await self.send_json(type="error",
                                  message=f"Transcription failed ({exc}); please answer again.")
@@ -230,6 +250,10 @@ class VoiceSession:
             return
         text = text.strip()
         if not text:
+            if len(pcm) >= 16000 * 2 * 2:   # >= 2 s of audio lost: say so
+                await self.send_json(
+                    type="error",
+                    message="I couldn't transcribe that - please answer again.")
             await self.set_state("listening")
             return
         if self.pending_entry is None:

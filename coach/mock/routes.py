@@ -23,6 +23,8 @@ def handle_get(handler, path):
     if path == "/api/mock/voice":
         # Voice capabilities: whether the ws loop is up, which audio stack
         # it runs, and which final-transcript engine this deployment offers.
+        import os
+
         from coach import config
         from coach.voice import loop as voice_loop
         from coach.voice.final_transcript import available_engine
@@ -31,6 +33,22 @@ def handle_get(handler, path):
             "ws_port": voice_loop.VOICE_PORT if config.VOICE_ENABLED else None,
             "audio_backend": voice_loop.audio_backend(),
             "final_stt": available_engine(),
+            # Level 1 (hosted Speech Engine loop) is offered only when the
+            # sidecar can run AND an engine id is configured (.env
+            # SPEECH_ENGINE_ID, created by sidecar --setup).
+            "level1": bool(config.VOICE_ENABLED
+                           and os.environ.get("ELEVENLABS_API_KEY")
+                           and os.environ.get("SPEECH_ENGINE_ID")),
+        })
+        return
+    if path == "/api/mock/level1/transcript":
+        # The mock page mirrors the hosted session's transcript from here
+        # (the sidecar holds it; audio and turn-taking live at ElevenLabs).
+        from coach.voice import sidecar
+        state = sidecar.LAST["state"]
+        json_response(handler, 200, {
+            "transcript": (state or {}).get("transcript", []),
+            "conversation_id": sidecar.LAST["conversation_id"],
         })
         return
     json_response(handler, 404, {"error": "Unknown endpoint."})
@@ -93,6 +111,33 @@ def handle_post(handler, path, data):
         result = report.build_report(data, report_engine)
         result["engine"] = report_engine
         json_response(handler, 200, result)
+        return
+
+    if path == "/api/mock/level1/start":
+        # Hosted Speech Engine session: register the plan with the sidecar
+        # (same process, --voice) and mint the client's WebRTC token. The
+        # ElevenLabs key never reaches the browser.
+        import os
+        if not (data.get("plan") or {}).get("probe_targets"):
+            json_response(handler, 400, {"error": "plan is required."})
+            return
+        engine_id = os.environ.get("SPEECH_ENGINE_ID")
+        if not engine_id or not os.environ.get("ELEVENLABS_API_KEY"):
+            json_response(handler, 500,
+                          {"error": "Level 1 is not configured: set "
+                                    "SPEECH_ENGINE_ID (sidecar --setup) and "
+                                    "ELEVENLABS_API_KEY in .env."})
+            return
+        from elevenlabs import ElevenLabs
+
+        from coach.voice import sidecar
+        sidecar.register_plan(data["plan"], data.get("role") or {}, engine)
+        client = ElevenLabs(api_key=os.environ["ELEVENLABS_API_KEY"], timeout=30)
+        token = client.conversational_ai.conversations.get_webrtc_token(
+            agent_id=engine_id)
+        json_response(handler, 200,
+                      {"token": getattr(token, "token", None) or token.dict().get("token"),
+                       "engine_id": engine_id})
         return
 
     if path == "/api/mock/keyterms":

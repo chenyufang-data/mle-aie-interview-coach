@@ -542,10 +542,16 @@ Measured, not assumed (`grader/loop_eval.py`: the 20 real Phase 0 answer
 recordings replayed through the live loop, with a deterministic
 interviewer so only the audio path varies). The end-of-turn silence
 threshold was chosen by sweep — 1.2 s cut 50% of real answers mid-thought,
-2.0 s ships at 5% — and the shipped config measures live term loss 5.6%
-lenient, WER 7.1%, first-agent-audio p50 0.83 s / p95 1.74 s, and
-distilled-grader movement on 3/18 answers (both sides normalized, per the
-Phase 0 decision). Live smoke with real models end to end: 2.3 s from
+2.0 s ships at 5% — and the shipped config measures live term loss 5.6–9.3%
+lenient across runs (54 term occurrences; small-n variance), WER ~7%,
+first-agent-audio p50 0.77–0.83 s / p95 ≤ 1.74 s, and distilled-grader
+movement on 3/18 answers (both sides normalized, per the Phase 0
+decision). The same harness measured the DIY-cloud stack (Scribe Realtime
++ Flash TTS): live term loss 3.7%, first audio p50 0.48 / p95 0.63 s, but
+grader movement 5/18 — cloud audio wins terms and latency, local wins
+grader stability, so local stays the main usage; getting that row stable
+surfaced five real loop/STT bugs (all fixed) that only cloud latencies
+could expose. Live smoke with real models end to end: 2.3 s from
 end-of-speech to first agent audio (Whisper 0.85 + Flash first token
 0.70 + Kokoro 0.54). The harness caught two real bugs before any user
 could: a Silero v5 context-window omission that scored real speech at

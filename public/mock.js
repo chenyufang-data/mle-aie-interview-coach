@@ -101,6 +101,9 @@ async function init() {
   } else {
     liveOption.textContent += ` (${voice.caps.audio_backend})`;
   }
+  if (voice.caps.level1) {
+    els.voiceMode.querySelector('option[value="level1"]').disabled = false;
+  }
   if (!("webkitSpeechRecognition" in window) && !("SpeechRecognition" in window)) {
     const browserOption = els.voiceMode.querySelector('option[value="browser"]');
     browserOption.disabled = true;
@@ -246,7 +249,10 @@ async function startInterview() {
     if (state.jdIsDefault) {
       els.interviewStatus.textContent = "Running on a default JD template (no JD pasted).";
     }
-    if (voice.mode === "live") {
+    if (voice.mode === "level1") {
+      els.answerArea.hidden = true;   // the hosted loop owns audio + turns
+      await startLevel1();
+    } else if (voice.mode === "live") {
       els.answerArea.hidden = true;   // the loop listens; typing is off
       await startLiveVoice();         // the server speaks turn 1 itself
     } else {
@@ -331,7 +337,60 @@ function endEarly() {
     wsSend({ type: "end" });
     teardownLiveVoice();
   }
+  if (voice.mode === "level1") teardownLevel1();
   buildReport(true);
+}
+
+// -------------------------------------- Level 1: hosted Speech Engine loop
+
+async function startLevel1() {
+  els.interviewStatus.textContent = "Starting the hosted voice session…";
+  const start = await postJson("/api/mock/level1/start", {
+    plan: state.plan, role: state.selectedRole,
+  });
+  // The documented exception to the zero-dependency rule: the ElevenLabs
+  // browser SDK, loaded only here, only for Level 1 sessions.
+  const sdk = await import("https://cdn.jsdelivr.net/npm/@elevenlabs/client/+esm");
+  voice.level1 = await sdk.Conversation.startSession({
+    conversationToken: start.token,
+    connectionType: "webrtc",
+    onStatusChange: (status) => {
+      setStateBadge(typeof status === "string" ? status : (status && status.status) || "");
+    },
+    onDisconnect: () => teardownLevel1(),
+  });
+  voice.l1Shown = {};
+  voice.level1Poll = setInterval(pollLevel1, 2000);
+  els.interviewStatus.textContent =
+    "Live on the hosted loop — audio runs through ElevenLabs ($0.08/min).";
+}
+
+async function pollLevel1() {
+  try {
+    const data = await getJson("/api/mock/level1/transcript");
+    for (const entry of data.transcript || []) {
+      upsertTranscript(entry);
+      const shown = voice.l1Shown[entry.turn] || (voice.l1Shown[entry.turn] = {});
+      if (entry.question && !shown.q) {
+        shown.q = true;
+        addBubble("interviewer", entry.question);
+        els.phaseBadge.textContent = entry.phase || "";
+        els.turnBadge.textContent = `turn ${entry.turn} / ${state.totalTurns}`;
+      }
+      if (entry.answer && !shown.a) {
+        shown.a = true;
+        addBubble("candidate", entry.answer);
+      }
+    }
+  } catch (error) { /* transient poll failures are fine */ }
+}
+
+function teardownLevel1() {
+  if (voice.level1Poll) { clearInterval(voice.level1Poll); voice.level1Poll = null; }
+  if (voice.level1) {
+    try { voice.level1.endSession(); } catch (error) { /* already closed */ }
+    voice.level1 = null;
+  }
 }
 
 // -------------------------------------------------------- browser voice
@@ -643,6 +702,10 @@ async function buildReport(early) {
     return;
   }
   if (voice.mode === "live") teardownLiveVoice();
+  if (voice.mode === "level1") {
+    await pollLevel1();          // final transcript refresh before grading
+    teardownLevel1();
+  }
   showView("report");
   els.reportBody.innerHTML = `<p class="inline-status">Writing the report${early ? " (ended early)" : ""}… this is the one careful model call of the session.</p>`;
   // Wait briefly for outstanding final-transcript calls (they improve what

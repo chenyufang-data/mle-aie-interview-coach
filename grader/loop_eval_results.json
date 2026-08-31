@@ -3,14 +3,14 @@
   "summary": {
    "backend": "local",
    "answers": 20,
-   "wer": 0.0706,
+   "wer": 0.0735,
    "occurrences": 54,
-   "ter_strict": 0.0556,
-   "ter_lenient": 0.0556,
-   "stt_p50_s": 0.366,
-   "stt_p95_s": 0.747,
-   "first_audio_p50_s": 0.832,
-   "first_audio_p95_s": 1.742,
+   "ter_strict": 0.0926,
+   "ter_lenient": 0.0926,
+   "stt_p50_s": 0.345,
+   "stt_p95_s": 0.734,
+   "first_audio_p50_s": 0.768,
+   "first_audio_p95_s": 1.725,
    "cutoff_rate": 0.05,
    "barge_in": {
     "ok": false,
@@ -22,7 +22,7 @@
     "moved_ge1": 3,
     "rate": 0.167
    },
-   "measured_at": "2026-08-31 15:42"
+   "measured_at": "2026-08-31 17:20"
   },
   "per_answer": [
    {
@@ -31,7 +31,7 @@
     "ref_text": "The pipeline discipline is right, the vectorizer is fit on train and only applied to test, so it isn't a leakage bug; it's overfitting driven by high cardinality. The ingredient tokens are essentially unique IDs, giving ~1858 sparse features, and an unregularized linear model memorizes coefficients for train-specific tokens that don't generalize.",
     "hyp_text": "The pipeline de-simpline is right. The vector riser is fit untrue and only applied to test, so it is a leakage bug. It's overfitting driven by high catenality, and the ingredient tokens are essentially unique IDs, giving about 1,858 sparse features, And an unregularized linear model memorizes coefficients for train-specific tokens that don't generalize.",
     "wer": 0.2264,
-    "stt_s": 0.747,
+    "stt_s": 0.734,
     "cut_during_pause": false,
     "barge": false
    },
@@ -39,9 +39,9 @@
     "id": "ans_16",
     "chunk_id": "19_logistic_regression_proba__01_temporal_train_test_split",
     "ref_text": "Whenever the data is temporal and you will deploy the model to predict future events. A random split lets rows from the future land in the training set, which leaks information that wouldn't be available at prediction time and inflates your metrics. A time-based split reproduces the real task, exposes distribution drift/non-stationarity, and gives an honest estimate of deployment performance. It's essentially the idea behind time-series cross-validation.",
-    "hyp_text": "Whenever the data is temporal and you will deploy the model to predict future events, a random split lets rows from the feature land in the training set, which leaks the information that wouldn't be available at the prediction time and inflates your metrics. A time-based split reproduces the real task, exposes distribution drift or non-stationarity, and gives an honest estimate of deployment performance. It's essentially the idea behind time series cross-validation.",
+    "hyp_text": "Whenever the data is temporal and you will deploy the model to predict feature events, a random split lets rows from the feature land in the training set, which leaks the information that wouldn't be available at prediction time and inflates your metrics. A time-based split reproduces the real task, exposes distribution drift or non-stationarity, and gives an honest estimate of deployment performance. It's essentially the idea behind time series cross-validation.",
     "wer": 0.0556,
-    "stt_s": 0.571,
+    "stt_s": 0.36,
     "cut_during_pause": false,
     "barge": true
    },
@@ -51,7 +51,7 @@
     "ref_text": "Prompt caching lets the provider reuse a large, stable prefix instead of reprocessing it, cutting cost and latency on repeat requests. It works by prefix match: everything from the start of the prompt up to the first differing byte is reused, so cache-friendly design puts stable content first - a frozen system prompt, a deterministic tool list - and only appends new content at the end.",
     "hyp_text": "Prompt caching lets the provider reuse a large, stable prefix instead of reprocessing it, cutting cost and latency on repeat requests. It works by prefix match. Everything from the start of the prompt up to the first differing byte is reused, so cache-friendly design puts stable content first, a frozen system prompt, a deterministic tool list and only appends new content at the end.",
     "wer": 0.0,
-    "stt_s": 0.555,
+    "stt_s": 0.345,
     "cut_during_pause": false,
     "barge": false
    },
@@ -59,9 +59,9 @@
     "id": "ans_04",
     "chunk_id": "12_time_series__05_regularization_scaling",
     "ref_text": "That gap is overfitting: with few observations and several correlated lag features the model fits noise, so it fails out-of-sample. Ridge adds a penalty on squared coefficient magnitude that shrinks weights, reducing variance at the cost of a little bias, which usually improves test performance; Lasso penalizes absolute magnitude and can drive coefficients to exactly zero, doubling as feature selection.",
-    "hyp_text": "That gap is overfitting. With few observations and several correlated lag features, the model fits noise, so it falls out of sample. Ridge adds a penalty on squared coefficient magnitude that shrinks weights, reducing variance at the cost of a little bias, which usually improves test performance. Lasso panelizes absolute magnitude and can drive coefficients to exactly zero, doubling as feature selection.",
-    "wer": 0.0323,
-    "stt_s": 0.51,
+    "hyp_text": "That gap is overfitting. With few observations and several correlated lag features, the model fits noise, so it falls out of sample. Ridge adds a penalty on squared coefficient magnitude that shrinks weights, reducing variance at the cost of a little bias, which usually improves test performance. Lasso penalizes absolute magnitude and can drive coefficients to exactly zero, doubling as feature selection.",
+    "wer": 0.0161,
+    "stt_s": 0.352,
     "cut_during_pause": false,
     "barge": false
    },
@@ -69,9 +69,9 @@
     "id": "ans_12",
     "chunk_id": "19_logistic_regression_proba__07_roc_auc",
     "ref_text": "ROC is the Receiver Operating Characteristic curve and AUC is the Area Under it. The curve plots the true positive rate against the false positive rate as you vary the decision threshold. AUC summarizes ranking quality independent of any single threshold and equals the probability that a randomly chosen positive gets a higher score than a randomly chosen negative.",
-    "hyp_text": "ROC is a receiver operating characteristic curve, and AUC is the area under it. The curve plots the true positive rate against the false positive rate as you vary the decision threshold. AUC summarizes ranking quality independent of any single threshold and equals the probability that a randomly chosen positive gets a higher score than a randomly chosen negative.",
-    "wer": 0.0169,
-    "stt_s": 0.395,
+    "hyp_text": "ROC is a receiver operating characteristic curve, and AUC is the area under it. The curve plots the true positive rate against the false positive rate as you vary the decision threshold. AUC summarizes ranking quality independent of any single threshold and equals the probability that a randomly chosen positives gets a higher score than a randomly chosen negative.",
+    "wer": 0.0339,
+    "stt_s": 0.452,
     "cut_during_pause": false,
     "barge": false
    },
@@ -81,7 +81,7 @@
     "ref_text": "When a single field contains several tokens, CountVectorizer tokenizes it and creates one column per distinct token holding the per-row count, a bag-of-words representation that captures each item, which plain one-hot on the raw string cannot.",
     "hyp_text": "When a single field contains several tokens, CountVectorizer tokenizes and creates one column per distinct token holding the per row count, a bag-of-words representation that captures each item, which plane one-hot on the row string cannot.",
     "wer": 0.075,
-    "stt_s": 0.328,
+    "stt_s": 0.196,
     "cut_during_pause": false,
     "barge": false
    },
@@ -89,9 +89,9 @@
     "id": "ans_13",
     "chunk_id": "04_ai_workflows_and_agents__06_workflow_challenges",
     "ref_text": "Workflows buy repeatability but become rigid and fragile: they struggle with unexpected inputs because the path is fixed, errors compound across steps, every handoff needs a quality check, and changing one step can silently break downstream steps. In RAG these show up as weak retrieval, bad chunking, noisy context, and compounding errors where an early retrieval mistake corrupts later turns.",
-    "hyp_text": "Workflows by repeatability but become rigid and fragile. They struggle with unexpected inputs because the path is fixed. Average compound across steps. Every handoff needs a quality check, and changing one step can silently break downstream steps. In RAG, these show up as weak retrieval, bad chunking, noisy contests, and compounding errors where an early retrieval mistake corrupts later returns.",
+    "hyp_text": "Workflows by repeatability but become rigid and fragile. They struggle with unexpected inputs because the path is fixed. Aries compound across steps. Every handoff needs a quality check, and changing one step can silently break downstream steps. In RAG, these show up as weak retrieval, bad chunking, noisy contests, and compounding errors where an early retrieval mistake corrupts later returns.",
     "wer": 0.0667,
-    "stt_s": 0.331,
+    "stt_s": 0.346,
     "cut_during_pause": false,
     "barge": false
    },
@@ -101,7 +101,7 @@
     "ref_text": "After SFT the model follows instructions but can still be unhelpful, verbose, or unsafe. RLHF aligns it to human preferences: humans compare several candidate responses and rank which is better; those comparisons train a reward model that scores responses, and the LLM is then optimized to maximize that reward, i.e., to produce answers people prefer. This improves helpfulness, safety, tone, and honesty beyond what SFT alone achieves.",
     "hyp_text": "After SFT, the model follows instructions but can still be unhelpful, verbose, or unsafe. RLHF aligns it to human preference. Humans compare several candidate responses and rank which is better. Those comparisons train a reward model that scores responses and the LLM is then optimized to maximize the reward model. reward, i.e., to produce answers people prefer. This improves helpfulness, safety, tongue, and honesty beyond what SFT alone achieves.",
     "wer": 0.0735,
-    "stt_s": 0.587,
+    "stt_s": 0.5,
     "cut_during_pause": false,
     "barge": false
    },
@@ -109,9 +109,9 @@
     "id": "ans_06",
     "chunk_id": "01_llm_foundations_and_prompting__01_tokens_and_tokenization",
     "ref_text": "A token is a sub-word unit produced by the tokenizer; the model reads and generates text one token at a time over a fixed vocabulary of tens of thousands of tokens. Sub-word tokenization is the sweet spot between characters and whole words: it keeps the embedding/output matrices bounded while composing rare words from pieces, so nothing is truly OOV, and it generalizes across languages.",
-    "hyp_text": "A token is a subword unit produced by the tokenizer. The model reads and generates text one token at a time over a fixed vocabulary of tens of thousands of tokens. Subword tokenization is a sweet support between characters and whole words. It keeps the embedding, output, matrices bounded while composing rare words from pieces. So nothing is truly OOV and it generalizes across languages.",
-    "wer": 0.0896,
-    "stt_s": 0.346,
+    "hyp_text": "A token is a subword unit produced by the tokenizer. The model reads and generates text one token at a time over a fixed vocabulary of tens of thousands of tokens. Subword tokenization is a sweet support between characters and whole words. It keeps the embedding, output, matrices bounded while composing rare words from pieces so nothing is truly oov and it generalize across languages",
+    "wer": 0.1045,
+    "stt_s": 0.339,
     "cut_during_pause": false,
     "barge": false
    },
@@ -119,9 +119,9 @@
     "id": "ans_05",
     "chunk_id": "02_llm_apis_and_prompting_in_code__02_api_hosting_and_routing",
     "ref_text": "Put a routing/gateway layer between the app and the models rather than calling one provider directly. An aggregator like OpenRouter gives a unified API to many models with automatic fallback if a provider is down. An enterprise gateway like LiteLLM or Portkey standardizes everything to OpenAI-style syntax, load-balances across multiple keys and endpoints, and enforces rate limits, auth, and usage tracking.",
-    "hyp_text": "Put a routing gateway layer between the app and models rather than calling one provider directly. An aggregator like OpenRouter gives a unified API to many models with automatic fallback if a provider is done. An enterprise gateway like LiteLLM or PortKey standardizes everything to OpenAI-style syntax. load balances across multiple keys and endpoints, and enforces read limits, and usage tracking.",
-    "wer": 0.0625,
-    "stt_s": 0.431,
+    "hyp_text": "Put a routing gateway layer between the app and models rather than calling one provider directly. An aggregator like OpenRouter gives a unified API to many models with automatic fallback if a provider is done. An enterprise gateway like LiteLLM or PortKey standardizes everything to OpenAI-style syntax. load balances across multiple keys and endpoints, and enforces rate limits, outs, and usage tracking.",
+    "wer": 0.0469,
+    "stt_s": 0.334,
     "cut_during_pause": false,
     "barge": false
    },
@@ -129,9 +129,9 @@
     "id": "ans_07",
     "chunk_id": "20_svm__04_feature_scaling_for_svm",
     "ref_text": "SVMs are distance- and inner-product-based: the margin and kernels like the RBF depend on the geometric distance between points. If features are on very different scales, the large-magnitude feature dominates the distance computation and the SVM essentially ignores the smaller-scale features, and the C penalty is applied unevenly. Standardizing or min-max scaling puts features on comparable footing so the margin reflects all of them.",
-    "hyp_text": "SVMs are distance and inner-product based. The margin and kernels like the RBF depend on the geometric distance between points. If features are on very different scales, the large magnitude feature dominates the distance computation, and the SVM essentially ignores the smaller scale features, and the C penalty is applied unevenly. Standardizing or min-max scaling puts features on comparable footing so the margin reflects off them.",
-    "wer": 0.029,
-    "stt_s": 0.332,
+    "hyp_text": "SVMs are distance and inner-product based. The margin and kernels like the RBF depend on the geometric distance between points. If features are on very different scales, the large magnitude feature dominates the distance computation, and the SVM essentially ignores the smaller scale features, and the C penalty is applied unevenly. Standardizing or mean-max scaling puts features on comparable footing so the margin reflects off them.",
+    "wer": 0.0435,
+    "stt_s": 0.311,
     "cut_during_pause": false,
     "barge": false
    },
@@ -141,7 +141,7 @@
     "ref_text": "ANN finds vectors that are close enough to the query far faster than exact search. Exact KNN scans every vector, O per query, which collapses at millions or billions of vectors. ANN builds an index offline so a query only explores a small candidate subset instead of the whole set, trading a little accuracy for a big speedup.",
     "hyp_text": "ANN finds vectors that are close enough to the query far faster than ExactSearch. ExactKNN scans every vector, all per query, which collapses at millions or billions of vectors. ANN builds an index offline, so a query only explores a small candidate subset instead of the whole set, trading a little accuracy for a big speed up.",
     "wer": 0.1207,
-    "stt_s": 0.511,
+    "stt_s": 0.466,
     "cut_during_pause": false,
     "barge": false
    },
@@ -149,9 +149,9 @@
     "id": "ans_03",
     "chunk_id": "18_logistic_regression_predict__04_what_is_logistic_regression",
     "ref_text": "Logistic regression models the probability that an observation belongs to the positive class as a function of its features, by passing a linear combination of the features through the sigmoid function. Under the hood it is a regression: it fits a linear model to the log-odds of the target and produces a continuous probability between 0 and 1.",
-    "hyp_text": "Logistic regression models the probability that an observation belongs to the positive class as a function of its features, by passing a linear combination of the features through the sigmoid function. Under the hood, it is a regression. It feeds a linear model to the log odds of the target and produces continuous probability between 0 and 1. Thank you.",
-    "wer": 0.0678,
-    "stt_s": 0.502,
+    "hyp_text": "Logistic regression models the probability that the observation belongs to the positive class as a function of its features, by passing a linear combination of the features through the sigmoid function. Under the hood, it is a regression. It feeds a linear model to the log odds of the target and produce continuous probability between 0 and 1. Thank you.",
+    "wer": 0.1017,
+    "stt_s": 0.314,
     "cut_during_pause": false,
     "barge": false
    },
@@ -159,9 +159,9 @@
     "id": "ans_08",
     "chunk_id": "10_pca__06_choosing_n_components",
     "ref_text": "Common approaches: plot cumulative explained variance and keep the smallest k that reaches a target like 90-95%, in scikit-learn you can pass PCA to do this automatically; the elbow/scree method, keeping components up to where the variance curve flattens; and treat k as a hyperparameter and tune it by cross-validated downstream performance, which is best when PCA feeds a supervised model. The notebook's scree plot elbows around 3 components.",
-    "hyp_text": "Common approaches, plot cumulative expanded variance and keep the smallest k that reaches the target like 90 to 95 percent. In Scikit-Learn, you can pass PCA to do this automatically. The Elbow-Scree method, keeping components up to where the variance curve flattens, and treat k as a hyperparameter, and tune it by cross-validated downstream performance, which is best when PCA feeds a supervised model. The notebooks screen plot elbows around three components.",
+    "hyp_text": "Common approaches, plot cumulative expanded variance and keep the smallest k that reaches the target like 90 to 95 percent. In scikit-learn, you can pass PCA to do this automatically. The elbow scree method, keeping components up to where the variance curve flattens, and treat k as a hyperparameter. and tune it by cross-validated downstream performance, which is best when PCA feeds a supervised model. The notebooks screen plot elbows around three components.",
     "wer": 0.0541,
-    "stt_s": 0.372,
+    "stt_s": 0.498,
     "cut_during_pause": false,
     "barge": false
    },
@@ -171,7 +171,7 @@
     "ref_text": "MAE is the mean absolute residual in the target's units, easy to interpret and robust to outliers. MSE squares residuals, so it punishes large errors much more and is sensitive to outliers; RMSE takes its square root to return to original units and is what OLS actually minimizes.",
     "hyp_text": "MAE is a mean absolute residual in targets units, easy to interpret and robust to outliers. MSE squares residuals, so it punishes large errors much more and is sensitive to outliers. RMSE takes its square root to return to original units and is what OLS actually minimizes. Thank you.",
     "wer": 0.0833,
-    "stt_s": 0.308,
+    "stt_s": 0.311,
     "cut_during_pause": false,
     "barge": false
    },
@@ -179,9 +179,9 @@
     "id": "ans_19",
     "chunk_id": "05_agent_loop_and_context_engineering__08_rag_for_context_engineering",
     "ref_text": "RAG is how you decide what external information enters the context window - it's the gate on what the model gets to see for this request, so it's squarely a context-engineering tool, and in an agent it's typically exposed as a retrieval function the model can call. It's not a single method but a family, and you choose by query shape.",
-    "hyp_text": "RAG is how you decide what external information enters the context window. It's a gate on what the model gets to see for this request. So it's squarely a context engineering tool. And in an agent, it's typically exposed as a retrieval function the model can call. It's not a single method but a family, and you choose by query shape.",
-    "wer": 0.0164,
-    "stt_s": 0.315,
+    "hyp_text": "Rec is how you decide what external information enters the context window. It's a gate on what the model gets to see for this request. So it's squarely a context engineering tool. And in an agent, it's typically exposed as a retrieval function the model can call. It's not a single method but a family, and you choose by query shape.",
+    "wer": 0.0328,
+    "stt_s": 0.313,
     "cut_during_pause": false,
     "barge": false
    },
@@ -189,9 +189,9 @@
     "id": "ans_09",
     "chunk_id": "01_llm_foundations_and_prompting__17_agentic_coding_and_dev_env",
     "ref_text": "A chatbot like ChatGPT is a conversational assistant, you exchange messages and it produces text. An agentic coding tool like Claude Code is an LLM wired into a harness with file access, a shell, and tools, so it can take multi-step actions in the actual project, not just reply.",
-    "hyp_text": "A chatbot, like ChatGPT, is a conversational assistant. You exchange messages and it produces text. An agentic coding tool, like CloudCode, is an LLM wired into a harness with file access, a shell, and tools, so it can take multi-step actions in the actual project, not just reply. Thank you.",
+    "hyp_text": "A chatbot, like ChatGPT, is a conversational assistant. You exchange messages and it produces text. An agentic coding tool, like CloudCode, is an LLM wired into a harness with file access, a shell, and tools. So it can take multi-step actions in the actual project, not just reply. Thank you.",
     "wer": 0.08,
-    "stt_s": 0.358,
+    "stt_s": 0.35,
     "cut_during_pause": false,
     "barge": false
    },
@@ -199,9 +199,9 @@
     "id": "ans_20",
     "chunk_id": "05_agent_loop_and_context_engineering__09_rag_grows_context_fast",
     "ref_text": "Naive RAG concatenates every retrieved chunk, so context grows fast and quality drops. The pattern is retrieve more, keep less. First rewrite the user request together with the current task state into a sharper query. Then retrieve a broad candidate set - say top-k of 12 - to get high recall. Then rerank and keep only the best handful, maybe the top 4, for precision.",
-    "hyp_text": "Naive-RAG concatenates every retripe chunk, so context grows fast and quality drops. The pattern is retripe more, keep less. First, rewrite the user request together with the current task state into a sharper query. Then, retrieve a bored candidate set, say top K of 12, to get high recall. Then re-rank and keep only the best handful, maybe the top 4, for position.",
+    "hyp_text": "Naive-RAG concatenates every retripe chunk, so context grows fast and quality drops. The pattern is retripe more, keep less. First, rewrite the user request together with the current task state into a sharper query. Then, retrieve a bored candidate set, say top K of 12, to get high recall. Then re-rank and keep only the best handful, maybe the top four, for position.",
     "wer": 0.0938,
-    "stt_s": 0.331,
+    "stt_s": 0.338,
     "cut_during_pause": false,
     "barge": false
    },
@@ -211,7 +211,7 @@
     "ref_text": "That's the classic signature of multicollinearity. When predictors are highly correlated, the design matrix is near-singular, so infinitely many coefficient combinations fit almost equally well; least squares picks one with huge variance, and the estimates become unstable, can flip sign, and are not individually interpretable, even though overall prediction and R2 may be fine.",
     "hyp_text": "That's the classic signature of multicollinearity. When predictors are highly correlated, the design matrix is near singular. So infinitely many coefficient combinations feed almost equally well.",
     "wer": 0.5455,
-    "stt_s": 0.163,
+    "stt_s": 0.166,
     "cut_during_pause": true,
     "barge": false
    },
@@ -219,9 +219,237 @@
     "id": "ans_17",
     "chunk_id": "03_rag_and_retrieval__05_data_sources_and_retrieval_methods",
     "ref_text": "Match the method to the data and the intent. Unstructured text is served by embedding search and keyword search. Structured data in databases or analytics platforms is served by SQL or database queries, you don't embed a numeric table to answer 'what was Q3 revenue'. Semi-structured data like JSON, markdown, and logs uses parsing plus field/keyword queries. Graph data like a knowledge graph uses graph queries for multi-hop relations.",
-    "hyp_text": "match the method to the data and the intent. Unstructured tags is served by embedding search and keyword search. Structured data in databases or analytics platforms is served by SQL, or database queries. You don't embed a numerical table to answer what was Q3 revenue. Semi-structured data like JSON, Markdown, and Logs use parsing plus field or keyword queries. Graph data like Knowledge Graph uses graph queries for multi-top relations.",
+    "hyp_text": "match the method to the data and the intent. Unstructured tags is served by embedding search and keyword search. Structured data in databases or analytics platforms is served by SQL or database queries. You don't embed a numerical table to answer what was Q3 revenue. Semi-structured data like JSON, Markdown, and logs use parsing plus field or keyword queries. Graph data like Knowledge Graph uses graph queries for multi-hop relations.",
+    "wer": 0.0694,
+    "stt_s": 0.362,
+    "cut_during_pause": false,
+    "barge": false
+   }
+  ]
+ },
+ "elevenlabs": {
+  "summary": {
+   "backend": "elevenlabs",
+   "answers": 20,
+   "wer": 0.0755,
+   "occurrences": 54,
+   "ter_strict": 0.0741,
+   "ter_lenient": 0.037,
+   "stt_p50_s": 0.111,
+   "stt_p95_s": 0.218,
+   "first_audio_p50_s": 0.476,
+   "first_audio_p95_s": 0.63,
+   "cutoff_rate": 0.05,
+   "barge_in": {
+    "ok": false,
+    "stop_s": 0.31,
+    "via": "agent_turn"
+   },
+   "damage": {
+    "graded": 18,
+    "moved_ge1": 5,
+    "rate": 0.278
+   },
+   "measured_at": "2026-08-31 17:15"
+  },
+  "per_answer": [
+   {
+    "id": "ans_18",
+    "chunk_id": "11_categorical_features__08_pipeline_scores_leakage_overfit",
+    "ref_text": "The pipeline discipline is right, the vectorizer is fit on train and only applied to test, so it isn't a leakage bug; it's overfitting driven by high cardinality. The ingredient tokens are essentially unique IDs, giving ~1858 sparse features, and an unregularized linear model memorizes coefficients for train-specific tokens that don't generalize.",
+    "hyp_text": "The pipeline, the simple line is right. The vector ri- riser is fit on train only apply to test, so it isn't a leakage bug. It's overfitting driven by high cardinality, and the ingredient tokens are essentially unique IDs, giving about 1,000 and, uh, 858 sparse features, and an unregularized linear model memorizes coefficients for train-specific tokens that don't generalize.",
+    "wer": 0.283,
+    "stt_s": 0.168,
+    "cut_during_pause": false,
+    "barge": false
+   },
+   {
+    "id": "ans_16",
+    "chunk_id": "19_logistic_regression_proba__01_temporal_train_test_split",
+    "ref_text": "Whenever the data is temporal and you will deploy the model to predict future events. A random split lets rows from the future land in the training set, which leaks information that wouldn't be available at prediction time and inflates your metrics. A time-based split reproduces the real task, exposes distribution drift/non-stationarity, and gives an honest estimate of deployment performance. It's essentially the idea behind time-series cross-validation.",
+    "hyp_text": "Whenever the data is- Whenever the data is temporal and you will deploy, deploy the model to predict future events, a random slit- split lets, lets rows from the feature land in the training set, which leaks the full information that wouldn't be available at prediction time and inflates your met- metrics. A time-based split reproduces the real task, exposes distribution drift or non-stati- stationary, stationarity, and gives a honest estimate of deployment performance. It's essentially the idea behind time series cross-validation.",
+    "wer": 0.2083,
+    "stt_s": 0.068,
+    "cut_during_pause": false,
+    "barge": true
+   },
+   {
+    "id": "ans_14",
+    "chunk_id": "05_agent_loop_and_context_engineering__13_prompt_caching",
+    "ref_text": "Prompt caching lets the provider reuse a large, stable prefix instead of reprocessing it, cutting cost and latency on repeat requests. It works by prefix match: everything from the start of the prompt up to the first differing byte is reused, so cache-friendly design puts stable content first - a frozen system prompt, a deterministic tool list - and only appends new content at the end.",
+    "hyp_text": "Prompt caching lets the provider reuse a large, stable prefix instead of reprocessing it, cutting cost and latency on repeat requests. It works by prefix match. Everything from the start of the prompt up to the first differing byte is reused. So cache-friendly design puts stable content first, a frozen system prompt, a deterministic tool list, and only appends new content at the end.",
+    "wer": 0.0,
+    "stt_s": 0.082,
+    "cut_during_pause": false,
+    "barge": false
+   },
+   {
+    "id": "ans_04",
+    "chunk_id": "12_time_series__05_regularization_scaling",
+    "ref_text": "That gap is overfitting: with few observations and several correlated lag features the model fits noise, so it fails out-of-sample. Ridge adds a penalty on squared coefficient magnitude that shrinks weights, reducing variance at the cost of a little bias, which usually improves test performance; Lasso penalizes absolute magnitude and can drive coefficients to exactly zero, doubling as feature selection.",
+    "hyp_text": "That gap is overfitting. With few observations and several correlated lag features, the model feeds noise, so it falls out of sample. Ridge adds a penalty on squared coefficient magnitude that shrinks weights, reducing variance at the cost, at the cost of a little bias, which usually improves, uh, p- test performance. Less penalizes the absolute magnitude and can drive coefficients to exactly zero, doubling as feature selection.",
+    "wer": 0.1452,
+    "stt_s": 0.165,
+    "cut_during_pause": false,
+    "barge": false
+   },
+   {
+    "id": "ans_12",
+    "chunk_id": "19_logistic_regression_proba__07_roc_auc",
+    "ref_text": "ROC is the Receiver Operating Characteristic curve and AUC is the Area Under it. The curve plots the true positive rate against the false positive rate as you vary the decision threshold. AUC summarizes ranking quality independent of any single threshold and equals the probability that a randomly chosen positive gets a higher score than a randomly chosen negative.",
+    "hyp_text": "ROC is a receiver operating characteristic curve, and AUC is, um, the area under it. The curve plots the true positive rate against the false positive rate as you vary the decision threshold. AUC summarizes ranking quality independent of any single threshold and equals the probability that a randomly chosen positives gets a higher score than a randomly chosen negative.",
+    "wer": 0.0508,
+    "stt_s": 0.128,
+    "cut_during_pause": false,
+    "barge": false
+   },
+   {
+    "id": "ans_02",
+    "chunk_id": "11_categorical_features__07_countvectorizer_sparse",
+    "ref_text": "When a single field contains several tokens, CountVectorizer tokenizes it and creates one column per distinct token holding the per-row count, a bag-of-words representation that captures each item, which plain one-hot on the raw string cannot.",
+    "hyp_text": "When a single field contains several tokens, CountVectorizer tokenizes and creates one column per distinct token holding the per-row count, a bag-of-words representation that captures each item, which plain one-hot on the raw string cannot.",
+    "wer": 0.025,
+    "stt_s": 0.132,
+    "cut_during_pause": false,
+    "barge": false
+   },
+   {
+    "id": "ans_13",
+    "chunk_id": "04_ai_workflows_and_agents__06_workflow_challenges",
+    "ref_text": "Workflows buy repeatability but become rigid and fragile: they struggle with unexpected inputs because the path is fixed, errors compound across steps, every handoff needs a quality check, and changing one step can silently break downstream steps. In RAG these show up as weak retrieval, bad chunking, noisy context, and compounding errors where an early retrieval mistake corrupts later turns.",
+    "hyp_text": "Workflows by repeatability, but become rigid and fragile. They struggle with unexpected inputs because the path is fixed. Errors compound across steps. Every handoff needs a quality check, and changing one step can silently break downstream steps. In RAG, these show up as weak retrieval, bad chunking, noisy context, and compounding errors where an early retrieval mistake corrupts later returns.",
+    "wer": 0.0333,
+    "stt_s": 0.071,
+    "cut_during_pause": false,
+    "barge": false
+   },
+   {
+    "id": "ans_15",
+    "chunk_id": "01_llm_foundations_and_prompting__08_rlhf",
+    "ref_text": "After SFT the model follows instructions but can still be unhelpful, verbose, or unsafe. RLHF aligns it to human preferences: humans compare several candidate responses and rank which is better; those comparisons train a reward model that scores responses, and the LLM is then optimized to maximize that reward, i.e., to produce answers people prefer. This improves helpfulness, safety, tone, and honesty beyond what SFT alone achieves.",
+    "hyp_text": "After SFT, the model follows instructions, but can still be unhelpful, verbose, or unsafe. RLHF aligns it to human preference. Humans compare several candidate responses and rank which is better. Those comparisons train a reward model that scores responses, and the LLM is then optimized to maximize the reward, i.e. to produce answers people prefer. This improves helpfulness, safety, tone, and honesty beyond what SFT alone achieves.",
+    "wer": 0.0294,
+    "stt_s": 0.077,
+    "cut_during_pause": false,
+    "barge": false
+   },
+   {
+    "id": "ans_06",
+    "chunk_id": "01_llm_foundations_and_prompting__01_tokens_and_tokenization",
+    "ref_text": "A token is a sub-word unit produced by the tokenizer; the model reads and generates text one token at a time over a fixed vocabulary of tens of thousands of tokens. Sub-word tokenization is the sweet spot between characters and whole words: it keeps the embedding/output matrices bounded while composing rare words from pieces, so nothing is truly OOV, and it generalizes across languages.",
+    "hyp_text": "A token is a subword unit produced by the tokenizer. The model reads and generates text one token at a time over a fixed vocabulary of tens of thousands of tokens. Subword tokenization is a sweet s- support between characters and whole words. It keeps the embedding output matrices b- bound while composing rare words from pieces. So nothing is truly OOV, and it generalize across languages.",
+    "wer": 0.1493,
+    "stt_s": 0.109,
+    "cut_during_pause": false,
+    "barge": false
+   },
+   {
+    "id": "ans_05",
+    "chunk_id": "02_llm_apis_and_prompting_in_code__02_api_hosting_and_routing",
+    "ref_text": "Put a routing/gateway layer between the app and the models rather than calling one provider directly. An aggregator like OpenRouter gives a unified API to many models with automatic fallback if a provider is down. An enterprise gateway like LiteLLM or Portkey standardizes everything to OpenAI-style syntax, load-balances across multiple keys and endpoints, and enforces rate limits, auth, and usage tracking.",
+    "hyp_text": "Put a routing gateway layer between the app and models, rather than calling one provider directly. An aggregator like OpenRouter gives a unified API to many models with automatic fallback if a provider is down. An enterprise gateway like LiteLLM or Portkey centralizes everything to Open AI-style syntax, load balances across multiple keys and endpoints, and enforces rate limits, auth, and usage tracking.",
+    "wer": 0.0625,
+    "stt_s": 0.108,
+    "cut_during_pause": false,
+    "barge": false
+   },
+   {
+    "id": "ans_07",
+    "chunk_id": "20_svm__04_feature_scaling_for_svm",
+    "ref_text": "SVMs are distance- and inner-product-based: the margin and kernels like the RBF depend on the geometric distance between points. If features are on very different scales, the large-magnitude feature dominates the distance computation and the SVM essentially ignores the smaller-scale features, and the C penalty is applied unevenly. Standardizing or min-max scaling puts features on comparable footing so the margin reflects all of them.",
+    "hyp_text": "SVMs are distance and inner product based. The margin and kernels, like the RBF, depend on the geometric distance between points. If features are on very different scales, the large magnitude feature dominates the distance computation. And the SS- SVM essentially ignores the smaller scale features, and the C penalty is applied uneven ly. Standardizing or min-max scaling puts features on comparable footing so the ma- so the margin reflects all of them.",
+    "wer": 0.087,
+    "stt_s": 0.067,
+    "cut_during_pause": false,
+    "barge": false
+   },
+   {
+    "id": "ans_11",
+    "chunk_id": "03_rag_and_retrieval__11_ann_tradeoffs",
+    "ref_text": "ANN finds vectors that are close enough to the query far faster than exact search. Exact KNN scans every vector, O per query, which collapses at millions or billions of vectors. ANN builds an index offline so a query only explores a small candidate subset instead of the whole set, trading a little accuracy for a big speedup.",
+    "hyp_text": "ANN finds vectors that are close enough to the query far faster than exact search. Exact KNN scans every vector, all per query, which collapses at millions or billions of vectors. ANN builds an index offline, so a query only explores a small candidate subset instead of the whole set, trading a little accuracy for a big speedup.",
+    "wer": 0.0172,
+    "stt_s": 0.08,
+    "cut_during_pause": false,
+    "barge": false
+   },
+   {
+    "id": "ans_03",
+    "chunk_id": "18_logistic_regression_predict__04_what_is_logistic_regression",
+    "ref_text": "Logistic regression models the probability that an observation belongs to the positive class as a function of its features, by passing a linear combination of the features through the sigmoid function. Under the hood it is a regression: it fits a linear model to the log-odds of the target and produces a continuous probability between 0 and 1.",
+    "hyp_text": "Logistic regression models the probability that an observation belongs to the positive class as a function of its features by passing a linear combination of the features through the sig- sigmoid function. Under the hood, it is a regression. It fits a linear model to the log odds of the target and produce continuous probability between zero and one.",
+    "wer": 0.0508,
+    "stt_s": 0.101,
+    "cut_during_pause": false,
+    "barge": false
+   },
+   {
+    "id": "ans_08",
+    "chunk_id": "10_pca__06_choosing_n_components",
+    "ref_text": "Common approaches: plot cumulative explained variance and keep the smallest k that reaches a target like 90-95%, in scikit-learn you can pass PCA to do this automatically; the elbow/scree method, keeping components up to where the variance curve flattens; and treat k as a hyperparameter and tune it by cross-validated downstream performance, which is best when PCA feeds a supervised model. The notebook's scree plot elbows around 3 components.",
+    "hyp_text": "Common approaches, plot cumulative expanded variance and keep the smallest k that reaches the target, like 90 to 95%. In scikit-learn, you can pass PCA to do this automatically. The elbow screener method, keeping components up to where the variance curve flattens, and treat k as a hyper-parameter, and tune it by cross-validated downstream performance, which is best when PCA feeds a supervised model. The notebooks scree- plot elbows around three components.",
+    "wer": 0.0811,
+    "stt_s": 0.112,
+    "cut_during_pause": false,
+    "barge": false
+   },
+   {
+    "id": "ans_01",
+    "chunk_id": "06_linear_regression_model__06_regression_metrics_mae_mse_r2",
+    "ref_text": "MAE is the mean absolute residual in the target's units, easy to interpret and robust to outliers. MSE squares residuals, so it punishes large errors much more and is sensitive to outliers; RMSE takes its square root to return to original units and is what OLS actually minimizes.",
+    "hyp_text": "MAE is a mean absolute residual in targets unit. Easy to interpret and robust to outliers. MSE squares residuals, so it punishes large errors much more and is sensitive to outliers. RMSE takes it, takes its square root to return to original units and is what OLS actually minim izes.",
+    "wer": 0.1458,
+    "stt_s": 0.216,
+    "cut_during_pause": false,
+    "barge": false
+   },
+   {
+    "id": "ans_19",
+    "chunk_id": "05_agent_loop_and_context_engineering__08_rag_for_context_engineering",
+    "ref_text": "RAG is how you decide what external information enters the context window - it's the gate on what the model gets to see for this request, so it's squarely a context-engineering tool, and in an agent it's typically exposed as a retrieval function the model can call. It's not a single method but a family, and you choose by query shape.",
+    "hyp_text": "RAG is how you decide what external information en- enters the context window. It's a gate on what the model gets to see for this request. So it's squarely a context engineering tool, and in an agent, it's typically exposed as a retrieval function the model can call. It's not a single method, but a family. And you choose by query shape.",
+    "wer": 0.0328,
+    "stt_s": 0.132,
+    "cut_during_pause": false,
+    "barge": false
+   },
+   {
+    "id": "ans_09",
+    "chunk_id": "01_llm_foundations_and_prompting__17_agentic_coding_and_dev_env",
+    "ref_text": "A chatbot like ChatGPT is a conversational assistant, you exchange messages and it produces text. An agentic coding tool like Claude Code is an LLM wired into a harness with file access, a shell, and tools, so it can take multi-step actions in the actual project, not just reply.",
+    "hyp_text": "A chatbot, like ChatGPT, is a conversational assistant. You exchange messages and it produce text. An agentic coding tool, like Claude Code, is an LLM wired into a harness with file access, a shell, and tools. So it can take multi-step actions in the actual project, not just reply.",
+    "wer": 0.02,
+    "stt_s": 0.112,
+    "cut_during_pause": false,
+    "barge": false
+   },
+   {
+    "id": "ans_20",
+    "chunk_id": "05_agent_loop_and_context_engineering__09_rag_grows_context_fast",
+    "ref_text": "Naive RAG concatenates every retrieved chunk, so context grows fast and quality drops. The pattern is retrieve more, keep less. First rewrite the user request together with the current task state into a sharper query. Then retrieve a broad candidate set - say top-k of 12 - to get high recall. Then rerank and keep only the best handful, maybe the top 4, for precision.",
+    "hyp_text": "Naive RAG concatenates every retrieved chunk, so context grows fast and quality drops. The pattern is retrieve more, keep less. First, rewrite the user request together with the current task state into a sharper query. Then retrieve a bored candidate set, say top K of 12, to get high recall. Then re-rank and keep only the best handful, maybe the top four, for position.",
+    "wer": 0.0625,
+    "stt_s": 0.218,
+    "cut_during_pause": false,
+    "barge": false
+   },
+   {
+    "id": "ans_10",
+    "chunk_id": "09_collinearity__07_coefficients_erratic_under_collinearity",
+    "ref_text": "That's the classic signature of multicollinearity. When predictors are highly correlated, the design matrix is near-singular, so infinitely many coefficient combinations fit almost equally well; least squares picks one with huge variance, and the estimates become unstable, can flip sign, and are not individually interpretable, even though overall prediction and R2 may be fine.",
+    "hyp_text": "That's a classic signature of multicollinearity. When predictors are highly correlated, the design metric is near singular, so infinitely many coefficient combinations fit almost equally well.",
+    "wer": 0.5636,
+    "stt_s": 0.063,
+    "cut_during_pause": true,
+    "barge": false
+   },
+   {
+    "id": "ans_17",
+    "chunk_id": "03_rag_and_retrieval__05_data_sources_and_retrieval_methods",
+    "ref_text": "Match the method to the data and the intent. Unstructured text is served by embedding search and keyword search. Structured data in databases or analytics platforms is served by SQL or database queries, you don't embed a numeric table to answer 'what was Q3 revenue'. Semi-structured data like JSON, markdown, and logs uses parsing plus field/keyword queries. Graph data like a knowledge graph uses graph queries for multi-hop relations.",
+    "hyp_text": "Match the method to the data and intent. Unstructured text is served by embedding search and keyword search. Structured data in databases or analytics platforms is served by SQL or database queries. You don't embed it a numerical table to answer, \"What was Q3 revenue?\" Semi-structured data like JSON. Markdown and logs use parsing plus field or keyword queries. Graph data like knowledge graph uses graph queries for multi-hop relations.",
     "wer": 0.0833,
-    "stt_s": 0.36,
+    "stt_s": 0.179,
     "cut_during_pause": false,
     "barge": false
    }

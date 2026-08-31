@@ -32,3 +32,4 @@ Desktop.ini
 # state, recordings. Only the README is tracked.
 data/*
 !data/README.md
+tools/bin/

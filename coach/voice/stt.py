@@ -159,6 +159,10 @@ class ScribeRealtimeSTT:
         self.keyterms = list(keyterms or [])
         self.connection = None
         self._committed = None       # future for the in-flight commit
+        self._sendq = None           # bounded frame queue -> writer task
+        self._writer = None
+        self._dropped = False        # live stream lost frames since last commit
+        self._segments = []          # committed segments since the last turn
 
     async def _connect(self):
         from elevenlabs import ElevenLabs
@@ -177,6 +181,14 @@ class ScribeRealtimeSTT:
         self.connection = await client.speech_to_text.realtime.connect(options)
 
         def on_committed(data):
+            # Scribe finalizes segments on its own at long pauses, even with
+            # MANUAL commits - a 40 s answer arrives as SEVERAL committed
+            # events, most of them while no commit() is pending. Accumulate
+            # every segment; commit() joins them (losing this dropped all
+            # but the final clause of long answers - the harness's 68% WER).
+            text = (data.get("text") or data.get("transcript") or "").strip()
+            if text:
+                self._segments.append(text)
             future = self._committed
             if future is not None and not future.done():
                 future.set_result(data)
@@ -190,35 +202,93 @@ class ScribeRealtimeSTT:
         self.connection.on(RealtimeEvents.ERROR, on_error)
 
     async def send(self, frame):
-        import base64
-        if self.connection is None:
-            await self._connect()
-        await self.connection.send(
-            {"audio_base_64": base64.b64encode(bytes(frame)).decode()})
+        # NOTHING in the audio path may block: a slow handshake or a
+        # backpressured socket send here deafens the whole receive loop
+        # (observed twice as silent harness stalls). Frames go into a
+        # bounded queue a writer task drains; when the queue overflows or
+        # the connection breaks, frames are dropped and commit() re-sends
+        # the endpointer's full utterance on a fresh connection instead.
+        if self._sendq is None:
+            self._sendq = asyncio.Queue(maxsize=128)
+        if self._writer is None or self._writer.done():
+            self._writer = asyncio.create_task(self._write_loop())
+        try:
+            self._sendq.put_nowait(bytes(frame))
+        except asyncio.QueueFull:
+            self._dropped = True
 
-    async def commit(self, utterance_pcm):
+    async def _write_loop(self):
+        import base64
+        while True:
+            frame = await self._sendq.get()
+            try:
+                if self.connection is None:
+                    await asyncio.wait_for(self._connect(), 10)
+                await self.connection.send(
+                    {"audio_base_64": base64.b64encode(frame).decode()})
+            except Exception:
+                self._dropped = True
+                await self.close()
+                await asyncio.sleep(1)   # no tight reconnect spin
+
+    async def _commit_once(self, utterance_pcm, resend):
         import base64
         if self.connection is None:
-            # Nothing was streamed (e.g. a reconnect): send the utterance now.
-            await self._connect()
-            chunk = 3200
+            resend = True
+            await asyncio.wait_for(self._connect(), 10)
+        chunk = 3200
+        if resend:
             for i in range(0, len(utterance_pcm), chunk):
                 await self.connection.send({"audio_base_64": base64.b64encode(
                     utterance_pcm[i:i + chunk]).decode()})
+                await asyncio.sleep(0.02)   # ~5x realtime; avoids overflow
         # Trailing silence so the endpoint sees the last word end.
         await self.connection.send(
-            {"audio_base_64": base64.b64encode(b"\x00" * 3200 * 5).decode()})
+            {"audio_base_64": base64.b64encode(b"\x00" * chunk * 5).decode()})
         self._committed = asyncio.get_running_loop().create_future()
         started = time.perf_counter()
         await self.connection.commit()
         try:
-            data = await asyncio.wait_for(self._committed, 20)
+            await asyncio.wait_for(self._committed, 20)
         finally:
             self._committed = None
-        text = (data.get("text") or data.get("transcript") or "").strip()
+        text = " ".join(self._segments).strip()
+        self._segments = []
         return text, time.perf_counter() - started
 
+    async def commit(self, utterance_pcm):
+        if self._dropped:
+            # The live stream is incomplete: start clean and re-send the
+            # whole utterance rather than commit partial audio.
+            self._dropped = False
+            await self.close()
+        try:
+            text, seconds = await asyncio.wait_for(
+                self._commit_once(utterance_pcm, resend=False), 30)
+            if text or len(utterance_pcm) < 16000 * 2:
+                return text, seconds
+            # A non-trivial utterance came back EMPTY: a fresh connection
+            # can discard audio sent during its handshake and then commit
+            # an empty segment in ~0.1 s (caught by the instrumented
+            # equivalence run). Fall through to the full re-send.
+            raise RuntimeError("empty transcript for non-trivial utterance")
+        except Exception:
+            # Expired/broken/deaf session: one retry on a fresh connection
+            # with the whole utterance re-sent at ~5x realtime; bounded so
+            # a hang becomes an error the caller surfaces, never a stall.
+            # Partial segments from the failed attempt are discarded - the
+            # re-send covers the entire utterance.
+            await self.close()
+            self._segments = []
+            return await asyncio.wait_for(
+                self._commit_once(utterance_pcm, resend=True), 90)
+
     async def close(self):
+        if self._writer is not None:
+            self._writer.cancel()
+            self._writer = None
+        if self._sendq is not None:
+            self._sendq = asyncio.Queue(maxsize=128)
         if self.connection is not None:
             try:
                 await self.connection.close()

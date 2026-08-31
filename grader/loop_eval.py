@@ -51,8 +51,11 @@ PORT, WS_PORT = 8033, 8790
 RESULTS_PATH = BASE_DIR / "grader" / "loop_eval_results.json"
 SENTENCES_PATH = BASE_DIR / "grader" / "stt_sentences.jsonl"
 AUDIO_DIR = BASE_DIR / "data" / "stt_audio" / "human" / "audio"
-PAUSE_S = 1.0            # injected mid-answer thinking pause (< 1.2 s limit)
-STREAM_SPEED = 4.0       # stream audio this many times faster than realtime
+PAUSE_S = 1.0            # injected mid-answer thinking pause
+# How many times faster than realtime to stream (LOOP_EVAL_SPEED): 4x is
+# fine locally; cloud realtime STT can backpressure sustained fast streams,
+# so use 2 for --backend elevenlabs.
+STREAM_SPEED = float(os.environ.get("LOOP_EVAL_SPEED", "4"))
 
 RESUME = ("ML engineer. Built a fraud detection model with LightGBM, evaluated "
           "with PR-AUC and calibration; deployed behind a FastAPI service on "
@@ -168,16 +171,25 @@ class SessionDriver:
             # injected (or an adjacent natural) pause: a measured cut-off.
             # Either way, stop streaming immediately - a real candidate
             # stops talking when the interviewer starts.
-            self.audio_done = False
-            stream_task = asyncio.create_task(self._stream_answer(answer))
-            try:
-                msg = await self.next_msg({"user_turn"})
-            finally:
-                stream_task.cancel()
+            msg = None
+            for attempt in range(2):
+                self.audio_done = False
+                stream_task = asyncio.create_task(self._stream_answer(answer))
                 try:
-                    await stream_task
-                except (asyncio.CancelledError, Exception):
-                    pass
+                    msg = await self.next_msg({"user_turn", "error"})
+                finally:
+                    stream_task.cancel()
+                    try:
+                        await stream_task
+                    except (asyncio.CancelledError, Exception):
+                        pass
+                if msg["type"] == "user_turn":
+                    break
+                print(f"  turn error ({msg.get('message', '')[:90]}); "
+                      f"{'retrying' if attempt == 0 else 'giving up'}")
+                msg = None
+            if msg is None:
+                break                # session unrecoverable; keep what we have
             self._record(answer, msg, cut=not self.audio_done,
                          barge=self.barge_on_turn == turn_no)
             # A real microphone never stops sending frames; the cancel
@@ -190,6 +202,7 @@ class SessionDriver:
         await self.ws.send(json.dumps({"type": "end"}))
 
     async def _stream_answer(self, answer):
+        print(f"  streaming {answer['id']} ({answer['seconds']:.0f}s)", flush=True)
         silence = b"\x00" * 3200
         half = (len(answer["pcm"]) // 2) & ~1
         await self.stream_pcm(answer["pcm"][:half])
@@ -330,8 +343,13 @@ async def drive(backend, answers, keyterms):
             "resume": RESUME, "role": role, "project": None,
             "settings": {"style": "neutral",
                          "length": "standard" if len(group) > 7 else "short"}})
+        # ping_interval=None: the scripted driver must not enforce protocol
+        # ping timeouts - a server busy with a slow STT commit would get
+        # disconnected mid-measurement (browsers, the real client, send no
+        # protocol pings at all).
         async with websockets.connect(f"ws://127.0.0.1:{WS_PORT}",
-                                      max_size=2 ** 23) as ws:
+                                      max_size=2 ** 23,
+                                      ping_interval=None) as ws:
             # Barge on turn 2: the walkthrough question is the longest the
             # fake engine speaks, so the interrupt lands mid-sentence.
             driver = SessionDriver(ws, group,
