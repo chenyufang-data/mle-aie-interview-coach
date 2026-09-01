@@ -33,10 +33,13 @@ const GENERAL_TOPICS = {
 };
 
 // Knowledge-base module lists come from the server (/api/meta), so the
-// frontend never hard-codes corpus contents: MLE -> rag_ml, AIE -> rag_ai.
+// frontend never hard-codes corpus contents: MLE -> rag_ml, AIE -> rag_ai,
+// EXP -> rag_exp (private bank; its track button stays hidden unless the
+// server reports it loaded).
 const KB_GROUP_LABELS = {
   MLE: "ML course knowledge base (real course questions)",
   AIE: "AI course knowledge base (real course questions)",
+  EXP: "Real interview questions (gathered from actual interviews)",
 };
 
 const setupPage = document.querySelector(".setup-page");
@@ -97,8 +100,12 @@ function initSetupPage() {
       topic.appendChild(group);
     };
 
-    addGroup(`${state.role} topics (AI-generated questions)`, GENERAL_TOPICS[state.role], false);
-    addGroup("Shared topics (AI-generated questions)", GENERAL_TOPICS.shared, false);
+    // Tracks without an AI-generated topic list (EXP) offer only their bank:
+    // every question there is one that was really asked.
+    if (GENERAL_TOPICS[state.role]) {
+      addGroup(`${state.role} topics (AI-generated questions)`, GENERAL_TOPICS[state.role], false);
+      addGroup("Shared topics (AI-generated questions)", GENERAL_TOPICS.shared, false);
+    }
     const kbModules = state.kbModules[state.role];
     if (kbModules && kbModules.length) {
       addGroup(
@@ -163,7 +170,7 @@ function initSetupPage() {
     const isKb = topicSource(topic) === "kb";
     sessionTitle.textContent = `${state.role} ${level.value}`;
     summaryTrack.textContent = `${state.role} ${level.value}`;
-    summaryTopic.textContent = isKb ? `${topic.value} (course KB)` : topic.value;
+    summaryTopic.textContent = isKb ? `${topic.value} (question bank)` : topic.value;
     summaryFocus.textContent = focus.value.trim() || "General";
   }
 
@@ -175,6 +182,10 @@ function initSetupPage() {
       Object.entries(meta.kb || {}).forEach(([role, info]) => {
         state.kbModules[role] = info.modules || [];
       });
+      const expButton = document.querySelector('[data-role="EXP"]');
+      if (expButton) {
+        expButton.hidden = !(meta.kb || {}).EXP;
+      }
     } catch (error) {
       // Server meta unavailable (e.g. corpus missing): the dropdown simply
       // offers AI-generated topics without a knowledge-base group.

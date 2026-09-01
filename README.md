@@ -8,6 +8,12 @@ model answers, and grading rubrics:
   serves the **MLE** track.
 - `rag_ai/` (91 chunks over 6 modules of LLM and agent engineering) - serves
   the **AIE** track.
+- `rag_exp/` (optional, private) - questions actually asked in recent MLE/AIE
+  interviews, hand-collected and rebuilt with Claude-generated rubrics by
+  `grader/ingest_questions.py`. When the bank file is present it appears as a
+  third **Real Qs** track and the mock interviewer's probes can ground against
+  it; without the file the app runs as a two-track install (see
+  `rag_exp/README.md`).
 
 Both banks are derived from course material I studied; the public repository
 ships the interview questions, model answers, and rubrics only. The complete

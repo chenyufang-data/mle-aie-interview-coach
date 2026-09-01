@@ -7,10 +7,15 @@ BASE_DIR = Path(__file__).resolve().parents[1]
 PUBLIC_DIR = BASE_DIR / "public"
 ENV_PATH = BASE_DIR / ".env"
 
-# One question-bank corpus per track; both share the id/interview/metadata schema.
+# One question-bank corpus per track; all share the id/interview/metadata
+# schema. EXP (real gathered interview questions, grader/ingest_questions.py)
+# is PRIVATE - gitignored, mounted from private storage on deploys - so
+# kb.load_chunks simply skips it where the file is absent and the app runs
+# as a two-track install.
 CORPUS_PATHS = {
     "MLE": BASE_DIR / "rag_ml" / "all_chunks.jsonl",
     "AIE": BASE_DIR / "rag_ai" / "all_chunks.jsonl",
+    "EXP": BASE_DIR / "rag_exp" / "all_chunks.jsonl",
 }
 DEFAULT_MODEL = "claude-opus-4-8"
 

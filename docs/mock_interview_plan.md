@@ -454,6 +454,29 @@ Cost: rubric generation ≈ $3–5 per 100 questions with the teacher; retrieval
 is free. Quality filter: 面经 mixes coding and design rounds — those are
 tagged and excluded here, not deleted.
 
+**BUILT 2026-09-01** (`grader/ingest_questions.py`, two-stage). The free
+dry run reduced ~160 raw lines to 57 rubric-worthy questions: rows the
+校长 had already aggregated into the frequency sheet are trusted and
+skipped (a human dedupe — it condensed an 18-probe serving deep-dive into
+one ranked question), lexical containment plus an HR-screen *intent table*
+merge paraphrases ("Why are you choosing to leave X?" / "What's bringing
+you to Y?" / "为什么想离开当前的公司" fold into the ranked canon), and
+logistics facts, context-bound followups, and too-vague memos are excluded
+with reasons printed (preview in `data/interview_exp/ingest_preview.json`).
+The paid step (57 Claude-teacher calls, ≈$1.77 authorized and spent)
+generated the English rephrasing + rubric per question →
+`rag_exp/all_chunks.jsonl` (17 behavioral / 20 experience / 12 technical /
+3 system design / 5 coding; idempotent re-runs skip existing ids). One
+teacher slip (the current employer's name surviving in a career-path
+question) was patched by hand; interviewee names never reach the API at
+all — prompts carry only question text + company/industry/round. Wiring:
+`CORPUS_PATHS["EXP"]` (kb warn-skips when the private file is absent, so
+public clones stay two-track), a "Real Qs" track button on the practice
+page that only appears when `/api/meta` reports the bank, and the mock's
+`attach_rubric_chunks` picks the bank up automatically since it searches
+every loaded bank. Retrieval suite still 100% Recall@5 with the third
+bank loaded.
+
 **Hidden interview plan** (once, at start): `{role_profile, project,
 opening, probe_targets: [5–8 technical points from the project + role
 themes], rubric_chunks: [...], on_the_fly_rubrics: {...}, behavioral_targets,
