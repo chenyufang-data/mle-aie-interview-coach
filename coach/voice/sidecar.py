@@ -4,14 +4,25 @@ The hosted loop does STT (Scribe Realtime + keywords), turn-taking,
 barge-in, TTS and playback; ElevenLabs connects to THIS server's public
 WebSocket (`ws_url`) and exchanges text only:
 
-  they send   init {conversation_id} / user_transcript {history} / ping
+  they send   init {conversation_id} / user_transcript {history, event_id}
+              / ping
   we send     agent_response {content, event_id, is_final} / pong
 
-(Wire shapes verified against elevenlabs SDK 2.65 types. Two consequences
-measured nowhere else: the transcript is the only observability - on a
-barge-in the sidecar never learns the spoken prefix, which the DIY loop
-does know - and `ws_url` must be publicly reachable, so a local run needs
-a tunnel. Both recorded in plan section 10.)
+Two contract details that are easy to get wrong (both bit the first live
+run as a silent, self-advancing conversation): `event_id` on an
+agent_response is NOT a counter of ours - it must ECHO the event_id of
+the user_transcript being answered, because ElevenLabs discards any
+response whose id doesn't match the current turn (that is their barge-in
+mechanism); and every response must terminate with a chunk whose
+content is "" and is_final is true - the text rides only in the
+preceding is_final=false chunks. (Wire shapes and both rules from the
+elevenlabs SDK 2.65 speech_engine_upstream types.)
+
+Two consequences measured nowhere else: the transcript is the only
+observability - on a barge-in the sidecar never learns the spoken
+prefix, which the DIY loop does know - and `ws_url` must be publicly
+reachable, so a local run needs a tunnel. Both recorded in plan
+section 10.
 
 Usage (single-tenant, a personal practice tool):
 
@@ -58,51 +69,82 @@ class SidecarSession:
         self.ws = websocket
         self.state = None
         self.engine = None
-        self.event_id = 0
+        # event_id of the user_transcript currently being answered; echoed
+        # on every agent_response chunk so the engine keeps (not discards)
+        # them. None before the first user turn (the unsolicited opener).
+        self.reply_event_id = None
 
     async def run(self):
         async for message in self.ws:
             data = json.loads(message)
             kind = data.get("type")
+            if kind != "ping":
+                print(f"sidecar: <- {kind}"
+                      + (f" event_id={data.get('event_id')}"
+                         if kind == "user_transcript" else ""))
             if kind == "ping":
                 await self.ws.send(json.dumps({"type": "pong"}))
             elif kind == "init":
+                if (LAST["state"] is not None
+                        and data.get("conversation_id") == LAST["conversation_id"]):
+                    # Reconnect of the SAME conversation (tunnel blip):
+                    # resume where it stood instead of restarting.
+                    self.state = LAST["state"]
+                    self.engine = _PENDING["engine"]
+                    continue
                 if _PENDING["plan"] is None:
                     await self._say("No interview is set up yet - open the mock "
-                                    "page and start a session first.", final=True)
+                                    "page and start a session first.")
                     continue
                 self.state = {"plan": _PENDING["plan"],
                               "role": _PENDING["role"], "transcript": []}
                 self.engine = _PENDING["engine"]
                 LAST["state"] = self.state
                 LAST["conversation_id"] = data.get("conversation_id")
-                await self.agent_turn()
+                await self.safe_agent_turn()
             elif kind == "user_transcript":
                 if self.state is None:
                     continue
+                self.reply_event_id = data.get("event_id")
                 answer = ""
                 for row in data.get("user_transcript") or []:
                     if row.get("role") == "user":
                         answer = row.get("content") or answer
                 if self.state["transcript"]:
                     self.state["transcript"][-1]["answer"] = answer
-                await self.agent_turn()
+                await self.safe_agent_turn()
             elif kind == "close":
                 break
             elif kind == "error":
                 print("speech engine error:", data.get("message"))
 
-    async def _say(self, content, final):
-        self.event_id += 1
-        await self.ws.send(json.dumps({
-            "type": "agent_response", "content": content,
-            "event_id": self.event_id, "is_final": final}))
+    async def _send(self, content, final):
+        frame = {"type": "agent_response", "content": content, "is_final": final}
+        if self.reply_event_id is not None:
+            frame["event_id"] = self.reply_event_id
+        await self.ws.send(json.dumps(frame))
+
+    async def _say(self, content):
+        """One complete response: the text chunk, then the empty is_final
+        terminator the protocol requires."""
+        await self._send(content, False)
+        await self._send("", True)
+
+    async def safe_agent_turn(self):
+        """An LLM hiccup must not tear the socket - a crash here makes the
+        engine reconnect and restart the whole interview."""
+        try:
+            await self.agent_turn()
+        except Exception as exc:
+            print(f"sidecar: agent turn failed: {exc}")
+            await self._say("Sorry, I lost my train of thought - "
+                            "could you repeat that?")
 
     async def agent_turn(self):
         phase, turn_number, done = turns.position(self.state)
         if done:
             await self._say("That's all we have time for. Thank you - your "
-                            "report is on the mock page.", final=True)
+                            "report is on the mock page.")
             return
         entry = {"turn": turn_number, "phase": phase, "question": "",
                  "probe_id": None, "rationale": None, "answer": None}
@@ -112,7 +154,7 @@ class SidecarSession:
                          probe_id=result.get("probe_id"),
                          rationale=result.get("rationale"))
             self.state["transcript"].append(entry)
-            await self._say(result["question"], final=True)
+            await self._say(result["question"])
             return
         system, messages = turns.turn_prompt(self.state, phase, turn_number)
         self.state["transcript"].append(entry)
@@ -138,11 +180,11 @@ class SidecarSession:
             if kind == "end":
                 break
             for sentence in stream.feed(value):
-                await self._say(sentence, final=False)
+                await self._send(sentence, False)
         late, spoken, meta = stream.finish()
         for sentence in late:
-            await self._say(sentence, final=False)
-        await self._say("", final=True)
+            await self._send(sentence, False)
+        await self._send("", True)
         entry.update(question=spoken, probe_id=meta.get("probe_id"),
                      rationale=meta.get("rationale"))
 

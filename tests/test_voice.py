@@ -207,6 +207,77 @@ def test_final_transcript_meta():
     print("final transcript meta ok")
 
 
+def test_sidecar_protocol():
+    """The Speech Engine upstream contract: every agent_response chunk
+    echoes the user_transcript's event_id (ElevenLabs discards mismatched
+    ids - the first live run was silent for exactly this) and every
+    response terminates with an empty is_final=true chunk."""
+    import asyncio
+    import json as jsonlib
+
+    from coach.voice import sidecar
+
+    plan = {"opening": "Welcome - give me the one minute version of you.",
+            "probe_targets": [{"id": "probe_1", "topic": "leakage",
+                               "question_hint": "How did you catch it?"}],
+            "behavioral_targets": ["a failure"],
+            "settings": {"length": "short", "style": "neutral"},
+            "persona": {"company_type": "bank", "seniority": "senior"}}
+    sidecar.register_plan(plan, {"title": "MLE", "level": "Mid-level"}, "fake")
+
+    class FakeWS:
+        def __init__(self, incoming):
+            self.incoming = list(incoming)
+            self.sent = []
+
+        def __aiter__(self):
+            return self
+
+        async def __anext__(self):
+            if not self.incoming:
+                raise StopAsyncIteration
+            return jsonlib.dumps(self.incoming.pop(0))
+
+        async def send(self, message):
+            self.sent.append(jsonlib.loads(message))
+
+    ws = FakeWS([
+        {"type": "init", "conversation_id": "conv_1"},
+        {"type": "ping"},
+        {"type": "user_transcript", "event_id": 7, "user_transcript": [
+            {"role": "agent", "content": plan["opening"]},
+            {"role": "user", "content": "I build fraud models."}]},
+        {"type": "close"},
+    ])
+    asyncio.run(sidecar.SidecarSession(ws).run())
+
+    assert any(f.get("type") == "pong" for f in ws.sent), ws.sent
+    responses = [f for f in ws.sent if f.get("type") == "agent_response"]
+    for frame in responses:
+        if frame["is_final"]:
+            assert frame["content"] == "", frame
+        else:
+            assert frame["content"], frame
+    assert responses[-1]["is_final"], responses
+    # the opener (no user turn yet) carries no event_id; everything after
+    # the user_transcript echoes ITS id, never a counter of ours
+    assert "event_id" not in responses[0], responses[0]
+    echoed = [f for f in responses if "event_id" in f]
+    assert echoed and all(f["event_id"] == 7 for f in echoed), responses
+    state = sidecar.LAST["state"]
+    assert state["transcript"][0]["question"] == plan["opening"]
+    assert state["transcript"][0]["answer"] == "I build fraud models."
+
+    # a reconnect with the SAME conversation_id resumes silently instead
+    # of restarting the interview from the top
+    ws2 = FakeWS([{"type": "init", "conversation_id": "conv_1"},
+                  {"type": "close"}])
+    asyncio.run(sidecar.SidecarSession(ws2).run())
+    assert not ws2.sent, ws2.sent
+    assert sidecar.LAST["state"] is state
+    print("sidecar protocol ok")
+
+
 if __name__ == "__main__":
     test_endpointer()
     test_chunker()
@@ -215,4 +286,5 @@ if __name__ == "__main__":
     test_turn_prompt()
     test_transcription_block()
     test_final_transcript_meta()
+    test_sidecar_protocol()
     print("all voice tests passed")
