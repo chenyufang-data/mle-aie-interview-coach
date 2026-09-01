@@ -677,14 +677,23 @@ against real interview outcomes.
       answers survived — 68% WER until segments were accumulated). Under
       the rule with this as the closest Level-1 proxy, **Level 2 stays
       main usage**: its grader damage beats the cloud path's
-- [ ] Deepgram row: the vendor decision (§10 decision 9, 2026-08-31) makes
-      Deepgram the recommended cloud stack — Nova-3 streaming STT (keyterm
-      prompting takes the policy-50 list) + Aura-2 TTS behind
-      `AUDIO_BACKEND=deepgram` (`STT_BACKEND`/`TTS_BACKEND` split the
-      bundle), Nova-3 batch + the capped-100 keyterm policy as the
-      final-transcript fallback. Built and unit-tested, key in `.env`;
-      UNMEASURED until `grader/loop_eval.py --backend deepgram --confirm`
-      (~$0.20) writes its equivalence row
+- [x] Deepgram row MEASURED (2026-08-31, five instrumented runs ≈ $0.95
+      of the ~$200 signup credit; decision 9): Nova-3 streaming + Aura-2
+      behind `AUDIO_BACKEND=deepgram` (`STT_BACKEND`/`TTS_BACKEND` split
+      the bundle), Nova-3 batch + capped-100 keyterms as final-transcript
+      fallback. Getting an honest row surfaced that Nova-3 WITHOUT
+      interim results both recognizes and finalizes lazily (the
+      finalized transcript trailed realtime input by 15–25 s; a Finalize
+      drains only ~2–3 s per final) — fixed with interim_results=true,
+      commits assembling finals + the open window's interim, and a
+      watermark against cross-turn leaks — plus one harness bug
+      (stream_pcm's def-time default ignored the per-backend speed;
+      answers streamed at 4×). Final numbers: WER 12.0%, TER 14.8%
+      lenient, STT finalize ~0.00 s, first-audio p50 1.35 / p95 4.48 s,
+      cut-off 5%, damage 6/18. VERDICT: fails the 2.0 s p95 bar and
+      loses to BOTH measured rows on text quality (Scribe 3.7%, local
+      5.6–9.3% lenient TER) — Deepgram is the keyless-cloud fallback,
+      not the recommendation; keyterm-off and batch variants untested
 - [ ] Level 1 live run: sidecar + tunnel + page + engine are all wired and
       config-verified (engine created; `asr.keywords` and patient turn
       accepted; quirk: English agents take eleven_flash_v2 — v2_5 is a
@@ -751,6 +760,13 @@ Decisions:
    default while its key exists (the measured Phase 0 winner), `FINAL_STT`
    overrides. Hosted Level 1 is not re-bought elsewhere: the DIY loop
    already beat it on grader damage.
+   → MEASURED the same day (Phase 2 checklist): the swap hypothesis did
+   not survive the harness — Deepgram TER 14.8% lenient vs Scribe 3.7%,
+   first-audio p95 4.48 s vs 0.63 s, damage 6/18 vs 5/18. Standing order
+   after the data: local = main usage, Scribe = best cloud row while the
+   ElevenLabs balance lasts, Deepgram = the cloud option without an
+   ElevenLabs key (~$200 credit; STT finalize ~0.00 s is its one win).
+   The final-transcript order (Scribe first) already matches.
 
 Verify against DeepSeek docs before Phase 1: the streaming (`stream: true`,
 SSE) path for the OpenAI-compatible endpoint — `call_deepseek` is currently

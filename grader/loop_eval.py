@@ -312,7 +312,11 @@ def summarize(backend, drivers):
             strict += term_row["strict_hits"]
             lenient += term_row["lenient_hits"]
     wers = [row["wer"] for row in clean]
-    stt = sorted(row["stt_s"] for row in rows if row.get("stt_s"))
+    # `is not None`, not truthiness: deepgram commits measure 0.000 s
+    # (endpoint finals cover everything during the end-silence) and a
+    # truthy filter turned a perfect column into null percentiles.
+    stt = sorted(row["stt_s"] for row in rows
+                 if row.get("stt_s") is not None)
     first_audio = sorted(l["first_audio_s"] for l in latencies
                          if l.get("first_audio_s"))
     cut = sum(1 for row in rows if row["cut_during_pause"])

@@ -248,7 +248,7 @@ local Whisper with a cloud voice):
 | --- | --- | --- | --- |
 | `local` (default) | faster-whisper `large-v3-turbo` in-process (GPU), keyterms via `initial_prompt` | Kokoro-82M via kokoro-onnx (CPU, RTF ≈ 0.3–0.45) | `requirements-stt.txt` + model files in `data/models/` |
 | `speaches` | the same models inside a [Speaches](https://speaches.ai) container | ↑ | Docker; `SPEACHES_URL` (default `http://127.0.0.1:8969/v1`) |
-| `deepgram` | Nova-3 streaming, one session-long connection, `Finalize` per turn, policy-50 via keyterm prompting | Aura-2 (`linear16`, `DEEPGRAM_TTS_VOICE`) | `DEEPGRAM_API_KEY` — the recommended cloud stack (~$0.008/min STT; unmeasured until `loop_eval --backend deepgram` runs) |
+| `deepgram` | Nova-3 streaming, one session-long connection, finals + open-interim assembly per turn, policy-50 via keyterm prompting | Aura-2 (`linear16`, `DEEPGRAM_TTS_VOICE`) | `DEEPGRAM_API_KEY` — measured: TER 14.8% lenient / WER 12%, STT finalize ~0.00 s, first-audio p50 1.35 / p95 4.48 s, damage 6/18 — worse than the Scribe row on this lexicon; the cloud option when no ElevenLabs key is present |
 | `elevenlabs` | Scribe v2 Realtime, one session-long connection, MANUAL commits, policy-50 keyterms | Flash v2.5 (`pcm_24000`) | `ELEVENLABS_API_KEY` — the measured cloud row (TER 3.7%, first-audio p95 0.63 s) |
 
 The turn LLM streams (`coach/llm.py call_chat_stream`, thinking off) →
