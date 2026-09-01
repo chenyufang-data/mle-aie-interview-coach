@@ -55,10 +55,13 @@ SENTENCES_PATH = BASE_DIR / "grader" / "stt_sentences.jsonl"
 AUDIO_DIR = BASE_DIR / "data" / "stt_audio" / "human" / "audio"
 PAUSE_S = 1.0            # injected mid-answer thinking pause
 # How many times faster than realtime to stream (LOOP_EVAL_SPEED): 4x is
-# fine locally; cloud realtime STT can backpressure sustained fast streams,
-# so cloud backends (elevenlabs, deepgram) default to 2 in main().
+# fine locally; elevenlabs takes 2x (faster streams get backpressured);
+# deepgram MUST run 1x - Nova-3 transcribes at the audio clock's own pace,
+# so faster-than-realtime input builds a transcript backlog that poisons
+# both the text and the stt latency column (measured: the first 2x run
+# returned 88% WER of turn-shifted fragments). Defaults set in main().
 STREAM_SPEED = float(os.environ.get("LOOP_EVAL_SPEED", "4"))
-CLOUD_BACKENDS = ("elevenlabs", "deepgram")
+CLOUD_SPEEDS = {"elevenlabs": 2.0, "deepgram": 1.0}
 
 RESUME = ("ML engineer. Built a fraud detection model with LightGBM, evaluated "
           "with PR-AUC and calibration; deployed behind a FastAPI service on "
@@ -370,8 +373,8 @@ def main():
     parser.add_argument("--confirm", action="store_true")
     args = parser.parse_args()
 
-    if args.backend in CLOUD_BACKENDS and "LOOP_EVAL_SPEED" not in os.environ:
-        globals()["STREAM_SPEED"] = 2.0
+    if args.backend in CLOUD_SPEEDS and "LOOP_EVAL_SPEED" not in os.environ:
+        globals()["STREAM_SPEED"] = CLOUD_SPEEDS[args.backend]
 
     answers = load_answers()
     total_seconds = sum(answer["seconds"] for answer in answers)

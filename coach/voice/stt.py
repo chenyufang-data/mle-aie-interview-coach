@@ -317,12 +317,19 @@ def deepgram_listen_query(keyterms):
 
 
 class DeepgramSTT:
-    """One Nova-3 streaming connection for the whole session; Finalize
-    messages segment it into turns. Same resilience shape as
-    ScribeRealtimeSTT - every lesson there was a property of session-long
-    realtime STT, not of one vendor: nothing in the audio path may block,
-    finals arrive unsolicited between commits and must be accumulated,
-    and a broken stream is recovered by re-sending the endpointer's full
+    """One Nova-3 streaming connection for the whole session; commits are
+    coverage-aware. Live-verified vendor behavior (probe 2026-08-31, and
+    the first harness run failed for exactly this): Deepgram transcribes
+    at roughly the pace the audio's own clock advances, so input faster
+    than realtime builds a transcript backlog; `Finalize` flushes only
+    what is already processed (finals keep arriving AFTER its reply, even
+    after CloseStream) and gets NO reply when nothing is buffered. A
+    commit therefore cannot mean "Finalize and wait" - it means: wait
+    until the covered timestamp (`start + duration` on every Results
+    event) catches up to the seconds of audio actually sent, then
+    Finalize for the tail with a short grace. Resilience shape shared
+    with ScribeRealtimeSTT: nothing in the audio path may block, finals
+    are accumulated between commits, a broken stream re-sends the whole
     utterance on a fresh connection."""
 
     wants_frames = True
@@ -337,6 +344,8 @@ class DeepgramSTT:
         self._dropped = False        # live stream lost frames since last commit
         self._segments = []          # final transcripts since the last turn
         self._finalized = None       # future for the in-flight Finalize
+        self._sent_bytes = 0         # audio actually sent this connection
+        self._covered = 0.0          # transcript coverage (s) this connection
 
     async def _connect(self):
         import websockets
@@ -348,6 +357,9 @@ class DeepgramSTT:
         self._ws = await websockets.connect(
             url, additional_headers={"Authorization": f"Token {key}"},
             max_size=2 ** 23)
+        # Timestamps restart at zero on every connection.
+        self._sent_bytes = 0
+        self._covered = 0.0
         self._reader = asyncio.create_task(self._read_loop())
 
     async def _read_loop(self):
@@ -363,6 +375,8 @@ class DeepgramSTT:
                 text = (alternatives[0].get("transcript") or "").strip()
                 if text and data.get("is_final"):
                     self._segments.append(text)
+                end = (data.get("start") or 0.0) + (data.get("duration") or 0.0)
+                self._covered = max(self._covered, end)
                 if data.get("from_finalize"):
                     future = self._finalized
                     if future is not None and not future.done():
@@ -405,6 +419,7 @@ class DeepgramSTT:
                 if self._ws is None:
                     await asyncio.wait_for(self._connect(), 10)
                 await self._ws.send(frame)
+                self._sent_bytes += len(frame)
             except Exception:
                 self._dropped = True
                 await self.close()
@@ -419,15 +434,31 @@ class DeepgramSTT:
             self._segments = []
             for i in range(0, len(utterance_pcm), chunk):
                 await self._ws.send(utterance_pcm[i:i + chunk])
+                self._sent_bytes += min(chunk, len(utterance_pcm) - i)
                 await asyncio.sleep(0.02)   # ~5x realtime; avoids overflow
             await self._ws.send(b"\x00" * chunk * 5)
-        self._finalized = asyncio.get_running_loop().create_future()
+            self._sent_bytes += chunk * 5
         started = time.perf_counter()
+        # 1. Let the transcript catch up to the audio clock. Speech ended
+        # >= the endpointer's end-silence before this commit, so coverage
+        # within 2.5 s of the sent seconds means every word is in. At
+        # realtime input the wait is ~zero; it only bites when the input
+        # outpaced realtime or the recognizer fell behind.
+        target = self._sent_bytes / 32000.0 - 2.5
+        backlog = max(0.0, target - self._covered)
+        deadline = started + min(60.0, 10.0 + backlog * 2.0)
+        while self._covered < target and time.perf_counter() < deadline:
+            await asyncio.sleep(0.05)
+        # 2. Flush the tail. No reply comes when nothing is buffered (the
+        # usual case: an endpoint final already fired during the end
+        # silence), so the grace is short; a real flush resolves early.
+        self._finalized = asyncio.get_running_loop().create_future()
         await self._ws.send(json.dumps({"type": "Finalize"}))
         try:
-            await asyncio.wait_for(self._finalized, 15)
+            await asyncio.wait_for(self._finalized,
+                                   0.75 if self._covered >= target else 3.0)
         except asyncio.TimeoutError:
-            pass    # Finalize with nothing buffered may get no reply
+            pass
         finally:
             self._finalized = None
         text = " ".join(self._segments).strip()
