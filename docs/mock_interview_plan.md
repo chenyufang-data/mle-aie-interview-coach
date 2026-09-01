@@ -693,7 +693,11 @@ against real interview outcomes.
       cut-off 5%, damage 6/18. VERDICT: fails the 2.0 s p95 bar and
       loses to BOTH measured rows on text quality (Scribe 3.7%, local
       5.6–9.3% lenient TER) — Deepgram is the keyless-cloud fallback,
-      not the recommendation; keyterm-off and batch variants untested
+      not the recommendation. Keyterm-off ablation (same day, ~$0.20,
+      `--no-keyterms` → results key deepgram_nokt): TER 16.7% vs 14.8%
+      lenient, WER 12.2% vs 12.05% — keyterm prompting helps slightly
+      and stays ON; the 14.8% is Nova-3's genuine accuracy on this
+      speaker/lexicon. Batch variant untested
 - [ ] Level 1 live run: sidecar + tunnel + page + engine are all wired and
       config-verified (engine created; `asr.keywords` and patient turn
       accepted; quirk: English agents take eleven_flash_v2 — v2_5 is a

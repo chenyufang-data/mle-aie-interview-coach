@@ -571,7 +571,9 @@ real on Deepgram: five instrumented runs surfaced Nova-3's lazy
 finalization without interim results (fixed by assembling finals plus
 the open window's interim) and a harness pacing bug, and ended in an
 honest negative — TER 14.8% lenient, first-audio p95 4.48 s, worse than
-both the Scribe row and local — so the measured ranking stands: local
+both the Scribe row and local (and a keyterm-off ablation measured
+16.7%, so the loss is the model's, not the prompting's) — so the
+measured ranking stands: local
 for main usage, Scribe as the best cloud row, Deepgram as the fallback
 when no ElevenLabs key is configured. Level 1 (ElevenLabs Speech
 Engine) remains as an optional hosted comparator behind a sidecar

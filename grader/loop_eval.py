@@ -380,8 +380,13 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--backend", default="local",
                         choices=["local", "speaches", "deepgram", "elevenlabs"])
+    parser.add_argument("--no-keyterms", action="store_true",
+                        help="run without session keyterms (ablation: vendor "
+                             "keyterm prompting can degrade general accuracy); "
+                             "results land under <backend>_nokt")
     parser.add_argument("--confirm", action="store_true")
     args = parser.parse_args()
+    label = args.backend + ("_nokt" if args.no_keyterms else "")
 
     if args.backend in CLOUD_SPEEDS and "LOOP_EVAL_SPEED" not in os.environ:
         globals()["STREAM_SPEED"] = CLOUD_SPEEDS[args.backend]
@@ -405,7 +410,7 @@ def main():
             print("dry run only - add --confirm to spend")
             return
 
-    keyterms = keyterm_list()
+    keyterms = [] if args.no_keyterms else keyterm_list()
     env = dict(os.environ, PORT=str(PORT), VOICE_PORT=str(WS_PORT),
                AUDIO_BACKEND=args.backend, PYTHONUNBUFFERED="1")
     # Server output goes to a FILE: an undrained PIPE fills up on the audio
@@ -427,11 +432,11 @@ def main():
             except subprocess.TimeoutExpired:
                 server_proc.kill()
 
-    summary, rows = summarize(args.backend, drivers)
+    summary, rows = summarize(label, drivers)
     print(json.dumps(summary, indent=1))
     existing = json.loads(RESULTS_PATH.read_text(encoding="utf-8")) \
         if RESULTS_PATH.exists() else {}
-    existing[args.backend] = {"summary": summary,
+    existing[label] = {"summary": summary,
                               "per_answer": [{k: v for k, v in row.items()
                                               if k not in ("terms",)}
                                              for row in rows]}
