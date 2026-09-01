@@ -208,8 +208,9 @@ and `--mock` mode serves a deterministic offline demo engine (also what
 - `GET /api/mock/voice` → `{enabled, ws_port, audio_backend, final_stt}`:
   whether the live loop WebSocket is up (`--voice`), which audio stack it
   runs, and which final-transcript engine this deployment offers
-  (`scribe_batch_kt` with an ElevenLabs key, `whisper_local` with
-  faster-whisper installed, else null).
+  (`scribe_batch_kt` with an ElevenLabs key, `nova3_batch_kt` with a
+  Deepgram key, `whisper_local` with faster-whisper installed, else null;
+  `FINAL_STT=scribe|deepgram|whisper` forces one).
 - `POST /api/mock/keyterms` `{resume?, role?, project?}` → `{keyterms}`:
   the ≤ 50 realtime STT keyterms for this session, chosen deterministically
   by the measured §7a policy (failure rates from
@@ -218,7 +219,10 @@ and `--mock` mode serves a deterministic offline demo engine (also what
 - `POST /api/mock/transcribe` `{audio_base64, mime}` → `{text, engine,
   seconds}`: final-transcript re-transcription of one recorded answer clip
   (≤ 25 MB) — Scribe v2 batch + the full lexicon when `ELEVENLABS_API_KEY`
-  is set (the Phase 0 winner: 3.0% lenient TER), local Whisper otherwise.
+  is set (the Phase 0 winner: 3.0% lenient TER), Deepgram Nova-3 batch +
+  the top-100 keyterm policy with a Deepgram key (unmeasured on the human
+  set, and the report's `engine` field says which ran), local Whisper
+  otherwise.
   The client attaches the result as `answer_final` on the transcript entry;
   the report grades it (normalized both sides for the kp classifier) and
   reports live-vs-final drift as the `transcription` block.
@@ -236,13 +240,16 @@ sentence chunking of the streamed LLM turn), `stt` / `tts` (backends),
 `keyterms` (the §7a policy), `final_transcript`, `loop` (the session
 server; the protocol is documented in its docstring).
 
-`AUDIO_BACKEND` selects the audio stack — all three drive the same loop:
+`AUDIO_BACKEND` selects the audio stack — all four drive the same loop;
+`STT_BACKEND` / `TTS_BACKEND` override each side for mix-and-match (e.g.
+local Whisper with a cloud voice):
 
 | Backend | STT | TTS | Needs |
 | --- | --- | --- | --- |
 | `local` (default) | faster-whisper `large-v3-turbo` in-process (GPU), keyterms via `initial_prompt` | Kokoro-82M via kokoro-onnx (CPU, RTF ≈ 0.3–0.45) | `requirements-stt.txt` + model files in `data/models/` |
 | `speaches` | the same models inside a [Speaches](https://speaches.ai) container | ↑ | Docker; `SPEACHES_URL` (default `http://127.0.0.1:8969/v1`) |
-| `elevenlabs` | Scribe v2 Realtime, one session-long connection, MANUAL commits, policy-50 keyterms | Flash v2.5 (`pcm_24000`) | `ELEVENLABS_API_KEY` |
+| `deepgram` | Nova-3 streaming, one session-long connection, `Finalize` per turn, policy-50 via keyterm prompting | Aura-2 (`linear16`, `DEEPGRAM_TTS_VOICE`) | `DEEPGRAM_API_KEY` — the recommended cloud stack (~$0.008/min STT; unmeasured until `loop_eval --backend deepgram` runs) |
+| `elevenlabs` | Scribe v2 Realtime, one session-long connection, MANUAL commits, policy-50 keyterms | Flash v2.5 (`pcm_24000`) | `ELEVENLABS_API_KEY` — the measured cloud row (TER 3.7%, first-audio p95 0.63 s) |
 
 The turn LLM streams (`coach/llm.py call_chat_stream`, thinking off) →
 sentence chunker → per-sentence TTS, so first audio does not wait for the

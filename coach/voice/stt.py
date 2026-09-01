@@ -3,6 +3,10 @@
   local       in-process faster-whisper (large-v-3-turbo on the GPU; the
               Phase 0 condition-6 stack), keyterms via initial_prompt
   speaches    a Speaches container's OpenAI-style /v1/audio/transcriptions
+  deepgram    Nova-3 streaming over one session-long WebSocket, Finalize
+              messages segmenting the stream per turn; keyterm prompting
+              takes the same policy-50 list (recommended cloud backend -
+              UNMEASURED until grader/loop_eval.py --backend deepgram runs)
   elevenlabs  Scribe v2 Realtime over one session-long WebSocket, MANUAL
               commits segmenting the stream per turn; keyterms per session
               (the policy-50 list - measured 9.7% vs 15.4% lenient TER)
@@ -34,6 +38,8 @@ SPEACHES_URL = os.environ.get("SPEACHES_URL", "http://127.0.0.1:8969/v1")
 # carries (Systran never published a turbo conversion).
 SPEACHES_STT_MODEL = os.environ.get(
     "SPEACHES_STT_MODEL", "jootanehorror/faster-whisper-large-v3-turbo-ct2")
+DEEPGRAM_API = os.environ.get("DEEPGRAM_URL", "https://api.deepgram.com")
+DEEPGRAM_STT_MODEL = os.environ.get("DEEPGRAM_STT_MODEL", "nova-3")
 WHISPER_MODEL_NAME = os.environ.get("STT_WHISPER_MODEL", "large-v3-turbo")
 # Beam 1-2 for the live loop (latency); Phase 0 measured accuracy at beam 5,
 # which the offline final-transcript path keeps.
@@ -258,9 +264,11 @@ class ScribeRealtimeSTT:
 
     async def commit(self, utterance_pcm):
         if self._dropped:
-            # The live stream is incomplete: start clean and re-send the
-            # whole utterance rather than commit partial audio.
+            # The live stream is incomplete: discard its partial segments
+            # (the re-send covers the whole utterance - keeping them would
+            # duplicate text) and start clean.
             self._dropped = False
+            self._segments = []
             await self.close()
         try:
             text, seconds = await asyncio.wait_for(
@@ -297,12 +305,179 @@ class ScribeRealtimeSTT:
             self.connection = None
 
 
+def deepgram_listen_query(keyterms):
+    """Query string for Nova-3 streaming: raw 16 k PCM in, finals only
+    (the endpointer owns turn-taking), keyterm prompting per session."""
+    from urllib.parse import urlencode
+    params = [("model", DEEPGRAM_STT_MODEL), ("encoding", "linear16"),
+              ("sample_rate", "16000"), ("channels", "1"), ("language", "en"),
+              ("smart_format", "true"), ("interim_results", "false")]
+    params += [("keyterm", term) for term in keyterms]
+    return urlencode(params)
+
+
+class DeepgramSTT:
+    """One Nova-3 streaming connection for the whole session; Finalize
+    messages segment it into turns. Same resilience shape as
+    ScribeRealtimeSTT - every lesson there was a property of session-long
+    realtime STT, not of one vendor: nothing in the audio path may block,
+    finals arrive unsolicited between commits and must be accumulated,
+    and a broken stream is recovered by re-sending the endpointer's full
+    utterance on a fresh connection."""
+
+    wants_frames = True
+    label = "deepgram_nova3"
+
+    def __init__(self, keyterms):
+        self.keyterms = list(keyterms or [])
+        self._ws = None
+        self._reader = None
+        self._writer = None
+        self._sendq = None           # bounded frame queue -> writer task
+        self._dropped = False        # live stream lost frames since last commit
+        self._segments = []          # final transcripts since the last turn
+        self._finalized = None       # future for the in-flight Finalize
+
+    async def _connect(self):
+        import websockets
+        key = os.environ.get("DEEPGRAM_API_KEY")
+        if not key:
+            raise RuntimeError("DEEPGRAM_API_KEY is not set (.env)")
+        url = (DEEPGRAM_API.replace("https://", "wss://", 1)
+               + "/v1/listen?" + deepgram_listen_query(self.keyterms))
+        self._ws = await websockets.connect(
+            url, additional_headers={"Authorization": f"Token {key}"},
+            max_size=2 ** 23)
+        self._reader = asyncio.create_task(self._read_loop())
+
+    async def _read_loop(self):
+        try:
+            async for message in self._ws:
+                if isinstance(message, (bytes, bytearray)):
+                    continue
+                data = json.loads(message)
+                if data.get("type") != "Results":
+                    continue        # Metadata / UtteranceEnd / SpeechStarted
+                alternatives = (data.get("channel") or {}).get("alternatives") \
+                    or [{}]
+                text = (alternatives[0].get("transcript") or "").strip()
+                if text and data.get("is_final"):
+                    self._segments.append(text)
+                if data.get("from_finalize"):
+                    future = self._finalized
+                    if future is not None and not future.done():
+                        future.set_result(True)
+        except Exception:
+            pass
+        # The socket died on its own (a cancel from close() never gets
+        # here): flag it so the next commit re-sends on a fresh session.
+        self._dropped = True
+        future = self._finalized
+        if future is not None and not future.done():
+            future.set_exception(RuntimeError("deepgram connection closed"))
+
+    async def send(self, frame):
+        if self._sendq is None:
+            self._sendq = asyncio.Queue(maxsize=128)
+        if self._writer is None or self._writer.done():
+            self._writer = asyncio.create_task(self._write_loop())
+        try:
+            self._sendq.put_nowait(bytes(frame))
+        except asyncio.QueueFull:
+            self._dropped = True
+
+    async def _write_loop(self):
+        while True:
+            try:
+                frame = await asyncio.wait_for(self._sendq.get(), 5)
+            except asyncio.TimeoutError:
+                # Deepgram tears down a socket that goes ~10 s without
+                # audio; the browser mic streams continuously, but any gap
+                # (harness scheduling, a stall) must not cost the session.
+                if self._ws is not None:
+                    try:
+                        await self._ws.send(json.dumps({"type": "KeepAlive"}))
+                    except Exception:
+                        self._dropped = True
+                        await self.close()
+                continue
+            try:
+                if self._ws is None:
+                    await asyncio.wait_for(self._connect(), 10)
+                await self._ws.send(frame)
+            except Exception:
+                self._dropped = True
+                await self.close()
+                await asyncio.sleep(1)   # no tight reconnect spin
+
+    async def _commit_once(self, utterance_pcm, resend):
+        if self._ws is None:
+            resend = True
+            await asyncio.wait_for(self._connect(), 10)
+        chunk = 3200
+        if resend:
+            self._segments = []
+            for i in range(0, len(utterance_pcm), chunk):
+                await self._ws.send(utterance_pcm[i:i + chunk])
+                await asyncio.sleep(0.02)   # ~5x realtime; avoids overflow
+            await self._ws.send(b"\x00" * chunk * 5)
+        self._finalized = asyncio.get_running_loop().create_future()
+        started = time.perf_counter()
+        await self._ws.send(json.dumps({"type": "Finalize"}))
+        try:
+            await asyncio.wait_for(self._finalized, 15)
+        except asyncio.TimeoutError:
+            pass    # Finalize with nothing buffered may get no reply
+        finally:
+            self._finalized = None
+        text = " ".join(self._segments).strip()
+        self._segments = []
+        return text, time.perf_counter() - started
+
+    async def commit(self, utterance_pcm):
+        if self._dropped:
+            # The live stream is incomplete: discard its partial segments
+            # and start clean (_commit_once re-sends when _ws is None).
+            self._dropped = False
+            self._segments = []
+            await self.close()
+        try:
+            text, seconds = await asyncio.wait_for(
+                self._commit_once(utterance_pcm, resend=False), 30)
+            if text or len(utterance_pcm) < 16000 * 2:
+                return text, seconds
+            raise RuntimeError("empty transcript for non-trivial utterance")
+        except Exception:
+            await self.close()
+            self._segments = []
+            return await asyncio.wait_for(
+                self._commit_once(utterance_pcm, resend=True), 90)
+
+    async def close(self):
+        current = asyncio.current_task()
+        for name in ("_writer", "_reader"):
+            task = getattr(self, name)
+            if task is not None and task is not current:
+                task.cancel()
+                setattr(self, name, None)
+        if self._sendq is not None:
+            self._sendq = asyncio.Queue(maxsize=128)
+        if self._ws is not None:
+            try:
+                await self._ws.close()
+            except Exception:
+                pass
+            self._ws = None
+
+
 def make_stt(backend, keyterms):
     if backend == "local":
         return LocalWhisperSTT(keyterms)
     if backend == "speaches":
         return SpeachesSTT(keyterms)
+    if backend == "deepgram":
+        return DeepgramSTT(keyterms)
     if backend == "elevenlabs":
         return ScribeRealtimeSTT(keyterms)
     raise ValueError(f"unknown AUDIO_BACKEND {backend!r} "
-                     "(expected local, speaches, or elevenlabs)")
+                     "(expected local, speaches, deepgram, or elevenlabs)")

@@ -203,8 +203,56 @@ def test_transcription_block():
 
 
 def test_final_transcript_meta():
-    assert available_engine() in (None, "scribe_batch_kt", "whisper_local")
+    assert available_engine() in (None, "scribe_batch_kt", "nova3_batch_kt",
+                                  "whisper_local")
     print("final transcript meta ok")
+
+
+def test_deepgram_backend():
+    """Offline checks for the Deepgram backend: the streaming URL carries
+    the session keyterms, the factories dispatch, the STT/TTS backend
+    split works, and the final-transcript engine order is forced-override
+    > Scribe (the measured Phase 0 winner) > Deepgram > local Whisper."""
+    import os
+
+    from coach.voice import final_transcript
+    from coach.voice import loop as voice_loop
+    from coach.voice import stt as stt_module
+    from coach.voice import tts as tts_module
+
+    query = stt_module.deepgram_listen_query(["LightGBM", "QWK"])
+    assert "model=nova-3" in query
+    assert "encoding=linear16" in query and "sample_rate=16000" in query
+    assert "interim_results=false" in query
+    assert query.count("keyterm=") == 2 and "keyterm=LightGBM" in query
+
+    stt = stt_module.make_stt("deepgram", ["QWK"])
+    assert isinstance(stt, stt_module.DeepgramSTT) and stt.wants_frames
+    tts = tts_module.make_tts("deepgram")
+    assert tts.label == "aura_2" and tts.sample_rate == 24000
+
+    saved = {key: os.environ.pop(key, None) for key in
+             ("FINAL_STT", "ELEVENLABS_API_KEY", "DEEPGRAM_API_KEY",
+              "AUDIO_BACKEND", "STT_BACKEND", "TTS_BACKEND")}
+    try:
+        os.environ["AUDIO_BACKEND"] = "deepgram"
+        os.environ["STT_BACKEND"] = "local"
+        assert voice_loop.stt_backend() == "local"
+        assert voice_loop.tts_backend() == "deepgram"
+
+        os.environ["DEEPGRAM_API_KEY"] = "x"
+        assert final_transcript.available_engine() == "nova3_batch_kt"
+        os.environ["ELEVENLABS_API_KEY"] = "x"
+        assert final_transcript.available_engine() == "scribe_batch_kt"
+        os.environ["FINAL_STT"] = "deepgram"
+        assert final_transcript.available_engine() == "nova3_batch_kt"
+    finally:
+        for key, value in saved.items():
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value
+    print("deepgram backend ok")
 
 
 def test_sidecar_protocol():
@@ -286,5 +334,6 @@ if __name__ == "__main__":
     test_turn_prompt()
     test_transcription_block()
     test_final_transcript_meta()
+    test_deepgram_backend()
     test_sidecar_protocol()
     print("all voice tests passed")

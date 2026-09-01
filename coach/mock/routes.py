@@ -32,6 +32,8 @@ def handle_get(handler, path):
             "enabled": config.VOICE_ENABLED,
             "ws_port": voice_loop.VOICE_PORT if config.VOICE_ENABLED else None,
             "audio_backend": voice_loop.audio_backend(),
+            "stt_backend": voice_loop.stt_backend(),
+            "tts_backend": voice_loop.tts_backend(),
             "final_stt": available_engine(),
             # Level 1 (hosted Speech Engine loop) is offered only when the
             # sidecar can run AND an engine id is configured (.env

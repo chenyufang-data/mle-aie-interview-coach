@@ -3,6 +3,8 @@
   local       Kokoro-82M via kokoro-onnx, in process (measured on this
               machine: RTF 0.30-0.45 on CPU - faster than playback)
   speaches    the same Kokoro inside a Speaches container, /v1/audio/speech
+  deepgram    Aura-2 via /v1/speak, raw linear16 (~$0.030 per 1k chars;
+              recommended cloud backend, one vendor with Nova-3 STT)
   elevenlabs  Flash v2.5, pcm_24000 output ($0.05 per 1k chars)
 
 synth() returns one sentence's full audio: at Kokoro/Flash speeds the
@@ -35,6 +37,8 @@ SPEACHES_TTS_MODEL = os.environ.get(
     "SPEACHES_TTS_MODEL", "speaches-ai/Kokoro-82M-v1.0-ONNX")
 # ElevenLabs premade voices, by the account's key (see grader/stt_eval.py).
 DEFAULT_ELEVEN_VOICE = os.environ.get("ELEVEN_TTS_VOICE", "XrExE9yKIg1WjnnlVkGX")
+DEEPGRAM_API = os.environ.get("DEEPGRAM_URL", "https://api.deepgram.com")
+DEFAULT_DEEPGRAM_VOICE = os.environ.get("DEEPGRAM_TTS_VOICE", "aura-2-thalia-en")
 
 _KOKORO = None
 
@@ -122,11 +126,40 @@ class ElevenLabsTTS:
         return audio, 24000
 
 
+class DeepgramTTS:
+    label = "aura_2"
+    sample_rate = 24000
+
+    def __init__(self, voice=None):
+        self.voice = voice or DEFAULT_DEEPGRAM_VOICE
+
+    async def synth(self, text):
+        return await asyncio.to_thread(self._synth, text)
+
+    def _synth(self, text):
+        key = os.environ.get("DEEPGRAM_API_KEY")
+        if not key:
+            raise RuntimeError("DEEPGRAM_API_KEY is not set (.env)")
+        from urllib.parse import urlencode
+        # container=none: raw linear16 (the default wraps it in a WAV).
+        query = urlencode({"model": self.voice, "encoding": "linear16",
+                           "sample_rate": "24000", "container": "none"})
+        req = urlrequest.Request(
+            f"{DEEPGRAM_API}/v1/speak?{query}",
+            data=json.dumps({"text": text}).encode("utf-8"),
+            headers={"Content-Type": "application/json",
+                     "Authorization": f"Token {key}"}, method="POST")
+        with urlrequest.urlopen(req, timeout=120) as response:
+            return response.read(), 24000
+
+
 def make_tts(backend, voice=None):
     if backend == "local":
         return KokoroTTS(voice)
     if backend == "speaches":
         return SpeachesTTS(voice)
+    if backend == "deepgram":
+        return DeepgramTTS(voice)
     if backend == "elevenlabs":
         return ElevenLabsTTS(voice)
     raise ValueError(f"unknown AUDIO_BACKEND {backend!r}")

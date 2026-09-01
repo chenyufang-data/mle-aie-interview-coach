@@ -66,3 +66,12 @@ def session_keyterms(resume="", role=None, project=None, n=50):
 def final_transcript_keyterms():
     from grader.stt_text import batch_keyterms
     return batch_keyterms(lexicon())
+
+
+def capped_transcript_keyterms(n=100):
+    """For batch engines with a smaller keyterm budget than Scribe's 1000
+    (Deepgram Nova-3 keyterm prompting): the same failure-rate + rarity
+    policy that beat naive selection live, sized to the budget."""
+    from grader.stt_text import select_keyterms
+    rates, observed = failure_rates()
+    return select_keyterms(lexicon(), rates, [], n=n, observed=observed)

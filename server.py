@@ -52,7 +52,8 @@ def parse_args():
         action="store_true",
         help="Also start the live voice-loop WebSocket server (coach/voice) on "
         "VOICE_PORT (default 8765). AUDIO_BACKEND picks the audio stack: local "
-        "(faster-whisper + Kokoro, default), speaches, or elevenlabs.",
+        "(faster-whisper + Kokoro, default), speaches, deepgram, or elevenlabs; "
+        "STT_BACKEND/TTS_BACKEND override each side.",
     )
     return parser.parse_args()
 
@@ -126,7 +127,7 @@ def main():
                          kwargs={"host": host}, daemon=True).start()
         print(
             f"Voice loop: ws://{display_host}:{voice_loop.VOICE_PORT} "
-            f"(AUDIO_BACKEND={voice_loop.audio_backend()})"
+            f"(stt={voice_loop.stt_backend()}, tts={voice_loop.tts_backend()})"
         )
         if os.environ.get("ELEVENLABS_API_KEY"):
             # Level 1 sidecar in the same process, so /api/mock/level1/start

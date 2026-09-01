@@ -526,17 +526,23 @@ beside the HTTP API, and `/mock.html` grows three modes: **text**,
 **live voice** — server-side Silero VAD with patient endpointing, live STT,
 the same streamed interviewer (sentence-by-sentence to TTS, so first audio
 never waits for the full turn), and barge-in that records exactly the
-sentences you actually heard. One loop, three audio stacks via
-`AUDIO_BACKEND`: `local` (faster-whisper turbo on the GPU + Kokoro-82M on
+sentences you actually heard. One loop, four audio stacks via
+`AUDIO_BACKEND` (`STT_BACKEND`/`TTS_BACKEND` override each side for
+mix-and-match): `local` (faster-whisper turbo on the GPU + Kokoro-82M on
 CPU — the expected main usage, ≈ $0.01/session with Flash turns),
 `speaches` (the same models in one Docker container; verified: warm STT
-1.6 s per 31 s answer, TTS 0.36 s), and `elevenlabs` (Scribe Realtime with
-the measured per-session keyterm policy + Flash v2.5 TTS). In voice modes
-each answer is also recorded and re-transcribed
-(`POST /api/mock/transcribe`: Scribe batch + the full 339-term lexicon,
-the Phase 0 winner at 3.0% term loss); the report grades that final
-transcript, shows both, and prices the difference — "transcription cost
-you N terms / flipped M rubric verdicts".
+1.6 s per 31 s answer, TTS 0.36 s), `deepgram` (Nova-3 streaming with the
+same per-session keyterm policy + Aura-2 TTS — the recommended cloud
+stack: one vendor, ~$0.008/min STT, keyterm prompting is a first-class
+API; not yet measured by the harness), and `elevenlabs` (Scribe Realtime
+with the measured keyterm policy + Flash v2.5 TTS — the measured cloud
+row, kept while its balance lasts). In voice modes each answer is also
+recorded and re-transcribed (`POST /api/mock/transcribe`: Scribe batch +
+the full 339-term lexicon, the Phase 0 winner at 3.0% term loss, when an
+ElevenLabs key is present; Deepgram Nova-3 batch with the top-100
+keyterm policy otherwise; `FINAL_STT` forces one); the report grades
+that final transcript, shows both, and prices the difference —
+"transcription cost you N terms / flipped M rubric verdicts".
 
 Measured, not assumed (`grader/loop_eval.py`: the 20 real Phase 0 answer
 recordings replayed through the live loop, with a deterministic
@@ -557,6 +563,9 @@ end-of-speech to first agent audio (Whisper 0.85 + Flash first token
 could: a Silero v5 context-window omission that scored real speech at
 ~0.0, and a stall when a candidate keeps talking past an already-committed
 answer (now appended as an afterthought; the interviewer regenerates).
-Level 1 (ElevenLabs Speech Engine) is built as a sidecar
-(`coach/voice/sidecar.py`) but its live run — and the pre-registered
-Level 1 vs Level 2 comparison — waits on a public tunnel and fresh spend.
+A new cloud vendor is one class behind `make_stt`/`make_tts` plus one
+harness run — `grader/loop_eval.py --backend deepgram --confirm` prints
+the cost and produces the same measured row. Level 1 (ElevenLabs Speech
+Engine) remains as an optional hosted comparator behind a sidecar
+(`coach/voice/sidecar.py`); with local as main usage and the cloud row
+measured, it is no longer on the recommended path.

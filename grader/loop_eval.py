@@ -19,12 +19,14 @@ per audio backend:
 
 The interviewer is the deterministic fake engine (--mock server: no LLM
 spend); the audio path is the real one. Levels measured here: 2/3
-(--backend local) and the DIY-cloud "1.5" (--backend elevenlabs, Scribe
-Realtime + Flash TTS - prints the cost and needs --confirm). Level 1
-(Speech Engine) needs its sidecar plus a public tunnel and is compared
-with the same numbers once it runs.
+(--backend local) and the DIY-cloud "1.5" (--backend deepgram, Nova-3
+streaming + Aura-2, or --backend elevenlabs, Scribe Realtime + Flash TTS
+- both print the cost and need --confirm). Level 1 (Speech Engine) needs
+its sidecar plus a public tunnel and is compared with the same numbers
+once it runs.
 
   .venv\\Scripts\\python grader\\loop_eval.py --backend local
+  .venv\\Scripts\\python grader\\loop_eval.py --backend deepgram --confirm
   .venv\\Scripts\\python grader\\loop_eval.py --backend elevenlabs --confirm
 
 Results: printed + merged into grader/loop_eval_results.json.
@@ -54,8 +56,9 @@ AUDIO_DIR = BASE_DIR / "data" / "stt_audio" / "human" / "audio"
 PAUSE_S = 1.0            # injected mid-answer thinking pause
 # How many times faster than realtime to stream (LOOP_EVAL_SPEED): 4x is
 # fine locally; cloud realtime STT can backpressure sustained fast streams,
-# so use 2 for --backend elevenlabs.
+# so cloud backends (elevenlabs, deepgram) default to 2 in main().
 STREAM_SPEED = float(os.environ.get("LOOP_EVAL_SPEED", "4"))
+CLOUD_BACKENDS = ("elevenlabs", "deepgram")
 
 RESUME = ("ML engineer. Built a fraud detection model with LightGBM, evaluated "
           "with PR-AUC and calibration; deployed behind a FastAPI service on "
@@ -363,9 +366,12 @@ async def drive(backend, answers, keyterms):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--backend", default="local",
-                        choices=["local", "speaches", "elevenlabs"])
+                        choices=["local", "speaches", "deepgram", "elevenlabs"])
     parser.add_argument("--confirm", action="store_true")
     args = parser.parse_args()
+
+    if args.backend in CLOUD_BACKENDS and "LOOP_EVAL_SPEED" not in os.environ:
+        globals()["STREAM_SPEED"] = 2.0
 
     answers = load_answers()
     total_seconds = sum(answer["seconds"] for answer in answers)
@@ -374,6 +380,14 @@ def main():
     if args.backend == "elevenlabs":
         est = total_seconds / 3600 * 0.44 + 0.05   # realtime STT + Flash TTS
         print(f"estimated ElevenLabs cost: ~${est:.2f}")
+        if not args.confirm:
+            print("dry run only - add --confirm to spend")
+            return
+    if args.backend == "deepgram":
+        # Nova-3 streaming ~$0.46/h + Aura-2 ~$0.030/1k chars of questions.
+        est = total_seconds / 3600 * 0.46 + 0.10
+        print(f"estimated Deepgram cost: ~${est:.2f} (new accounts carry "
+              "~$200 signup credit)")
         if not args.confirm:
             print("dry run only - add --confirm to spend")
             return

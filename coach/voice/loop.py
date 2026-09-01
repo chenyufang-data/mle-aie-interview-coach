@@ -67,6 +67,16 @@ def audio_backend():
     return os.environ.get("AUDIO_BACKEND", "local")
 
 
+def stt_backend():
+    """STT_BACKEND overrides the AUDIO_BACKEND bundle for mix-and-match
+    stacks (e.g. local Whisper STT with a cloud TTS voice)."""
+    return os.environ.get("STT_BACKEND", audio_backend())
+
+
+def tts_backend():
+    return os.environ.get("TTS_BACKEND", audio_backend())
+
+
 class VoiceSession:
     def __init__(self, websocket):
         self.ws = websocket
@@ -123,25 +133,25 @@ class VoiceSession:
                       "transcript": list(hello.get("transcript") or [])}
         settings = hello.get("settings") or {}
         self.speak = settings.get("speak", True)
-        backend = audio_backend()
         keyterms = hello.get("keyterms") or []
         try:
-            self.stt = stt_module.make_stt(backend, keyterms)
-            self.tts = tts_module.make_tts(backend, settings.get("tts_voice")) \
+            self.stt = stt_module.make_stt(stt_backend(), keyterms)
+            self.tts = tts_module.make_tts(tts_backend(),
+                                           settings.get("tts_voice")) \
                 if self.speak else None
             self.endpointer = Endpointer(vad=SileroVAD(),
                                          end_silence_ms=END_SILENCE_MS)
         except Exception as exc:
             await self.send_json(type="error", message=str(exc))
             return
-        if backend == "local":
+        if stt_backend() == "local":
             # Warm the Whisper model while the interviewer speaks the opening.
             asyncio.create_task(asyncio.to_thread(stt_module.whisper_singleton))
         total = turns.total_turns(plan.get("settings", {}).get("length", "standard"))
         await self.send_json(
-            type="ready", engine=self.engine, audio_backend=backend,
+            type="ready", engine=self.engine, audio_backend=audio_backend(),
             rate=(self.tts.sample_rate if self.tts else None),
-            stt=getattr(self.stt, "label", backend), total_turns=total,
+            stt=getattr(self.stt, "label", stt_backend()), total_turns=total,
             keyterms_used=len(keyterms))
         self.agent_task = asyncio.create_task(self.agent_turn())
         await self.receive_loop()
@@ -435,7 +445,7 @@ async def serve(host="127.0.0.1", port=VOICE_PORT):
     import websockets
     async with websockets.serve(handler, host, port, max_size=2 ** 23):
         print(f"Voice loop listening on ws://{host}:{port} "
-              f"(AUDIO_BACKEND={audio_backend()})")
+              f"(stt={stt_backend()}, tts={tts_backend()})")
         await asyncio.Future()
 
 
