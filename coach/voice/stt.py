@@ -306,34 +306,37 @@ class ScribeRealtimeSTT:
 
 
 def deepgram_listen_query(keyterms):
-    """Query string for Nova-3 streaming: raw 16 k PCM in, finals only
-    (the endpointer owns turn-taking), keyterm prompting per session."""
+    """Query string for Nova-3 streaming: raw 16 k PCM in, keyterm
+    prompting per session. interim_results MUST be on: without interims
+    Nova-3 both recognizes and finalizes lazily (measured: the finalized
+    transcript trailed realtime input by 15-25 s and a Finalize drained
+    at ~2-3 s per final), so the interim of the open window is the only
+    way to have the whole utterance at commit time."""
     from urllib.parse import urlencode
     params = [("model", DEEPGRAM_STT_MODEL), ("encoding", "linear16"),
               ("sample_rate", "16000"), ("channels", "1"), ("language", "en"),
-              ("smart_format", "true"), ("interim_results", "false")]
+              ("smart_format", "true"), ("interim_results", "true")]
     params += [("keyterm", term) for term in keyterms]
     return urlencode(params)
 
 
 class DeepgramSTT:
-    """One Nova-3 streaming connection for the whole session; commits
-    LEAD with Finalize and wait for finalized coverage. Live-verified
-    vendor behavior (probe + two failed harness runs, 2026-08-31):
-    under interim_results=false Nova-3 finalizes LAZILY - a fluent answer
-    yields finals only at internal boundaries, so the finalized
-    transcript can trail the live edge by 15-25 s even at realtime
-    input; `Finalize` forces the flush of processed audio (instant
-    reply) but not of a backlog, and gets NO reply when nothing is
-    buffered. So a commit sends Finalize (repeating ~1/s), and exits
-    when the finalized coverage (`start + duration` on Results events)
-    reaches the seconds of audio actually sent, or when a Finalize is
-    followed by 1.5 s of event silence (flushed, nothing more coming).
-    A watermark drops any later-arriving tail of a committed turn - text
-    in the wrong turn is worse than text lost. Resilience shape shared
-    with ScribeRealtimeSTT: nothing in the audio path may block, finals
-    are accumulated between commits, a broken stream re-sends the whole
-    utterance on a fresh connection."""
+    """One Nova-3 streaming connection for the whole session. The turn
+    text is assembled from FINALS plus the open window's latest INTERIM
+    - learned the hard way (three instrumented harness runs +2 probes,
+    2026-08-31): with interims off, Nova-3 recognizes and finalizes in
+    lazy batches, the finalized transcript trails realtime input by
+    15-25 s, and a Finalize drains it at only ~2-3 s per final, so no
+    commit-side waiting strategy can be both fast and complete. With
+    interims on, recognition rides the live edge; commit sends Finalize
+    to convert the open window and briefly waits for finalized coverage
+    (`start + duration` on Results) to reach the seconds of audio sent,
+    falling back to finals+interim at the cap. A watermark drops any
+    later-arriving tail of a committed turn - text in the wrong turn is
+    worse than text lost. Resilience shape shared with ScribeRealtimeSTT:
+    nothing in the audio path may block, finals accumulate between
+    commits, a broken stream re-sends the whole utterance on a fresh
+    connection."""
 
     wants_frames = True
     label = "deepgram_nova3"
@@ -346,10 +349,10 @@ class DeepgramSTT:
         self._sendq = None           # bounded frame queue -> writer task
         self._dropped = False        # live stream lost frames since last commit
         self._segments = []          # final transcripts since the last turn
+        self._interim = None         # (text, end_s) of the open window
         self._sent_bytes = 0         # audio actually sent this connection
         self._covered = 0.0          # finalized coverage (s) this connection
         self._flushed_to = 0.0       # committed-turn watermark (s)
-        self._last_event_at = 0.0    # perf_counter of the last Results event
 
     async def _connect(self):
         import websockets
@@ -365,6 +368,7 @@ class DeepgramSTT:
         self._sent_bytes = 0
         self._covered = 0.0
         self._flushed_to = 0.0
+        self._interim = None
         self._reader = asyncio.create_task(self._read_loop())
 
     async def _read_loop(self):
@@ -375,14 +379,20 @@ class DeepgramSTT:
                 data = json.loads(message)
                 if data.get("type") != "Results":
                     continue        # Metadata / UtteranceEnd / SpeechStarted
-                self._last_event_at = time.perf_counter()
                 alternatives = (data.get("channel") or {}).get("alternatives") \
                     or [{}]
                 text = (alternatives[0].get("transcript") or "").strip()
                 end = (data.get("start") or 0.0) + (data.get("duration") or 0.0)
-                if text and data.get("is_final") and end > self._flushed_to:
-                    self._segments.append(text)
-                self._covered = max(self._covered, end)
+                if data.get("is_final"):
+                    # A final supersedes the window's interims.
+                    self._interim = None
+                    self._covered = max(self._covered, end)
+                    if text and end > self._flushed_to:
+                        self._segments.append(text)
+                elif text:
+                    # Interims within one window are cumulative: keep the
+                    # newest only.
+                    self._interim = (text, end)
         except Exception:
             pass
         # The socket died on its own (a cancel from close() never gets
@@ -431,6 +441,7 @@ class DeepgramSTT:
         chunk = 3200
         if resend:
             self._segments = []
+            self._interim = None
             for i in range(0, len(utterance_pcm), chunk):
                 await self._ws.send(utterance_pcm[i:i + chunk])
                 self._sent_bytes += min(chunk, len(utterance_pcm) - i)
@@ -438,30 +449,23 @@ class DeepgramSTT:
             await self._ws.send(b"\x00" * chunk * 5)
             self._sent_bytes += chunk * 5
         started = time.perf_counter()
-        # Finalize-led flush (see the class docstring): force the lazy
-        # finalizer, repeating ~1/s, until the finalized coverage reaches
-        # the audio clock less the end-silence margin - or a Finalize is
-        # answered by nothing for 1.5 s (fully flushed; a Finalize with
-        # no buffered audio sends no reply at all).
+        # Finalize converts the open window to a final; with interims on
+        # the recognizer rides the live edge, so this is fast. Wait for
+        # finalized coverage to reach the audio clock (less the
+        # end-silence margin); at the cap, fall back to finals + the open
+        # interim - complete text either way.
         target = self._sent_bytes / 32000.0 - 2.5
         backlog = max(0.0, target - self._covered)
-        deadline = started + min(60.0, 10.0 + backlog * 2.0)
-        last_finalize = 0.0
-        while self._covered < target:
-            now = time.perf_counter()
-            if now >= deadline:
-                break
-            if last_finalize and max(last_finalize,
-                                     self._last_event_at) + 1.5 < now:
-                break       # a Finalize produced nothing more: flushed
-            # Re-Finalize only when the event flow stalls - while finals
-            # are streaming in, forcing extra boundaries just chops words.
-            if now - last_finalize >= 2.0 and now - self._last_event_at >= 0.5:
-                await self._ws.send(json.dumps({"type": "Finalize"}))
-                last_finalize = time.perf_counter()
+        deadline = started + min(30.0, 3.0 + backlog)
+        await self._ws.send(json.dumps({"type": "Finalize"}))
+        while self._covered < target and time.perf_counter() < deadline:
             await asyncio.sleep(0.05)
-        text = " ".join(self._segments).strip()
+        parts = list(self._segments)
+        if self._interim is not None and self._interim[1] > self._flushed_to:
+            parts.append(self._interim[0])
+        text = " ".join(parts).strip()
         self._segments = []
+        self._interim = None
         # Anything that later arrives for audio this turn already owned
         # belongs HERE, not to the next answer - drop it at the reader.
         self._flushed_to = max(self._flushed_to, target)
@@ -473,16 +477,18 @@ class DeepgramSTT:
             # and start clean (_commit_once re-sends when _ws is None).
             self._dropped = False
             self._segments = []
+            self._interim = None
             await self.close()
         try:
             text, seconds = await asyncio.wait_for(
-                self._commit_once(utterance_pcm, resend=False), 30)
+                self._commit_once(utterance_pcm, resend=False), 40)
             if text or len(utterance_pcm) < 16000 * 2:
                 return text, seconds
             raise RuntimeError("empty transcript for non-trivial utterance")
         except Exception:
             await self.close()
             self._segments = []
+            self._interim = None
             return await asyncio.wait_for(
                 self._commit_once(utterance_pcm, resend=True), 90)
 

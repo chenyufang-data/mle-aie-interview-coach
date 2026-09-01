@@ -223,7 +223,7 @@ def test_deepgram_backend():
     query = stt_module.deepgram_listen_query(["LightGBM", "QWK"])
     assert "model=nova-3" in query
     assert "encoding=linear16" in query and "sample_rate=16000" in query
-    assert "interim_results=false" in query
+    assert "interim_results=true" in query
     assert query.count("keyterm=") == 2 and "keyterm=LightGBM" in query
 
     stt = stt_module.make_stt("deepgram", ["QWK"])
