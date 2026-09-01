@@ -33,3 +33,9 @@ Desktop.ini
 data/*
 !data/README.md
 tools/bin/
+
+# rag_exp/ is built from hand-collected interview experiences (plan section
+# 7b) and stays private - the infra plan mounts it from private storage,
+# never from the repository. Only the README is tracked.
+rag_exp/*
+!rag_exp/README.md
