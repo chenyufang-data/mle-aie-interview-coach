@@ -147,6 +147,51 @@ def test_full_offline_flow():
             assert verdict["hits"] or verdict["partials"] or verdict["misses"]
 
 
+def test_rubric_round_filter():
+    """The mock simulates only the technical deep-dive: a probe must skip
+    HR-screen behavioral / coding chunks (rag_exp round tags) even when
+    they are the strongest lexical match, and course chunks (no round tag)
+    stay eligible."""
+    from retrieval import Retriever
+
+    def synth(chunk_id, question, round_tag=None):
+        meta = {"module": "m", "topic": "t", "tags": [], "difficulty": "intermediate"}
+        if round_tag:
+            meta["round"] = round_tag
+        return {"id": chunk_id,
+                "interview": {"question": question, "key_points": []},
+                "metadata": meta}
+
+    assert planning.rubric_eligible(synth("a", "q"))
+    assert planning.rubric_eligible(synth("a", "q", "technical"))
+    assert not planning.rubric_eligible(synth("a", "q", "behavioral"))
+    assert not planning.rubric_eligible(synth("a", "q", "coding"))
+
+    chunks = [
+        synth("exp_hr", "compensation salary negotiation expectation range level",
+              "behavioral"),
+        synth("exp_tech", "compensation salary negotiation model serving", "technical"),
+    ]
+    fake_bank = {"chunks": chunks, "retriever": Retriever(chunks), "modules": ["m"]}
+    plan = {"probe_targets": [{"id": "probe_1",
+                               "topic": "compensation salary negotiation",
+                               "question_hint": "expectation range"}]}
+    old_kb, old_min = dict(kb.KB), planning.RUBRIC_MIN_SCORE
+    kb.KB.clear()
+    kb.KB["SYNTH"] = fake_bank
+    planning.RUBRIC_MIN_SCORE = 0.5  # tiny corpus -> tiny BM25 scores
+    try:
+        planning.attach_rubric_chunks(plan, {"level": "Mid-level"})
+    finally:
+        kb.KB.clear()
+        kb.KB.update(old_kb)
+        planning.RUBRIC_MIN_SCORE = old_min
+    target = plan["probe_targets"][0]
+    # The behavioral chunk matches more query terms, but only the technical
+    # one may ground the probe.
+    assert target.get("chunk_id") == "exp_tech", target
+
+
 def test_fake_schema_dispatch():
     assert "roles" in engines.fake_structured("resume with XGBoost", ROLES_SCHEMA)
     assert "per_turn" in engines.fake_structured("Candidate: hi", REPORT_SCHEMA)

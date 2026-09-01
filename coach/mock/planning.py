@@ -21,6 +21,18 @@ from coach.mock.templates import TEMPLATES, render
 # is the safer grader.
 RUBRIC_MIN_SCORE = 10.0
 
+# The mock simulates only the technical deep-dive (user decision
+# 2026-09-01), so a probe may ground against technical, experience, and
+# system-design chunks. rag_exp's HR-screen behavioral and live-coding
+# chunks serve the practice track only; course chunks carry no round tag
+# and are always eligible.
+MOCK_ROUNDS = {"technical", "experience", "system_design"}
+
+
+def rubric_eligible(chunk):
+    round_tag = chunk["metadata"].get("round")
+    return round_tag is None or round_tag in MOCK_ROUNDS
+
 STYLES = {
     "neutral": "professional and neutral; give no praise and no criticism during the interview",
     "friendly": "warm and encouraging, but still thorough",
@@ -118,8 +130,12 @@ def attach_rubric_chunks(plan, role):
         query = f"{target.get('topic', '')} {target.get('question_hint', '')}"
         best_score, best_chunk = 0.0, None
         for info in kb.KB.values():
-            for score, chunk in info["retriever"].top_scored(query, level=level, limit=1):
-                if score > best_score and chunk["id"] not in used:
+            # limit 3, not 1: when the top hit is a round the mock does not
+            # simulate, the next eligible match can still stand in.
+            for score, chunk in info["retriever"].top_scored(query, level=level, limit=3):
+                if not rubric_eligible(chunk) or chunk["id"] in used:
+                    continue
+                if score > best_score:
                     best_score, best_chunk = score, chunk
         if best_chunk is not None and best_score >= RUBRIC_MIN_SCORE:
             used.add(best_chunk["id"])

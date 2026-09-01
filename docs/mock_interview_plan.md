@@ -475,7 +475,13 @@ public clones stay two-track), a "Real Qs" track button on the practice
 page that only appears when `/api/meta` reports the bank, and the mock's
 `attach_rubric_chunks` picks the bank up automatically since it searches
 every loaded bank. Retrieval suite still 100% Recall@5 with the third
-bank loaded.
+bank loaded. Refinement (user direction, same day): the mock simulates
+only the technical deep-dive, so probe grounding now filters by round —
+`MOCK_ROUNDS = {technical, experience, system_design}`; HR-screen
+behavioral and live-coding chunks serve the practice track only (course
+chunks carry no round tag and stay eligible; top_scored limit raised to
+3 so an excluded top hit doesn't block the next eligible match;
+regression test `test_rubric_round_filter`).
 
 **Hidden interview plan** (once, at start): `{role_profile, project,
 opening, probe_targets: [5–8 technical points from the project + role
