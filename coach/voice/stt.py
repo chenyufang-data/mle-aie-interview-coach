@@ -317,17 +317,20 @@ def deepgram_listen_query(keyterms):
 
 
 class DeepgramSTT:
-    """One Nova-3 streaming connection for the whole session; commits are
-    coverage-aware. Live-verified vendor behavior (probe 2026-08-31, and
-    the first harness run failed for exactly this): Deepgram transcribes
-    at roughly the pace the audio's own clock advances, so input faster
-    than realtime builds a transcript backlog; `Finalize` flushes only
-    what is already processed (finals keep arriving AFTER its reply, even
-    after CloseStream) and gets NO reply when nothing is buffered. A
-    commit therefore cannot mean "Finalize and wait" - it means: wait
-    until the covered timestamp (`start + duration` on every Results
-    event) catches up to the seconds of audio actually sent, then
-    Finalize for the tail with a short grace. Resilience shape shared
+    """One Nova-3 streaming connection for the whole session; commits
+    LEAD with Finalize and wait for finalized coverage. Live-verified
+    vendor behavior (probe + two failed harness runs, 2026-08-31):
+    under interim_results=false Nova-3 finalizes LAZILY - a fluent answer
+    yields finals only at internal boundaries, so the finalized
+    transcript can trail the live edge by 15-25 s even at realtime
+    input; `Finalize` forces the flush of processed audio (instant
+    reply) but not of a backlog, and gets NO reply when nothing is
+    buffered. So a commit sends Finalize (repeating ~1/s), and exits
+    when the finalized coverage (`start + duration` on Results events)
+    reaches the seconds of audio actually sent, or when a Finalize is
+    followed by 1.5 s of event silence (flushed, nothing more coming).
+    A watermark drops any later-arriving tail of a committed turn - text
+    in the wrong turn is worse than text lost. Resilience shape shared
     with ScribeRealtimeSTT: nothing in the audio path may block, finals
     are accumulated between commits, a broken stream re-sends the whole
     utterance on a fresh connection."""
@@ -343,9 +346,10 @@ class DeepgramSTT:
         self._sendq = None           # bounded frame queue -> writer task
         self._dropped = False        # live stream lost frames since last commit
         self._segments = []          # final transcripts since the last turn
-        self._finalized = None       # future for the in-flight Finalize
         self._sent_bytes = 0         # audio actually sent this connection
-        self._covered = 0.0          # transcript coverage (s) this connection
+        self._covered = 0.0          # finalized coverage (s) this connection
+        self._flushed_to = 0.0       # committed-turn watermark (s)
+        self._last_event_at = 0.0    # perf_counter of the last Results event
 
     async def _connect(self):
         import websockets
@@ -360,6 +364,7 @@ class DeepgramSTT:
         # Timestamps restart at zero on every connection.
         self._sent_bytes = 0
         self._covered = 0.0
+        self._flushed_to = 0.0
         self._reader = asyncio.create_task(self._read_loop())
 
     async def _read_loop(self):
@@ -370,25 +375,19 @@ class DeepgramSTT:
                 data = json.loads(message)
                 if data.get("type") != "Results":
                     continue        # Metadata / UtteranceEnd / SpeechStarted
+                self._last_event_at = time.perf_counter()
                 alternatives = (data.get("channel") or {}).get("alternatives") \
                     or [{}]
                 text = (alternatives[0].get("transcript") or "").strip()
-                if text and data.get("is_final"):
-                    self._segments.append(text)
                 end = (data.get("start") or 0.0) + (data.get("duration") or 0.0)
+                if text and data.get("is_final") and end > self._flushed_to:
+                    self._segments.append(text)
                 self._covered = max(self._covered, end)
-                if data.get("from_finalize"):
-                    future = self._finalized
-                    if future is not None and not future.done():
-                        future.set_result(True)
         except Exception:
             pass
         # The socket died on its own (a cancel from close() never gets
         # here): flag it so the next commit re-sends on a fresh session.
         self._dropped = True
-        future = self._finalized
-        if future is not None and not future.done():
-            future.set_exception(RuntimeError("deepgram connection closed"))
 
     async def send(self, frame):
         if self._sendq is None:
@@ -439,30 +438,33 @@ class DeepgramSTT:
             await self._ws.send(b"\x00" * chunk * 5)
             self._sent_bytes += chunk * 5
         started = time.perf_counter()
-        # 1. Let the transcript catch up to the audio clock. Speech ended
-        # >= the endpointer's end-silence before this commit, so coverage
-        # within 2.5 s of the sent seconds means every word is in. At
-        # realtime input the wait is ~zero; it only bites when the input
-        # outpaced realtime or the recognizer fell behind.
+        # Finalize-led flush (see the class docstring): force the lazy
+        # finalizer, repeating ~1/s, until the finalized coverage reaches
+        # the audio clock less the end-silence margin - or a Finalize is
+        # answered by nothing for 1.5 s (fully flushed; a Finalize with
+        # no buffered audio sends no reply at all).
         target = self._sent_bytes / 32000.0 - 2.5
         backlog = max(0.0, target - self._covered)
         deadline = started + min(60.0, 10.0 + backlog * 2.0)
-        while self._covered < target and time.perf_counter() < deadline:
+        last_finalize = 0.0
+        while self._covered < target:
+            now = time.perf_counter()
+            if now >= deadline:
+                break
+            if last_finalize and max(last_finalize,
+                                     self._last_event_at) + 1.5 < now:
+                break       # a Finalize produced nothing more: flushed
+            # Re-Finalize only when the event flow stalls - while finals
+            # are streaming in, forcing extra boundaries just chops words.
+            if now - last_finalize >= 2.0 and now - self._last_event_at >= 0.5:
+                await self._ws.send(json.dumps({"type": "Finalize"}))
+                last_finalize = time.perf_counter()
             await asyncio.sleep(0.05)
-        # 2. Flush the tail. No reply comes when nothing is buffered (the
-        # usual case: an endpoint final already fired during the end
-        # silence), so the grace is short; a real flush resolves early.
-        self._finalized = asyncio.get_running_loop().create_future()
-        await self._ws.send(json.dumps({"type": "Finalize"}))
-        try:
-            await asyncio.wait_for(self._finalized,
-                                   0.75 if self._covered >= target else 3.0)
-        except asyncio.TimeoutError:
-            pass
-        finally:
-            self._finalized = None
         text = " ".join(self._segments).strip()
         self._segments = []
+        # Anything that later arrives for audio this turn already owned
+        # belongs HERE, not to the next answer - drop it at the reader.
+        self._flushed_to = max(self._flushed_to, target)
         return text, time.perf_counter() - started
 
     async def commit(self, utterance_pcm):
