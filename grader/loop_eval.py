@@ -148,11 +148,17 @@ class SessionDriver:
             if msg["type"] in kinds:
                 return msg
 
-    async def stream_pcm(self, pcm, realtime_factor=STREAM_SPEED):
+    async def stream_pcm(self, pcm, realtime_factor=None):
+        # NOT a default argument: a def-time default captured the import-
+        # time STREAM_SPEED and silently ignored main()'s per-backend
+        # override - answers streamed at 4x while the silences ran at 1x
+        # (found when two deepgram runs both showed a ~20 s recognition
+        # backlog at every commit).
+        speed = realtime_factor or STREAM_SPEED
         chunk = 3200                                     # 100 ms
         for i in range(0, len(pcm), chunk):
             await self.ws.send(pcm[i:i + chunk])
-            await asyncio.sleep(0.1 / realtime_factor)
+            await asyncio.sleep(0.1 / speed)
 
     async def run(self, keyterms, plan, role):
         await self.ws.send(json.dumps({
