@@ -759,7 +759,10 @@ function renderReport(result) {
       ${v.hits.map((p) => `<li class="kp-hit">hit — ${escapeHtml(p)}</li>`).join("")}
       ${v.partials.map((p) => `<li class="kp-partial">partial — ${escapeHtml(p)}</li>`).join("")}
       ${v.misses.map((p) => `<li class="kp-miss">missed — ${escapeHtml(p)}</li>`).join("")}
-    </ul>`).join("");
+    </ul>
+    ${(v.misses.length || v.partials.length) && v.chunk_id ? `
+    <p class="muted-note">Practice this exact question in the coach${v.module ? ` (${escapeHtml(v.module)})` : ""}:
+      <a href="/?practice=${encodeURIComponent(v.chunk_id)}">${escapeHtml(v.bank_question || v.chunk_id)}</a></p>` : ""}`).join("");
   const trans = result.transcription ? renderTranscription(result.transcription) : "";
 
   els.reportBody.innerHTML = `

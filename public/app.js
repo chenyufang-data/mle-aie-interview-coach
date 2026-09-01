@@ -122,8 +122,20 @@ function initSetupPage() {
     input.addEventListener("change", updateSummary);
   });
 
+  // Mock-report rubric tie-in: /?practice=<chunk_id> pins the first
+  // question to the exact bank chunk a mock probe was graded against.
+  const practiceChunk = new URLSearchParams(window.location.search).get("practice");
+  if (practiceChunk) {
+    setupStatus.textContent =
+      "Practicing the question your mock report flagged — press Start to get exactly that question.";
+  }
+
   startBtn.addEventListener("click", async () => {
     const session = getSessionPayload(state, level, topic, focus);
+    if (practiceChunk) {
+      session.chunk_id = practiceChunk;
+      session.source = "kb";
+    }
     startBtn.disabled = true;
     setupStatus.textContent = session.source === "kb"
       ? "Picking a question from the course knowledge base..."

@@ -516,7 +516,22 @@ regrade consistency is what makes scorecards comparable across sessions),
 and `--mock` mode runs a deterministic offline demo interviewer — the same
 path `tests/test_mock.py` and CI exercise. The free tier cannot run a mock
 (it needs a real LLM); paid turns are quota-free on Flash at ~$0.01 per
-session. Nothing is stored server-side: the session lives in the page.
+session. Nothing is stored server-side unless you opt in: a per-session
+checkbox (default off) saves the plan, transcript, and report to a local
+JSONL — otherwise the session lives in the page.
+
+Phase 3 polish, measured where measurable: setup calls are cached by
+content hash (`data/mock_cache/`, gitignored), so re-practicing the same
+resume gets its role list instantly and replays a role with zero wait and
+zero LLM spend — a "fresh analysis" checkbox forces new questions.
+Interviewer turns are prompt-cache-shaped and verified with real calls
+(`grader/cache_check.py`: the second Claude turn read 1,123 cached tokens
+and paid full price only for the ~374-token per-turn tail; DeepSeek's
+automatic cache hit 512 prefix tokens — the check also caught that
+`temperature` 400s on current Claude models, a latent turn-path bug). And
+every rubric-grounded miss in the report links to the exact bank question
+it was graded against — one click reopens it as a practice question in
+the coach.
 
 ### Live voice (Phase 2: the DIY loop, measured)
 

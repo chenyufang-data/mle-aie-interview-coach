@@ -129,7 +129,9 @@ Claude mode; the frontend hides its tier badge then.
 
 Request: `role` (`"MLE"` | `"AIE"`), `level`, `topic`, `focus`,
 `source` (`"kb"` to draw from the course bank, otherwise AI-generated),
-`exclude` (list of already-served chunk ids).
+`exclude` (list of already-served chunk ids). With `chunk_id` set, the
+exact bank chunk is returned instead (404 if unknown) — the mock
+report's rubric tie-in links a missed probe here via `/?practice=<id>`.
 
 Response:
 
@@ -184,9 +186,13 @@ and `--mock` mode serves a deterministic offline demo engine (also what
 `tests/test_mock.py` and CI run).
 
 - `GET /api/mock/templates` → default JD templates (§7c), styles, lengths.
-- `POST /api/mock/roles` `{resume, jd_text?}` → `{profile, roles[]}` (§7a).
-- `POST /api/mock/start` `{resume, jd_text?, role, project?, settings}` →
-  `{plan, jd_text, jd_is_default, turn, total_turns}`. The hidden plan
+- `POST /api/mock/roles` `{resume, jd_text?, fresh?}` → `{profile, roles[],
+  cached}` (§7a). Results are cached by content hash in `data/mock_cache/`
+  (gitignored; Phase 3) so repeat practice is instant and spends nothing;
+  `fresh: true` bypasses the read.
+- `POST /api/mock/start` `{resume, jd_text?, role, project?, settings,
+  fresh?}` →
+  `{plan, jd_text, jd_is_default, turn, total_turns, cached}`. The hidden plan
   carries probe targets with on-the-fly rubrics; targets that BM25-match a
   bank chunk (score ≥ 10) also carry `chunk_id` + `bank_key_points` —
   rubric-grounded probes. Note: the plan travels to the client, so a curious
@@ -197,13 +203,18 @@ and `--mock` mode serves a deterministic offline demo engine (also what
   within the phase, with thinking disabled (measured ~0.8 s vs ~1.4 s first
   token). Turn protocol: spoken text, then a `---` line and a JSON trailer
   `{probe_id, rationale}` that is stripped server-side.
-- `POST /api/mock/report` `{plan, role, transcript, report_engine?}` →
-  `{assessment, metrics, kp_verdicts, engine}`: the §8a scorecard (six
-  anchored dimensions, per-turn feedback, red flags that quote, hiring
-  call), deterministic communication metrics, and distilled-classifier
-  hit/partial/miss verdicts for rubric-grounded probes. Report engine
-  defaults to Claude when a key is present (regrade consistency), else the
-  turn engine.
+- `POST /api/mock/report` `{plan, role, transcript, report_engine?,
+  log_consent?}` →
+  `{assessment, metrics, kp_verdicts, engine, logged}`: the §8a scorecard
+  (six anchored dimensions, per-turn feedback, red flags that quote,
+  hiring call), deterministic communication metrics, and
+  distilled-classifier hit/partial/miss verdicts for rubric-grounded
+  probes — each verdict row carries `bank_question` + `chunk_id` so the
+  page links misses to `/?practice=<chunk_id>`. Report engine defaults to
+  Claude when a key is present (regrade consistency), else the turn
+  engine. `log_consent: true` (the UI's opt-in checkbox, default off)
+  appends the session to `data/sessions/mock_sessions.jsonl`; `logged`
+  reports whether it was written.
 
 - `GET /api/mock/voice` → `{enabled, ws_port, audio_backend, final_stt}`:
   whether the live loop WebSocket is up (`--voice`), which audio stack it

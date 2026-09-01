@@ -74,6 +74,17 @@ class InterviewCoachHandler(BaseHTTPRequestHandler):
                 mock_routes.handle_post(self, self.path, data)
                 return
             if self.path == "/api/question":
+                if data.get("chunk_id"):
+                    # Exact-question request: the mock report's rubric
+                    # tie-in links a missed probe straight to the bank
+                    # question it was graded against (plan section 9 P3).
+                    chunk = kb.CHUNKS_BY_ID.get(data["chunk_id"])
+                    if chunk is None:
+                        json_response(self, 404, {
+                            "error": f"unknown chunk_id {data['chunk_id']!r}"})
+                        return
+                    json_response(self, 200, kb.kb_question_payload(chunk))
+                    return
                 if data.get("source") == "kb":
                     chunk = kb.select_chunk(
                         data.get("role", "MLE"),

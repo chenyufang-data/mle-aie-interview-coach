@@ -76,6 +76,10 @@ def kp_verdicts(plan, transcript):
             "turn": entry.get("turn"),
             "probe_id": target["id"],
             "chunk_id": target["chunk_id"],
+            # For the report's practice link: the exact bank question this
+            # answer was graded against, and where it lives in the course.
+            "bank_question": chunk["interview"]["question"],
+            "module": (chunk.get("metadata") or {}).get("module", ""),
             "topic": target.get("topic", ""),
             "hits": [p for p, v in zip(points, verdicts) if v == "hit"],
             "partials": [p for p, v in zip(points, verdicts) if v == "partial"],

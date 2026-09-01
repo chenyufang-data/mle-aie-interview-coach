@@ -711,20 +711,41 @@ against real interview outcomes.
       response terminates with an empty `is_final: true` chunk). Fixed +
       fake-websocket regression test. Since decision 9 Level 1 is an
       OPTIONAL comparator, no longer on the recommended path
-- [ ] barge-in scripted probe: the mechanism is verified end to end (a
-      fault-injection run produced `interrupted` + clean spoken-prefix
-      recovery), but the probe cannot reliably hit the fake engine's ~1 s
-      speaking window; re-probe under real LLM turns (3–8 s windows)
+- [x] barge-in scripted probe RESOLVED (2026-09-01): fault injection had
+      verified the mechanism; the fake engine's ~1 s speaking window
+      defeated the scripted probe, so it re-ran under REAL LLM turns
+      (`loop_eval.py --llm`: real server, paid key, DeepSeek turns,
+      ~$0.01) — interrupted mid-question in 0.32 s, `via: interrupted`,
+      clean spoken-prefix recovery. The barge_llm row also re-confirms
+      the live-LLM smoke: first-audio 2.28 s end to end, cut-off 0/3
 
-**Phase 3 — polish and portfolio**
-- [ ] resume-analysis cache (user request 2026-08-31): hash-keyed
-      server-side cache of `/api/mock/roles` and `/api/mock/start` results
-      in `data/mock_cache/` (gitignored — resumes are personal), so repeat
-      practice across roles skips the re-analysis wait and the LLM spend;
-      a "fresh plan" bypass for new questions on the same role. Pairs with
-      the prompt-cached materials prefix below
-- [ ] consent-aware opt-in logging; prompt-cached materials prefix
-- [ ] rubric tie-in with prep-doc Q&A; README + interview_prep additions
+**Phase 3 — polish and portfolio** (built + measured 2026-09-01)
+- [x] resume-analysis cache (user request 2026-08-31):
+      coach/mock/plan_cache.py — content-hash cache of roles/plan results
+      in `data/mock_cache/` (gitignored; capped 200 entries; the fake
+      engine is never cached so CI/harness leave nothing behind); the
+      mock page's "fresh analysis" checkbox bypasses; responses carry
+      `cached` so the UI says when setup was instant
+- [x] consent-aware opt-in logging: report requests with `log_consent`
+      (UI checkbox, default OFF — stricter than the practice logs,
+      because plan+transcript embed resume-derived content) append to
+      `data/sessions/mock_sessions.jsonl`; the per-user log flag vetoes
+- [x] prompt-cached materials prefix, MEASURED (grader/cache_check.py +
+      committed results, ~$0.12 of the authorized Claude spend): the turn
+      shape was already prefix-stable (frozen persona system, append-only
+      history, volatile control message last), so Claude turn calls now
+      mark system + the last HISTORY block — measured second turn: 1,123
+      tokens read from cache, 125-token delta written, full price only on
+      the 374-token tail (≈ -75% turn input cost); DeepSeek's automatic
+      cache measured 512 prefix tokens hit. Found live: `temperature` is
+      a 400 on current Claude models — any Always-Claude turn would have
+      failed; dropped from both Claude chat paths
+- [x] rubric tie-in: kp-verdict rows carry `bank_question` + `chunk_id`;
+      a missed/partial probe renders "practice this exact question" →
+      `/?practice=<chunk_id>`, and the setup page pins its first question
+      to that chunk (`/api/question` accepts `chunk_id`). README updated;
+      interview-prep notes live in the private repo post-split, so the
+      public half of that item is README-level only
 
 **Infra track — private RAG service (§13)**: see the checklist there; it
 runs alongside Phases 1–3 and is the prerequisite for sharing the mock with

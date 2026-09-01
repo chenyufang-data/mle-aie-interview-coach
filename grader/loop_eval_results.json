@@ -910,5 +910,63 @@
     "barge": false
    }
   ]
+ },
+ "barge_llm": {
+  "summary": {
+   "backend": "barge_llm",
+   "answers": 3,
+   "wer": 0.1132,
+   "occurrences": 6,
+   "ter_strict": 0.0,
+   "ter_lenient": 0.0,
+   "stt_p50_s": 0.375,
+   "stt_p95_s": 1.634,
+   "first_audio_p50_s": 2.284,
+   "first_audio_p95_s": 2.284,
+   "cutoff_rate": 0.0,
+   "barge_in": {
+    "ok": true,
+    "stop_s": 0.32,
+    "via": "interrupted"
+   },
+   "damage": {
+    "graded": 2,
+    "moved_ge1": 0,
+    "rate": 0.0
+   },
+   "measured_at": "2026-09-01 15:31"
+  },
+  "per_answer": [
+   {
+    "id": "ans_18",
+    "chunk_id": "11_categorical_features__08_pipeline_scores_leakage_overfit",
+    "ref_text": "The pipeline discipline is right, the vectorizer is fit on train and only applied to test, so it isn't a leakage bug; it's overfitting driven by high cardinality. The ingredient tokens are essentially unique IDs, giving ~1858 sparse features, and an unregularized linear model memorizes coefficients for train-specific tokens that don't generalize.",
+    "hyp_text": "The pipeline de-simpline is right. The vector riser is fit untrue and only applied to test, so it is a leakage bug. It's overfitting driven by high catenality, and the ingredient tokens are essentially unique IDs, giving about 1,858 sparse features, And an unregularized linear model memorizes coefficients for train-specific tokens that don't generalize.",
+    "wer": 0.2264,
+    "stt_s": 1.634,
+    "cut_during_pause": false,
+    "barge": false
+   },
+   {
+    "id": "ans_16",
+    "chunk_id": "19_logistic_regression_proba__01_temporal_train_test_split",
+    "ref_text": "Whenever the data is temporal and you will deploy the model to predict future events. A random split lets rows from the future land in the training set, which leaks information that wouldn't be available at prediction time and inflates your metrics. A time-based split reproduces the real task, exposes distribution drift/non-stationarity, and gives an honest estimate of deployment performance. It's essentially the idea behind time-series cross-validation.",
+    "hyp_text": "Whenever the data is temporal and you will deploy the model to predict future events, a random split lets rows from the feature land in the training set, which leaks the information that wouldn't be available at prediction time and inflates your metrics. A time-based split reproduces the real task, exposes distribution drift or non-stationarity, and gives an honest estimate of deployment performance. It's essentially the idea behind time series cross-validation.",
+    "wer": 0.0417,
+    "stt_s": 0.344,
+    "cut_during_pause": false,
+    "barge": true
+   },
+   {
+    "id": "ans_14",
+    "chunk_id": "05_agent_loop_and_context_engineering__13_prompt_caching",
+    "ref_text": "Prompt caching lets the provider reuse a large, stable prefix instead of reprocessing it, cutting cost and latency on repeat requests. It works by prefix match: everything from the start of the prompt up to the first differing byte is reused, so cache-friendly design puts stable content first - a frozen system prompt, a deterministic tool list - and only appends new content at the end.",
+    "hyp_text": "Prompt caching lets the provider reuse a large, stable prefix instead of reprocessing it, cutting cost and latency on repeat requests. It works by prefix match. Everything from the start of the prompt up to the first differing byte is reused, so cache-friendly design puts stable content first, a frozen system prompt, a deterministic tool list and only appends new content at the end.",
+    "wer": 0.0,
+    "stt_s": 0.375,
+    "cut_during_pause": false,
+    "barge": false
+   }
+  ]
  }
 }

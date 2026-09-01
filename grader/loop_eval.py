@@ -69,11 +69,17 @@ RESUME = ("ML engineer. Built a fraud detection model with LightGBM, evaluated "
           "sklearn grader evaluated by QWK against a Claude teacher.")
 
 
+# --llm mode sends the paid access key from users.json (never printed) so
+# the real server routes turns to the LLM; empty on the --mock server.
+ACCESS_KEY = ""
+
+
 def post(path, body):
     import urllib.request
     req = urllib.request.Request(
         f"http://127.0.0.1:{PORT}{path}", data=json.dumps(body).encode(),
-        headers={"Content-Type": "application/json"}, method="POST")
+        headers={"Content-Type": "application/json",
+                 "X-Access-Key": ACCESS_KEY}, method="POST")
     with urllib.request.urlopen(req, timeout=60) as response:
         return json.loads(response.read().decode())
 
@@ -162,8 +168,9 @@ class SessionDriver:
 
     async def run(self, keyterms, plan, role):
         await self.ws.send(json.dumps({
-            "type": "hello", "access_key": "", "plan": plan, "role": role,
-            "transcript": [], "keyterms": keyterms, "settings": {"speak": True}}))
+            "type": "hello", "access_key": ACCESS_KEY, "plan": plan,
+            "role": role, "transcript": [], "keyterms": keyterms,
+            "settings": {"speak": True}}))
         receiver = asyncio.create_task(self.receiver())
         try:
             await self._run_turns()
@@ -346,7 +353,7 @@ def summarize(backend, drivers):
     return summary, rows
 
 
-async def drive(backend, answers, keyterms):
+async def drive(backend, answers, keyterms, barge_turn=2):
     import websockets
     drivers = []
     # sessions of at most 11 turns (standard length), barge-in test on the
@@ -369,7 +376,8 @@ async def drive(backend, answers, keyterms):
             # Barge on turn 2: the walkthrough question is the longest the
             # fake engine speaks, so the interrupt lands mid-sentence.
             driver = SessionDriver(ws, group,
-                                   barge_on_turn=2 if index == 0 else None)
+                                   barge_on_turn=barge_turn if index == 0
+                                   else None)
             await driver.run(keyterms, start["plan"], role)
             drivers.append(driver)
         print(f"  session {index + 1}/{len(groups)}: {len(driver.rows)} answers")
@@ -384,17 +392,33 @@ def main():
                         help="run without session keyterms (ablation: vendor "
                              "keyterm prompting can degrade general accuracy); "
                              "results land under <backend>_nokt")
+    parser.add_argument("--llm", action="store_true",
+                        help="barge-in probe under REAL LLM turns (3-8 s "
+                             "speaking windows the fake engine cannot offer): "
+                             "server without --mock, paid key from users.json "
+                             "(DeepSeek turns, ~$0.01), first 3 answers, one "
+                             "session; results land under barge_llm")
     parser.add_argument("--confirm", action="store_true")
     args = parser.parse_args()
-    label = args.backend + ("_nokt" if args.no_keyterms else "")
+    label = "barge_llm" if args.llm \
+        else args.backend + ("_nokt" if args.no_keyterms else "")
 
     if args.backend in CLOUD_SPEEDS and "LOOP_EVAL_SPEED" not in os.environ:
         globals()["STREAM_SPEED"] = CLOUD_SPEEDS[args.backend]
 
     answers = load_answers()
+    if args.llm:
+        data = json.loads((BASE_DIR / "users.json").read_text(encoding="utf-8-sig"))
+        globals()["ACCESS_KEY"] = next(
+            (key for key, entry in data.items()
+             if isinstance(entry, dict) and entry.get("tier") == "paid"), "")
+        if not ACCESS_KEY:
+            print("no paid key in users.json - cannot run the --llm probe")
+            return
+        answers = answers[:3]
     total_seconds = sum(answer["seconds"] for answer in answers)
     print(f"{len(answers)} scripted answers, {total_seconds / 60:.1f} min of audio, "
-          f"backend {args.backend}")
+          f"backend {args.backend}{' + real LLM turns' if args.llm else ''}")
     if args.backend == "elevenlabs":
         est = total_seconds / 3600 * 0.44 + 0.05   # realtime STT + Flash TTS
         print(f"estimated ElevenLabs cost: ~${est:.2f}")
@@ -417,9 +441,11 @@ def main():
     # stack's per-sentence warnings and freezes the server mid-print.
     log_path = BASE_DIR / "data" / "loop_eval_server.log"
     log_path.parent.mkdir(parents=True, exist_ok=True)
+    server_cmd = [PY, "server.py", "--voice"] if args.llm \
+        else [PY, "server.py", "--mock", "--voice"]
     with log_path.open("w", encoding="utf-8") as log:
         server_proc = subprocess.Popen(
-            [PY, "server.py", "--mock", "--voice"], cwd=str(BASE_DIR), env=env,
+            server_cmd, cwd=str(BASE_DIR), env=env,
             stdout=log, stderr=subprocess.STDOUT)
         try:
             wait_port(PORT)
