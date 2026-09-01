@@ -677,19 +677,39 @@ against real interview outcomes.
       answers survived — 68% WER until segments were accumulated). Under
       the rule with this as the closest Level-1 proxy, **Level 2 stays
       main usage**: its grader damage beats the cloud path's
+- [ ] Deepgram row: the vendor decision (§10 decision 9, 2026-08-31) makes
+      Deepgram the recommended cloud stack — Nova-3 streaming STT (keyterm
+      prompting takes the policy-50 list) + Aura-2 TTS behind
+      `AUDIO_BACKEND=deepgram` (`STT_BACKEND`/`TTS_BACKEND` split the
+      bundle), Nova-3 batch + the capped-100 keyterm policy as the
+      final-transcript fallback. Built and unit-tested, key in `.env`;
+      UNMEASURED until `grader/loop_eval.py --backend deepgram --confirm`
+      (~$0.20) writes its equivalence row
 - [ ] Level 1 live run: sidecar + tunnel + page + engine are all wired and
       config-verified (engine created; `asr.keywords` and patient turn
       accepted; quirk: English agents take eleven_flash_v2 — v2_5 is a
       400 on update and a 500 inside create). `tools/level1_up.py` brings
       the tunnel + engine config up in one command and the mock page has
       the "Level 1 — hosted voice" mode; the session itself needs a human
-      speaking. The blind TTS preference test rides on that session
+      speaking. The blind TTS preference test rides on that session.
+      First live try 2026-08-31: silent while self-advancing — the sidecar
+      violated two upstream rules (`agent_response.event_id` must ECHO the
+      answered user_transcript's id, ElevenLabs discards mismatches; every
+      response terminates with an empty `is_final: true` chunk). Fixed +
+      fake-websocket regression test. Since decision 9 Level 1 is an
+      OPTIONAL comparator, no longer on the recommended path
 - [ ] barge-in scripted probe: the mechanism is verified end to end (a
       fault-injection run produced `interrupted` + clean spoken-prefix
       recovery), but the probe cannot reliably hit the fake engine's ~1 s
       speaking window; re-probe under real LLM turns (3–8 s windows)
 
 **Phase 3 — polish and portfolio**
+- [ ] resume-analysis cache (user request 2026-08-31): hash-keyed
+      server-side cache of `/api/mock/roles` and `/api/mock/start` results
+      in `data/mock_cache/` (gitignored — resumes are personal), so repeat
+      practice across roles skips the re-analysis wait and the LLM spend;
+      a "fresh plan" bypass for new questions on the same role. Pairs with
+      the prompt-cached materials prefix below
 - [ ] consent-aware opt-in logging; prompt-cached materials prefix
 - [ ] rubric tie-in with prep-doc Q&A; README + interview_prep additions
 
@@ -721,6 +741,16 @@ Decisions:
    (needed for a public demo and browser voice on EC2). Both can coexist.
 8. Private data storage: the private git repository (now) vs a versioned S3
    bucket (when data outgrows git or others need deploy-time access).
+9. Audio vendor (2026-08-31; supersedes the ElevenLabs framing of 1 and 4):
+   the user dropped the ElevenLabs-application consideration — "just
+   choose better options". **Deepgram** is the recommended cloud vendor:
+   Nova-3 streaming/batch STT (first-class keyterm prompting, ~$0.008/min)
+   + Aura-2 TTS, one key (`DEEPGRAM_API_KEY`, ~$200 signup credit).
+   ElevenLabs stays as the measured legacy row until its ~$7.85 balance
+   runs out; Scribe batch + full lexicon remains the final-transcript
+   default while its key exists (the measured Phase 0 winner), `FINAL_STT`
+   overrides. Hosted Level 1 is not re-bought elsewhere: the DIY loop
+   already beat it on grader damage.
 
 Verify against DeepSeek docs before Phase 1: the streaming (`stream: true`,
 SSE) path for the OpenAI-compatible endpoint — `call_deepseek` is currently
@@ -747,6 +777,12 @@ a Speech Engine server never learns how much of its question was actually
 spoken, while the DIY loop knows exactly (sentence `played` acks). Also:
 `ws_url` must be publicly reachable, so a local Level 1 session needs a
 tunnel. Both findings push the expected main usage further toward Level 2.
+Live addendum 2026-08-31: two more upstream rules, learned when the first
+Level 1 session sat silent — `agent_response.event_id` must echo the
+answered user_transcript's id (their barge-in correlation key; mismatches
+are silently discarded), and every response terminates with an
+empty-content `is_final: true` chunk. Both in coach/voice/sidecar.py with
+a fake-websocket regression test.
 
 ## 11. Risks and mitigations
 
@@ -762,7 +798,9 @@ tunnel. Both findings push the expected main usage further toward Level 2.
 - HTTPS for the microphone → local runs for prep; public demo waits on the
   domain/HTTPS item.
 - Personal data (resume, voice) → client-side by default; logging opt-in;
-  ElevenLabs sees the audio in the live path (state this in the UI).
+  the cloud audio vendor (Deepgram or ElevenLabs) sees the audio on cloud
+  backends (state this in the UI); the local backend keeps audio
+  on-machine.
 
 ## 12. Next-session start checklist
 
