@@ -4,7 +4,8 @@ import json
 from datetime import datetime
 
 from coach import config
-from coach.config import FREE_SESSIONS_PATH, REAL_SESSIONS_PATH
+from coach.config import (FREE_SESSIONS_PATH, MOCK_SESSIONS_PATH,
+                          REAL_SESSIONS_PATH)
 from coach.llm import engine_model
 
 
@@ -39,6 +40,36 @@ def log_real_session(data, result, user=None, engine=None):
             handle.write(json.dumps(record, ensure_ascii=False) + "\n")
     except Exception as exc:
         print(f"Warning: could not log session ({exc})")
+
+
+def log_mock_session(data, result, user=None, engine=None):
+    """Phase 3 mock-interview logging - OPT-IN, unlike the practice logs:
+    nothing is written unless the request itself carries log_consent (the
+    UI checkbox, default off), because the plan and transcript embed
+    resume-derived content. The per-user log flag still vetoes. Returns
+    whether a record was written, so the response can say so."""
+    if not data.get("log_consent"):
+        return False
+    if user is not None and not user.get("log", True):
+        return False
+    try:
+        record = {
+            "timestamp": datetime.now().isoformat(timespec="seconds"),
+            "user": (user or {}).get("name", "anonymous"),
+            "report_engine": engine,
+            "role": data.get("role"),
+            "settings": (data.get("plan") or {}).get("settings"),
+            "plan": data.get("plan"),
+            "transcript": data.get("transcript"),
+            "report": result,
+        }
+        MOCK_SESSIONS_PATH.parent.mkdir(parents=True, exist_ok=True)
+        with MOCK_SESSIONS_PATH.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(record, ensure_ascii=False) + "\n")
+        return True
+    except Exception as exc:
+        print(f"Warning: could not log mock session ({exc})")
+        return False
 
 
 def log_free_session(data, result, user, reason):

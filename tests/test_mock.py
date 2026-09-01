@@ -174,6 +174,74 @@ def test_free_tier_refused():
         config.MODE, users.TIERS_ENABLED = original_mode, original_tiers
 
 
+def test_plan_cache():
+    """Phase 3 setup cache: roundtrip, key sensitivity, fake never cached,
+    trim caps the directory."""
+    import importlib
+    import os
+    import tempfile
+
+    from coach.mock import plan_cache
+    old = os.environ.get("MOCK_CACHE_DIR")
+    os.environ["MOCK_CACHE_DIR"] = tempfile.mkdtemp()
+    try:
+        importlib.reload(plan_cache)
+        assert plan_cache.get("roles", "flash", RESUME, "") is None
+        plan_cache.put("roles", "flash", {"roles": [{"title": "MLE"}]}, RESUME, "")
+        assert plan_cache.get("roles", "flash", RESUME, "") == \
+            {"roles": [{"title": "MLE"}]}
+        # any input or engine change misses
+        assert plan_cache.get("roles", "flash", RESUME + "x", "") is None
+        assert plan_cache.get("roles", "claude", RESUME, "") is None
+        # the fake engine is never cached - CI and the harness run on it
+        # and must not leave files behind
+        plan_cache.put("roles", "fake", {"roles": []}, RESUME, "")
+        assert plan_cache.get("roles", "fake", RESUME, "") is None
+        assert len(list(plan_cache.CACHE_DIR.glob("*.json"))) == 1
+        plan_cache.put("plan", "flash", {"probe_targets": []},
+                       RESUME, "", ROLE, None, {})
+        assert len(list(plan_cache.CACHE_DIR.glob("*.json"))) == 2
+        plan_cache.trim(limit=1)
+        assert len(list(plan_cache.CACHE_DIR.glob("*.json"))) == 1
+    finally:
+        if old is None:
+            os.environ.pop("MOCK_CACHE_DIR", None)
+        else:
+            os.environ["MOCK_CACHE_DIR"] = old
+        importlib.reload(plan_cache)
+
+
+def test_mock_session_log():
+    """Phase 3 opt-in logging: nothing without log_consent, one JSONL row
+    with it, and the per-user log flag still vetoes."""
+    import json
+    import tempfile
+
+    from coach import sessions
+    tmp = Path(tempfile.mkdtemp()) / "mock_sessions.jsonl"
+    old = sessions.MOCK_SESSIONS_PATH
+    sessions.MOCK_SESSIONS_PATH = tmp
+    try:
+        data = {"role": ROLE, "plan": {"settings": {"length": "short"}},
+                "transcript": [{"turn": 1, "question": "q", "answer": "a"}]}
+        assert sessions.log_mock_session(data, {"call": "hire"},
+                                         user=None, engine="fake") is False
+        assert not tmp.exists()
+        data["log_consent"] = True
+        assert sessions.log_mock_session(data, {"call": "hire"},
+                                         user={"name": "u"}, engine="fake") is True
+        rows = [json.loads(line)
+                for line in tmp.read_text(encoding="utf-8").splitlines()]
+        assert len(rows) == 1 and rows[0]["user"] == "u"
+        assert rows[0]["report"] == {"call": "hire"}
+        assert rows[0]["settings"] == {"length": "short"}
+        assert sessions.log_mock_session(
+            data, {}, user={"name": "u", "log": False}) is False
+        assert len(tmp.read_text(encoding="utf-8").splitlines()) == 1
+    finally:
+        sessions.MOCK_SESSIONS_PATH = old
+
+
 if __name__ == "__main__":
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):

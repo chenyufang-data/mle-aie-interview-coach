@@ -57,7 +57,7 @@ for (const id of ["resume", "jd", "jdTemplate", "style", "length", "accessKey", 
   "reportView", "phaseBadge", "turnBadge", "engineBadge", "stateBadge", "latencyBadge",
   "endBtn", "chatLog", "answerBox", "sendBtn", "dictateBtn", "interviewStatus",
   "reportBody", "dlReport", "dlTranscript", "againBtn", "pageTitle", "voiceMode",
-  "recordAnswers", "voiceCaps", "answerArea"]) {
+  "recordAnswers", "voiceCaps", "answerArea", "freshPlan", "saveSession"]) {
   els[id] = document.querySelector(`#${id}`);
 }
 
@@ -163,13 +163,14 @@ async function detectRoles() {
   els.setupStatus.textContent = "Analyzing the resume…";
   try {
     const result = await postJson("/api/mock/roles", {
-      resume, jd_text: els.jd.value.trim(),
+      resume, jd_text: els.jd.value.trim(), fresh: els.freshPlan.checked,
     });
     state.roles = result.roles || [];
     state.profile = result.profile || null;
     renderRoleCards();
     els.rolesArea.hidden = false;
-    els.setupStatus.textContent = `Proposed ${state.roles.length} roles (engine: ${result.engine}). Pick one.`;
+    els.setupStatus.textContent = `Proposed ${state.roles.length} roles (engine: ${result.engine}`
+      + `${result.cached ? ", cached — instant" : ""}). Pick one.`;
   } catch (error) {
     els.setupStatus.textContent = error.message;
   } finally {
@@ -236,6 +237,7 @@ async function startInterview() {
       role,
       project,
       settings: { style: els.style.value, length: els.length.value, voice: voice.mode },
+      fresh: els.freshPlan.checked,
     });
     state.plan = result.plan;
     state.jdText = result.jd_text;
@@ -246,9 +248,10 @@ async function startInterview() {
     els.voiceMode.disabled = true;
     showView("interview");
     els.pageTitle.textContent = `${role.title} — ${role.level || ""}`;
-    if (state.jdIsDefault) {
-      els.interviewStatus.textContent = "Running on a default JD template (no JD pasted).";
-    }
+    const notes = [];
+    if (state.jdIsDefault) notes.push("Running on a default JD template (no JD pasted).");
+    if (result.cached) notes.push("Plan loaded from cache — instant; tick “fresh analysis” on setup for new questions.");
+    if (notes.length) els.interviewStatus.textContent = notes.join(" ");
     if (voice.mode === "level1") {
       els.answerArea.hidden = true;   // the hosted loop owns audio + turns
       await startLevel1();
@@ -719,6 +722,7 @@ async function buildReport(early) {
       plan: state.plan,
       role: state.selectedRole,
       transcript: state.transcript,
+      log_consent: els.saveSession.checked,
     });
     state.report = result;
     renderReport(result);

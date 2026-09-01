@@ -191,4 +191,7 @@ def chat(system, messages, engine, thinking=False, max_tokens=700):
     if engine == "fake":
         raise RuntimeError("fake engine has no free-form chat; use fake_turn")
     from coach.llm import call_chat
-    return call_chat(system, messages, engine, thinking=thinking, max_tokens=max_tokens)
+    # cache=True: interviewer turns share the frozen persona + append-only
+    # history prefix, the shape prompt caching pays for (plan section 5c).
+    return call_chat(system, messages, engine, thinking=thinking,
+                     max_tokens=max_tokens, cache=True)

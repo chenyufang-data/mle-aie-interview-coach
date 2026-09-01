@@ -6,9 +6,9 @@ refused with a clear message — the mock needs a real LLM (plan §7d) — while
 --mock mode serves the deterministic offline demo engine.
 """
 
-from coach import grading, users
+from coach import grading, sessions, users
 from coach.mock import engine as engines
-from coach.mock import planning, report, turns
+from coach.mock import plan_cache, planning, report, turns
 from coach.mock.templates import catalog
 from coach.web import json_response
 
@@ -71,8 +71,14 @@ def handle_post(handler, path, data):
                           {"error": "Paste the resume text first (resume_parser.py "
                                     "turns a PDF or .docx into text)."})
             return
-        result = planning.propose_roles(resume, (data.get("jd_text") or "").strip(), engine)
-        result["engine"] = engine
+        jd_text = (data.get("jd_text") or "").strip()
+        result = None if data.get("fresh") \
+            else plan_cache.get("roles", engine, resume, jd_text)
+        hit = result is not None
+        if result is None:
+            result = planning.propose_roles(resume, jd_text, engine)
+            plan_cache.put("roles", engine, result, resume, jd_text)
+        result = dict(result, engine=engine, cached=hit)
         json_response(handler, 200, result)
         return
 
@@ -83,13 +89,21 @@ def handle_post(handler, path, data):
             json_response(handler, 400, {"error": "resume and role are required."})
             return
         jd_text, jd_is_default = planning.resolve_jd(data)
-        plan = planning.build_plan(resume, jd_text, role, data.get("project"),
-                                   data.get("settings") or {}, engine)
+        cache_parts = (resume, jd_text, role, data.get("project"),
+                       data.get("settings") or {})
+        plan = None if data.get("fresh") \
+            else plan_cache.get("plan", engine, *cache_parts)
+        hit = plan is not None
+        if plan is None:
+            plan = planning.build_plan(resume, jd_text, role, data.get("project"),
+                                       data.get("settings") or {}, engine)
+            plan_cache.put("plan", engine, plan, *cache_parts)
         state = {"plan": plan, "role": role, "transcript": []}
         first = turns.next_turn(state, engine)
         json_response(handler, 200, {"plan": plan, "jd_text": jd_text,
                                      "jd_is_default": jd_is_default,
                                      "turn": first, "engine": engine,
+                                     "cached": hit,
                                      "total_turns": turns.total_turns(
                                          plan["settings"]["length"])})
         return
@@ -112,6 +126,8 @@ def handle_post(handler, path, data):
             grading.load_grader()  # kp verdicts want the artifact even in Claude mode
         result = report.build_report(data, report_engine)
         result["engine"] = report_engine
+        result["logged"] = sessions.log_mock_session(data, result, user,
+                                                     report_engine)
         json_response(handler, 200, result)
         return
 

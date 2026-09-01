@@ -165,7 +165,8 @@ class SidecarSession:
             from coach.llm import call_chat_stream
             try:
                 for delta in call_chat_stream(system, messages, self.engine,
-                                              thinking=False, max_tokens=400):
+                                              thinking=False, max_tokens=400,
+                                              cache=True):
                     loop.call_soon_threadsafe(queue.put_nowait, ("delta", delta))
                 loop.call_soon_threadsafe(queue.put_nowait, ("end", None))
             except Exception as exc:

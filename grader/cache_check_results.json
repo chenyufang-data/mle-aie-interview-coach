@@ -1,0 +1,47 @@
+{
+ "deepseek": {
+  "rows": [
+   {
+    "seconds": 1.06,
+    "question": "You mentioned the threshold was tuned against a cost matrix the risk team signed",
+    "engine": "deepseek",
+    "prompt_tokens": 951,
+    "cache_hit": 512,
+    "cache_miss": 439
+   },
+   {
+    "seconds": 1.47,
+    "question": "What breaks first when traffic doubles?",
+    "engine": "deepseek",
+    "prompt_tokens": 1049,
+    "cache_hit": 512,
+    "cache_miss": 537
+   }
+  ],
+  "cache_working": true,
+  "detail": "second call prompt_cache_hit_tokens=512"
+ },
+ "claude": {
+  "rows": [
+   {
+    "seconds": 2.27,
+    "question": "How was the decision threshold actually chosen from that cost matrix?",
+    "engine": "claude",
+    "input_tokens": 374,
+    "cache_read": 0,
+    "cache_write": 1123
+   },
+   {
+    "seconds": 2.63,
+    "question": "You put the cost numbers into that matrix - where did the actual dollar values f",
+    "engine": "claude",
+    "input_tokens": 374,
+    "cache_read": 1123,
+    "cache_write": 125
+   }
+  ],
+  "cache_working": true,
+  "detail": "second call cache_read_input_tokens=1123"
+ },
+ "measured_at": "2026-09-01 15:24"
+}

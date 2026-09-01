@@ -14,6 +14,44 @@ from coach.prompts import SYSTEM_PROMPT
 
 _client = None
 
+# Usage of the most recent chat call, engine-labeled, incl. the cache
+# counters (Anthropic: cache_read/creation_input_tokens; DeepSeek:
+# prompt_cache_hit/miss_tokens). grader/cache_check.py measures the
+# prompt-cache design against these; they are the only ground truth
+# that caching is actually working.
+LAST_USAGE = {}
+
+
+def _record_usage(engine, **fields):
+    LAST_USAGE.clear()
+    LAST_USAGE["engine"] = engine
+    LAST_USAGE.update({k: v for k, v in fields.items() if v is not None})
+
+
+def _cache_marked(system, messages):
+    """Claude prompt-cache breakpoints for the interviewer turn shape
+    (plan section 5c; placement per the prefix-match contract):
+
+    system (the frozen persona) and the transcript history are the stable,
+    append-only prefix; the [Interview control] instruction in the LAST
+    message changes every turn and never recurs, so a breakpoint there
+    would be a pure write surcharge. Mark the system block and the last
+    HISTORY block instead - each turn then reads the previous turn's
+    entry and writes only the newly appended Q&A. (Entries below the
+    model's ~1k-token minimum silently don't cache; with the persona plus
+    a few real answers the prefix crosses it early in a session.)"""
+    system_blocks = [{"type": "text", "text": system,
+                     "cache_control": {"type": "ephemeral"}}]
+    marked = list(messages)
+    if len(marked) >= 2:
+        last_history = dict(marked[-2])
+        content = last_history.get("content")
+        if isinstance(content, str):
+            last_history["content"] = [{"type": "text", "text": content,
+                                        "cache_control": {"type": "ephemeral"}}]
+            marked[-2] = last_history
+    return system_blocks, marked
+
 
 def get_api_key():
     for name in ("ANTHROPIC_API_KEY", "ANTHROPIC_KEY", "API_KEY"):
@@ -128,7 +166,8 @@ def call_deepseek(user_prompt, schema):
     raise RuntimeError(f"DeepSeek returned malformed JSON twice ({last_error})")
 
 
-def call_chat(system, messages, engine, thinking=False, max_tokens=700, temperature=0.7):
+def call_chat(system, messages, engine, thinking=False, max_tokens=700,
+              temperature=0.7, cache=False):
     """Plain-text chat, for the mock interviewer's conversational turns.
 
     Unlike call_model there is no output schema: the turn protocol wants
@@ -173,17 +212,29 @@ def call_chat(system, messages, engine, thinking=False, max_tokens=700, temperat
                 body = json.loads(response.read().decode("utf-8"))
         except urlerror.URLError as exc:
             raise RuntimeError(f"Could not reach the DeepSeek API ({exc})") from exc
+        usage = body.get("usage") or {}
+        _record_usage("deepseek",
+                      prompt_tokens=usage.get("prompt_tokens"),
+                      cache_hit=usage.get("prompt_cache_hit_tokens"),
+                      cache_miss=usage.get("prompt_cache_miss_tokens"))
         return (body["choices"][0]["message"].get("content") or "").strip()
+    if cache:
+        system, messages = _cache_marked(system, messages)
+    # No temperature: sampling params are rejected (400) on current Claude
+    # models - found live by grader/cache_check.py.
     response = get_client().messages.create(
         model=os.environ.get("ANTHROPIC_MODEL", DEFAULT_MODEL),
         max_tokens=max_tokens if not thinking else max(max_tokens, 4000),
         system=system,
         thinking={"type": "adaptive"} if thinking else {"type": "disabled"},
-        temperature=temperature,
         messages=messages,
     )
     if response.stop_reason == "refusal":
         raise RuntimeError("The model declined this request.")
+    _record_usage("claude",
+                  input_tokens=response.usage.input_tokens,
+                  cache_read=response.usage.cache_read_input_tokens,
+                  cache_write=response.usage.cache_creation_input_tokens)
     return next((block.text for block in response.content if block.type == "text"), "").strip()
 
 
@@ -223,7 +274,7 @@ def _sse_events(lines):
 
 
 def call_chat_stream(system, messages, engine, thinking=False, max_tokens=700,
-                     temperature=0.7):
+                     temperature=0.7, cache=False):
     """call_chat, streamed: yields text deltas as they arrive.
 
     The voice loop pipes these through the sentence chunker to TTS so the
@@ -240,6 +291,9 @@ def call_chat_stream(system, messages, engine, thinking=False, max_tokens=700,
             "max_tokens": max_tokens,
             "temperature": temperature,
             "stream": True,
+            # The final SSE chunk then carries usage incl. the prompt-cache
+            # hit/miss counters (DeepSeek caches stable prefixes on its own).
+            "stream_options": {"include_usage": True},
         }
         req = urlrequest.Request(
             DEEPSEEK_URL, data=json.dumps(payload).encode("utf-8"),
@@ -249,6 +303,12 @@ def call_chat_stream(system, messages, engine, thinking=False, max_tokens=700,
         try:
             with urlrequest.urlopen(req, timeout=300) as response:
                 for event in _sse_events(response):
+                    usage = event.get("usage")
+                    if usage:
+                        _record_usage("deepseek",
+                                      prompt_tokens=usage.get("prompt_tokens"),
+                                      cache_hit=usage.get("prompt_cache_hit_tokens"),
+                                      cache_miss=usage.get("prompt_cache_miss_tokens"))
                     for choice in event.get("choices") or []:
                         piece = (choice.get("delta") or {}).get("content")
                         if piece:
@@ -275,14 +335,21 @@ def call_chat_stream(system, messages, engine, thinking=False, max_tokens=700,
         except urlerror.URLError as exc:
             raise RuntimeError("Could not reach Ollama at localhost:11434.") from exc
         return
+    if cache:
+        system, messages = _cache_marked(system, messages)
+    # No temperature here either (400 on current Claude models).
     with get_client().messages.stream(
         model=os.environ.get("ANTHROPIC_MODEL", DEFAULT_MODEL),
         max_tokens=max_tokens if not thinking else max(max_tokens, 4000),
         system=system,
         thinking={"type": "adaptive"} if thinking else {"type": "disabled"},
-        temperature=temperature,
         messages=messages,
     ) as stream:
         for piece in stream.text_stream:
             if piece:
                 yield piece
+        final = stream.get_final_message()
+        _record_usage("claude",
+                      input_tokens=final.usage.input_tokens,
+                      cache_read=final.usage.cache_read_input_tokens,
+                      cache_write=final.usage.cache_creation_input_tokens)

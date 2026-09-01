@@ -34,6 +34,13 @@ FREE_SESSIONS_PATH = Path(
     os.environ.get("FREE_SESSIONS_PATH", BASE_DIR / "data" / "sessions" / "free_sessions.jsonl")
 )
 
+# Phase 3 mock-interview log - OPT-IN per session, unlike the practice
+# logs above: a mock's plan and transcript embed resume-derived content,
+# so nothing is written unless the request itself consents (plan section 7).
+MOCK_SESSIONS_PATH = Path(
+    os.environ.get("MOCK_SESSIONS_PATH", BASE_DIR / "data" / "sessions" / "mock_sessions.jsonl")
+)
+
 # Freemium tiers (Claude mode only): see coach/users.py.
 USERS_PATH = Path(os.environ.get("USERS_PATH", BASE_DIR / "users.json"))
 USAGE_PATH = Path(os.environ.get("USAGE_PATH", BASE_DIR / "data" / "usage.json"))
