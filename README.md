@@ -1,5 +1,7 @@
 # MLE/AIE Interview Coach
 
+[![tests](https://github.com/chenyufang-data/mle-aie-interview-coach/actions/workflows/tests.yml/badge.svg)](https://github.com/chenyufang-data/mle-aie-interview-coach/actions/workflows/tests.yml)
+
 A local interview practice app for Machine Learning Engineer and AI Engineer interviews,
 powered by Claude and two curated, rubric-grounded question banks with real questions,
 model answers, and grading rubrics:
