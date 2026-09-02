@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>MLE/AIE Interview Coach</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@700;800&family=JetBrains+Mono:wght@600&display=swap">
     <link rel="stylesheet" href="/styles.css">
   </head>
   <body>
@@ -28,13 +29,10 @@
           <span class="secondary-action compact-action">Start a mock</span>
         </a>
 
-        <div class="setup-grid">
-          <section class="setup-card">
-            <div class="section-heading">
-              <p class="eyebrow">Setup</p>
-              <h2>Choose your interview topic</h2>
-            </div>
+        <section class="form-section" aria-label="Interview setup">
+          <h3>Practice a question</h3>
 
+          <div class="field-row">
             <div class="field">
               <label>Track</label>
               <div class="segmented" role="group" aria-label="Role track">
@@ -45,7 +43,6 @@
                 <button class="segment" data-role="EXP" type="button" hidden>Real Qs</button>
               </div>
             </div>
-
             <div class="field">
               <label for="level">Level</label>
               <select id="level">
@@ -55,42 +52,25 @@
                 <option>Staff</option>
               </select>
             </div>
+          </div>
 
+          <div class="field-row">
             <div class="field">
               <label for="topic">Topic</label>
               <select id="topic"></select>
             </div>
-
             <div class="field">
               <label for="focus">Optional focus</label>
               <input id="focus" type="text" placeholder="e.g. fraud ranking, RAG latency">
             </div>
+          </div>
 
-            <button id="startBtn" class="primary-action" type="button">Start</button>
-            <p id="setupStatus" class="inline-status" aria-live="polite"></p>
-          </section>
-
-          <section class="preview-panel" aria-label="Selected session summary">
-            <div class="section-heading">
-              <p class="eyebrow">Session</p>
-              <h2 id="sessionTitle">MLE Mid-level</h2>
-            </div>
-            <dl class="session-list">
-              <div>
-                <dt>Track and level</dt>
-                <dd id="summaryTrack">MLE Mid-level</dd>
-              </div>
-              <div>
-                <dt>Topic</dt>
-                <dd id="summaryTopic">ML system design</dd>
-              </div>
-              <div>
-                <dt>Focus</dt>
-                <dd id="summaryFocus">General</dd>
-              </div>
-            </dl>
-          </section>
-        </div>
+          <div class="cta-row">
+            <button id="startBtn" class="primary-action" type="button">Start practice</button>
+            <p id="setupSummary" class="setup-summary">MLE · Mid-level</p>
+          </div>
+          <p id="setupStatus" class="inline-status" aria-live="polite"></p>
+        </section>
       </section>
     </main>
 

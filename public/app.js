@@ -60,10 +60,7 @@ function initSetupPage() {
   const focus = document.querySelector("#focus");
   const startBtn = document.querySelector("#startBtn");
   const setupStatus = document.querySelector("#setupStatus");
-  const sessionTitle = document.querySelector("#sessionTitle");
-  const summaryTrack = document.querySelector("#summaryTrack");
-  const summaryTopic = document.querySelector("#summaryTopic");
-  const summaryFocus = document.querySelector("#summaryFocus");
+  const setupSummary = document.querySelector("#setupSummary");
 
   roleButtons.forEach((button) => {
     button.addEventListener("click", () => {
@@ -164,10 +161,12 @@ function initSetupPage() {
 
   function updateSummary() {
     const isKb = topicSource(topic) === "kb";
-    sessionTitle.textContent = `${state.role} ${level.value}`;
-    summaryTrack.textContent = `${state.role} ${level.value}`;
-    summaryTopic.textContent = isKb ? `${topic.value} (question bank)` : topic.value;
-    summaryFocus.textContent = focus.value.trim() || "General";
+    const parts = [
+      `${state.role} · ${level.value}`,
+      topic.value ? `${topic.value}${isKb ? " (question bank)" : ""}` : "",
+      focus.value.trim(),
+    ].filter(Boolean);
+    setupSummary.textContent = parts.join(" · ");
   }
 
   async function loadKbMeta() {

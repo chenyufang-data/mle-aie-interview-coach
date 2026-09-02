@@ -1,16 +1,18 @@
 ﻿:root {
   color-scheme: light;
-  --ink: #182026;
-  --muted: #5f6d75;
-  --line: #d8dee3;
+  --ink: #1a2229;
+  --muted: #5c6b70;
+  --line: #dce4e1;
   --surface: #ffffff;
   --panel: #f4f7f6;
+  --ground: #eef2f0;
   --green: #176c5f;
   --green-dark: #0e5148;
+  --tint: rgba(23, 108, 95, 0.08);
   --gold: #b06d14;
   --red: #bd3f2f;
   --blue: #2f66b3;
-  --shadow: 0 20px 60px rgba(24, 32, 38, 0.11);
+  --shadow: 0 14px 40px rgba(10, 30, 25, 0.10);
 }
 
 * {
@@ -20,11 +22,24 @@
 body {
   margin: 0;
   min-height: 100vh;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   color: var(--ink);
-  background:
-    linear-gradient(135deg, rgba(23, 108, 95, 0.12), rgba(47, 102, 179, 0.08)),
-    #eef3f1;
+  /* Green-tinted grey ground: white cards get figure/ground contrast from
+     the surface behind them, not from borders alone. */
+  background: var(--ground);
+}
+
+/* Headings and the brand mark carry the display face; body stays on the
+   zero-cost system stack (the Google Fonts link degrades gracefully). */
+h1, h2, h3, .logo-mark {
+  font-family: "Schibsted Grotesk", ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  letter-spacing: -0.015em;
+}
+
+.brand h1 {
+  font-size: 27px;
+  font-weight: 800;
+  margin: 0;
 }
 
 button,
@@ -52,6 +67,21 @@ button:disabled {
   display: grid;
   min-height: calc(100vh - 64px);
   align-items: center;
+  /* Single-column setup since the preview panel retired into a summary line. */
+  width: min(780px, calc(100vw - 32px));
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 640px) {
+  .field-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
 }
 
 .interview-shell {
@@ -60,8 +90,9 @@ button:disabled {
 
 .setup-page,
 .interview-page {
-  background: rgba(255, 255, 255, 0.78);
-  border: 1px solid rgba(216, 222, 227, 0.9);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
   box-shadow: var(--shadow);
 }
 
@@ -215,22 +246,34 @@ h3 {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 24px;
+  margin-bottom: 22px;
   padding: 18px 24px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--panel);
+  border-radius: 12px;
+  background: var(--green);
   text-decoration: none;
 }
 
 .mock-banner:hover {
-  border-color: var(--green);
+  background: var(--green-dark);
+}
+
+.mock-banner .eyebrow {
+  color: #ffffff;
 }
 
 .mock-banner-text {
   margin: 4px 0 0;
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.85);
   font-size: 14px;
+}
+
+.mock-banner .secondary-action {
+  background: #ffffff;
+  color: var(--green-dark);
+}
+
+.mock-banner:hover .secondary-action {
+  background: #ffffff;
 }
 
 .setup-grid {
@@ -345,8 +388,76 @@ textarea:focus {
   background: var(--green);
 }
 
+/* One primary per view, sized to its label - full-width primaries made
+   every action carry the same visual weight. */
 .primary-action {
-  width: 100%;
+  width: auto;
+  min-width: 170px;
+  padding: 0 22px;
+}
+
+.cta-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 22px;
+}
+
+.setup-summary {
+  margin: 0 0 0 auto;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
+.setup-summary b {
+  color: var(--ink);
+}
+
+/* Grouped form sections: dividers inside one card, never nested boxes. */
+.form-section {
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+  margin-top: 20px;
+}
+
+.form-section:first-of-type {
+  border-top: 0;
+  padding-top: 0;
+  margin-top: 0;
+}
+
+.form-section > h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 12px;
+}
+
+.form-section .section-hint {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin: -8px 0 12px;
+}
+
+.advanced-box {
+  border-top: 1px solid var(--line);
+  margin-top: 20px;
+  padding-top: 14px;
+}
+
+.advanced-box summary {
+  cursor: pointer;
+  font-weight: 750;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.advanced-box summary:hover {
+  color: var(--ink);
+}
+
+.advanced-box[open] summary {
+  margin-bottom: 10px;
 }
 
 .compact-action {
@@ -447,11 +558,12 @@ textarea:focus {
 }
 
 .timer-display {
+  font-family: "JetBrains Mono", ui-monospace, Consolas, monospace;
   font-variant-numeric: tabular-nums;
-  font-size: 42px;
+  font-size: 40px;
   line-height: 1;
-  font-weight: 850;
-  color: var(--blue);
+  font-weight: 600;
+  color: var(--green-dark);
 }
 
 .timer-actions {

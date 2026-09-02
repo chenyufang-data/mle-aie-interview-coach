@@ -4,13 +4,14 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Mock Interview | MLE/AIE Interview Coach</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@700;800&family=JetBrains+Mono:wght@600&display=swap">
     <link rel="stylesheet" href="/styles.css">
     <style>
       .mock-shell { width: min(980px, calc(100vw - 32px)); }
       .mock-page { padding: 30px; }
       .mock-two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
       @media (max-width: 760px) { .mock-two { grid-template-columns: 1fr; } }
-      .role-card { border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; margin-bottom: 10px; cursor: pointer; background: #fff; }
+      .role-card { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; cursor: pointer; background: #fff; }
       .role-card.active { border-color: var(--green); box-shadow: 0 0 0 3px rgba(23, 108, 95, 0.12); }
       .role-card h3 { margin: 0 0 4px; font-size: 16px; }
       .role-card p { margin: 0 0 8px; color: var(--muted); font-size: 13px; }
@@ -25,7 +26,7 @@
       .phase-strip { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; }
       .score-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 12px 0; }
       .score-tile { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; background: #fff; }
-      .score-tile b { font-size: 22px; color: var(--green-dark); }
+      .score-tile b { font-size: 22px; color: var(--green-dark); font-family: "JetBrains Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
       .score-tile span { display: block; font-size: 12px; color: var(--muted); font-weight: 750; }
       .report-block { border: 1px solid var(--line); border-radius: 8px; background: #fff; padding: 18px 20px; margin-bottom: 16px; }
       .report-block h3 { margin-top: 0; }
@@ -49,6 +50,7 @@
       /* Checkbox rows: the box sits beside ONE flowing text span - putting
          bare text nodes in a flex label splits them into ragged columns. */
       .check-row { display: flex; gap: 8px; align-items: flex-start; font-weight: 400; }
+      .advanced-box .check-row { margin-top: 10px; }
       .check-row input { width: auto; height: auto; margin-top: 3px; flex-shrink: 0; }
       .upload-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 6px; }
       .upload-row input[type=file] { font-size: 13px; color: var(--muted); }
@@ -70,88 +72,99 @@
 
         <!-- ============================== SETUP ============================== -->
         <div id="setupView" class="view">
-          <div class="mock-two">
-            <div>
-              <div class="field">
-                <label for="resume">Resume &mdash; paste text, or upload a file</label>
-                <textarea id="resume" placeholder="Paste your resume text here, or upload the file below. It stays on this machine and is sent only to the grading model you choose."></textarea>
-                <div class="upload-row">
-                  <input id="resumeFile" type="file" accept=".pdf,.docx,.txt,.md">
-                  <span id="resumeFileStatus" class="muted-note" aria-live="polite"></span>
+          <section class="form-section">
+            <h3>Your materials</h3>
+            <p class="section-hint">Stays on this machine and is sent only to the grading model you choose.</p>
+            <div class="mock-two">
+              <div>
+                <div class="field">
+                  <label for="resume">Resume &mdash; paste text, or upload a file</label>
+                  <textarea id="resume" placeholder="Paste your resume text here, or upload the file below."></textarea>
+                  <div class="upload-row">
+                    <input id="resumeFile" type="file" accept=".pdf,.docx,.txt,.md">
+                    <span id="resumeFileStatus" class="muted-note" aria-live="polite"></span>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div class="field">
+                  <label for="jd">Job description &mdash; optional</label>
+                  <textarea id="jd" placeholder="Paste or upload the real JD. Leave empty to use a default template for the role you pick."></textarea>
+                  <div class="upload-row">
+                    <input id="jdFile" type="file" accept=".pdf,.docx,.txt,.md">
+                    <span id="jdFileStatus" class="muted-note" aria-live="polite"></span>
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="jdTemplate">Default JD template (when the box above is empty)</label>
+                  <select id="jdTemplate"></select>
                 </div>
               </div>
             </div>
-            <div>
+          </section>
+
+          <section class="form-section">
+            <h3>Interview</h3>
+            <div class="mock-two">
               <div class="field">
-                <label for="jd">Job description (optional &mdash; paste or upload a real one, or pick a default template)</label>
-                <textarea id="jd" placeholder="Paste the JD you are interviewing for. Leave empty to use a default template for the role you pick."></textarea>
-                <div class="upload-row">
-                  <input id="jdFile" type="file" accept=".pdf,.docx,.txt,.md">
-                  <span id="jdFileStatus" class="muted-note" aria-live="polite"></span>
-                </div>
+                <label for="style">Interviewer style</label>
+                <select id="style">
+                  <option value="neutral" selected>Neutral</option>
+                  <option value="friendly">Friendly</option>
+                  <option value="tough">Tough</option>
+                </select>
               </div>
               <div class="field">
-                <label for="jdTemplate">Default JD template (used only when the box above is empty)</label>
-                <select id="jdTemplate"></select>
+                <label for="length">Length</label>
+                <select id="length">
+                  <option value="short">Short (~7 questions)</option>
+                  <option value="standard" selected>Standard (~11 questions)</option>
+                </select>
               </div>
             </div>
-          </div>
+          </section>
 
-          <div class="mock-two">
-            <div class="field">
-              <label for="style">Interviewer style</label>
-              <select id="style">
-                <option value="neutral" selected>Neutral</option>
-                <option value="friendly">Friendly</option>
-                <option value="tough">Tough</option>
-              </select>
+          <section class="form-section">
+            <h3>Voice</h3>
+            <div class="mock-two">
+              <div class="field">
+                <label for="voiceMode">Mode</label>
+                <select id="voiceMode">
+                  <option value="text" selected>Text only &mdash; type your answers</option>
+                  <option value="browser">Browser voice &mdash; dictation + spoken questions</option>
+                  <option value="live">Live voice &mdash; server loop</option>
+                  <option value="level1" disabled>Level 1 &mdash; hosted voice (ElevenLabs Speech Engine)</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="recordAnswers">Final transcript</label>
+                <label class="muted-note check-row">
+                  <input id="recordAnswers" type="checkbox">
+                  <span>record each answer &amp; re-transcribe for the report
+                    <span id="voiceCaps"></span></span>
+                </label>
+              </div>
             </div>
-            <div class="field">
-              <label for="length">Length</label>
-              <select id="length">
-                <option value="short">Short (~7 questions)</option>
-                <option value="standard" selected>Standard (~11 questions)</option>
-              </select>
-            </div>
-          </div>
+          </section>
 
-          <div class="mock-two">
-            <div class="field">
-              <label for="voiceMode">Voice</label>
-              <select id="voiceMode">
-                <option value="text" selected>Text only &mdash; type your answers</option>
-                <option value="browser">Browser voice &mdash; dictation + spoken questions</option>
-                <option value="live">Live voice &mdash; server loop</option>
-                <option value="level1" disabled>Level 1 &mdash; hosted voice (ElevenLabs Speech Engine)</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="recordAnswers">Final transcript</label>
-              <label class="muted-note check-row">
-                <input id="recordAnswers" type="checkbox">
-                <span>record each answer &amp; re-transcribe for the report
-                  <span id="voiceCaps"></span></span>
-              </label>
-            </div>
-          </div>
-          <div class="field">
-            <label for="freshPlan">Setup cache</label>
+          <details class="advanced-box">
+            <summary>Advanced &mdash; setup cache &middot; session log (both off by default)</summary>
             <label class="muted-note check-row">
               <input id="freshPlan" type="checkbox">
               <span>fresh analysis &mdash; skip the cached roles/plan for this resume
                 (cached setup is instant and costs nothing; fresh gives new questions)</span>
             </label>
-          </div>
-          <div class="field">
-            <label for="saveSession">Session log (opt-in)</label>
             <label class="muted-note check-row">
               <input id="saveSession" type="checkbox">
               <span>save this session (plan, transcript, report) to the server's local
                 <code>data/sessions/mock_sessions.jsonl</code> when the report is built
-                &mdash; off by default; nothing is stored server-side without this</span>
+                &mdash; nothing is stored server-side without this</span>
             </label>
+          </details>
+
+          <div class="cta-row">
+            <button id="detectBtn" class="primary-action" type="button">Detect target roles</button>
           </div>
-          <button id="detectBtn" class="primary-action" type="button">Detect target roles</button>
           <p id="setupStatus" class="inline-status" aria-live="polite"></p>
 
           <div id="rolesArea" hidden>
