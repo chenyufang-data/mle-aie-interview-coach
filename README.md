@@ -15,13 +15,13 @@ model answers, and grading rubrics:
   it; without the file the app runs as a two-track install (see
   `rag_exp/README.md`).
 
-Both banks are derived from course material I studied; the public repository
+The two course banks are derived from course material I studied; the public repository
 ships the interview questions, model answers, and rubrics only. The complete
 edition — with each chunk's lesson text and the builder scripts — lives in a
 private repository, and `tools/strip_chunks.py` regenerates the public banks
 from it (see [Data and privacy](#data-and-privacy)).
 
-Both banks share the same chunk schema (`id` / `interview` / `metadata`), so the
+All banks share the same chunk schema (`id` / `interview` / `metadata`), so the
 server treats them uniformly and routes by track.
 
 The project doubles as an end-to-end LLM + classical-ML case study: rubric-grounded
@@ -196,9 +196,9 @@ http://127.0.0.1:8000
 
 ## Resume files → text
 
-The upcoming mock-interview feature (see `docs/mock_interview_plan.md`) and
-its transcription experiment need your resume as plain text. `resume_parser.py`
-converts PDF and Word files:
+The mock interview (section below; design history in
+`docs/mock_interview_plan.md`) and its transcription experiment need your
+resume as plain text. `resume_parser.py` converts PDF and Word files:
 
 ```powershell
 .venv\Scripts\python resume_parser.py path\to\resume.pdf      # or .docx / .txt / .md

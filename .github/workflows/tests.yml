@@ -24,6 +24,9 @@ jobs:
       # Mock interview: phase machine, turn protocol, metrics, full offline
       # flow on the fake engine (roles -> plan -> turns -> report).
       - run: python tests/test_mock.py
+      # rag_exp ingest, pure parsing/dedupe/chunk helpers on synthetic
+      # fixtures (no spreadsheets, no private bank needed).
+      - run: python tests/test_ingest.py
       # Voice loop, deterministic parts: endpointer state machine, sentence
       # chunker, keyterm policy, SSE parsing, two-transcript report block.
       - run: python tests/test_voice.py

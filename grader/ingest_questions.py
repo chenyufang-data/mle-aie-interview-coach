@@ -360,7 +360,7 @@ def merge_duplicates(candidates, threshold=0.65):
 
 
 # HR-screen questions are a small closed set of intents asked in wildly
-# different words ("Why are you choosing to leave Glodon?" / "What's
+# different words ("Why are you choosing to leave Company X?" / "What's
 # bringing you to Niagara?" / "为什么想离开当前的公司") - exactly what
 # lexical containment misses. Candidates in the same intent merge into the
 # first one seen (the frequency sheet is processed first, so its ranked
