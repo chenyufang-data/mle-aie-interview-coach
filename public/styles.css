@@ -94,6 +94,11 @@ button:disabled {
   border: 1px solid var(--line);
   border-radius: 14px;
   box-shadow: var(--shadow);
+  /* Grid items default to min-width:auto, so one long nowrap string (a
+     saved question) would inflate the whole card past its track instead
+     of letting text-overflow do its job. */
+  min-width: 0;
+  max-width: 100%;
 }
 
 .setup-page {
@@ -346,7 +351,11 @@ textarea:focus {
 
 .segmented {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  /* One equal column per visible track button: two-track installs get
+     1fr 1fr as before, and the optional Real Qs track joins the row
+     instead of wrapping onto its own. */
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
   padding: 3px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -619,6 +628,8 @@ textarea:focus {
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 10px 14px;
+  min-width: 0; /* see .setup-page: never let the question set the width */
+  max-width: 100%;
 }
 
 .saved-open {

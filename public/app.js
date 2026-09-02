@@ -236,7 +236,9 @@ function initSetupPage() {
       open.type = "button";
       open.className = "saved-open";
       open.textContent = entry.question.question;
-      open.title = "Practice this question again";
+      // Rows truncate with an ellipsis; hovering and pausing shows the
+      // full question as the native tooltip.
+      open.title = entry.question.question;
       open.addEventListener("click", () => {
         persistSession({
           role: entry.role,
