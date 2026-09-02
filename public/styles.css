@@ -129,6 +129,32 @@ h3 {
   font-size: 18px;
 }
 
+/* Entry to the mock interview: the setup page is the app's front door,
+   and before this banner the mock lived only behind a typed URL. */
+.mock-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 18px 24px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  text-decoration: none;
+}
+
+.mock-banner:hover {
+  border-color: var(--green);
+}
+
+.mock-banner-text {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
 .setup-grid {
   display: grid;
   grid-template-columns: minmax(300px, 440px) minmax(280px, 1fr);
