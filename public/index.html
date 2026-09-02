@@ -73,11 +73,11 @@
         </section>
 
         <!-- Questions starred during practice (localStorage; app.js hides
-             the section while the list is empty). -->
-        <section class="form-section" id="savedSection" hidden>
-          <h3>Saved questions</h3>
+             the section while the list is empty, collapsed by default). -->
+        <details class="form-section saved-box" id="savedSection" hidden>
+          <summary>Saved questions <span id="savedCount" class="saved-count"></span></summary>
           <div id="savedList" class="saved-list"></div>
-        </section>
+        </details>
       </section>
     </main>
 

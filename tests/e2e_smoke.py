@@ -86,6 +86,13 @@ def main():
 
             page.goto(BASE + "/", wait_until="networkidle")
             page.wait_for_selector("#savedSection:not([hidden])", timeout=5000)
+            assert not page.evaluate(
+                "document.querySelector('#savedSection').open"), \
+                "saved list should start collapsed"
+            assert "(1)" in page.text_content("#savedSection summary"), \
+                "summary lacks the bookmark count"
+            page.click("#savedSection summary")  # expand the disclosure
+            page.wait_for_selector(".saved-row", timeout=3000)
             assert page.locator(".saved-row").count() == 1, "saved row missing"
             meta = page.text_content(".saved-meta")
             assert "scored" in meta, f"saved row lacks the score: {meta!r}"

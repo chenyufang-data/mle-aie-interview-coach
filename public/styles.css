@@ -586,6 +586,27 @@ textarea:focus {
   color: var(--gold);
 }
 
+.saved-box summary {
+  cursor: pointer;
+  font-family: "Schibsted Grotesk", ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.saved-box summary:hover {
+  color: var(--green-dark);
+}
+
+.saved-box[open] summary {
+  margin-bottom: 12px;
+}
+
+.saved-count {
+  color: var(--muted);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
 .saved-list {
   display: grid;
   gap: 8px;

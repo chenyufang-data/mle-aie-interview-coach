@@ -207,12 +207,16 @@ function initSetupPage() {
       // not depend on the HTML and the script being the same version.
       const anchor = document.querySelector(".form-section");
       if (!anchor || !anchor.parentNode) return;
-      section = document.createElement("section");
-      section.className = "form-section";
+      section = document.createElement("details");
+      section.className = "form-section saved-box";
       section.id = "savedSection";
       section.hidden = true;
-      const heading = document.createElement("h3");
-      heading.textContent = "Saved questions";
+      const heading = document.createElement("summary");
+      heading.append("Saved questions ");
+      const count = document.createElement("span");
+      count.id = "savedCount";
+      count.className = "saved-count";
+      heading.appendChild(count);
       listEl = document.createElement("div");
       listEl.id = "savedList";
       listEl.className = "saved-list";
@@ -221,6 +225,8 @@ function initSetupPage() {
     }
     const bookmarks = readBookmarks();
     section.hidden = bookmarks.length === 0;
+    const countEl = document.querySelector("#savedCount");
+    if (countEl) countEl.textContent = `(${bookmarks.length})`;
     listEl.innerHTML = "";
     bookmarks.forEach((entry) => {
       const row = document.createElement("div");
