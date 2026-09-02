@@ -1,4 +1,8 @@
 const STORAGE_KEY = "interviewCoachSession";
+// Declared before the init calls below run: a const declared later in the
+// file is in its temporal dead zone during init, and the resulting
+// ReferenceError was silently eaten by readBookmarks' try/catch.
+const BOOKMARKS_STORAGE = "interviewCoachBookmarks";
 
 // Freemium tiers: requests carry the access key (if any) so the server can
 // route paid keys to Claude and everyone else to the local distilled grader.
@@ -195,9 +199,26 @@ function initSetupPage() {
   Account.onchange = () => loadKbMeta();
 
   function renderSavedQuestions() {
-    const section = document.querySelector("#savedSection");
-    const listEl = document.querySelector("#savedList");
-    if (!section || !listEl) return;
+    let section = document.querySelector("#savedSection");
+    let listEl = document.querySelector("#savedList");
+    if (!section || !listEl) {
+      // Build the section ourselves when the markup is absent (e.g. a
+      // stale cached index.html from before the feature): the list must
+      // not depend on the HTML and the script being the same version.
+      const anchor = document.querySelector(".form-section");
+      if (!anchor || !anchor.parentNode) return;
+      section = document.createElement("section");
+      section.className = "form-section";
+      section.id = "savedSection";
+      section.hidden = true;
+      const heading = document.createElement("h3");
+      heading.textContent = "Saved questions";
+      listEl = document.createElement("div");
+      listEl.id = "savedList";
+      listEl.className = "saved-list";
+      section.append(heading, listEl);
+      anchor.parentNode.insertBefore(section, anchor.nextSibling);
+    }
     const bookmarks = readBookmarks();
     section.hidden = bookmarks.length === 0;
     listEl.innerHTML = "";
@@ -270,6 +291,7 @@ function initInterviewPage() {
   const forceLlm = document.querySelector("#forceLlm");
 
   const saved = readSavedSession();
+  let lastScore = null; // this question's latest grade, for star-after-grading
   const timer = createTimer((elapsed) => {
     const formatted = formatElapsed(elapsed);
     timerDisplay.textContent = formatted;
@@ -339,6 +361,7 @@ function initInterviewPage() {
       wireNextActions(result);
       // A bookmarked question keeps its latest score, so the saved list
       // on the home page reads as a review queue.
+      lastScore = result.overall_score;
       recordBookmarkScore(saved.question, result.overall_score);
       setReady(statusBadge, "Evaluated");
     } catch (error) {
@@ -349,6 +372,7 @@ function initInterviewPage() {
   });
 
   function beginQuestion() {
+    lastScore = null; // a new question must not inherit the previous grade
     renderQuestion(questionCard, saved.question);
     wireBookmarkStar();
     answer.value = "";
@@ -371,7 +395,12 @@ function initInterviewPage() {
       star.title = on ? "Saved - click to remove" : "Save to practice again later";
     };
     paint(isBookmarked(saved.question));
-    star.addEventListener("click", () => paint(toggleBookmark(saved)));
+    star.addEventListener("click", () => {
+      toggleBookmark(saved, lastScore);
+      // Re-read storage so the gold star never lies: if persistence is
+      // blocked (private window, site data off), the star stays empty.
+      paint(isBookmarked(saved.question));
+    });
   }
 
   function wireNextActions(result) {
@@ -507,7 +536,7 @@ function getSessionPayload(state, level, topic, focus) {
 // state, works on the free tier. The full question payload is stored, so a
 // saved question replays without any server call - AI-generated ones
 // included; grading still works because the payload keeps its chunk_id.
-const BOOKMARKS_STORAGE = "interviewCoachBookmarks";
+// (BOOKMARKS_STORAGE is declared at the top of the file with STORAGE_KEY.)
 
 function readBookmarks() {
   try {
@@ -539,7 +568,7 @@ function isBookmarked(question) {
   return readBookmarks().some((b) => b.id === bookmarkId(question));
 }
 
-function toggleBookmark(session) {
+function toggleBookmark(session, score = null) {
   const list = readBookmarks();
   const id = bookmarkId(session.question);
   const at = list.findIndex((b) => b.id === id);
@@ -555,7 +584,8 @@ function toggleBookmark(session) {
     level: session.level,
     topic: session.topic,
     focus: session.focus || "",
-    score: null,
+    // Starring after grading keeps the score already earned this session.
+    score: typeof score === "number" ? score : null,
     savedAt: Date.now(),
   });
   writeBookmarks(list);
