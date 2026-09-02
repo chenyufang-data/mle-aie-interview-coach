@@ -1,10 +1,21 @@
 # Plan — AI Mock Interview, revision 2 (voice as an evaluation problem)
 
-Status: **planned, not started.** Revision 1 (2026-08-10) framed this as a
-feature ("add voice I/O to the coach"). Revision 2 (2026-08-29) reframes it
-around the evaluation problem hiding inside voice — and fixes the models,
-APIs, and vendor (ElevenLabs) before any code. Read §1–§5 before starting;
-§6–§9 carry the implementation detail; §10 lists the decisions still open.
+> **Reader's note.** This is the project's living design document and lab
+> notebook, kept verbatim as decision history: measured results are pasted
+> in as they landed, dated build records sit next to the sections they
+> implement, and "the user" means the author (much of the notebook was
+> written by an AI pair programmer during build sessions). Nothing here is
+> polished for publication — that is the point: every ship/no-ship call
+> below traces to a number, including the negative results.
+
+Status: **built and measured** — Phases 0–3 are complete (text mock, live
+voice with four audio stacks, measured prompt caching, the rag_exp bank);
+the dated build records below each section carry the numbers. Revision 1
+(2026-08-10) framed this as a feature ("add voice I/O to the coach").
+Revision 2 (2026-08-29) reframed it around the evaluation problem hiding
+inside voice — and fixed the models, APIs, and vendor before any code.
+§1–§5 carry the framing; §6–§9 the implementation detail; §10 the
+decision log.
 
 ## 1. The reframing
 

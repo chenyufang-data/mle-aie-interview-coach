@@ -30,6 +30,31 @@ scikit-learn grader that approximates the Claude judge offline — with a measur
 agreement number for every component (see
 [Local ML grader](#local-ml-grader-llm-distillation)).
 
+<p align="center">
+  <img src="docs/img/evaluation.png" width="760"
+       alt="A graded practice answer: rubric hits and gaps, score tiles, a stronger answer, and a follow-up question">
+</p>
+
+## Repository map
+
+```text
+server.py            entrypoint: HTTP server + the voice loop when available
+coach/               backend package (one module per concern)
+  http.py            routes and static serving      kb.py       bank loading/selection
+  llm.py             Claude / DeepSeek / Ollama     grading.py  distilled grader + cascade
+  users.py           freemium access keys           mock/       mock interview (plan, turns, report)
+  voice/             live voice loop: VAD, STT, TTS, barge-in, Level 1 sidecar
+public/              dependency-free vanilla-JS frontend (no build step)
+retrieval.py         BM25 over the banks (evaluated: tests/test_retrieval.py)
+rag_ml/  rag_ai/     question banks, public stripped edition (schema in their READMEs)
+rag_exp/             real gathered interview questions - private bank, README explains
+grader/              training + every measurement script with its committed results
+tests/               offline suite (CI) + a browser e2e smoke (local, Playwright)
+docs/                specs, measured reports, and the design/lab notebook
+docker/              two-service compose deploy (nginx frontend + Python backend)
+data/                personal and runtime data - never committed (see data/README.md)
+```
+
 ## Architecture
 
 Frontend and backend have strictly separated requirements — see
@@ -43,6 +68,11 @@ Nothing corpus-specific is hard-coded in the frontend — module lists come from
 `GET /api/meta`.
 
 ## What it does
+
+<p align="center">
+  <img src="docs/img/home.png" width="640"
+       alt="The setup page: mock-interview banner, track/level/topic picker, saved questions">
+</p>
 
 - Choose an interview track, level, and topic on the setup page.
 - Two question sources in the topic dropdown:
