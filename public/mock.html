@@ -46,6 +46,12 @@
       .dl-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
       textarea.answer-box { min-height: 130px; }
       .view[hidden] { display: none; }
+      /* Checkbox rows: the box sits beside ONE flowing text span - putting
+         bare text nodes in a flex label splits them into ragged columns. */
+      .check-row { display: flex; gap: 8px; align-items: flex-start; font-weight: 400; }
+      .check-row input { width: auto; height: auto; margin-top: 3px; flex-shrink: 0; }
+      .upload-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 6px; }
+      .upload-row input[type=file] { font-size: 13px; color: var(--muted); }
     </style>
   </head>
   <body>
@@ -64,14 +70,22 @@
           <div class="mock-two">
             <div>
               <div class="field">
-                <label for="resume">Resume (paste as text; <code>resume_parser.py</code> converts PDF/.docx)</label>
-                <textarea id="resume" placeholder="Paste your resume text here. It stays on this machine and is sent only to the grading model you choose."></textarea>
+                <label for="resume">Resume &mdash; paste text, or upload a file</label>
+                <textarea id="resume" placeholder="Paste your resume text here, or upload the file below. It stays on this machine and is sent only to the grading model you choose."></textarea>
+                <div class="upload-row">
+                  <input id="resumeFile" type="file" accept=".pdf,.docx,.txt,.md">
+                  <span id="resumeFileStatus" class="muted-note" aria-live="polite"></span>
+                </div>
               </div>
             </div>
             <div>
               <div class="field">
-                <label for="jd">Job description (optional &mdash; paste a real one, or pick a default template)</label>
+                <label for="jd">Job description (optional &mdash; paste or upload a real one, or pick a default template)</label>
                 <textarea id="jd" placeholder="Paste the JD you are interviewing for. Leave empty to use a default template for the role you pick."></textarea>
+                <div class="upload-row">
+                  <input id="jdFile" type="file" accept=".pdf,.docx,.txt,.md">
+                  <span id="jdFileStatus" class="muted-note" aria-live="polite"></span>
+                </div>
               </div>
               <div class="field">
                 <label for="jdTemplate">Default JD template (used only when the box above is empty)</label>
@@ -110,28 +124,28 @@
             </div>
             <div class="field">
               <label for="recordAnswers">Final transcript</label>
-              <label class="muted-note" style="display:flex;gap:8px;align-items:center;min-height:44px;font-weight:400">
-                <input id="recordAnswers" type="checkbox" style="width:auto;height:auto">
-                record each answer &amp; re-transcribe for the report
-                <span id="voiceCaps"></span>
+              <label class="muted-note check-row">
+                <input id="recordAnswers" type="checkbox">
+                <span>record each answer &amp; re-transcribe for the report
+                  <span id="voiceCaps"></span></span>
               </label>
             </div>
           </div>
           <div class="field">
             <label for="freshPlan">Setup cache</label>
-            <label class="muted-note" style="display:flex;gap:8px;align-items:center;font-weight:400">
-              <input id="freshPlan" type="checkbox" style="width:auto;height:auto">
-              fresh analysis &mdash; skip the cached roles/plan for this resume
-              (cached setup is instant and costs nothing; fresh gives new questions)
+            <label class="muted-note check-row">
+              <input id="freshPlan" type="checkbox">
+              <span>fresh analysis &mdash; skip the cached roles/plan for this resume
+                (cached setup is instant and costs nothing; fresh gives new questions)</span>
             </label>
           </div>
           <div class="field">
             <label for="saveSession">Session log (opt-in)</label>
-            <label class="muted-note" style="display:flex;gap:8px;align-items:center;font-weight:400">
-              <input id="saveSession" type="checkbox" style="width:auto;height:auto">
-              save this session (plan, transcript, report) to the server's local
-              <code>data/sessions/mock_sessions.jsonl</code> when the report is built
-              &mdash; off by default; nothing is stored server-side without this
+            <label class="muted-note check-row">
+              <input id="saveSession" type="checkbox">
+              <span>save this session (plan, transcript, report) to the server's local
+                <code>data/sessions/mock_sessions.jsonl</code> when the report is built
+                &mdash; off by default; nothing is stored server-side without this</span>
             </label>
           </div>
           <div class="field">

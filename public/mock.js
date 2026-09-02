@@ -57,7 +57,8 @@ for (const id of ["resume", "jd", "jdTemplate", "style", "length", "accessKey", 
   "reportView", "phaseBadge", "turnBadge", "engineBadge", "stateBadge", "latencyBadge",
   "endBtn", "chatLog", "answerBox", "sendBtn", "dictateBtn", "interviewStatus",
   "reportBody", "dlReport", "dlTranscript", "againBtn", "pageTitle", "voiceMode",
-  "recordAnswers", "voiceCaps", "answerArea", "freshPlan", "saveSession"]) {
+  "recordAnswers", "voiceCaps", "answerArea", "freshPlan", "saveSession",
+  "resumeFile", "resumeFileStatus", "jdFile", "jdFileStatus"]) {
   els[id] = document.querySelector(`#${id}`);
 }
 
@@ -80,6 +81,10 @@ async function init() {
   els.dlTranscript.addEventListener("click", downloadTranscript);
   els.dictateBtn.addEventListener("click", toggleDictation);
   els.voiceMode.addEventListener("change", onVoiceModeChange);
+  els.resumeFile.addEventListener("change",
+    () => parseUpload(els.resumeFile, els.resume, els.resumeFileStatus));
+  els.jdFile.addEventListener("change",
+    () => parseUpload(els.jdFile, els.jd, els.jdFileStatus));
   try {
     const meta = await getJson("/api/mock/templates");
     state.templates = meta.templates;
@@ -131,6 +136,33 @@ function updateVoiceCaps() {
 function authHeaders() {
   const key = (els.accessKey.value || "").trim();
   return key ? { "X-Access-Key": key } : {};
+}
+
+// Resume/JD file upload: the file is parsed server-side into plain text
+// (resume_parser.py; nothing stored) and fills the textarea, which stays
+// the single source of truth for what the interview actually uses.
+async function parseUpload(fileInput, textarea, status) {
+  const file = fileInput.files && fileInput.files[0];
+  if (!file) return;
+  status.textContent = `Parsing ${file.name}…`;
+  try {
+    const file_base64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result).split(",", 2)[1] || "");
+      reader.onerror = () => reject(new Error("could not read the file"));
+      reader.readAsDataURL(file);
+    });
+    const result = await postJson("/api/mock/parse_file", {
+      filename: file.name, file_base64,
+    });
+    textarea.value = result.text;
+    status.textContent = `${file.name} → ${result.words} words`
+      + (result.warning ? ` — ${result.warning}` : "");
+  } catch (error) {
+    status.textContent = `${file.name}: ${error.message}`;
+  } finally {
+    fileInput.value = "";  // re-selecting the same file fires change again
+  }
 }
 
 async function getJson(url) {

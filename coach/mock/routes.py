@@ -57,6 +57,14 @@ def handle_get(handler, path):
 
 
 def handle_post(handler, path, data):
+    if path == "/api/mock/parse_file":
+        # Resume/JD upload -> plain text. Deterministic and entirely local
+        # (resume_parser.py: pypdf for .pdf, stdlib for .docx/.txt/.md), so
+        # it is served before the engine gate - no tier or LLM needed, and
+        # nothing is stored.
+        _parse_file(handler, data)
+        return
+
     try:
         user = users.resolve_user(handler)
         engine = engines.pick_engine(user, force_llm=bool(data.get("force_llm")))
@@ -68,8 +76,8 @@ def handle_post(handler, path, data):
         resume = (data.get("resume") or "").strip()
         if len(resume) < 80:
             json_response(handler, 400,
-                          {"error": "Paste the resume text first (resume_parser.py "
-                                    "turns a PDF or .docx into text)."})
+                          {"error": "Paste the resume text or upload the "
+                                    "file first (at least a few lines)."})
             return
         jd_text = (data.get("jd_text") or "").strip()
         result = None if data.get("fresh") \
@@ -190,6 +198,37 @@ def handle_post(handler, path, data):
         return
 
     json_response(handler, 404, {"error": "Unknown endpoint."})
+
+
+def _parse_file(handler, data):
+    file_b64 = data.get("file_base64") or ""
+    name = data.get("filename") or ""
+    if not file_b64 or not name:
+        json_response(handler, 400,
+                      {"error": "filename and file_base64 are required."})
+        return
+    if len(file_b64) > 14_000_000:  # ~10 MB decoded; resumes are far smaller
+        json_response(handler, 400, {"error": "file too large (10 MB cap)."})
+        return
+    import base64
+
+    from resume_parser import extract_text_from_bytes
+    try:
+        text = extract_text_from_bytes(base64.b64decode(file_b64), name)
+    except ValueError as exc:
+        json_response(handler, 400, {"error": str(exc)})
+        return
+    except Exception as exc:
+        json_response(handler, 500, {"error": f"could not parse {name}: {exc}"})
+        return
+    words = len(text.split())
+    json_response(handler, 200, {
+        "text": text, "words": words,
+        # Same heuristic as the CLI: a scanned/image PDF has no text layer.
+        "warning": ("very little text extracted - a scanned (image-only) PDF "
+                    "has no text layer; export a text PDF or .docx"
+                    if words < 80 else None),
+    })
 
 
 def _default_report_engine(turn_engine):
