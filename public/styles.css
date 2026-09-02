@@ -156,6 +156,12 @@ h3 {
   background: rgba(23, 108, 95, 0.08);
 }
 
+/* display:grid below would defeat the hidden attribute's UA display:none,
+   so hidden must win explicitly - the popover opens only from the chip. */
+.account-pop[hidden] {
+  display: none;
+}
+
 .account-pop {
   position: absolute;
   right: 0;
