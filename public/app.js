@@ -194,9 +194,63 @@ function initSetupPage() {
   // module lists when the key changes (the paid/free views can differ).
   Account.onchange = () => loadKbMeta();
 
+  function renderSavedQuestions() {
+    const section = document.querySelector("#savedSection");
+    const listEl = document.querySelector("#savedList");
+    if (!section || !listEl) return;
+    const bookmarks = readBookmarks();
+    section.hidden = bookmarks.length === 0;
+    listEl.innerHTML = "";
+    bookmarks.forEach((entry) => {
+      const row = document.createElement("div");
+      row.className = "saved-row";
+
+      const open = document.createElement("button");
+      open.type = "button";
+      open.className = "saved-open";
+      open.textContent = entry.question.question;
+      open.title = "Practice this question again";
+      open.addEventListener("click", () => {
+        persistSession({
+          role: entry.role,
+          level: entry.level,
+          topic: entry.topic,
+          focus: entry.focus || "",
+          source: entry.question.chunk_id ? "kb" : "ai",
+          question: entry.question,
+          askedChunkIds: entry.question.chunk_id ? [entry.question.chunk_id] : [],
+          createdAt: Date.now(),
+        });
+        window.location.href = "/interview.html";
+      });
+
+      const meta = document.createElement("span");
+      meta.className = "saved-meta";
+      meta.textContent = [
+        entry.role,
+        entry.topic,
+        entry.score != null ? `scored ${entry.score}/10` : "not graded yet",
+      ].filter(Boolean).join(" · ");
+
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "saved-remove";
+      remove.textContent = "✕";
+      remove.title = "Remove from saved questions";
+      remove.addEventListener("click", () => {
+        writeBookmarks(readBookmarks().filter((b) => b.id !== entry.id));
+        renderSavedQuestions();
+      });
+
+      row.append(open, meta, remove);
+      listEl.appendChild(row);
+    });
+  }
+
   populateTopics();
   updateSummary();
   loadKbMeta();
+  renderSavedQuestions();
 }
 
 function initInterviewPage() {
@@ -283,6 +337,9 @@ function initInterviewPage() {
       });
       renderEvaluation(evaluation, result, formatElapsed(timer.elapsed()));
       wireNextActions(result);
+      // A bookmarked question keeps its latest score, so the saved list
+      // on the home page reads as a review queue.
+      recordBookmarkScore(saved.question, result.overall_score);
       setReady(statusBadge, "Evaluated");
     } catch (error) {
       showError(evaluation, error.message);
@@ -293,6 +350,7 @@ function initInterviewPage() {
 
   function beginQuestion() {
     renderQuestion(questionCard, saved.question);
+    wireBookmarkStar();
     answer.value = "";
     updateWordCount(answer, wordCount);
     evaluation.hidden = true;
@@ -302,6 +360,18 @@ function initInterviewPage() {
     timer.start();
     timerToggleBtn.textContent = "Pause";
     setReady(statusBadge, "Answering");
+  }
+
+  function wireBookmarkStar() {
+    const star = questionCard.querySelector("#bookmarkBtn");
+    if (!star) return;
+    const paint = (on) => {
+      star.textContent = on ? "★" : "☆";
+      star.classList.toggle("on", on);
+      star.title = on ? "Saved - click to remove" : "Save to practice again later";
+    };
+    paint(isBookmarked(saved.question));
+    star.addEventListener("click", () => paint(toggleBookmark(saved)));
   }
 
   function wireNextActions(result) {
@@ -432,6 +502,69 @@ function getSessionPayload(state, level, topic, focus) {
   };
 }
 
+// ---------------------------------------------------------------- bookmarks
+// Saved questions live in localStorage, like the access key: no server
+// state, works on the free tier. The full question payload is stored, so a
+// saved question replays without any server call - AI-generated ones
+// included; grading still works because the payload keeps its chunk_id.
+const BOOKMARKS_STORAGE = "interviewCoachBookmarks";
+
+function readBookmarks() {
+  try {
+    return JSON.parse(localStorage.getItem(BOOKMARKS_STORAGE)) || [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function writeBookmarks(list) {
+  try {
+    localStorage.setItem(BOOKMARKS_STORAGE, JSON.stringify(list.slice(0, 100)));
+  } catch (error) {
+    // Storage blocked (private window): the star just won't persist.
+  }
+}
+
+function bookmarkId(question) {
+  return question.chunk_id || `ai:${(question.question || "").slice(0, 80)}`;
+}
+
+function isBookmarked(question) {
+  return readBookmarks().some((b) => b.id === bookmarkId(question));
+}
+
+function toggleBookmark(session) {
+  const list = readBookmarks();
+  const id = bookmarkId(session.question);
+  const at = list.findIndex((b) => b.id === id);
+  if (at >= 0) {
+    list.splice(at, 1);
+    writeBookmarks(list);
+    return false;
+  }
+  list.unshift({
+    id,
+    question: session.question,
+    role: session.role,
+    level: session.level,
+    topic: session.topic,
+    focus: session.focus || "",
+    score: null,
+    savedAt: Date.now(),
+  });
+  writeBookmarks(list);
+  return true;
+}
+
+function recordBookmarkScore(question, score) {
+  const list = readBookmarks();
+  const found = list.find((b) => b.id === bookmarkId(question));
+  if (found && typeof score === "number") {
+    found.score = score;
+    writeBookmarks(list);
+  }
+}
+
 function readSavedSession() {
   try {
     return JSON.parse(sessionStorage.getItem(STORAGE_KEY));
@@ -473,6 +606,8 @@ function renderQuestion(container, result) {
 
   container.className = "question-card";
   container.innerHTML = `
+    <button id="bookmarkBtn" class="bookmark-btn" type="button"
+      title="Save to practice again later">☆</button>
     <p class="question-text">${escapeHtml(result.question)}</p>
     <p class="testing-note"><strong>What this tests:</strong> ${escapeHtml(result.what_interviewer_is_testing)}</p>
     ${hints}

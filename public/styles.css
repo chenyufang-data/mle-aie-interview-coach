@@ -557,6 +557,86 @@ textarea:focus {
   padding: 18px 20px;
 }
 
+/* Bookmark star on the question card + the saved-questions review list. */
+.question-card {
+  position: relative;
+}
+
+.question-card .question-text {
+  padding-right: 44px;
+}
+
+.bookmark-btn {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  background: none;
+  border: 0;
+  padding: 4px 6px;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--muted);
+}
+
+.bookmark-btn:hover {
+  color: var(--gold);
+}
+
+.bookmark-btn.on {
+  color: var(--gold);
+}
+
+.saved-list {
+  display: grid;
+  gap: 8px;
+}
+
+.saved-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+
+.saved-open {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  background: none;
+  border: 0;
+  padding: 0;
+  font-weight: 600;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.saved-open:hover {
+  color: var(--green-dark);
+  text-decoration: underline;
+}
+
+.saved-meta {
+  color: var(--muted);
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+
+.saved-remove {
+  background: none;
+  border: 0;
+  color: var(--muted);
+  font-size: 14px;
+  padding: 2px 6px;
+}
+
+.saved-remove:hover {
+  color: var(--red);
+}
+
 .timer-display {
   font-family: "JetBrains Mono", ui-monospace, Consolas, monospace;
   font-variant-numeric: tabular-nums;
