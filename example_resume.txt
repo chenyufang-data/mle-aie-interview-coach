@@ -1,0 +1,34 @@
+Jordan Lee - Machine Learning Engineer (fictional example resume)
+
+SUMMARY
+MLE with 4 years across fraud detection and LLM applications; owns models
+from feature pipeline to serving and rollback.
+
+EXPERIENCE
+Machine Learning Engineer, Meridian Pay (2023-present)
+- Built the card-fraud scoring model: XGBoost on 40M transactions with
+  heavy class imbalance; class weights over resampling after ablation,
+  threshold tuned on PR curves (recall 0.62 at 90% precision, up from
+  0.41), validated with TimeSeriesSplit to prevent leakage.
+- Served it behind FastAPI on Kubernetes with canary rollout; feature
+  drift monitoring pages on PSI > 0.2, rollback via versioned model
+  registry in under five minutes.
+- Cut inference p99 from 180 ms to 45 ms by moving feature lookups to a
+  Redis feature store and batching model calls.
+
+ML Engineer, Corvid Analytics (2021-2023)
+- Shipped a retrieval-augmented support assistant: BM25 + embedding
+  hybrid retrieval over 12k internal docs, reranking, grounded prompting;
+  answer faithfulness measured with an LLM judge (89% grounded).
+- Fine-tuned a small classifier to route tickets (F1 0.87), distilled
+  from an LLM labeler at 1/100th of the serving cost.
+- Built offline evaluation harnesses: golden sets, Recall@5 for
+  retrieval, regression gates in CI.
+
+SKILLS
+Python, SQL, scikit-learn, XGBoost, PyTorch, FastAPI, Kubernetes, Docker,
+Redis, Airflow, AWS (S3, EC2, SageMaker), prompt engineering, RAG
+evaluation, A/B testing.
+
+EDUCATION
+BS Computer Science, State University (2021)

@@ -525,10 +525,12 @@ final transcripts side by side.
 `/mock.html` runs the experience/project deep-dive round the way a real one
 works: around a target role, against your own resume.
 
-1. **Setup** — paste your resume (and optionally the real JD you are
-   interviewing for; otherwise a default JD template for the role family is
-   used and labelled as such). Pick interviewer style (neutral / friendly /
-   tough) and length (short ≈ 7 questions, standard ≈ 11).
+1. **Setup** — paste or upload your resume (no resume at hand? use the
+   fictional `example_resume.txt` in the repo root), and optionally the
+   real JD you are interviewing for; otherwise a default JD template for
+   the role family is used and labelled as such. Pick interviewer style
+   (neutral / friendly / tough) and length (short ≈ 7 questions,
+   standard ≈ 11).
 2. **Role detection** — the model proposes 3–5 target roles with the resume
    projects that support each and the probe themes an interviewer for that
    role would drill into. Pick the role and the project to defend.
