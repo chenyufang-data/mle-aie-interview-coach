@@ -7,6 +7,10 @@ Copies into PRIVATE_REPO_DIR (default: ../mle-aie-interview-coach-private):
     questions and generated rubrics - no interviewee names)
   - data/interview_exp/pastes/*         (questions hand-gathered from
     public 面经 posts, the ingest's drop folder)
+  - data/notes/interview_prep*.md       (the author's interview-prep notes;
+    the private repo keeps them under docs/, their pre-split home)
+  - docs/specification.md               (tracked publicly too; mirrored so
+    the private archive's copy stays current)
 
 Deliberately NOT synced (the backup boundary, author's decision
 2026-09-02): the interview_exp spreadsheets - they carry third parties'
@@ -52,6 +56,11 @@ def main():
         for src in sorted(pastes.glob("*.txt")) + sorted(pastes.glob("*.md")):
             changed += sync(src, PRIVATE_DIR / "data" / "interview_exp"
                             / "pastes" / src.name)
+    notes = BASE_DIR / "data" / "notes"
+    for src in sorted(notes.glob("interview_prep*.md")):
+        changed += sync(src, PRIVATE_DIR / "docs" / src.name)
+    changed += sync(BASE_DIR / "docs" / "specification.md",
+                    PRIVATE_DIR / "docs" / "specification.md")
     if not changed:
         print("backup already current - nothing to sync")
         return
