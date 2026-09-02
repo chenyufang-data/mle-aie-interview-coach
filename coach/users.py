@@ -7,6 +7,7 @@ local grader. When USERS_PATH does not exist, tiers are disabled and every
 request grades with Claude — the original single-user behaviour.
 """
 
+import hashlib
 import json
 import threading
 from datetime import datetime
@@ -19,14 +20,16 @@ USERS = {}
 # never open (everyone gets Claude), or a corrupt file becomes a cost leak.
 TIERS_ENABLED = False
 _usage_lock = threading.Lock()
+_users_mtime = None
 
 
 def load_users():
-    global USERS, TIERS_ENABLED
+    global USERS, TIERS_ENABLED, _users_mtime
     if not USERS_PATH.exists():
         return
     TIERS_ENABLED = True
     try:
+        _users_mtime = USERS_PATH.stat().st_mtime
         # utf-8-sig: tolerate the BOM that Windows editors and PowerShell
         # (Set-Content -Encoding utf8) prepend.
         USERS = json.loads(USERS_PATH.read_text(encoding="utf-8-sig"))
@@ -37,9 +40,28 @@ def load_users():
         )
 
 
+def _maybe_reload():
+    """Pick up users.json edits without a restart, so revoking a leaked
+    key (delete its line) takes effect on the next request."""
+    try:
+        mtime = USERS_PATH.stat().st_mtime
+    except OSError:
+        return
+    if mtime != _users_mtime:
+        load_users()
+
+
+def _usage_id(key):
+    """usage.json rows are keyed by a digest of the access key, never the
+    raw key: a shared or backed-up usage file must not leak every paid
+    key. The raw keys rest only in users.json (gitignored)."""
+    return hashlib.sha256(key.encode("utf-8")).hexdigest()[:16]
+
+
 def resolve_key(key):
     """User record for a bare access key (the voice WebSocket has no
     request headers; everything else goes through resolve_user)."""
+    _maybe_reload()
     key = (key or "").strip()
     entry = USERS.get(key)
     if entry:
@@ -71,7 +93,7 @@ def quota_left(user):
         return 0
     today = datetime.now().date().isoformat()
     with _usage_lock:
-        row = _read_usage().get(user["key"])
+        row = _read_usage().get(_usage_id(user["key"]))
     used = row["used"] if row and row.get("date") == today else 0
     return max(0, PAID_DAILY_QUOTA - used)
 
@@ -81,11 +103,11 @@ def quota_take(user):
     today = datetime.now().date().isoformat()
     with _usage_lock:
         usage = _read_usage()
-        row = usage.get(user["key"])
+        row = usage.get(_usage_id(user["key"]))
         used = row["used"] if row and row.get("date") == today else 0
         if used >= PAID_DAILY_QUOTA:
             return False
-        usage[user["key"]] = {"date": today, "used": used + 1}
+        usage[_usage_id(user["key"])] = {"date": today, "used": used + 1}
         USAGE_PATH.parent.mkdir(parents=True, exist_ok=True)
         USAGE_PATH.write_text(json.dumps(usage), encoding="utf-8")
     return True

@@ -7,8 +7,6 @@
 // plus per-answer recording -> POST /api/mock/transcribe (the final
 // transcript the report grades - the Phase 0 two-transcript decision).
 
-const ACCESS_KEY_STORAGE = "interviewCoachAccessKey";
-
 const state = {
   templates: [],
   roles: [],
@@ -52,7 +50,7 @@ const voice = {
 };
 
 const els = {};
-for (const id of ["resume", "jd", "jdTemplate", "style", "length", "accessKey", "detectBtn",
+for (const id of ["resume", "jd", "jdTemplate", "style", "length", "detectBtn",
   "setupStatus", "rolesArea", "roleCards", "startBtn", "setupView", "interviewView",
   "reportView", "phaseBadge", "turnBadge", "engineBadge", "stateBadge", "latencyBadge",
   "endBtn", "chatLog", "answerBox", "sendBtn", "dictateBtn", "interviewStatus",
@@ -65,10 +63,6 @@ for (const id of ["resume", "jd", "jdTemplate", "style", "length", "accessKey", 
 init();
 
 async function init() {
-  els.accessKey.value = sessionStorage.getItem(ACCESS_KEY_STORAGE) || "";
-  els.accessKey.addEventListener("change", () => {
-    sessionStorage.setItem(ACCESS_KEY_STORAGE, els.accessKey.value.trim());
-  });
   els.detectBtn.addEventListener("click", detectRoles);
   els.startBtn.addEventListener("click", startInterview);
   els.sendBtn.addEventListener("click", sendAnswer);
@@ -133,9 +127,9 @@ function updateVoiceCaps() {
     : "final transcript unavailable (no STT configured server-side)";
 }
 
+// The account chip (account.js, loaded first) owns the access key.
 function authHeaders() {
-  const key = (els.accessKey.value || "").trim();
-  return key ? { "X-Access-Key": key } : {};
+  return Account.headers();
 }
 
 // Resume/JD file upload: the file is parsed server-side into plain text
@@ -492,7 +486,8 @@ async function startLiveVoice() {
   voice.ws.onopen = () => {
     wsSend({
       type: "hello",
-      access_key: (els.accessKey.value || "").trim(),
+      // WebSockets carry no request headers, so the key rides in the hello.
+      access_key: Account.key(),
       plan: state.plan,
       role: state.selectedRole,
       transcript: [],

@@ -1,11 +1,10 @@
 const STORAGE_KEY = "interviewCoachSession";
-const ACCESS_KEY_STORAGE = "interviewCoachAccessKey";
 
 // Freemium tiers: requests carry the access key (if any) so the server can
 // route paid keys to Claude and everyone else to the local distilled grader.
+// The key itself is managed by the account chip (account.js, loaded first).
 function authHeaders() {
-  const key = sessionStorage.getItem(ACCESS_KEY_STORAGE) || "";
-  return key ? { "X-Access-Key": key } : {};
+  return Account.headers();
 }
 
 const GENERAL_TOPICS = {
@@ -59,9 +58,6 @@ function initSetupPage() {
   const level = document.querySelector("#level");
   const topic = document.querySelector("#topic");
   const focus = document.querySelector("#focus");
-  const accessKey = document.querySelector("#accessKey");
-  const keyStatus = document.querySelector("#keyStatus");
-  const tierBadge = document.querySelector("#tierBadge");
   const startBtn = document.querySelector("#startBtn");
   const setupStatus = document.querySelector("#setupStatus");
   const sessionTitle = document.querySelector("#sessionTitle");
@@ -191,52 +187,13 @@ function initSetupPage() {
       // offers AI-generated topics without a knowledge-base group.
       return;
     }
-    updateTierBadge(meta.user);
-    updateKeyStatus(meta.user);
     populateTopics();
     updateSummary();
   }
 
-  function updateKeyStatus(user) {
-    const key = sessionStorage.getItem(ACCESS_KEY_STORAGE) || "";
-    if (!key || !user || !user.tiers_enabled) {
-      keyStatus.hidden = true;
-      return;
-    }
-    // The server is the authority: a key is valid only if /api/meta came back
-    // with tier "paid" for it.
-    const valid = user.tier === "paid";
-    keyStatus.hidden = false;
-    keyStatus.textContent = valid ? "✓" : "✕";
-    keyStatus.className = `key-status ${valid ? "valid" : "invalid"}`;
-    keyStatus.title = valid ? `Key recognized (${user.name})` : "Key not recognized";
-  }
-
-  function updateTierBadge(user) {
-    if (!user || !user.tiers_enabled) {
-      tierBadge.hidden = true;
-      return;
-    }
-    tierBadge.hidden = false;
-    const proText = user.paid_grader && user.paid_grader !== "claude"
-      ? `Pro (${user.name}): AI grading by ${user.paid_grader}; ${user.paid_left_today} of ${user.paid_quota} Claude gradings left today ("Always Claude").`
-      : `Pro (${user.name}): ${user.paid_left_today} of ${user.paid_quota} Claude gradings left today.`;
-    tierBadge.textContent = user.tier === "paid"
-      ? proText
-      : "Free tier: instant local ML grading on course questions. Enter a paid key for AI grading.";
-  }
-
-  accessKey.value = sessionStorage.getItem(ACCESS_KEY_STORAGE) || "";
-  let keyCheckTimer = null;
-  accessKey.addEventListener("input", () => {
-    // Debounced so we re-check against the server once per pause in typing,
-    // not per keystroke.
-    window.clearTimeout(keyCheckTimer);
-    keyCheckTimer = window.setTimeout(() => {
-      sessionStorage.setItem(ACCESS_KEY_STORAGE, accessKey.value.trim());
-      loadKbMeta();
-    }, 400);
-  });
+  // The account chip owns key entry and the tier display; re-pull the
+  // module lists when the key changes (the paid/free views can differ).
+  Account.onchange = () => loadKbMeta();
 
   populateTopics();
   updateSummary();

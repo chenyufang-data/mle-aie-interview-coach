@@ -155,8 +155,9 @@ With `users.json` present, requests are routed per user instead of per server:
 
 - **Free (no key, or unknown key)**: course-bank questions and instant grading
   by the distilled local model. Zero API cost, works offline.
-- **Paid (a key listed with `"tier": "paid"`, entered in the setup page's
-  access-key field)**: AI-generated questions and real LLM grading. With
+- **Paid (a key listed with `"tier": "paid"`, entered once via the account
+  chip in the page header — it persists in that browser's localStorage)**:
+  AI-generated questions and real LLM grading. With
   `DEEPSEEK_API_KEY` in `.env`, the workhorse judge is DeepSeek V4 Flash —
   quota-free at ~$0.0005 per evaluation, and measured before it shipped
   (94% within-±1 agreement with the Claude teacher; see the judge table

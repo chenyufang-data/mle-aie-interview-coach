@@ -15,6 +15,7 @@
             <p class="eyebrow">Interview Coach</p>
             <h1>MLE/AIE practice</h1>
           </div>
+          <div id="accountChip" class="account-mount"></div>
         </div>
 
         <a class="mock-banner" href="/mock.html">
@@ -65,15 +66,6 @@
               <input id="focus" type="text" placeholder="e.g. fraud ranking, RAG latency">
             </div>
 
-            <div class="field">
-              <label for="accessKey">Access key (optional)</label>
-              <div class="key-input-row">
-                <input id="accessKey" type="password" placeholder="Paid key for Claude grading" autocomplete="off">
-                <span id="keyStatus" class="key-status" aria-live="polite" hidden></span>
-              </div>
-              <p id="tierBadge" class="inline-status" hidden></p>
-            </div>
-
             <button id="startBtn" class="primary-action" type="button">Start</button>
             <p id="setupStatus" class="inline-status" aria-live="polite"></p>
           </section>
@@ -102,6 +94,7 @@
       </section>
     </main>
 
+    <script src="/account.js"></script>
     <script src="/app.js"></script>
   </body>
 </html>

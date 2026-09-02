@@ -65,6 +65,7 @@
             <p class="eyebrow">Mock interview &middot; experience deep-dive round</p>
             <h1 id="pageTitle">Set up your interview</h1>
           </div>
+          <div id="accountChip" class="account-mount"></div>
         </div>
 
         <!-- ============================== SETUP ============================== -->
@@ -150,11 +151,6 @@
                 &mdash; off by default; nothing is stored server-side without this</span>
             </label>
           </div>
-          <div class="field">
-            <label for="accessKey">Access key (paid key &rarr; DeepSeek Flash turns + Claude report; in --mock mode a free offline demo runs)</label>
-            <input id="accessKey" type="password" placeholder="Access key" autocomplete="off">
-          </div>
-
           <button id="detectBtn" class="primary-action" type="button">Detect target roles</button>
           <p id="setupStatus" class="inline-status" aria-live="polite"></p>
 
@@ -209,6 +205,7 @@
         </p>
       </section>
     </main>
+    <script src="/account.js"></script>
     <script src="/mock.js"></script>
   </body>
 </html>
