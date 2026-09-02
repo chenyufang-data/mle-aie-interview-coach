@@ -47,15 +47,50 @@ def parse_args():
         help="Use a free local Ollama model instead of the Anthropic API (default: llama3.2). "
         "Requires Ollama running at localhost:11434.",
     )
-    parser.add_argument(
+    voice = parser.add_mutually_exclusive_group()
+    voice.add_argument(
         "--voice",
         action="store_true",
-        help="Also start the live voice-loop WebSocket server (coach/voice) on "
-        "VOICE_PORT (default 8765). AUDIO_BACKEND picks the audio stack: local "
-        "(faster-whisper + Kokoro, default), speaches, deepgram, or elevenlabs; "
+        help="Force the live voice-loop WebSocket server (coach/voice) on "
+        "VOICE_PORT (default 8765) and fail loudly if it cannot start. "
+        "Without either voice flag the loop starts automatically whenever "
+        "its optional dependencies (requirements-stt.txt) are installed. "
+        "AUDIO_BACKEND picks the audio stack: local (faster-whisper + "
+        "Kokoro, default), speaches, deepgram, or elevenlabs; "
         "STT_BACKEND/TTS_BACKEND override each side.",
     )
+    voice.add_argument(
+        "--no-voice",
+        action="store_true",
+        help="Skip the voice loop even when its dependencies are available "
+        "(fast text-only server).",
+    )
     return parser.parse_args()
+
+
+def voice_availability(host):
+    """None when the voice loop can run here, else a short reason.
+
+    The voice stack's heavy dependencies are optional (requirements-stt.txt),
+    so a plain install serves HTTP-only and says why; models load lazily per
+    session, so availability is only imports plus a free WebSocket port."""
+    try:
+        import numpy  # noqa: F401
+        import onnxruntime  # noqa: F401
+        import websockets  # noqa: F401
+    except ImportError as exc:
+        return (f"missing dependency {getattr(exc, 'name', exc)!r} "
+                "(pip install -r requirements-stt.txt)")
+    import socket
+
+    from coach.voice import loop as voice_loop
+    with socket.socket() as probe:
+        try:
+            probe.bind((host, voice_loop.VOICE_PORT))
+        except OSError:
+            return (f"ws port {voice_loop.VOICE_PORT} is already in use "
+                    "(another server with voice running?)")
+    return None
 
 
 def main():
@@ -117,7 +152,20 @@ def main():
             )
         else:
             print("Tiers: off (no users.json) - every request grades with Claude.")
-    if args.voice:
+    # Voice defaults to ON when the optional stack can run (user decision
+    # 2026-09-02): --voice forces it, --no-voice skips it, and a plain
+    # public install (no requirements-stt.txt) degrades to HTTP-only with
+    # the reason stated here and on the mock page.
+    if args.no_voice:
+        voice_reason = "disabled with --no-voice"
+    else:
+        voice_reason = voice_availability(host)
+        if voice_reason and args.voice:
+            raise SystemExit(f"--voice: cannot start the voice loop - {voice_reason}")
+    if voice_reason:
+        config.VOICE_DISABLED_REASON = voice_reason
+        print(f"Voice loop: off - {voice_reason}.")
+    else:
         import threading
 
         from coach.voice import loop as voice_loop

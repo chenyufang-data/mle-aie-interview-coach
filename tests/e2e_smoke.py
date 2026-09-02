@@ -50,8 +50,11 @@ def main():
     # server mid-print (measured the hard way in loop_eval).
     log = tempfile.NamedTemporaryFile(prefix="e2e_server_", suffix=".log",
                                       delete=False)
+    # --no-voice keeps the test hermetic: without it the server would try
+    # to bind the shared VOICE_PORT and fight any dev server already up.
     server = subprocess.Popen(
-        [sys.executable, "-X", "utf8", str(BASE_DIR / "server.py"), "--mock"],
+        [sys.executable, "-X", "utf8", str(BASE_DIR / "server.py"),
+         "--mock", "--no-voice"],
         cwd=BASE_DIR, stdout=log, stderr=subprocess.STDOUT,
         env={**__import__("os").environ, "PORT": str(PORT)},
     )

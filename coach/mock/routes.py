@@ -30,6 +30,7 @@ def handle_get(handler, path):
         from coach.voice.final_transcript import available_engine
         json_response(handler, 200, {
             "enabled": config.VOICE_ENABLED,
+            "reason": config.VOICE_DISABLED_REASON,
             "ws_port": voice_loop.VOICE_PORT if config.VOICE_ENABLED else None,
             "audio_backend": voice_loop.audio_backend(),
             "stt_backend": voice_loop.stt_backend(),

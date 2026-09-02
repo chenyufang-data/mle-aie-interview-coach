@@ -96,7 +96,7 @@ async function init() {
   const liveOption = els.voiceMode.querySelector('option[value="live"]');
   if (!voice.caps.enabled) {
     liveOption.disabled = true;
-    liveOption.textContent += " — start the server with --voice";
+    liveOption.textContent += ` — ${voice.caps.reason || "not available on this server"}`;
   } else {
     liveOption.textContent += ` (${voice.caps.audio_backend})`;
   }

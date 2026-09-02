@@ -542,8 +542,12 @@ the coach.
 
 ### Live voice (Phase 2: the DIY loop, measured)
 
-`python server.py --voice` adds a WebSocket voice loop (`coach/voice/`)
-beside the HTTP API, and `/mock.html` grows three modes: **text**,
+The WebSocket voice loop (`coach/voice/`) starts automatically beside the
+HTTP API whenever its optional dependencies are installed
+(`pip install -r requirements-stt.txt`); a plain install runs HTTP-only
+and both the console and the mock page say why. `--voice` forces the loop
+(failing loudly if it cannot start), `--no-voice` skips it for a fast
+text-only server. With the loop up, `/mock.html` grows three modes: **text**,
 **browser voice** (Web Speech dictation + spoken questions, free), and
 **live voice** — server-side Silero VAD with patient endpointing, live STT,
 the same streamed interviewer (sentence-by-sentence to TTS, so first audio
