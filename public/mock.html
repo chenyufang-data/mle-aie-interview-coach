@@ -52,11 +52,13 @@
       .check-row input { width: auto; height: auto; margin-top: 3px; flex-shrink: 0; }
       .upload-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 6px; }
       .upload-row input[type=file] { font-size: 13px; color: var(--muted); }
+      .mock-back { min-height: 36px; padding: 0 14px; font-size: 14px; margin-bottom: 16px; }
     </style>
   </head>
   <body>
     <main class="app-shell mock-shell">
       <section class="setup-page mock-page">
+        <a class="back-link mock-back" href="/"><span aria-hidden="true">&larr;</span>&nbsp;Back to the coach</a>
         <div class="brand setup-brand">
           <div class="logo-mark">IC</div>
           <div>
@@ -204,7 +206,6 @@
           Nothing is stored server-side: the session lives in this page and is sent to the
           grading model per request. Voice modes send audio only to the configured STT
           backend (local Whisper by default; ElevenLabs when configured server-side).
-          <a class="back-link" href="/" style="min-height:0;padding:0;border:0">Back to the coach</a>
         </p>
       </section>
     </main>
