@@ -526,6 +526,12 @@ function writeBookmarks(list) {
 }
 
 function bookmarkId(question) {
+  // Follow-ups keep their parent's chunk_id for grading context, so they
+  // must key on their own text - otherwise starring a follow-up would
+  // toggle (remove) the parent question's bookmark.
+  if (question.source === "followup") {
+    return `fu:${(question.question || "").slice(0, 80)}`;
+  }
   return question.chunk_id || `ai:${(question.question || "").slice(0, 80)}`;
 }
 

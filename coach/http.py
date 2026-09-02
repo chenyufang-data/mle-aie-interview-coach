@@ -61,6 +61,10 @@ class InterviewCoachHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(body)))
+        # Without this, browsers heuristically cache the HTML/JS and serve
+        # stale pages after an update (a shipped feature "not showing up").
+        # The files are tiny and local, so always revalidating is free.
+        self.send_header("Cache-Control", "no-cache")
         self.end_headers()
         self.wfile.write(body)
 
