@@ -26,6 +26,10 @@ class InterviewCoachHandler(BaseHTTPRequestHandler):
                     role: {"modules": info["modules"], "chunks": len(info["chunks"])}
                     for role, info in kb.KB.items()
                 },
+                # "hybrid" (BM25 + bge-small, docs/retrieval_evaluation.md)
+                # or "bm25" with the reason the hybrid stack is not serving.
+                "retrieval": {"backend": config.RETRIEVAL_ACTIVE,
+                              "reason": config.RETRIEVAL_DISABLED_REASON},
                 "user": {
                     "name": user["name"],
                     "tier": user["tier"],

@@ -14,8 +14,18 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -r requirements.txt
-      # Retrieval quality gate: 23 curated cases, fails below 90% Recall@5.
+      # The bge-small embedding model (~127 MB) downloads once per cache key.
+      - uses: actions/cache@v4
+        with:
+          path: data/models/fastembed
+          key: fastembed-bge-small-en-v1.5-${{ runner.os }}
+      # Retrieval quality gate: 23 curated cases, fails below 90% Recall@5 -
+      # on BM25 (the fallback) and on the shipped hybrid retriever.
       - run: python tests/test_retrieval.py
+      - run: python tests/test_retrieval.py --backend hybrid
+      # Dense/hybrid arms, offline: filter parity with BM25, RRF math,
+      # ranking contracts (fake embedder, no model download).
+      - run: python tests/test_dense_retrieval.py
       # Distilled grader artifact: ordering invariants on probe answers.
       - run: python tests/test_grader.py
       # STT experiment text layer: normalization, WER, term error rate,

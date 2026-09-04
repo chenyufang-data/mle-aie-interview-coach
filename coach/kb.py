@@ -5,28 +5,65 @@ import random
 
 from retrieval import Retriever
 
+from coach import config
 from coach.config import CORPUS_PATHS
 
-# role -> {"chunks": [...], "retriever": Retriever, "modules": [...]}
+# role -> {"chunks": [...], "retriever": <serves practice questions>,
+#          "bm25": Retriever, "modules": [...]}
+# "retriever" is the hybrid BM25 + dense retriever when its stack is
+# available (config.RETRIEVAL_BACKEND) and the BM25 Retriever otherwise.
+# "bm25" is always the BM25 Retriever: the mock's rubric grounding reads
+# it (coach/mock/planning.py) because its threshold is in BM25 score units
+# and rule R2 of the retrieval plan has not moved it.
 KB = {}
 # Chunk ids are unique across both corpora, so evaluation can look them up globally.
 CHUNKS_BY_ID = {}
 
 
+def _hybrid_embedder():
+    """The shared embedder, or None with config.RETRIEVAL_DISABLED_REASON set."""
+    backend = config.RETRIEVAL_BACKEND
+    if backend == "bm25":
+        config.RETRIEVAL_DISABLED_REASON = "RETRIEVAL_BACKEND=bm25"
+        return None
+    try:
+        from retrieval_dense import hybrid_availability
+    except ImportError as exc:  # numpy missing: fastembed would be too
+        outcome = f"missing dependency {getattr(exc, 'name', exc)!r}"
+    else:
+        outcome = hybrid_availability()
+    if isinstance(outcome, str):
+        if backend == "hybrid":
+            raise SystemExit(f"RETRIEVAL_BACKEND=hybrid: cannot start - {outcome}")
+        config.RETRIEVAL_DISABLED_REASON = outcome
+        return None
+    return outcome
+
+
 def load_chunks():
+    embedder = _hybrid_embedder()
     for role, path in CORPUS_PATHS.items():
         if not path.exists():
             print(f"Warning: {path} not found; {role} course knowledge base disabled.")
             continue
         with path.open(encoding="utf-8") as handle:
             chunks = [json.loads(line) for line in handle if line.strip()]
+        bm25 = Retriever(chunks)
+        retriever = bm25
+        if embedder is not None:
+            from retrieval_dense import DenseRetriever, HybridRetriever, load_or_build
+
+            vectors, _, _ = load_or_build(role, chunks, embedder)
+            retriever = HybridRetriever(bm25, DenseRetriever(chunks, embedder, vectors))
         KB[role] = {
             "chunks": chunks,
-            "retriever": Retriever(chunks),
+            "retriever": retriever,
+            "bm25": bm25,
             # Module names in corpus (class) order, for the topic dropdown.
             "modules": list(dict.fromkeys(chunk["metadata"]["module"] for chunk in chunks)),
         }
         CHUNKS_BY_ID.update({chunk["id"]: chunk for chunk in chunks})
+    config.RETRIEVAL_ACTIVE = "hybrid" if embedder is not None else "bm25"
 
 
 def select_chunk(role, module, level, focus, exclude_ids):

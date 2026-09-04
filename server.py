@@ -120,6 +120,11 @@ def main():
             f"Knowledge base [{role}]: {len(info['chunks'])} interview chunks "
             f"from {config.CORPUS_PATHS[role].parent.name}/."
         )
+    if config.RETRIEVAL_ACTIVE == "hybrid":
+        print("Retrieval: hybrid BM25 + bge-small (measured +13 pts Recall@5 on "
+              "paraphrased queries, docs/retrieval_evaluation.md).")
+    else:
+        print(f"Retrieval: BM25 only - {config.RETRIEVAL_DISABLED_REASON}.")
     if config.MODE == "mock":
         brain = (
             f"trained ML grader ({grading.GRADER['model_name']})"

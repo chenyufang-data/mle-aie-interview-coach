@@ -74,6 +74,15 @@ MODE = "claude"
 # --no-voice, port taken) so the mock page can explain the disabled option.
 VOICE_ENABLED = False
 VOICE_DISABLED_REASON = None
+# Practice-question retrieval. "auto" (default) serves the hybrid BM25 +
+# bge-small retriever (retrieval_dense.py) when fastembed and the model are
+# available and falls back to BM25 with a stated reason; "bm25" forces the
+# fallback; "hybrid" forces the stack and fails loudly. The swap was earned
+# by the pre-registered rule in docs/dense_retrieval_plan.md (results:
+# docs/retrieval_evaluation.md). RETRIEVAL_ACTIVE reports what is serving.
+RETRIEVAL_BACKEND = os.environ.get("RETRIEVAL_BACKEND", "auto").lower()
+RETRIEVAL_ACTIVE = "bm25"
+RETRIEVAL_DISABLED_REASON = None
 OLLAMA_MODEL = "llama3.2"
 OLLAMA_URL = "http://127.0.0.1:11434/api/chat"
 

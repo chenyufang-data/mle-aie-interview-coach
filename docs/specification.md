@@ -155,18 +155,40 @@ Key behaviors:
   honor the per-key `"log": false` opt-out; the UI discloses collection.
   Mock sessions log only with an explicit opt-in checkbox.
 
-## 4. Retrieval — `retrieval.py`
+## 4. Retrieval — `retrieval.py` + `retrieval_dense.py`
 
-Pure-Python BM25 (k1=1.5, b=0.75) over short per-question documents
-(question + key points + tags), not raw lesson text, across three tracks:
-MLE (`rag_ml`, 191 chunks), AIE (`rag_ai`, 91), and the optional "Real Qs"
-track (`rag_exp`, 57 chunks distilled from real interview reports — absent
-in a fresh clone; `coach/kb.py` warn-skips it). Query-time filters: module
-and difficulty-by-level metadata, plus a session `exclude` list so questions
-do not repeat. One of the top-5 hits is sampled at random for variety.
-Deliberately not embedding-based — measured at 100% Recall@5 / 0.91 MRR on
-23 curated cases (`tests/test_retrieval.py`), which does not leave room for
-an embedding index to pay its complexity.
+Short per-question documents (module + topic + tags + question + key
+points), not raw lesson text, across three tracks: MLE (`rag_ml`, 191
+chunks), AIE (`rag_ai`, 91), and the optional "Real Qs" track (`rag_exp`,
+57 chunks distilled from real interview reports — absent in a fresh clone;
+`coach/kb.py` warn-skips it). Query-time filters: module and
+difficulty-by-level metadata, plus a session `exclude` list so questions do
+not repeat. One of the top-5 hits is sampled at random for variety.
+
+Two rankers with identical interfaces and filter semantics:
+
+- `retrieval.py` — pure-Python BM25 (k1=1.5, b=0.75). 100% Recall@5 / 0.91
+  MRR on the 23 curated cases; the CI gate and the fallback.
+- `retrieval_dense.py` — bge-small-en-v1.5 embeddings (fastembed, ONNX on
+  CPU, ~127 MB, 384-d) over a numpy matrix, fused with BM25 by
+  reciprocal-rank fusion (k=60). **This hybrid serves the practice track**
+  when its stack is available; `coach/kb.py` auto-detects at startup and
+  otherwise serves BM25 with a stated reason (`RETRIEVAL_BACKEND` forces
+  either). Document vectors cache under `data/index/` keyed by a content hash.
+
+The swap was an experiment with pre-registered rules
+([dense_retrieval_plan.md](dense_retrieval_plan.md); results in
+[retrieval_evaluation.md](retrieval_evaluation.md)). The curated set was
+saturated (every arm 23/23), so a 61-query paraphrase set built to defeat
+lexical matching carried the decision: BM25 41/61, dense 47/61, hybrid
+49/61 (+13 points, MRR 0.60 vs 0.49), no regression on the curated set
+(MRR 0.95 vs 0.91), p95 under 3 ms. Dense alone missed the +10-point bar
+by 0.2 points. The same experiment measured that a vector database (Chroma)
+earns nothing at this size — +0.6 ms p95, 6× the disk, identical top-5 to
+the numpy array — so no store ships. The mock's rubric grounding stays on
+BM25: it already grounds 77/77 planner probes, and the hand-labeled
+precision of what it attaches (56%, vs 65% dense) is the open problem, not
+coverage.
 
 ## 5. The grader subsystem — `grader/`
 

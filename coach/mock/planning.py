@@ -123,16 +123,22 @@ Do not reveal the plan to the candidate; it drives the interviewer."""
 
 def attach_rubric_chunks(plan, role):
     """BM25 each probe target against both banks; a strong match adds the
-    chunk's rubric (chunk_id + key points) alongside the on-the-fly one."""
+    chunk's rubric (chunk_id + key points) alongside the on-the-fly one.
+
+    Reads the bank's BM25 retriever even when hybrid retrieval serves the
+    practice track: RUBRIC_MIN_SCORE is in BM25 units, and the retrieval
+    plan's rule R2 (docs/dense_retrieval_plan.md) decides separately whether
+    grounding moves to another arm."""
     level = role.get("level") or "Mid-level"
     used = set()
     for target in plan.get("probe_targets", []):
         query = f"{target.get('topic', '')} {target.get('question_hint', '')}"
         best_score, best_chunk = 0.0, None
         for info in kb.KB.values():
+            retriever = info.get("bm25") or info["retriever"]
             # limit 3, not 1: when the top hit is a round the mock does not
             # simulate, the next eligible match can still stand in.
-            for score, chunk in info["retriever"].top_scored(query, level=level, limit=3):
+            for score, chunk in retriever.top_scored(query, level=level, limit=3):
                 if not rubric_eligible(chunk) or chunk["id"] in used:
                     continue
                 if score > best_score:

@@ -27,9 +27,11 @@ All banks share the same chunk schema (`id` / `interview` / `metadata`), so the
 server treats them uniformly and routes by track.
 
 The project doubles as an end-to-end LLM + classical-ML case study: rubric-grounded
-Claude grading with structured outputs, evaluated BM25 retrieval, and a distilled
-scikit-learn grader that approximates the Claude judge offline — with a measured
-agreement number for every component (see
+Claude grading with structured outputs, hybrid BM25 + embedding retrieval that
+earned its place in a pre-registered experiment (see
+[Retrieval](#retrieval-bm25-vs-dense-measured)), and a distilled scikit-learn
+grader that approximates the Claude judge offline — with a measured agreement
+number for every component (see
 [Local ML grader](#local-ml-grader-llm-distillation)).
 
 <p align="center">
@@ -47,7 +49,8 @@ coach/               backend package (one module per concern)
   users.py           freemium access keys           mock/       mock interview (plan, turns, report)
   voice/             live voice loop: VAD, STT, TTS, barge-in, Level 1 sidecar
 public/              dependency-free vanilla-JS frontend (no build step)
-retrieval.py         BM25 over the banks (evaluated: tests/test_retrieval.py)
+retrieval.py         BM25 over the banks (the CI gate and the fallback)
+retrieval_dense.py   bge-small embeddings + BM25 hybrid (serves when its stack is installed)
 rag_ml/  rag_ai/     question banks, public stripped edition (schema in their READMEs)
 rag_exp/             real gathered interview questions - private bank, README explains
 grader/              training + every measurement script with its committed results
@@ -83,10 +86,11 @@ Nothing corpus-specific is hard-coded in the frontend — module lists come from
     and safety on the AIE track).
   - **Course knowledge base** - the app picks a real question from your track's
     course bank (MLE -> `rag_ml`, AIE -> `rag_ai`), filtered by module and your
-    level, then ranked against your optional focus text with BM25 keyword search
-    (`retrieval.py`; one of the top matches is chosen at random so sessions stay
-    varied). The module lists in the dropdown come from the server (`/api/meta`),
-    so the frontend never hard-codes corpus contents.
+    level, then ranked against your optional focus text — hybrid BM25 + embedding
+    retrieval (`retrieval_dense.py`) when the embedding stack is installed, plain
+    BM25 (`retrieval.py`) otherwise; one of the top matches is chosen at random so
+    sessions stay varied. The module lists in the dropdown come from the server
+    (`/api/meta`), so the frontend never hard-codes corpus contents.
 - Answer with the elapsed timer running — typed, or spoken via the 🎤 button
   (browser speech recognition, client-side only; needs HTTPS or localhost) —
   then submit.
@@ -272,17 +276,47 @@ For follow-up questions, the same chunk is kept but its key points are provided 
 background context rather than a strict checklist (they belong to the original
 question), together with the original question and your previous answer.
 
-## Retrieval smoke test
+## Retrieval: BM25 vs dense, measured
 
-`tests/retrieval_cases.json` holds curated focus-text queries for both banks
-(`"corpus": "ml"` or `"ai"`) with the module or tags a good result should have.
-Run it after changing `retrieval.py` or either corpus:
+Retrieval started as pure BM25 and stayed that way for as long as the
+evidence said so: 100% Recall@5 / 0.91 MRR on 23 curated queries left no
+room for an embedding index to earn its complexity. That set was saturated,
+though — it could show dense retrieval losing, never winning — so the
+comparison was re-run as a pre-registered experiment
+([`docs/dense_retrieval_plan.md`](docs/dense_retrieval_plan.md), rules
+frozen before the first run; results in
+[`docs/retrieval_evaluation.md`](docs/retrieval_evaluation.md)):
+
+| Arm | Curated (23) | Paraphrased, tag words removed (61) | p95 latency |
+| --- | --- | --- | --- |
+| BM25 | 23/23, MRR 0.91 | 41/61 (67%), MRR 0.49 | 0.5 ms |
+| dense (bge-small, cosine) | 23/23, MRR 0.93 | 47/61 (77%), MRR 0.64 | 2.3 ms |
+| **hybrid (RRF of both)** | 23/23, MRR 0.95 | **49/61 (80%)**, MRR 0.60 | 2.7 ms |
+
+The 61 paraphrases were written the way a candidate would type them, with
+the target's tag vocabulary filtered out automatically and the meaning
+reviewed by hand — the queries lexical matching is built to lose. Hybrid
+cleared every clause of the shipping rule (+13 points there, no regression
+on the curated set, p95 under 50 ms, model under 200 MB) and now serves
+the practice track; dense alone missed the +10-point bar by 0.2 points.
+Two more findings from the same run: a vector database (Chroma) adds
++0.6 ms p95 and 6× the disk for an identical top-5 at this corpus size, so
+none ships; and the mock interview's rubric grounding stays on BM25 — it
+already grounds 77/77 planner probes, and the hand-labeled precision of
+what it attaches (56%, vs 65% for dense) is the open problem, not coverage.
+
+Install shape: `requirements.txt` carries `fastembed` (ONNX on CPU, no
+torch); the ~127 MB model downloads once into `data/models/` and document
+vectors cache under `data/index/`. If the import or download fails the
+server says so and serves BM25 — `RETRIEVAL_BACKEND=bm25|hybrid` forces
+either. Re-run the gates after changing either ranker or a corpus:
 
 ```powershell
-.venv\Scripts\python tests\test_retrieval.py
+.venv\Scripts\python tests\test_retrieval.py                   # BM25, fails below 90% Recall@5
+.venv\Scripts\python tests\test_retrieval.py --backend hybrid  # the shipped ranker, same gate
+.venv\Scripts\python tests\test_dense_retrieval.py             # offline: filter parity, RRF math
+.venv\Scripts\python grader\retrieval_eval.py                  # the full comparison + report
 ```
-
-It reports Recall@5 and MRR and fails below 90% Recall@5.
 
 ## Local ML grader (LLM distillation)
 
