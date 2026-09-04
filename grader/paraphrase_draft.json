@@ -1,0 +1,758 @@
+{
+ "kept": [
+  {
+   "corpus": "ml",
+   "query": "my scaling stats accidentally saw the held-out rows and now my scores look too good",
+   "parent": "test set information leaking into training during preprocessing",
+   "parent_index": 0,
+   "overlap_with_parent": 0.0,
+   "expected_tags": [
+    "data-leakage",
+    "leakage"
+   ]
+  },
+  {
+   "corpus": "ml",
+   "query": "how does peeking at future evaluation rows during data prep inflate results",
+   "parent": "test set information leaking into training during preprocessing",
+   "parent_index": 0,
+   "overlap_with_parent": 0.08,
+   "expected_tags": [
+    "data-leakage",
+    "leakage"
+   ]
+  },
+  {
+   "corpus": "ml",
+   "query": "I fit my normalizer on everything before splitting and results seem unrealistic",
+   "parent": "test set information leaking into training during preprocessing",
+   "parent_index": 0,
+   "overlap_with_parent": 0.0,
+   "expected_tags": [
+    "data-leakage",
+    "leakage"
+   ]
+  },
+  {
+   "corpus": "ml",
+   "query": "only a tiny fraction of my transactions are the bad kind, how do I train well",
+   "parent": "handle class imbalance when training a fraud classifier",
+   "parent_index": 1,
+   "overlap_with_parent": 0.06,
+   "expected_tags": [
+    "class-imbalance",
+    "imbalanced-data"
+   ]
+  },
+  {
+   "corpus": "ml",
+   "query": "my model just predicts the majority group and ignores the rare cases",
+   "parent": "handle class imbalance when training a fraud classifier",
+   "parent_index": 1,
+   "overlap_with_parent": 0.0,
+   "expected_tags": [
+    "class-imbalance",
+    "imbalanced-data"
+   ]
+  },
+  {
+   "corpus": "ml",
+   "query": "dealing with datasets where one label barely shows up when catching fraud",
+   "parent": "handle class imbalance when training a fraud classifier",
+   "parent_index": 1,
+   "overlap_with_parent": 0.17,
+   "expected_tags": [
+    "class-imbalance",
+    "imbalanced-data"
+   ]
+  },
+  {
+   "corpus": "ml",
+   "query": "when should I shrink some coefficients to zero versus just making them smaller",
+   "parent": "difference between lasso and ridge regularization",
+   "parent_index": 2,
+   "overlap_with_parent": 0.0,
+   "expected_tags": [
+    "regularization",
+    "lasso"
+   ]
+  },
+  {
+   "corpus": "ml",
+   "query": "comparing the two penalty approaches that keep model weights from getting too big",
+   "parent": "difference between lasso and ridge regularization",
+   "parent_index": 2,
+   "overlap_with_parent": 0.0,
+   "expected_tags": [
+    "regularization",
+    "lasso"
+   ]
+  },
+  {
+   "corpus": "ml",
+   "query": "how do L1 and L2 penalties differ in what they do to feature weights",
+   "parent": "difference between lasso and ridge regularization",
+   "parent_index": 2,
+   "overlap_with_parent": 0.08,
+   "expected_tags": [
+    "regularization",
+    "lasso"
+   ]
+  },
+  {
+   "corpus": "ml",
+   "query": "I have way too many columns, how do I compress them before fitting a model",
+   "parent": "reduce dimensions with principal component analysis before modeling",
+   "parent_index": 3,
+   "overlap_with_parent": 0.07,
+   "expected_tags": [
+    "pca"
+   ]
+  },
+  {
+   "corpus": "ml",
+   "query": "projecting features onto fewer axes that capture most of the variation",
+   "parent": "reduce dimensions with principal component analysis before modeling",
+   "parent_index": 3,
+   "overlap_with_parent": 0.0,
+   "expected_tags": [
+    "pca"
+   ]
+  },
+  {
+   "corpus": "ml",
+   "query": "cutting down the number of input variables while keeping most information",
+   "parent": "reduce dimensions with principal component analysis before modeling",
+   "parent_index": 3,
+   "overlap_with_parent": 0.0,
+   "expected_tags": [
+    "pca"
+   ]
+  },
+  {
+   "corpus": "ml",
+   "query": "a text column has thousands of unique values, how do I turn it into numbers",
+   "parent": "encode high cardinality categorical features",
+   "parent_index": 4,
+   "overlap_with_parent": 0.0,
+   "expected_tags": [
+    "high-cardinality",
+    "categorical"
+   ]
+  },
+  {
+   "corpus": "ml",
+   "query": "best way to turn a feature with tons of distinct labels into model input",
+   "parent": "encode high cardinality categorical features",
+   "parent_index": 4,
+   "overlap_with_parent": 0.0,
+   "expected_tags": [
+    "high-cardinality",
+    "categorical"
+   ]
+  },
+  {
+   "corpus": "ml",
+   "query": "representing a variable that has huge number of possible category values numerically",
+   "parent": "encode high cardinality categorical features",
+   "parent_index": 4,
+   "overlap_with_parent": 0.0,
+   "expected_tags": [
+    "high-cardinality",
+    "categorical"
+   ]
+  },
+  {
+   "corpus": "ml",
+   "query": "filling in blanks in my data without letting the evaluation rows influence the fill",
+   "parent": "impute missing values without contaminating the test data",
+   "parent_index": 5,
+   "overlap_with_parent": 0.25,
+   "expected_tags": [
+    "missing-data",
+    "imputation"
+   ]
+  },
+  {
+   "corpus": "ml",
+   "query": "how do I replace empty cells so the held-out set stays untouched",
+   "parent": "impute missing values without contaminating the test data",
+   "parent_index": 5,
+   "overlap_with_parent": 0.08,
+   "expected_tags": [
+    "missing-data",
+    "imputation"
+   ]
+  },
+  {
+   "corpus": "ml",
+   "query": "proper way to substitute absent values while keeping validation data isolated",
+   "parent": "impute missing values without contaminating the test data",
+   "parent_index": 5,
+   "overlap_with_parent": 0.18,
+   "expected_tags": [
+    "missing-data",
+    "imputation"
+   ]
+  },
+  {
+   "corpus": "ml",
+   "query": "should I pick many parallel trees or trees built one correcting the next",
+   "parent": "random forest versus gradient boosting tradeoffs",
+   "parent_index": 6,
+   "overlap_with_parent": 0.0,
+   "expected_module": "Ensemble Methods"
+  },
+  {
+   "corpus": "ml",
+   "query": "pros and cons of averaging trees versus sequentially adding weak learners",
+   "parent": "random forest versus gradient boosting tradeoffs",
+   "parent_index": 6,
+   "overlap_with_parent": 0.09,
+   "expected_module": "Ensemble Methods"
+  },
+  {
+   "corpus": "ml",
+   "query": "comparing bagged forests against boosted tree approaches",
+   "parent": "random forest versus gradient boosting tradeoffs",
+   "parent_index": 6,
+   "overlap_with_parent": 0.0,
+   "expected_module": "Ensemble Methods"
+  },
+  {
+   "corpus": "ml",
+   "query": "dividing dated records into train and test without shuffling chronology",
+   "parent": "train test split for time series forecasting",
+   "parent_index": 7,
+   "overlap_with_parent": 0.2,
+   "expected_tags": [
+    "temporal-split",
+    "time-series"
+   ]
+  },
+  {
+   "corpus": "ml",
+   "query": "explain the algorithm that groups points around centers and choosing how many groups",
+   "parent": "how k-means works and how to pick the number of clusters",
+   "parent_index": 8,
+   "overlap_with_parent": 0.25,
+   "expected_tags": [
+    "kmeans",
+    "clustering"
+   ]
+  },
+  {
+   "corpus": "ml",
+   "query": "how do I decide the right number of segments when partitioning unlabeled data",
+   "parent": "how k-means works and how to pick the number of clusters",
+   "parent_index": 8,
+   "overlap_with_parent": 0.31,
+   "expected_tags": [
+    "kmeans",
+    "clustering"
+   ]
+  },
+  {
+   "corpus": "ml",
+   "query": "walk me through centroid-based grouping and picking the group count",
+   "parent": "how k-means works and how to pick the number of clusters",
+   "parent_index": 8,
+   "overlap_with_parent": 0.18,
+   "expected_tags": [
+    "kmeans",
+    "clustering"
+   ]
+  },
+  {
+   "corpus": "ml",
+   "query": "what does the goodness-of-fit percentage mean and when does it lie",
+   "parent": "interpret r squared and when it is misleading",
+   "parent_index": 9,
+   "overlap_with_parent": 0.25,
+   "expected_tags": [
+    "r2"
+   ]
+  },
+  {
+   "corpus": "ml",
+   "query": "how do I read the variance-explained score and when is it deceptive",
+   "parent": "interpret r squared and when it is misleading",
+   "parent_index": 9,
+   "overlap_with_parent": 0.31,
+   "expected_tags": [
+    "r2"
+   ]
+  },
+  {
+   "corpus": "ml",
+   "query": "that fraction telling how well the line fits, when should I not trust it",
+   "parent": "interpret r squared and when it is misleading",
+   "parent_index": 9,
+   "overlap_with_parent": 0.14,
+   "expected_tags": [
+    "r2"
+   ]
+  },
+  {
+   "corpus": "ml",
+   "query": "how do I pick the transformation function for a maximum-margin classifier",
+   "parent": "svm kernel choice and margin intuition",
+   "parent_index": 10,
+   "overlap_with_parent": 0.08,
+   "expected_tags": [
+    "svm"
+   ]
+  },
+  {
+   "corpus": "ml",
+   "query": "intuition behind the widest separating boundary and mapping data to higher dimensions",
+   "parent": "svm kernel choice and margin intuition",
+   "parent_index": 10,
+   "overlap_with_parent": 0.17,
+   "expected_tags": [
+    "svm"
+   ]
+  },
+  {
+   "corpus": "ml",
+   "query": "choosing between different similarity functions for that margin-maximizing model",
+   "parent": "svm kernel choice and margin intuition",
+   "parent_index": 10,
+   "overlap_with_parent": 0.1,
+   "expected_tags": [
+    "svm"
+   ]
+  },
+  {
+   "corpus": "ml",
+   "query": "my model nails training data but flops on new data, how to balance complexity",
+   "parent": "overfitting and the bias variance tradeoff",
+   "parent_index": 11,
+   "overlap_with_parent": 0.0,
+   "expected_tags": [
+    "overfitting",
+    "bias-variance"
+   ]
+  },
+  {
+   "corpus": "ml",
+   "query": "why does a simpler model underperform while a complex one memorizes noise",
+   "parent": "overfitting and the bias variance tradeoff",
+   "parent_index": 11,
+   "overlap_with_parent": 0.0,
+   "expected_tags": [
+    "overfitting",
+    "bias-variance"
+   ]
+  },
+  {
+   "corpus": "ml",
+   "query": "explain the tension between fitting too little and fitting too much",
+   "parent": "overfitting and the bias variance tradeoff",
+   "parent_index": 11,
+   "overlap_with_parent": 0.22,
+   "expected_tags": [
+    "overfitting",
+    "bias-variance"
+   ]
+  },
+  {
+   "corpus": "ml",
+   "query": "why bundle all my transform steps together into one reusable object",
+   "parent": "why wrap preprocessing in a sklearn pipeline",
+   "parent_index": 12,
+   "overlap_with_parent": 0.09,
+   "expected_tags": [
+    "pipeline"
+   ]
+  },
+  {
+   "corpus": "ml",
+   "query": "what's the benefit of chaining prep and model so they run as a unit",
+   "parent": "why wrap preprocessing in a sklearn pipeline",
+   "parent_index": 12,
+   "overlap_with_parent": 0.07,
+   "expected_tags": [
+    "pipeline"
+   ]
+  },
+  {
+   "corpus": "ml",
+   "query": "how does packaging preprocessing and fitting into one flow prevent mistakes",
+   "parent": "why wrap preprocessing in a sklearn pipeline",
+   "parent_index": 12,
+   "overlap_with_parent": 0.09,
+   "expected_tags": [
+    "pipeline"
+   ]
+  },
+  {
+   "corpus": "ml",
+   "query": "moving my cutoff catches more positives but flags more false alarms, how to choose",
+   "parent": "precision recall tradeoff when choosing a classification threshold",
+   "parent_index": 13,
+   "overlap_with_parent": 0.0,
+   "expected_tags": [
+    "precision-recall",
+    "threshold",
+    "recall"
+   ]
+  },
+  {
+   "corpus": "ml",
+   "query": "balancing catching all true cases against avoiding wrong flags when setting the decision point",
+   "parent": "precision recall tradeoff when choosing a classification threshold",
+   "parent_index": 13,
+   "overlap_with_parent": 0.07,
+   "expected_tags": [
+    "precision-recall",
+    "threshold",
+    "recall"
+   ]
+  },
+  {
+   "corpus": "ml",
+   "query": "how do I pick the score boundary given the tension between the two error rates",
+   "parent": "precision recall tradeoff when choosing a classification threshold",
+   "parent_index": 13,
+   "overlap_with_parent": 0.0,
+   "expected_tags": [
+    "precision-recall",
+    "threshold",
+    "recall"
+   ]
+  },
+  {
+   "corpus": "ai",
+   "query": "why do language models split text into word pieces and how does that affect billing",
+   "parent": "why llms use sub-word tokens and how token counts drive api cost",
+   "parent_index": 14,
+   "overlap_with_parent": 0.27,
+   "expected_tags": [
+    "tokens",
+    "tokenization"
+   ]
+  },
+  {
+   "corpus": "ai",
+   "query": "how does breaking prompts into chunks relate to what I pay per request",
+   "parent": "why llms use sub-word tokens and how token counts drive api cost",
+   "parent_index": 14,
+   "overlap_with_parent": 0.08,
+   "expected_tags": [
+    "tokens",
+    "tokenization"
+   ]
+  },
+  {
+   "corpus": "ai",
+   "query": "explain why input is chopped into fragments and how that drives usage cost",
+   "parent": "why llms use sub-word tokens and how token counts drive api cost",
+   "parent_index": 14,
+   "overlap_with_parent": 0.31,
+   "expected_tags": [
+    "tokens",
+    "tokenization"
+   ]
+  },
+  {
+   "corpus": "ai",
+   "query": "what are the two knobs that make model output more or less random",
+   "parent": "temperature versus top p nucleus sampling to control randomness",
+   "parent_index": 15,
+   "overlap_with_parent": 0.0,
+   "expected_tags": [
+    "temperature",
+    "top-p",
+    "nucleus-sampling"
+   ]
+  },
+  {
+   "corpus": "ai",
+   "query": "difference between the setting that flattens probabilities and the one that trims the tail",
+   "parent": "temperature versus top p nucleus sampling to control randomness",
+   "parent_index": 15,
+   "overlap_with_parent": 0.0,
+   "expected_tags": [
+    "temperature",
+    "top-p",
+    "nucleus-sampling"
+   ]
+  },
+  {
+   "corpus": "ai",
+   "query": "should I match exact words or meaning when searching, and can I mix both",
+   "parent": "keyword bm25 versus semantic embedding search and when to combine them",
+   "parent_index": 16,
+   "overlap_with_parent": 0.15,
+   "expected_tags": [
+    "bm25",
+    "semantic-search",
+    "hybrid-retrieval"
+   ]
+  },
+  {
+   "corpus": "ai",
+   "query": "how do I let the model trigger my own functions to fetch data",
+   "parent": "let the model call external tools with function calling",
+   "parent_index": 17,
+   "overlap_with_parent": 0.23,
+   "expected_tags": [
+    "function-calling",
+    "tool-use"
+   ]
+  },
+  {
+   "corpus": "ai",
+   "query": "enabling the model to invoke external actions instead of just talking",
+   "parent": "let the model call external tools with function calling",
+   "parent_index": 17,
+   "overlap_with_parent": 0.27,
+   "expected_tags": [
+    "function-calling",
+    "tool-use"
+   ]
+  },
+  {
+   "corpus": "ai",
+   "query": "should I hardcode the steps or let the model decide its own actions",
+   "parent": "when to build a fixed workflow versus an autonomous agent",
+   "parent_index": 18,
+   "overlap_with_parent": 0.0,
+   "expected_tags": [
+    "ai-workflow",
+    "ai-agent"
+   ]
+  },
+  {
+   "corpus": "ai",
+   "query": "when is a predetermined sequence better than a self-directing system",
+   "parent": "when to build a fixed workflow versus an autonomous agent",
+   "parent_index": 18,
+   "overlap_with_parent": 0.2,
+   "expected_tags": [
+    "ai-workflow",
+    "ai-agent"
+   ]
+  },
+  {
+   "corpus": "ai",
+   "query": "choosing between a rigid pipeline and one that plans its own moves",
+   "parent": "when to build a fixed workflow versus an autonomous agent",
+   "parent_index": 18,
+   "overlap_with_parent": 0.08,
+   "expected_tags": [
+    "ai-workflow",
+    "ai-agent"
+   ]
+  },
+  {
+   "corpus": "ai",
+   "query": "how do I avoid reprocessing the same instructions every request",
+   "parent": "prompt caching to cut cost and latency",
+   "parent_index": 19,
+   "overlap_with_parent": 0.0,
+   "expected_tags": [
+    "prompt-caching"
+   ]
+  },
+  {
+   "corpus": "ai",
+   "query": "storing the fixed prefix of prompts to save money and response time",
+   "parent": "prompt caching to cut cost and latency",
+   "parent_index": 19,
+   "overlap_with_parent": 0.17,
+   "expected_tags": [
+    "prompt-caching"
+   ]
+  },
+  {
+   "corpus": "ai",
+   "query": "using one model to score the answers another model produces",
+   "parent": "llm as judge graders for evaluating agent outputs",
+   "parent_index": 20,
+   "overlap_with_parent": 0.0,
+   "expected_tags": [
+    "graders",
+    "llm-as-judge"
+   ]
+  },
+  {
+   "corpus": "ai",
+   "query": "having an AI grade responses instead of writing manual evaluation rules",
+   "parent": "llm as judge graders for evaluating agent outputs",
+   "parent_index": 20,
+   "overlap_with_parent": 0.0,
+   "expected_tags": [
+    "graders",
+    "llm-as-judge"
+   ]
+  },
+  {
+   "corpus": "ai",
+   "query": "my agent's conversation history got huge, how do I shrink it during a session",
+   "parent": "compact the context window when a long agent session grows",
+   "parent_index": 21,
+   "overlap_with_parent": 0.2,
+   "expected_tags": [
+    "compaction",
+    "context-engineering"
+   ]
+  },
+  {
+   "corpus": "ai",
+   "query": "summarizing old messages so a long-running chat stays within limits",
+   "parent": "compact the context window when a long agent session grows",
+   "parent_index": 21,
+   "overlap_with_parent": 0.18,
+   "expected_tags": [
+    "compaction",
+    "context-engineering"
+   ]
+  },
+  {
+   "corpus": "ai",
+   "query": "managing what stays in the prompt when a session accumulates too much history",
+   "parent": "compact the context window when a long agent session grows",
+   "parent_index": 21,
+   "overlap_with_parent": 0.31,
+   "expected_tags": [
+    "compaction",
+    "context-engineering"
+   ]
+  },
+  {
+   "corpus": "ai",
+   "query": "how do I stop the model from making things up by tying answers to sources",
+   "parent": "reduce hallucinations by grounding answers in retrieved documents",
+   "parent_index": 22,
+   "overlap_with_parent": 0.13,
+   "expected_tags": [
+    "hallucination",
+    "grounding"
+   ]
+  },
+  {
+   "corpus": "ai",
+   "query": "keeping responses factual by anchoring them to fetched reference material",
+   "parent": "reduce hallucinations by grounding answers in retrieved documents",
+   "parent_index": 22,
+   "overlap_with_parent": 0.1,
+   "expected_tags": [
+    "hallucination",
+    "grounding"
+   ]
+  },
+  {
+   "corpus": "ai",
+   "query": "my assistant invents facts, how does pulling in documents fix that",
+   "parent": "reduce hallucinations by grounding answers in retrieved documents",
+   "parent_index": 22,
+   "overlap_with_parent": 0.18,
+   "expected_tags": [
+    "hallucination",
+    "grounding"
+   ]
+  }
+ ],
+ "dropped": [
+  {
+   "corpus": "ml",
+   "query": "how do I split data for forecasting so I don't train on the future",
+   "parent": "train test split for time series forecasting",
+   "parent_index": 7,
+   "overlap_with_parent": 0.29,
+   "expected_tags": [
+    "temporal-split",
+    "time-series"
+   ],
+   "dropped": "tag tokens leaked: split"
+  },
+  {
+   "corpus": "ml",
+   "query": "building a validation setup that respects the order of events over time",
+   "parent": "train test split for time series forecasting",
+   "parent_index": 7,
+   "overlap_with_parent": 0.08,
+   "expected_tags": [
+    "temporal-split",
+    "time-series"
+   ],
+   "dropped": "tag tokens leaked: time"
+  },
+  {
+   "corpus": "ai",
+   "query": "how do I control creativity of generations, comparing the two sampling parameters",
+   "parent": "temperature versus top p nucleus sampling to control randomness",
+   "parent_index": 15,
+   "overlap_with_parent": 0.17,
+   "expected_tags": [
+    "temperature",
+    "top-p",
+    "nucleus-sampling"
+   ],
+   "dropped": "tag tokens leaked: sampling"
+  },
+  {
+   "corpus": "ai",
+   "query": "comparing literal term matching against vector similarity retrieval and blending them",
+   "parent": "keyword bm25 versus semantic embedding search and when to combine them",
+   "parent_index": 16,
+   "overlap_with_parent": 0.18,
+   "expected_tags": [
+    "bm25",
+    "semantic-search",
+    "hybrid-retrieval"
+   ],
+   "dropped": "tag tokens leaked: retrieval"
+  },
+  {
+   "corpus": "ai",
+   "query": "when does word-overlap search beat meaning-based search and when combine the two",
+   "parent": "keyword bm25 versus semantic embedding search and when to combine them",
+   "parent_index": 16,
+   "overlap_with_parent": 0.33,
+   "expected_tags": [
+    "bm25",
+    "semantic-search",
+    "hybrid-retrieval"
+   ],
+   "dropped": "tag tokens leaked: search"
+  },
+  {
+   "corpus": "ai",
+   "query": "setup so the assistant can run APIs and use their results in answers",
+   "parent": "let the model call external tools with function calling",
+   "parent_index": 17,
+   "overlap_with_parent": 0.08,
+   "expected_tags": [
+    "function-calling",
+    "tool-use"
+   ],
+   "dropped": "tag tokens leaked: use"
+  },
+  {
+   "corpus": "ai",
+   "query": "reusing already-processed prompt parts so repeated calls are cheaper and faster",
+   "parent": "prompt caching to cut cost and latency",
+   "parent_index": 19,
+   "overlap_with_parent": 0.17,
+   "expected_tags": [
+    "prompt-caching"
+   ],
+   "dropped": "tag tokens leaked: prompt"
+  },
+  {
+   "corpus": "ai",
+   "query": "automating quality checks on agent outputs with a model as the reviewer",
+   "parent": "llm as judge graders for evaluating agent outputs",
+   "parent_index": 20,
+   "overlap_with_parent": 0.25,
+   "expected_tags": [
+    "graders",
+    "llm-as-judge"
+   ],
+   "dropped": "tag tokens leaked: as"
+  }
+ ]
+}

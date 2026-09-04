@@ -1,0 +1,196 @@
+{
+ "model": "claude-opus-4-8",
+ "usage": {
+  "input_tokens": 1582,
+  "output_tokens": 1855
+ },
+ "cost_usd": 0.0543,
+ "response": {
+  "items": [
+   {
+    "index": 0,
+    "paraphrases": [
+     "my scaling stats accidentally saw the held-out rows and now my scores look too good",
+     "how does peeking at future evaluation rows during data prep inflate results",
+     "I fit my normalizer on everything before splitting and results seem unrealistic"
+    ]
+   },
+   {
+    "index": 1,
+    "paraphrases": [
+     "only a tiny fraction of my transactions are the bad kind, how do I train well",
+     "my model just predicts the majority group and ignores the rare cases",
+     "dealing with datasets where one label barely shows up when catching fraud"
+    ]
+   },
+   {
+    "index": 2,
+    "paraphrases": [
+     "when should I shrink some coefficients to zero versus just making them smaller",
+     "comparing the two penalty approaches that keep model weights from getting too big",
+     "how do L1 and L2 penalties differ in what they do to feature weights"
+    ]
+   },
+   {
+    "index": 3,
+    "paraphrases": [
+     "I have way too many columns, how do I compress them before fitting a model",
+     "projecting features onto fewer axes that capture most of the variation",
+     "cutting down the number of input variables while keeping most information"
+    ]
+   },
+   {
+    "index": 4,
+    "paraphrases": [
+     "a text column has thousands of unique values, how do I turn it into numbers",
+     "best way to turn a feature with tons of distinct labels into model input",
+     "representing a variable that has huge number of possible category values numerically"
+    ]
+   },
+   {
+    "index": 5,
+    "paraphrases": [
+     "filling in blanks in my data without letting the evaluation rows influence the fill",
+     "how do I replace empty cells so the held-out set stays untouched",
+     "proper way to substitute absent values while keeping validation data isolated"
+    ]
+   },
+   {
+    "index": 6,
+    "paraphrases": [
+     "should I pick many parallel trees or trees built one correcting the next",
+     "pros and cons of averaging trees versus sequentially adding weak learners",
+     "comparing bagged forests against boosted tree approaches"
+    ]
+   },
+   {
+    "index": 7,
+    "paraphrases": [
+     "how do I split data for forecasting so I don't train on the future",
+     "dividing dated records into train and test without shuffling chronology",
+     "building a validation setup that respects the order of events over time"
+    ]
+   },
+   {
+    "index": 8,
+    "paraphrases": [
+     "explain the algorithm that groups points around centers and choosing how many groups",
+     "how do I decide the right number of segments when partitioning unlabeled data",
+     "walk me through centroid-based grouping and picking the group count"
+    ]
+   },
+   {
+    "index": 9,
+    "paraphrases": [
+     "what does the goodness-of-fit percentage mean and when does it lie",
+     "how do I read the variance-explained score and when is it deceptive",
+     "that fraction telling how well the line fits, when should I not trust it"
+    ]
+   },
+   {
+    "index": 10,
+    "paraphrases": [
+     "how do I pick the transformation function for a maximum-margin classifier",
+     "intuition behind the widest separating boundary and mapping data to higher dimensions",
+     "choosing between different similarity functions for that margin-maximizing model"
+    ]
+   },
+   {
+    "index": 11,
+    "paraphrases": [
+     "my model nails training data but flops on new data, how to balance complexity",
+     "why does a simpler model underperform while a complex one memorizes noise",
+     "explain the tension between fitting too little and fitting too much"
+    ]
+   },
+   {
+    "index": 12,
+    "paraphrases": [
+     "why bundle all my transform steps together into one reusable object",
+     "what's the benefit of chaining prep and model so they run as a unit",
+     "how does packaging preprocessing and fitting into one flow prevent mistakes"
+    ]
+   },
+   {
+    "index": 13,
+    "paraphrases": [
+     "moving my cutoff catches more positives but flags more false alarms, how to choose",
+     "balancing catching all true cases against avoiding wrong flags when setting the decision point",
+     "how do I pick the score boundary given the tension between the two error rates"
+    ]
+   },
+   {
+    "index": 14,
+    "paraphrases": [
+     "why do language models split text into word pieces and how does that affect billing",
+     "how does breaking prompts into chunks relate to what I pay per request",
+     "explain why input is chopped into fragments and how that drives usage cost"
+    ]
+   },
+   {
+    "index": 15,
+    "paraphrases": [
+     "what are the two knobs that make model output more or less random",
+     "difference between the setting that flattens probabilities and the one that trims the tail",
+     "how do I control creativity of generations, comparing the two sampling parameters"
+    ]
+   },
+   {
+    "index": 16,
+    "paraphrases": [
+     "should I match exact words or meaning when searching, and can I mix both",
+     "comparing literal term matching against vector similarity retrieval and blending them",
+     "when does word-overlap search beat meaning-based search and when combine the two"
+    ]
+   },
+   {
+    "index": 17,
+    "paraphrases": [
+     "how do I let the model trigger my own functions to fetch data",
+     "enabling the model to invoke external actions instead of just talking",
+     "setup so the assistant can run APIs and use their results in answers"
+    ]
+   },
+   {
+    "index": 18,
+    "paraphrases": [
+     "should I hardcode the steps or let the model decide its own actions",
+     "when is a predetermined sequence better than a self-directing system",
+     "choosing between a rigid pipeline and one that plans its own moves"
+    ]
+   },
+   {
+    "index": 19,
+    "paraphrases": [
+     "reusing already-processed prompt parts so repeated calls are cheaper and faster",
+     "how do I avoid reprocessing the same instructions every request",
+     "storing the fixed prefix of prompts to save money and response time"
+    ]
+   },
+   {
+    "index": 20,
+    "paraphrases": [
+     "using one model to score the answers another model produces",
+     "automating quality checks on agent outputs with a model as the reviewer",
+     "having an AI grade responses instead of writing manual evaluation rules"
+    ]
+   },
+   {
+    "index": 21,
+    "paraphrases": [
+     "my agent's conversation history got huge, how do I shrink it during a session",
+     "summarizing old messages so a long-running chat stays within limits",
+     "managing what stays in the prompt when a session accumulates too much history"
+    ]
+   },
+   {
+    "index": 22,
+    "paraphrases": [
+     "how do I stop the model from making things up by tying answers to sources",
+     "keeping responses factual by anchoring them to fetched reference material",
+     "my assistant invents facts, how does pulling in documents fix that"
+    ]
+   }
+  ]
+ }
+}

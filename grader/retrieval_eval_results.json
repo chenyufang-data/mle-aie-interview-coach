@@ -1,0 +1,1295 @@
+{
+ "generated": "2026-09-04T00:51:29",
+ "hardware": {
+  "cpu": "AMD Ryzen 7 9800X3D 8-Core Processor",
+  "threads": 16,
+  "platform": "Windows-11-10.0.26200-SP0",
+  "python": "3.13.7"
+ },
+ "model": {
+  "model": "BAAI/bge-small-en-v1.5",
+  "source": "data\\models\\fastembed\\fast-bge-small-en-v1.5",
+  "onnx_mb": 126.7,
+  "query_prefix": "Represent this sentence for searching relevant passages: "
+ },
+ "memory": {
+  "rss_before_mb": 31.7,
+  "rss_runtime_mb": 231.6,
+  "rss_after_mb": 281.5,
+  "growth_mb": 200.0,
+  "chroma_extra_mb": 49.8
+ },
+ "build": {
+  "ai": {
+   "chunks": 91,
+   "bm25_build_s": 0.0022,
+   "embed_s": 0.007,
+   "embed_from_cache": true,
+   "chroma_build_s": 0.071
+  },
+  "ml": {
+   "chunks": 191,
+   "bm25_build_s": 0.0031,
+   "embed_s": 0.005,
+   "embed_from_cache": true,
+   "chroma_build_s": 0.113
+  }
+ },
+ "index_mb": {
+  "npz": 0.414,
+  "chroma": 3.71
+ },
+ "sets": {
+  "A": {
+   "n": 23,
+   "metrics": {
+    "bm25": {
+     "n": 23,
+     "hits": 23,
+     "recall5": 1.0,
+     "recall1": 0.8696,
+     "mrr": 0.9087
+    },
+    "dense": {
+     "n": 23,
+     "hits": 23,
+     "recall5": 1.0,
+     "recall1": 0.8696,
+     "mrr": 0.9348
+    },
+    "chroma": {
+     "n": 23,
+     "hits": 23,
+     "recall5": 1.0,
+     "recall1": 0.8696,
+     "mrr": 0.9348
+    },
+    "hybrid": {
+     "n": 23,
+     "hits": 23,
+     "recall5": 1.0,
+     "recall1": 0.913,
+     "mrr": 0.9493
+    }
+   },
+   "rows": [
+    {
+     "query": "test set information leaking into training during preprocessing",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 1,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": null
+    },
+    {
+     "query": "handle class imbalance when training a fraud classifier",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 1,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": null
+    },
+    {
+     "query": "difference between lasso and ridge regularization",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 1,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": null
+    },
+    {
+     "query": "reduce dimensions with principal component analysis before modeling",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 2,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": null
+    },
+    {
+     "query": "encode high cardinality categorical features",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 1,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": null
+    },
+    {
+     "query": "impute missing values without contaminating the test data",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 1,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": null
+    },
+    {
+     "query": "random forest versus gradient boosting tradeoffs",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 1,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": null
+    },
+    {
+     "query": "train test split for time series forecasting",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 1,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": null
+    },
+    {
+     "query": "how k-means works and how to pick the number of clusters",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 1,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": null
+    },
+    {
+     "query": "interpret r squared and when it is misleading",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 5,
+      "dense": 2,
+      "chroma": 2,
+      "hybrid": 2
+     },
+     "parent": null
+    },
+    {
+     "query": "svm kernel choice and margin intuition",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 1,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": null
+    },
+    {
+     "query": "overfitting and the bias variance tradeoff",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 1,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": null
+    },
+    {
+     "query": "why wrap preprocessing in a sklearn pipeline",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 1,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": null
+    },
+    {
+     "query": "precision recall tradeoff when choosing a classification threshold",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 1,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": null
+    },
+    {
+     "query": "why llms use sub-word tokens and how token counts drive api cost",
+     "corpus": "ai",
+     "ranks": {
+      "bm25": 1,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": null
+    },
+    {
+     "query": "temperature versus top p nucleus sampling to control randomness",
+     "corpus": "ai",
+     "ranks": {
+      "bm25": 1,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": null
+    },
+    {
+     "query": "keyword bm25 versus semantic embedding search and when to combine them",
+     "corpus": "ai",
+     "ranks": {
+      "bm25": 1,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": null
+    },
+    {
+     "query": "let the model call external tools with function calling",
+     "corpus": "ai",
+     "ranks": {
+      "bm25": 1,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": null
+    },
+    {
+     "query": "when to build a fixed workflow versus an autonomous agent",
+     "corpus": "ai",
+     "ranks": {
+      "bm25": 1,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": null
+    },
+    {
+     "query": "prompt caching to cut cost and latency",
+     "corpus": "ai",
+     "ranks": {
+      "bm25": 1,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": null
+    },
+    {
+     "query": "llm as judge graders for evaluating agent outputs",
+     "corpus": "ai",
+     "ranks": {
+      "bm25": 1,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": null
+    },
+    {
+     "query": "compact the context window when a long agent session grows",
+     "corpus": "ai",
+     "ranks": {
+      "bm25": 5,
+      "dense": 2,
+      "chroma": 2,
+      "hybrid": 3
+     },
+     "parent": null
+    },
+    {
+     "query": "reduce hallucinations by grounding answers in retrieved documents",
+     "corpus": "ai",
+     "ranks": {
+      "bm25": 1,
+      "dense": 2,
+      "chroma": 2,
+      "hybrid": 1
+     },
+     "parent": null
+    }
+   ]
+  },
+  "B": {
+   "n": 61,
+   "metrics": {
+    "bm25": {
+     "n": 61,
+     "hits": 41,
+     "recall5": 0.6721,
+     "recall1": 0.3607,
+     "mrr": 0.4904
+    },
+    "dense": {
+     "n": 61,
+     "hits": 47,
+     "recall5": 0.7705,
+     "recall1": 0.5738,
+     "mrr": 0.6421
+    },
+    "chroma": {
+     "n": 61,
+     "hits": 47,
+     "recall5": 0.7705,
+     "recall1": 0.5738,
+     "mrr": 0.6421
+    },
+    "hybrid": {
+     "n": 61,
+     "hits": 49,
+     "recall5": 0.8033,
+     "recall1": 0.4918,
+     "mrr": 0.6041
+    }
+   },
+   "rows": [
+    {
+     "query": "my scaling stats accidentally saw the held-out rows and now my scores look too good",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 4,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": "test set information leaking into training during preprocessing"
+    },
+    {
+     "query": "how does peeking at future evaluation rows during data prep inflate results",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 2,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": "test set information leaking into training during preprocessing"
+    },
+    {
+     "query": "I fit my normalizer on everything before splitting and results seem unrealistic",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 2,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": "test set information leaking into training during preprocessing"
+    },
+    {
+     "query": "only a tiny fraction of my transactions are the bad kind, how do I train well",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": null,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": null
+     },
+     "parent": "handle class imbalance when training a fraud classifier"
+    },
+    {
+     "query": "my model just predicts the majority group and ignores the rare cases",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 2,
+      "dense": null,
+      "chroma": null,
+      "hybrid": 2
+     },
+     "parent": "handle class imbalance when training a fraud classifier"
+    },
+    {
+     "query": "dealing with datasets where one label barely shows up when catching fraud",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": null,
+      "dense": 3,
+      "chroma": 3,
+      "hybrid": 2
+     },
+     "parent": "handle class imbalance when training a fraud classifier"
+    },
+    {
+     "query": "when should I shrink some coefficients to zero versus just making them smaller",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 2,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": "difference between lasso and ridge regularization"
+    },
+    {
+     "query": "comparing the two penalty approaches that keep model weights from getting too big",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 1,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": "difference between lasso and ridge regularization"
+    },
+    {
+     "query": "how do L1 and L2 penalties differ in what they do to feature weights",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 1,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": "difference between lasso and ridge regularization"
+    },
+    {
+     "query": "I have way too many columns, how do I compress them before fitting a model",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": null,
+      "dense": null,
+      "chroma": null,
+      "hybrid": null
+     },
+     "parent": "reduce dimensions with principal component analysis before modeling"
+    },
+    {
+     "query": "projecting features onto fewer axes that capture most of the variation",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": null,
+      "dense": null,
+      "chroma": null,
+      "hybrid": null
+     },
+     "parent": "reduce dimensions with principal component analysis before modeling"
+    },
+    {
+     "query": "cutting down the number of input variables while keeping most information",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": null,
+      "dense": null,
+      "chroma": null,
+      "hybrid": 1
+     },
+     "parent": "reduce dimensions with principal component analysis before modeling"
+    },
+    {
+     "query": "a text column has thousands of unique values, how do I turn it into numbers",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 4,
+      "dense": null,
+      "chroma": null,
+      "hybrid": 4
+     },
+     "parent": "encode high cardinality categorical features"
+    },
+    {
+     "query": "best way to turn a feature with tons of distinct labels into model input",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 3,
+      "dense": 3,
+      "chroma": 3,
+      "hybrid": 4
+     },
+     "parent": "encode high cardinality categorical features"
+    },
+    {
+     "query": "representing a variable that has huge number of possible category values numerically",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 1,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": "encode high cardinality categorical features"
+    },
+    {
+     "query": "filling in blanks in my data without letting the evaluation rows influence the fill",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 1,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": "impute missing values without contaminating the test data"
+    },
+    {
+     "query": "how do I replace empty cells so the held-out set stays untouched",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": null,
+      "dense": 2,
+      "chroma": 2,
+      "hybrid": null
+     },
+     "parent": "impute missing values without contaminating the test data"
+    },
+    {
+     "query": "proper way to substitute absent values while keeping validation data isolated",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 2,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": "impute missing values without contaminating the test data"
+    },
+    {
+     "query": "should I pick many parallel trees or trees built one correcting the next",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 1,
+      "dense": null,
+      "chroma": null,
+      "hybrid": 2
+     },
+     "parent": "random forest versus gradient boosting tradeoffs"
+    },
+    {
+     "query": "pros and cons of averaging trees versus sequentially adding weak learners",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 1,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": "random forest versus gradient boosting tradeoffs"
+    },
+    {
+     "query": "comparing bagged forests against boosted tree approaches",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": null,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 5
+     },
+     "parent": "random forest versus gradient boosting tradeoffs"
+    },
+    {
+     "query": "dividing dated records into train and test without shuffling chronology",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 1,
+      "dense": 2,
+      "chroma": 2,
+      "hybrid": 1
+     },
+     "parent": "train test split for time series forecasting"
+    },
+    {
+     "query": "explain the algorithm that groups points around centers and choosing how many groups",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 1,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": "how k-means works and how to pick the number of clusters"
+    },
+    {
+     "query": "how do I decide the right number of segments when partitioning unlabeled data",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 1,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": "how k-means works and how to pick the number of clusters"
+    },
+    {
+     "query": "walk me through centroid-based grouping and picking the group count",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 1,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": "how k-means works and how to pick the number of clusters"
+    },
+    {
+     "query": "what does the goodness-of-fit percentage mean and when does it lie",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 4,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": "interpret r squared and when it is misleading"
+    },
+    {
+     "query": "how do I read the variance-explained score and when is it deceptive",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 4,
+      "dense": 4,
+      "chroma": 4,
+      "hybrid": null
+     },
+     "parent": "interpret r squared and when it is misleading"
+    },
+    {
+     "query": "that fraction telling how well the line fits, when should I not trust it",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": null,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": null
+     },
+     "parent": "interpret r squared and when it is misleading"
+    },
+    {
+     "query": "how do I pick the transformation function for a maximum-margin classifier",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 1,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": "svm kernel choice and margin intuition"
+    },
+    {
+     "query": "intuition behind the widest separating boundary and mapping data to higher dimensions",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 1,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": "svm kernel choice and margin intuition"
+    },
+    {
+     "query": "choosing between different similarity functions for that margin-maximizing model",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 2,
+      "dense": 3,
+      "chroma": 3,
+      "hybrid": 1
+     },
+     "parent": "svm kernel choice and margin intuition"
+    },
+    {
+     "query": "my model nails training data but flops on new data, how to balance complexity",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 1,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": "overfitting and the bias variance tradeoff"
+    },
+    {
+     "query": "why does a simpler model underperform while a complex one memorizes noise",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": null,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 2
+     },
+     "parent": "overfitting and the bias variance tradeoff"
+    },
+    {
+     "query": "explain the tension between fitting too little and fitting too much",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": null,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 2
+     },
+     "parent": "overfitting and the bias variance tradeoff"
+    },
+    {
+     "query": "why bundle all my transform steps together into one reusable object",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 1,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": "why wrap preprocessing in a sklearn pipeline"
+    },
+    {
+     "query": "what's the benefit of chaining prep and model so they run as a unit",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": null,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 2
+     },
+     "parent": "why wrap preprocessing in a sklearn pipeline"
+    },
+    {
+     "query": "how does packaging preprocessing and fitting into one flow prevent mistakes",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 1,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": "why wrap preprocessing in a sklearn pipeline"
+    },
+    {
+     "query": "moving my cutoff catches more positives but flags more false alarms, how to choose",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 1,
+      "dense": null,
+      "chroma": null,
+      "hybrid": 1
+     },
+     "parent": "precision recall tradeoff when choosing a classification threshold"
+    },
+    {
+     "query": "balancing catching all true cases against avoiding wrong flags when setting the decision point",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 2,
+      "dense": null,
+      "chroma": null,
+      "hybrid": 3
+     },
+     "parent": "precision recall tradeoff when choosing a classification threshold"
+    },
+    {
+     "query": "how do I pick the score boundary given the tension between the two error rates",
+     "corpus": "ml",
+     "ranks": {
+      "bm25": 2,
+      "dense": null,
+      "chroma": null,
+      "hybrid": 1
+     },
+     "parent": "precision recall tradeoff when choosing a classification threshold"
+    },
+    {
+     "query": "why do language models split text into word pieces and how does that affect billing",
+     "corpus": "ai",
+     "ranks": {
+      "bm25": 2,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": "why llms use sub-word tokens and how token counts drive api cost"
+    },
+    {
+     "query": "how does breaking prompts into chunks relate to what I pay per request",
+     "corpus": "ai",
+     "ranks": {
+      "bm25": 2,
+      "dense": null,
+      "chroma": null,
+      "hybrid": 5
+     },
+     "parent": "why llms use sub-word tokens and how token counts drive api cost"
+    },
+    {
+     "query": "explain why input is chopped into fragments and how that drives usage cost",
+     "corpus": "ai",
+     "ranks": {
+      "bm25": 1,
+      "dense": null,
+      "chroma": null,
+      "hybrid": 4
+     },
+     "parent": "why llms use sub-word tokens and how token counts drive api cost"
+    },
+    {
+     "query": "what are the two knobs that make model output more or less random",
+     "corpus": "ai",
+     "ranks": {
+      "bm25": null,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 5
+     },
+     "parent": "temperature versus top p nucleus sampling to control randomness"
+    },
+    {
+     "query": "difference between the setting that flattens probabilities and the one that trims the tail",
+     "corpus": "ai",
+     "ranks": {
+      "bm25": null,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": "temperature versus top p nucleus sampling to control randomness"
+    },
+    {
+     "query": "should I match exact words or meaning when searching, and can I mix both",
+     "corpus": "ai",
+     "ranks": {
+      "bm25": 2,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": "keyword bm25 versus semantic embedding search and when to combine them"
+    },
+    {
+     "query": "how do I let the model trigger my own functions to fetch data",
+     "corpus": "ai",
+     "ranks": {
+      "bm25": 3,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": "let the model call external tools with function calling"
+    },
+    {
+     "query": "enabling the model to invoke external actions instead of just talking",
+     "corpus": "ai",
+     "ranks": {
+      "bm25": null,
+      "dense": 4,
+      "chroma": 4,
+      "hybrid": 3
+     },
+     "parent": "let the model call external tools with function calling"
+    },
+    {
+     "query": "should I hardcode the steps or let the model decide its own actions",
+     "corpus": "ai",
+     "ranks": {
+      "bm25": 1,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": "when to build a fixed workflow versus an autonomous agent"
+    },
+    {
+     "query": "when is a predetermined sequence better than a self-directing system",
+     "corpus": "ai",
+     "ranks": {
+      "bm25": 1,
+      "dense": 4,
+      "chroma": 4,
+      "hybrid": 4
+     },
+     "parent": "when to build a fixed workflow versus an autonomous agent"
+    },
+    {
+     "query": "choosing between a rigid pipeline and one that plans its own moves",
+     "corpus": "ai",
+     "ranks": {
+      "bm25": 1,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 2
+     },
+     "parent": "when to build a fixed workflow versus an autonomous agent"
+    },
+    {
+     "query": "how do I avoid reprocessing the same instructions every request",
+     "corpus": "ai",
+     "ranks": {
+      "bm25": null,
+      "dense": 3,
+      "chroma": 3,
+      "hybrid": null
+     },
+     "parent": "prompt caching to cut cost and latency"
+    },
+    {
+     "query": "storing the fixed prefix of prompts to save money and response time",
+     "corpus": "ai",
+     "ranks": {
+      "bm25": 1,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
+     },
+     "parent": "prompt caching to cut cost and latency"
+    },
+    {
+     "query": "using one model to score the answers another model produces",
+     "corpus": "ai",
+     "ranks": {
+      "bm25": null,
+      "dense": null,
+      "chroma": null,
+      "hybrid": null
+     },
+     "parent": "llm as judge graders for evaluating agent outputs"
+    },
+    {
+     "query": "having an AI grade responses instead of writing manual evaluation rules",
+     "corpus": "ai",
+     "ranks": {
+      "bm25": null,
+      "dense": 3,
+      "chroma": 3,
+      "hybrid": null
+     },
+     "parent": "llm as judge graders for evaluating agent outputs"
+    },
+    {
+     "query": "my agent's conversation history got huge, how do I shrink it during a session",
+     "corpus": "ai",
+     "ranks": {
+      "bm25": 4,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 2
+     },
+     "parent": "compact the context window when a long agent session grows"
+    },
+    {
+     "query": "summarizing old messages so a long-running chat stays within limits",
+     "corpus": "ai",
+     "ranks": {
+      "bm25": null,
+      "dense": null,
+      "chroma": null,
+      "hybrid": null
+     },
+     "parent": "compact the context window when a long agent session grows"
+    },
+    {
+     "query": "managing what stays in the prompt when a session accumulates too much history",
+     "corpus": "ai",
+     "ranks": {
+      "bm25": 1,
+      "dense": 4,
+      "chroma": 4,
+      "hybrid": 3
+     },
+     "parent": "compact the context window when a long agent session grows"
+    },
+    {
+     "query": "how do I stop the model from making things up by tying answers to sources",
+     "corpus": "ai",
+     "ranks": {
+      "bm25": 2,
+      "dense": 2,
+      "chroma": 2,
+      "hybrid": 4
+     },
+     "parent": "reduce hallucinations by grounding answers in retrieved documents"
+    },
+    {
+     "query": "keeping responses factual by anchoring them to fetched reference material",
+     "corpus": "ai",
+     "ranks": {
+      "bm25": null,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": null
+     },
+     "parent": "reduce hallucinations by grounding answers in retrieved documents"
+    },
+    {
+     "query": "my assistant invents facts, how does pulling in documents fix that",
+     "corpus": "ai",
+     "ranks": {
+      "bm25": null,
+      "dense": null,
+      "chroma": null,
+      "hybrid": null
+     },
+     "parent": "reduce hallucinations by grounding answers in retrieved documents"
+    }
+   ]
+  }
+ },
+ "params": {
+  "limit": 5,
+  "repeats": 5,
+  "bm25_rubric_threshold": 10.0,
+  "r1": {
+   "b_gain_points": 10,
+   "mrr_drop_max": 0.05,
+   "p95_ms_max": 50,
+   "model_mb_max": 200
+  }
+ },
+ "latency": {
+  "bm25": {
+   "n": 420,
+   "p50_ms": 0.214,
+   "p95_ms": 0.454,
+   "mean_ms": 0.226
+  },
+  "dense": {
+   "n": 420,
+   "p50_ms": 1.829,
+   "p95_ms": 2.268,
+   "mean_ms": 1.851
+  },
+  "chroma": {
+   "n": 420,
+   "p50_ms": 2.529,
+   "p95_ms": 3.162,
+   "mean_ms": 2.566
+  },
+  "hybrid": {
+   "n": 420,
+   "p50_ms": 2.181,
+   "p95_ms": 2.761,
+   "mean_ms": 2.196
+  },
+  "embed_only": {
+   "n": 420,
+   "p50_ms": 1.731,
+   "p95_ms": 2.106,
+   "mean_ms": 1.739
+  }
+ },
+ "chroma_agreement": {
+  "queries": 84,
+  "identical_top5": 84,
+  "mean_jaccard": 1.0
+ },
+ "calibration": {
+  "n": 84,
+  "bm25": {
+   "threshold": 10.0,
+   "attached": 52,
+   "attach_rate": 0.619,
+   "precision": 0.5962
+  },
+  "dense": {
+   "chosen": {
+    "threshold": 0.5638,
+    "attached": 84,
+    "attach_rate": 1.0,
+    "precision": 0.6548
+   },
+   "target_precision": 0.5962,
+   "curve": [
+    {
+     "threshold": 0.6402,
+     "attached": 75,
+     "attach_rate": 0.8929,
+     "precision": 0.6667
+    },
+    {
+     "threshold": 0.6766,
+     "attached": 63,
+     "attach_rate": 0.75,
+     "precision": 0.6984
+    },
+    {
+     "threshold": 0.711,
+     "attached": 42,
+     "attach_rate": 0.5,
+     "precision": 0.8333
+    },
+    {
+     "threshold": 0.7755,
+     "attached": 21,
+     "attach_rate": 0.25,
+     "precision": 0.9048
+    },
+    {
+     "threshold": 0.847,
+     "attached": 9,
+     "attach_rate": 0.1071,
+     "precision": 1.0
+    }
+   ],
+   "score_range": [
+    0.5638,
+    0.8757
+   ]
+  },
+  "hybrid": {
+   "chosen": {
+    "threshold": 0.0284,
+    "attached": 84,
+    "attach_rate": 1.0,
+    "precision": 0.6071
+   },
+   "target_precision": 0.5962,
+   "curve": [
+    {
+     "threshold": 0.0309,
+     "attached": 75,
+     "attach_rate": 0.8929,
+     "precision": 0.64
+    },
+    {
+     "threshold": 0.0315,
+     "attached": 66,
+     "attach_rate": 0.7857,
+     "precision": 0.697
+    },
+    {
+     "threshold": 0.0323,
+     "attached": 49,
+     "attach_rate": 0.5833,
+     "precision": 0.7959
+    },
+    {
+     "threshold": 0.0328,
+     "attached": 23,
+     "attach_rate": 0.2738,
+     "precision": 0.7826
+    },
+    {
+     "threshold": 0.0328,
+     "attached": 23,
+     "attach_rate": 0.2738,
+     "precision": 0.7826
+    }
+   ],
+   "score_range": [
+    0.0284,
+    0.0328
+   ]
+  },
+  "chroma": {
+   "chosen": {
+    "threshold": 0.5638,
+    "attached": 84,
+    "attach_rate": 1.0,
+    "precision": 0.6548
+   },
+   "target_precision": 0.5962,
+   "curve": [
+    {
+     "threshold": 0.6402,
+     "attached": 75,
+     "attach_rate": 0.8929,
+     "precision": 0.6667
+    },
+    {
+     "threshold": 0.6766,
+     "attached": 63,
+     "attach_rate": 0.75,
+     "precision": 0.6984
+    },
+    {
+     "threshold": 0.711,
+     "attached": 42,
+     "attach_rate": 0.5,
+     "precision": 0.8333
+    },
+    {
+     "threshold": 0.7755,
+     "attached": 21,
+     "attach_rate": 0.25,
+     "precision": 0.9048
+    },
+    {
+     "threshold": 0.847,
+     "attached": 9,
+     "attach_rate": 0.1071,
+     "precision": 1.0
+    }
+   ],
+   "score_range": [
+    0.5638,
+    0.8757
+   ]
+  }
+ },
+ "r1": {
+  "dense": {
+   "pass": false,
+   "checks": {
+    "1_A_no_regression": {
+     "pass": true,
+     "detail": "A hits 23/23 (bm25 23), MRR 0.935 vs 0.909"
+    },
+    "2_B_gain": {
+     "pass": false,
+     "detail": "B Recall@5 77.0% vs bm25 67.2% (+9.8 pts; need +10)"
+    },
+    "3_latency": {
+     "pass": true,
+     "detail": "p95 2.268 ms (max 50)"
+    },
+    "4_model_size": {
+     "pass": true,
+     "detail": "model 126.7 MB (max 200); RSS growth 200.0 MB (reported)"
+    }
+   }
+  },
+  "hybrid": {
+   "pass": true,
+   "checks": {
+    "1_A_no_regression": {
+     "pass": true,
+     "detail": "A hits 23/23 (bm25 23), MRR 0.949 vs 0.909"
+    },
+    "2_B_gain": {
+     "pass": true,
+     "detail": "B Recall@5 80.3% vs bm25 67.2% (+13.1 pts; need +10)"
+    },
+    "3_latency": {
+     "pass": true,
+     "detail": "p95 2.761 ms (max 50)"
+    },
+    "4_model_size": {
+     "pass": true,
+     "detail": "model 126.7 MB (max 200); RSS growth 200.0 MB (reported)"
+    }
+   }
+  },
+  "chroma": {
+   "pass": false,
+   "checks": {
+    "1_A_no_regression": {
+     "pass": true,
+     "detail": "A hits 23/23 (bm25 23), MRR 0.935 vs 0.909"
+    },
+    "2_B_gain": {
+     "pass": false,
+     "detail": "B Recall@5 77.0% vs bm25 67.2% (+9.8 pts; need +10)"
+    },
+    "3_latency": {
+     "pass": true,
+     "detail": "p95 3.162 ms (max 50)"
+    },
+    "4_model_size": {
+     "pass": true,
+     "detail": "model 126.7 MB (max 200); RSS growth 200.0 MB (reported)"
+    }
+   }
+  }
+ }
+}

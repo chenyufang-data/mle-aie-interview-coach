@@ -1,0 +1,68 @@
+{
+ "generated": "2026-09-04T00:49:27",
+ "probes": 77,
+ "plans": 10,
+ "generator": "DeepSeek deepseek-v4-flash via planning.build_plan",
+ "labeler": "Claude (assistant), in-session 2026-09-04; author spot-check pending",
+ "thresholds": {
+  "bm25": 10.0,
+  "dense": 0.5638,
+  "hybrid": 0.0284
+ },
+ "arms": {
+  "bm25": {
+   "threshold": 10.0,
+   "attached": 77,
+   "coverage": 1.0,
+   "labeled_yes": 43,
+   "precision": 0.5584,
+   "r2": "-"
+  },
+  "dense": {
+   "threshold": 0.5638,
+   "attached": 77,
+   "coverage": 1.0,
+   "labeled_yes": 50,
+   "precision": 0.6494,
+   "coverage_gain_points": 0.0,
+   "r2": "FAIL (+0.0 pts, precision ok)"
+  },
+  "hybrid": {
+   "threshold": 0.0284,
+   "attached": 77,
+   "coverage": 1.0,
+   "labeled_yes": 47,
+   "precision": 0.6104,
+   "coverage_gain_points": 0.0,
+   "r2": "FAIL (+0.0 pts, precision ok)"
+  }
+ },
+ "ungrounded_bm25": {
+  "total": 0,
+  "covered": 0,
+  "uncovered": 0
+ },
+ "unfair_split": {
+  "bm25": {
+   "total": 34,
+   "covered": 25,
+   "uncovered": 9
+  },
+  "dense": {
+   "total": 27,
+   "covered": 18,
+   "uncovered": 9
+  },
+  "hybrid": {
+   "total": 30,
+   "covered": 21,
+   "uncovered": 9
+  }
+ },
+ "uncovered_probes": {
+  "total": 77,
+  "uncovered": 9
+ },
+ "s9_trigger": "not triggered",
+ "s9_basis": "unfairly grounded probes (9/34 uncovered)"
+}

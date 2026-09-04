@@ -1,0 +1,7 @@
+# Retrieval-experiment extras (docs/dense_retrieval_plan.md), on top of
+# requirements.txt (which carries fastembed since hybrid retrieval shipped).
+#   .venv\Scripts\python -m pip install -r requirements-retrieval-eval.txt
+# Only grader/retrieval_eval.py's Chroma arm needs this - the question of
+# whether a vector store earns its place at a few hundred chunks (Q3).
+# Resolved on 2026-09-04, Python 3.13, Windows x86-64.
+chromadb==1.5.9
