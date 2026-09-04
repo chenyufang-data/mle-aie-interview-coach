@@ -110,6 +110,34 @@ Where an arm attached an UNFAIR rubric, did a fair chunk exist in some bank (a r
 
 Across all 77 probes, 9 have no fair chunk in any bank. Plan §9 trigger (>= 1/3 uncovered, basis: unfairly grounded probes (9/34 uncovered)): **not triggered**.
 
+#### Precision by slice
+
+Fair attachments / probes. Cells are small (15-16 probes per JD, 7-8 per JD x level), so one probe moves a cell by 6-13 points - read as direction, not as a ranking.
+
+**By candidate level**
+
+| Slice | n | `bm25` | `dense` | `hybrid` | content gaps |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Mid-level | 39 | 22/39 (56.4%) | 27/39 (69.2%) | 26/39 (66.7%) | 4 |
+| Senior | 38 | 21/38 (55.3%) | 23/38 (60.5%) | 21/38 (55.3%) | 5 |
+
+**By job-description template**
+
+| Slice | n | `bm25` | `dense` | `hybrid` | content gaps |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| mle | 16 | 14/16 (87.5%) | 10/16 (62.5%) | 12/16 (75.0%) | 1 |
+| aie | 16 | 6/16 (37.5%) | 8/16 (50.0%) | 8/16 (50.0%) | 1 |
+| ds | 15 | 6/15 (40.0%) | 13/15 (86.7%) | 9/15 (60.0%) | 0 |
+| platform | 15 | 9/15 (60.0%) | 9/15 (60.0%) | 9/15 (60.0%) | 4 |
+| applied_sci | 15 | 8/15 (53.3%) | 10/15 (66.7%) | 9/15 (60.0%) | 3 |
+
+**By probe source (project = from the resume, role_theme = from the JD)**
+
+| Slice | n | `bm25` | `dense` | `hybrid` | content gaps |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| project | 54 | 37/54 (68.5%) | 40/54 (74.1%) | 39/54 (72.2%) | 2 |
+| role_theme | 23 | 6/23 (26.1%) | 10/23 (43.5%) | 8/23 (34.8%) | 7 |
+
 ### R3 - does the store earn its place at this size?
 
 Chroma adds +0.89 ms at p95 over the numpy arm for the same vectors, 3.71 MB on disk vs 0.414 MB, and a fully identical top-5. At a few hundred chunks the numpy array is the honest implementation; the store is a workflow choice (persistence, filtering API, scale headroom), not a performance one. Plan §2 predicted 'not earned' - the numbers above are the check.

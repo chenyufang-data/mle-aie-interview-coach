@@ -413,6 +413,25 @@ def render(results, grounding):
         lines += ["", f"Across all {up.get('total', '?')} probes, {up.get('uncovered', '?')} have no fair chunk "
                   f"in any bank. Plan §9 trigger (>= 1/3 uncovered, basis: {g.get('s9_basis', '?')}): "
                   f"**{g.get('s9_trigger', '?')}**.", ""]
+        groups = g.get("by_group", {})
+        if groups:
+            arms_in = list(g["arms"].keys())
+            titles = {"level": "By candidate level", "template": "By job-description template",
+                      "source": "By probe source (project = from the resume, role_theme = from the JD)"}
+            lines += ["#### Precision by slice", "",
+                      "Fair attachments / probes. Cells are small (15-16 probes per JD, 7-8 per "
+                      "JD x level), so one probe moves a cell by 6-13 points - read as direction, "
+                      "not as a ranking.", ""]
+            for key, title in titles.items():
+                if key not in groups:
+                    continue
+                lines += [f"**{title}**", "",
+                          "| Slice | n | " + " | ".join(f"`{a}`" for a in arms_in) + " | content gaps |",
+                          "| --- | ---: | " + " | ".join("---:" for _ in arms_in) + " | ---: |"]
+                for slice_name, s in groups[key].items():
+                    cells = [f"{s[a]['fair']}/{s[a]['attached']} ({pct(s[a]['precision'])})" for a in arms_in]
+                    lines.append(f"| {slice_name} | {s['n']} | " + " | ".join(cells) + f" | {s['gaps']} |")
+                lines.append("")
     else:
         lines += ["Pending - `grader/grounding_eval.py` has not produced `grounding_eval_results.json` yet.", ""]
     lines += ["### R3 - does the store earn its place at this size?", ""]

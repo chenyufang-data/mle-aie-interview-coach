@@ -226,6 +226,28 @@ def score(labeler):
         cov = sum(1 for r in unfair if r["covered"] == "covered")
         out["unfair_split"][arm] = {"total": len(unfair), "covered": cov, "uncovered": len(unfair) - cov}
     out["uncovered_probes"] = {"total": n, "uncovered": sum(1 for r in rows if r["covered"] == "uncovered")}
+
+    # Precision by slice: level, JD template, and probe source (project =
+    # drawn from the resume, role_theme = drawn from the JD). Small cells -
+    # 15-16 probes per JD - so one probe is 6-7 points; read as direction.
+    def group_stats(keyfn):
+        groups = {}
+        for r in rows:
+            groups.setdefault(keyfn(r), []).append(r)
+        stats = {}
+        for key, rs in groups.items():
+            entry = {"n": len(rs), "gaps": sum(1 for r in rs if r["covered"] == "uncovered")}
+            for arm in thresholds:
+                attached = [c for r in rs for c in r["candidates"] if arm in c["attached_by"]]
+                fair = sum(1 for c in attached if c["label"] == "yes")
+                entry[arm] = {"fair": fair, "attached": len(attached),
+                              "precision": round(fair / len(attached), 4) if attached else None}
+            stats[key] = entry
+        return stats
+
+    out["by_group"] = {"level": group_stats(lambda r: r["level"]),
+                       "template": group_stats(lambda r: r["template"]),
+                       "source": group_stats(lambda r: r.get("source") or "?")}
     trigger_pool = ungrounded if ungrounded else [
         r for r in rows for c in r["candidates"] if "bm25" in c["attached_by"] and c["label"] == "no"]
     trigger_uncovered = sum(1 for r in trigger_pool if r["covered"] == "uncovered")

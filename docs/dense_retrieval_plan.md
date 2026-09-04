@@ -402,6 +402,20 @@ somewhere in the banks (retrieval misses) while 9 had none (content gaps —
 retraining triggers, reranker cost/latency, ML reproducibility and CI/CD,
 label maturity, capacity planning, handoff).
 
+Sliced (15–16 probes per JD, 38–39 per level, so one probe is 6–7 points;
+tables in the report): the candidate *level* barely matters — Mid-level
+56 / 67 / 69% for BM25 / hybrid / dense, Senior 55 / 55 / 61%. The *job
+description* matters a lot — BM25 leads on the MLE posting (88% vs dense
+62%), dense leads on the data-science posting (87% vs 40%), and every arm
+is poor on the AIE posting (38–50%). The sharpest cut is the probe's
+*source*: probes drawn from the resume's own project ground fairly 69–74%
+of the time in every arm, probes drawn from the JD's role themes only
+26–43%, and 7 of the 9 content gaps are role themes. The banks cover the
+example resume's fraud-model vocabulary well (imbalance, temporal splits,
+thresholds, deployment); they do not cover what a posting asks *beyond*
+the resume (reproducibility, capacity, reranking cost, handoff). That is a
+bank question as much as a retrieval one.
+
 Consequences, none of them shipped today because none was pre-registered:
 
 1. **Grounding is a precision problem, so R2 was the wrong rule.** A rule
