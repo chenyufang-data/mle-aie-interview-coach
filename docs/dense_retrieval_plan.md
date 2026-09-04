@@ -383,7 +383,7 @@ is recorded.
 | Phase | What | Cost / time | Gate out |
 | --- | --- | --- | --- |
 | **1. Dense retrieval experiment** (2026-09-04) | 1a harness + set A + store overhead (Q3) · 1b set B, run A + B, freeze threshold → **R1** · 1c set C, hand label → **R2** + covered/uncovered split · 1d report, README, spec §4, tests, commit, résumé line | one day, < $1 in two authorized calls | R1 and R2 decisions written verbatim in `docs/retrieval_evaluation.md`; §9 trigger computed |
-| **2. Chunk harvest** (conditional) | reviewed generated chunks for uncovered probe topics: `generated:probe` source, `rag_gen/` bank, third rubric tier in the report, C coverage re-measured | half day, ≈ $1.50 + 1 h review | runs only if ≥ 1/3 of ungrounded probes were `uncovered`; otherwise skipped with the number that says why |
+| **2. Chunk harvest** (conditional) | reviewed generated chunks for uncovered probe topics: `generated:probe` source, `rag_gen/` bank, third rubric tier in the report, C coverage re-measured | half day, ≈ $1.50 + 1 h review | runs only if ≥ 1/3 of ungrounded probes were `uncovered`; otherwise skipped with the number that says why. *Outcome 2026-09-04: not triggered. Replaced by **§12** — content-grounded bank growth (expand from lesson text, docs, licensed lists) followed by one grounding experiment under rule R4.* |
 | **3. Deployment** (when there is something to show) | 3a code: `wss://` + proxied socket path in `public/mock.js`, Caddy/nginx TLS config, cloud `AUDIO_BACKEND` · 3b instance: t3.small x86, swap, SG 443/80 only, domain + TLS, billing alarm · 3c smoke: mock over HTTPS with the mic from a clean browser, free-tier gating verified | ≈ $17/month; t3.small vs t3.medium decided by Phase 1's RSS number | public URL works end to end; anonymous visitor cannot spend API money |
 | **4. Tell the story** | prep notes (en/zh), résumé bullets, private-repo backup sync, memory | an hour | every number on the résumé traces to a committed script |
 | *Parked* | Level 1 spoken retry + blind TTS preference (needs the mic; ElevenLabs ≈ $7.85 left); grader style-hardening; rag_exp growth as new 面经 arrive | — | on demand |
@@ -447,3 +447,150 @@ editable in `grader/grounding_labels.jsonl`; the author's spot-check may
 move the precision numbers by a few points but is unlikely to move the
 conclusion, since coverage — the pre-registered quantity — is 100% by
 construction.
+
+**Agreement finding (post-hoc, same labels).** When BM25 and dense pick
+the *same* chunk, the attachment is fair 28/31 times over all probes and
+25/25 on resume-project probes. When they disagree, every arm is a coin
+flip — BM25 41%, dense 52%, hybrid 48% on resume-project probes; hybrid
+does not rescue a disagreement, it averages a good pick with a bad one.
+Score alone separates less well: dense cosine has fair median 0.774 vs
+unfair 0.690 (a floor at 0.70 keeps 38/40 fair and admits 5/14 unfair);
+BM25 raw score fair median 20.8 vs unfair 16.4. Per-JD routing was
+considered and rejected: cells of 8–13 probes, and the JD is a proxy for
+probe style, not the cause. These numbers were found *after* looking, on
+the assistant's labels — which is why §12.4 turns them into a rule to be
+tested on fresh probes rather than shipping them.
+
+## 12. Phase 2 (revised) — grow the banks, then measure grounding once
+
+*Written 2026-09-04 before any of it starts; the author reviews this
+section before the build session. Sequencing decision: the grounding
+experiment measures precision against the bank as it is, so the bank grows
+first and the experiment runs once, on the grown bank, with one labeling
+pass.*
+
+### 12.1 The rule that governs the growth: add, never rewrite
+
+Chunk ids are load-bearing beyond retrieval: `grader/dataset.jsonl` and
+the gold labels join on them, bookmarks store them in the browser, the plan
+cache and the rag_exp overlap check reference them. A "re-chunk" that
+replaces the AIE chunks would silently orphan the grader's gold labels.
+Growth is therefore an **expansion**: every existing chunk stays as it is;
+new claim-level chunks get new ids and a metadata `source` that says where
+they came from (`course:expanded`, `paste:<file>`, or a GitHub repo id).
+The public banks are regenerated from the private complete ones by
+`tools/strip_chunks.py` exactly as today; lesson text never enters the
+public repo.
+
+### 12.2 Sources, in the order to spend effort
+
+1. **Expand the course banks from their own lesson text** (highest value,
+   no new sourcing). The private complete banks carry the lesson `content`
+   for every chunk. A new script, `grader/expand_chunks.py`, walks each
+   coarse chunk and asks the teacher for the finer sub-questions *that the
+   lesson text actually supports*, each with a rubric written from that
+   text — the AIE weakness is granularity (resume claims like "reranking
+   stage" or "CI regression gate" meet one coarse "RAG architecture" or
+   "offline vs online evaluation" chunk). Same conventions as the ingest:
+   free dry run listing every proposed sub-question and the cost, nothing
+   sent without `--confirm`, idempotent by id, containment dedupe against
+   the existing bank, human review of every kept chunk. ≈ $0.03 per chunk.
+2. **The seed list from the experiment** (free, do first — it aims the
+   expansion). Every topic below gets at least one reviewed chunk:
+   - content gaps (no bank had them): retraining triggers and production
+     data quality; reranking cost/latency and its justification;
+     reproducibility, testing and CI/CD for ML pipelines and deployments;
+     serving failure modes, circuit breakers and cost controls; capacity
+     planning and autoscaling; label definition and label maturity;
+     handoff and reproducibility for teammates;
+   - AIE resume-project topics that grounded unfairly: the reranking
+     stage; offline evaluation harness and CI regression gates; measuring
+     groundedness with an LLM judge; a distilled routing classifier and
+     its cost trade-off; production failure modes and guardrails for LLM
+     features; measured prompt/context engineering; serving a RAG assistant
+     under cost and latency budgets.
+3. **Primary documentation as rubric *source* for seed topics the course
+   notes do not cover**: Anthropic's docs on prompt caching, tool use and
+   building agents; the OpenAI cookbook; LlamaIndex / LangChain material on
+   reranking and evaluation; the Hugging Face course (Apache 2.0). Paste the
+   relevant section into the ingest's drop folder with a header naming the
+   source; the teacher writes the rubric in its own words. Books (Huyen's
+   *AI Engineering*, Xu's ML system design) contribute topic lists only —
+   no text is ingested.
+4. **GitHub question lists** for LLM and ML interviews (the author is
+   gathering these). Two filters: the license first — MIT / CC BY lists
+   can be ingested with attribution recorded in the bank README; a repo
+   with no license file is all-rights-reserved, so only its *topics* are
+   taken and the questions are written fresh. Then the existing ingest,
+   which already dedupes at 0.6/0.8 containment against the banks; expect a
+   low keep rate on classic-ML lists (the course banks cover them) and a
+   higher one on LLM-engineering lists. Files go into
+   `data/interview_exp/pastes/` with a header line naming the repo and
+   license; they back up to the private repo like the other pastes.
+5. Later: opt-in mock session logs, once real users run mocks.
+
+Not allowed (plan §9): bulk LLM-generated chunks with no source text or
+question behind them.
+
+### 12.3 Targets and priorities (written before growing)
+
+| Bank | Now | Target | Priority |
+| --- | ---: | ---: | --- |
+| AIE (`rag_ai`) | 91 | ≥ 180 claim-level chunks | first — the measured outlier (36–45% fair on resume-project probes) |
+| MLE (`rag_ml`) | 191 | +40–60 chunks on senior-level trade-offs and judgment | second — Senior probes trail Mid-level by ~10 points in every arm |
+| Real Qs (`rag_exp`) | 57 | grows by whatever the lists and docs yield; no number | as gathered |
+| seed topics (12.2 item 2) | 0 covered | every topic ≥ 1 reviewed chunk | part of the AIE/MLE runs |
+
+Budget: expansion teacher runs ≈ $3–8 total; ingest of lists and doc
+sections cents to a few dollars; author review is the real cost (about an
+hour per hundred chunks).
+
+### 12.4 The next grounding experiment — pre-registered now
+
+After the growth is committed and reviewed:
+
+1. **R1 re-check (automatic, free).** `grader/retrieval_eval.py` re-runs
+   sets A and B on the grown banks. Hybrid must still hold 23/23 on A and
+   stay ≥ +10 points over BM25 on B; if the added chunks break either,
+   the growth is reviewed before anything else.
+2. **Fresh probes.** Regenerate the 10 default plans (resume-only rule),
+   plus, if available, two real pasted JDs — never the labeled probes from
+   set C, which the agreement numbers were read off.
+3. **Labels by the author**, using the labeling page format; the assistant
+   may pre-fill, the author's judgment is what counts.
+4. **Grounding policies compared** (all using the frozen per-arm
+   thresholds; coverage = probes that receive a bank rubric, precision =
+   hand-labeled fair share):
+   - `bm25@10` — today's behaviour;
+   - `agree` — attach only when BM25's and dense's top chunk coincide,
+     otherwise the planner's own expected points;
+   - `dense≥0.70` — attach when the dense cosine clears 0.70;
+   - `hybrid` at its frozen threshold.
+5. **Rule R4 (frozen here):** a policy may replace `bm25@10` only if its
+   precision is **≥ 90%** at coverage **≥ 40%** on the fresh labels. Among
+   policies that pass, the one with the highest coverage ships; on a tie,
+   the simpler one. If none passes, grounding stays on `bm25@10` and the
+   report keeps disclosing the rubric tier per probe.
+6. **What falsifies the agreement finding:** `agree` precision under 90%
+   on the fresh labels means the 25/25 was fitted to the assistant's
+   labels, and the policy is dropped without argument.
+
+Predicted (written before running, to be checked against): `agree` passes
+at roughly 45–55% coverage; `dense≥0.70` lands near 85–90% precision at
+~80% coverage and may miss the bar by a little; the grown AIE bank moves
+AIE resume-project fairness from the 40s to above 60% under `bm25@10`.
+
+### 12.5 Build-session checklist
+
+1. Author has read §12 and changed anything that looks wrong (before the
+   first teacher call; after it, edits are recorded as post-hoc).
+2. `grader/expand_chunks.py` dry run on the private AIE bank: proposed
+   sub-questions, dedupe verdicts, cost. Nothing sent without a go.
+3. Seed topics mapped to source text (course chunk or pasted doc section)
+   before generation, so no chunk is written from nothing.
+4. GitHub lists: license recorded per file header; ingest dry run shows
+   keep/drop counts before the teacher run.
+5. After the runs: author review of every kept chunk; `strip_chunks.py`
+   regenerates the public banks; retrieval eval re-run (12.4 step 1);
+   `tools/backup_private.py`; commit with the usual scan.
+6. Then 12.4 steps 2–6, once.
