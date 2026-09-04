@@ -411,6 +411,15 @@ real interview is — **around a target role**:
    answer — rubric-grounded grading for the technical part of the mock, the
    same mechanism the app already has.
 
+   *Amended 2026-09-04 (user decision, evidence in
+   [retrieval_evaluation.md](retrieval_evaluation.md) set C):* items 3–4 now
+   read **resume only**. Probes anchor in the resume's own claims; the JD
+   decides which claims get probed and how deep (`jd_emphasis`), never adds
+   topics. Role-theme probes grounded fairly in only 26–43% of cases and
+   held 7 of 9 content gaps, because no bank holds beyond-resume questions
+   yet. The path is frozen behind `MOCK_BEYOND_RESUME` and the "wander"
+   budget with it, to be unfrozen once such a bank is gathered.
+
 The same choice fixes the **50-keyterm selection** for Scribe Realtime.
 Candidate terms = union(role vocabulary, chosen-project vocabulary, resume
 terms, lexicon). Rank by: (a) Phase 0 measured failure rate *without*

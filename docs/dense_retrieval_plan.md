@@ -416,6 +416,14 @@ thresholds, deployment); they do not cover what a posting asks *beyond*
 the resume (reproducibility, capacity, reranking cost, handoff). That is a
 bank question as much as a retrieval one.
 
+**Product decision taken on this evidence (2026-09-04, user):** the mock's
+probes now come from the resume only. The JD decides which resume claims
+get probed and how deep (`jd_emphasis`), never adds topics the resume
+lacks; the beyond-resume path is frozen behind `MOCK_BEYOND_RESUME` until a
+bank of beyond-resume interview questions has been gathered to ground it.
+By construction that moves grounding to the project-probe row above
+(69–74% fair, 2 gaps in 54).
+
 Consequences, none of them shipped today because none was pre-registered:
 
 1. **Grounding is a precision problem, so R2 was the wrong rule.** A rule

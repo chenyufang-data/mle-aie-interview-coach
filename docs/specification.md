@@ -233,9 +233,15 @@ endpoints. The free tier gets a clear 403 — a mock needs a real LLM; in
 tests.
 
 - `planning.py` — one code path whether the JD was pasted or defaulted:
-  JD → role profile → persona + probe themes. Each probe target is matched
-  against the question banks by BM25 and a strong match attaches that
-  chunk's rubric, so the report can score against curated key points.
+  JD → role profile → persona + focus themes. Probes come from the
+  **resume only**: the JD decides which resume claims get probed and how
+  deep (`jd_emphasis`), never adds topics the resume lacks — a decision
+  taken on set C of the retrieval experiment, where JD "role theme" probes
+  grounded fairly in only 26–43% of cases; that path is frozen behind
+  `MOCK_BEYOND_RESUME` until a bank exists to ground it. Each probe target
+  is matched against the question banks by BM25 and a strong match
+  attaches that chunk's rubric, so the report can score against curated
+  key points.
   `rag_exp` chunks are round-filtered (`MOCK_ROUNDS`: technical, experience,
   system_design) — behavioral/coding questions never ground a tech-round
   probe.

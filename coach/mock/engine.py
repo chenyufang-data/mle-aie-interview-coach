@@ -105,7 +105,8 @@ def _fake_plan(prompt):
             "id": f"probe_{index + 1}",
             "topic": keyword,
             "question_hint": f"Walk me through how you used {keyword} and why.",
-            "source": "project" if index % 2 == 0 else "role_theme",
+            "source": "project",
+            "jd_emphasis": ("high", "medium", "low")[index % 3],
             "expected_points": [
                 f"what decision was made around {keyword}",
                 "which alternative was considered and rejected",

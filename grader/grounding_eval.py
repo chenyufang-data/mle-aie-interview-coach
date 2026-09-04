@@ -67,7 +67,7 @@ def write_jsonl(path, rows):
 
 # ---------------------------------------------------------------- generate
 
-def generate(confirm):
+def generate(confirm, out_path=PROBES_PATH):
     jobs = [(template_id, level) for template_id in TEMPLATES for level in LEVELS]
     print(f"{len(jobs)} plans: {len(TEMPLATES)} default JDs x {LEVELS} with "
           f"{RESUME_PATH.name}; engine deepseek ({config.deepseek_model()}), "
@@ -92,14 +92,19 @@ def generate(confirm):
                          "topic": target.get("topic", ""),
                          "question_hint": target.get("question_hint", ""),
                          "source": target.get("source"),
+                         "jd_emphasis": target.get("jd_emphasis"),
                          "expected_points": target.get("expected_points", []),
                          "runtime_chunk_id": target.get("chunk_id"),
                          "runtime_rubric_score": target.get("rubric_score")})
         grounded = sum(1 for t in plan.get("probe_targets", []) if t.get("chunk_id"))
         print(f"  {template_id:12s} {level:9s}: {len(plan.get('probe_targets', []))} probes, "
               f"{grounded} grounded at runtime")
-    write_jsonl(PROBES_PATH, rows)
-    print(f"{len(rows)} probes written to {PROBES_PATH.name}")
+    sources = {}
+    for row in rows:
+        sources[row["source"]] = sources.get(row["source"], 0) + 1
+    write_jsonl(out_path, rows)
+    print(f"{len(rows)} probes written to {out_path.name}; sources {sources}; "
+          f"beyond-resume path {'ON' if config.MOCK_BEYOND_RESUME else 'frozen off'}")
 
 
 # -------------------------------------------------------------------- pool
@@ -271,10 +276,12 @@ def main():
     parser.add_argument("--pool", action="store_true")
     parser.add_argument("--score", action="store_true")
     parser.add_argument("--labeler", default="unrecorded")
+    parser.add_argument("--out", help="--generate: write probes here instead of "
+                                      "grounding_probes.jsonl (keeps a labeled set intact)")
     args = parser.parse_args()
     config.load_env_file()
     if args.generate:
-        generate(args.confirm)
+        generate(args.confirm, Path(args.out) if args.out else PROBES_PATH)
     elif args.pool:
         pool()
     elif args.score:

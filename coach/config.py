@@ -83,6 +83,15 @@ VOICE_DISABLED_REASON = None
 RETRIEVAL_BACKEND = os.environ.get("RETRIEVAL_BACKEND", "auto").lower()
 RETRIEVAL_ACTIVE = "bm25"
 RETRIEVAL_DISABLED_REASON = None
+
+# Mock-interview probes come from the RESUME only; the job description
+# decides which resume claims get probed and how deep (jd_emphasis), never
+# adds topics the resume lacks. FROZEN OFF 2026-09-04 (user decision): the
+# retrieval experiment's set C showed JD "role theme" probes ground fairly
+# in only 26-43% of cases and hold 7 of 9 content gaps, because the banks
+# hold nothing beyond what a resume claims. Unfreeze (MOCK_BEYOND_RESUME=1)
+# only after a bank of beyond-resume questions exists to ground them.
+MOCK_BEYOND_RESUME = os.environ.get("MOCK_BEYOND_RESUME", "0") == "1"
 OLLAMA_MODEL = "llama3.2"
 OLLAMA_URL = "http://127.0.0.1:11434/api/chat"
 

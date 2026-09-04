@@ -62,7 +62,12 @@ PLAN_SCHEMA = _obj({
         "id": _STR,
         "topic": _STR,
         "question_hint": {"type": "string", "description": "how to open this probe"},
+        # "role_theme" is the frozen beyond-resume path (config.MOCK_BEYOND_RESUME);
+        # the default rule requires "project" and planning.py drops the rest.
         "source": {"type": "string", "enum": ["project", "role_theme"]},
+        "jd_emphasis": {"type": "string", "enum": ["high", "medium", "low"],
+                        "description": "how strongly the job description points at this "
+                                       "resume claim - decides depth, never adds topics"},
         "expected_points": {"type": "array", "items": _STR,
                             "description": "3-5 expected specifics: the decision, the "
                                            "alternative considered, the metric and its value, "

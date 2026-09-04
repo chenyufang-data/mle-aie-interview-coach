@@ -23,11 +23,15 @@ from coach.config import BASE_DIR
 CACHE_DIR = Path(os.environ.get("MOCK_CACHE_DIR",
                                 str(BASE_DIR / "data" / "mock_cache")))
 MAX_FILES = 200
+# Bump when a prompt or schema behind a cached call changes, so entries
+# built by the old prompt are never served. 2: resume-only probes with
+# jd_emphasis (2026-09-04) replaced the project-or-role-theme rule.
+CACHE_VERSION = 2
 
 
 def _path(kind, engine, parts):
     digest = hashlib.sha256()
-    digest.update(f"{kind}\x00{engine}".encode("utf-8"))
+    digest.update(f"{kind}\x00{engine}\x00v{CACHE_VERSION}".encode("utf-8"))
     for part in parts:
         digest.update(b"\x00")
         digest.update(json.dumps(part, sort_keys=True,

@@ -10,7 +10,7 @@ expected_points the plan call wrote from the resume.
 
 import json
 
-from coach import kb
+from coach import config, kb
 from coach.mock import engine as engines
 from coach.mock.schemas import PLAN_SCHEMA, ROLES_SCHEMA
 from coach.mock.templates import TEMPLATES, render
@@ -33,6 +33,22 @@ def rubric_eligible(chunk):
     round_tag = chunk["metadata"].get("round")
     return round_tag is None or round_tag in MOCK_ROUNDS
 
+# Where probes may come from. The resume-only rule is the default (user
+# decision 2026-09-04, evidence in docs/retrieval_evaluation.md set C):
+# the JD chooses WHICH resume claims to probe and how deep, never adds
+# topics the resume lacks. The beyond-resume rule is frozen behind
+# config.MOCK_BEYOND_RESUME until a bank exists to ground such probes.
+PROBE_RULE_RESUME_ONLY = (
+    "every one anchored in a specific claim the candidate makes in the resume "
+    "(a project, a decision, a metric, a tool - quote or closely paraphrase it "
+    "in the question_hint); `source` is always \"project\". Use the job "
+    "description only to decide WHICH resume claims to probe and how deep: "
+    "claims the JD emphasizes get more probes and harder follow-ups. Never "
+    "invent a probe about a topic the resume does not mention.")
+PROBE_RULE_BEYOND = (
+    "each a specific technical point from the chosen project or a role theme "
+    "from the JD (mark `source` as \"project\" or \"role_theme\").")
+
 STYLES = {
     "neutral": "professional and neutral; give no praise and no criticism during the interview",
     "friendly": "warm and encouraging, but still thorough",
@@ -49,7 +65,9 @@ the level the resume supports, the closest template_id (mle = classic ML
 engineer, aie = LLM application engineer, ds = data scientist, platform = ML
 infra, applied_sci = applied scientist), one sentence on why, the resume
 projects that support it (name, one-sentence summary, 3-6 technical keywords),
-and 4-6 probe themes an interviewer for that role would drill into.
+and 4-6 focus themes: the parts of THIS resume an interviewer for that role
+would concentrate on. Themes must name resume content; the role decides the
+emphasis, it never adds topics the resume lacks.
 
 Also produce `profile`: a structured role profile {'of the job description'
 if jd_text else 'of the FIRST proposed role (there is no job description)'}.
@@ -87,6 +105,7 @@ def build_plan(resume, jd_text, role, project, settings, engine):
     project_line = (f"the project \"{project['name']}\" ({project.get('summary', '')})"
                     if project else "the interviewer's choice among the resume's projects")
     style = STYLES.get(settings.get("style", "neutral"), STYLES["neutral"])
+    probe_rule = PROBE_RULE_BEYOND if config.MOCK_BEYOND_RESUME else PROBE_RULE_RESUME_ONLY
     prompt = f"""Plan a mock interview for the experience/project deep-dive round.
 
 Target role (candidate's pick): {role.get('title', 'Machine Learning Engineer')} — level {role.get('level', 'Mid-level')}, domain {role.get('domain', 'general')}
@@ -104,16 +123,21 @@ Produce the hidden interview plan:
   realistic for this JD), the company type, their seniority.
 - opening: the interviewer's first message — a one-line greeting in character,
   then the warm-up question ("give me the one-minute version of ...").
-- probe_targets: 6 to 8, ids "probe_1"..., each a specific technical point from
-  the chosen project or a role theme from the JD (mark `source`), with a
+- probe_targets: 6 to 8, ids "probe_1"..., {probe_rule} Each has a
   question_hint and 3-5 expected_points — the concrete specifics a strong
   answer would contain (the decision made, the alternative considered, the
   metric and its value, the outcome, the lesson). Write expected_points from
-  the resume's own claims where possible.
+  the resume's own claims where possible. Set jd_emphasis to how strongly the
+  job description points at this claim (high / medium / low).
 - behavioral_targets: 2 short topics (a failure, a conflict, a deadline).
 
 Do not reveal the plan to the candidate; it drives the interviewer."""
     plan = engines.structured(prompt, PLAN_SCHEMA, engine)
+    if not config.MOCK_BEYOND_RESUME:
+        # Belt and braces for the frozen path: a probe the resume does not
+        # support has no claim to verify and, measured, no fair rubric.
+        plan["probe_targets"] = [t for t in plan.get("probe_targets", [])
+                                 if t.get("source") != "role_theme"]
     attach_rubric_chunks(plan, role)
     plan["settings"] = {"style": settings.get("style", "neutral"),
                         "length": settings.get("length", "standard"),
