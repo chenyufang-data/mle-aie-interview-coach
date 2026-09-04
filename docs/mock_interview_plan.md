@@ -892,19 +892,6 @@ a fake-websocket regression test.
   backends (state this in the UI); the local backend keeps audio
   on-machine.
 
-## 12. Next-session start checklist
-
-- Start with Phase 0: say "build phase 0"; confirm the §10 decisions or
-  accept the recommendations. Have an ElevenLabs API key ready
-  (pay-as-you-go, or credits) — it goes in `.env` as `ELEVENLABS_API_KEY`.
-- Phase 0 needs ~15 minutes of the user's time to record the human set.
-- Resume as text: `.venv\Scripts\python resume_parser.py <resume.pdf|.docx>`
-  → `data/resume/<name>.txt` (gitignored). Phase 0's lexicon and Phase 1's role
-  picker read it from there; the setup page will accept the same upload.
-- `.env` already holds `ANTHROPIC_API_KEY` and `DEEPSEEK_API_KEY`; DeepSeek
-  spend is authorized; any Claude live test needs fresh authorization;
-  ElevenLabs spend needs authorization once the key exists.
-
 ## 13. Private RAG service — data private, code public, service gated
 
 Decision (2026-08-29): the retrieval-and-grading backend becomes a **private
