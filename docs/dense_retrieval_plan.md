@@ -594,3 +594,65 @@ AIE resume-project fairness from the 40s to above 60% under `bm25@10`.
    regenerates the public banks; retrieval eval re-run (12.4 step 1);
    `tools/backup_private.py`; commit with the usual scan.
 6. Then 12.4 steps 2–6, once.
+
+### 12.6 Build log — GitHub lists (2026-09-04, evening)
+
+Decisions (author, in conversation):
+
+- **Sources**: ombharatiya/AI-Engineer-Interview-Questions (MIT; folders
+  02–09, intermediate + advanced tiers, full pool) and
+  KalyanKS-NLP/LLM-Interview-Questions-and-Answers-Hub (Apache-2.0; capped
+  at 30, internals first). pubalisen/ai-ml-interview-deep-dives left
+  unused: its license is a README sentence with no LICENSE file, its
+  answered sections duplicate ombharatiya, and its distinct sections are
+  titles only. Both used repos are LLM-synthesized or author-written prep
+  lists, not 面经; the Real Qs track keeps its own sources.
+- **Separate bank**, `rag_lists/` (`LISTS` corpus, "Lists" track), rather
+  than growing `rag_ai/`: the AIE bank keeps its measured baseline (sets
+  A/B), the new material is switchable, and 12.4 can measure grounding
+  with and without it. Growth stays additive (12.1) by construction.
+- **Full pool, Claude teacher**, over the capped option (~$7): the author
+  chose density on RAG / agents / evals over the §12.3 budget line.
+- **Overstaffing** was asked about and answered: size is not the risk
+  (retrieval is milliseconds; the practice track serves one of the top-5
+  within module and level), per-topic density is. No existing chunk is
+  removed; there is no usage signal to prune by (bookmarks are
+  browser-local, logs opt-in). Later pruning = a `retired` flag on
+  evidence, never deletion.
+
+How 12.5 item 4 was implemented (`grader/ingest_lists.py`,
+`tests/test_ingest_lists.py`): license and attribution are recorded per
+chunk (`metadata.license`, `attribution`, `source_url` pinned to the clone
+commit) and in `rag_lists/README.md`, with both license texts copied to
+`rag_lists/licenses/`; the source answer is passed to the teacher as
+material to rewrite and is not stored. The rag_exp ingest's classifier
+and containment dedupe were built for 面经 sheets and misfire on lists
+("hybrid" and "schedule" trip HR-screen patterns; key points pooled into
+the bank side let a 4-token question match any rubric), so the list
+ingest routes module by folder, difficulty by tier, and dedupes
+question-against-question (≥ 80% of the candidate's content tokens in
+one bank question, 3-token floor) plus bge-small cosine ≥ 0.90.
+
+Dry run (free): 534 questions parsed, 425 in the selected tiers, 30
+lexical merges, 0 bank near-duplicates, 9 semantic near-duplicates, work
+list 331 (301 ombharatiya + 30 Kalyan), estimate $11.04. Teacher run:
+see the line below, filled in after it finished.
+
+Teacher run result: 331/331 rubrics, 0 failures, 4 workers, ~35 minutes;
+actual usage 604,994 input / 350,333 output tokens = **$11.78** (7% over
+the estimate: the teacher's answers ran longer than the 1,100-token
+assumption). Bank: 331 chunks, 8 modules (LLM Fundamentals 55, Inference &
+Production 53, Agents & Tool Use 45, RAG & Retrieval 41, Fine-tuning &
+Alignment 37, Evaluation & Observability 34, Prompt & Context Engineering
+33, Safety & Security 33); difficulty 196 intermediate / 135 advanced;
+round 299 technical / 32 system_design; 5–6 key points each; model
+answers 104–284 words (median 190, longer than the "3–6 sentences" asked
+for — acceptable, noted). Verbatim probe (share of the rubric's 8-grams
+found in the source answer): max 0.13, median 0.02 — rewritten, not
+copied. Runtime: `LISTS` loads as a hybrid-served bank, vector cache
+`data/index/LISTS.*.npz`; mock suite and hybrid retrieval gate pass with
+it present. Author review of the kept chunks (12.5 item 5) is still open.
+
+Consequence for 12.4: the mock's rubric grounding walks every loaded
+bank, so `rag_lists` grounds probes from now on; R4 measures the policies
+with the bank present and, as a slice, with `LISTS` excluded.

@@ -16,6 +16,10 @@ CORPUS_PATHS = {
     "MLE": BASE_DIR / "rag_ml" / "all_chunks.jsonl",
     "AIE": BASE_DIR / "rag_ai" / "all_chunks.jsonl",
     "EXP": BASE_DIR / "rag_exp" / "all_chunks.jsonl",
+    # Public GitHub interview lists (MIT / Apache-2.0), rubrics by the
+    # teacher; separate from the course banks so the grounding experiment
+    # can measure with and without it (docs/dense_retrieval_plan.md §12).
+    "LISTS": BASE_DIR / "rag_lists" / "all_chunks.jsonl",
 }
 DEFAULT_MODEL = "claude-opus-4-8"
 

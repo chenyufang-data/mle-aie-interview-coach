@@ -16,6 +16,12 @@ model answers, and grading rubrics:
   third **Real Qs** track and the mock interviewer's probes can ground against
   it; without the file the app runs as a two-track install (see
   `rag_exp/README.md`).
+- `rag_lists/` (optional, generated) - technical questions from licensed public
+  GitHub interview lists (MIT / Apache-2.0; attribution and license copies in
+  `rag_lists/`), rewritten into rubrics by `grader/ingest_lists.py`. Kept apart
+  from the course banks on purpose: its own **Lists** track, switchable, and
+  measurable with and without in the grounding experiment. These are prep-list
+  questions, not real interview reports.
 
 The two course banks are derived from course material I studied; the public repository
 ships the interview questions, model answers, and rubrics only. The complete
@@ -53,6 +59,7 @@ retrieval.py         BM25 over the banks (the CI gate and the fallback)
 retrieval_dense.py   bge-small embeddings + BM25 hybrid (serves when its stack is installed)
 rag_ml/  rag_ai/     question banks, public stripped edition (schema in their READMEs)
 rag_exp/             real gathered interview questions - private bank, README explains
+rag_lists/           licensed GitHub question lists rewritten into rubrics - generated bank, README explains
 grader/              training + every measurement script with its committed results
 tests/               offline suite (CI) + a browser e2e smoke (local, Playwright)
 docs/                specs, measured reports, and the design/lab notebook

@@ -39,3 +39,10 @@ tools/bin/
 # never from the repository. Only the README is tracked.
 rag_exp/*
 !rag_exp/README.md
+
+# rag_lists/ is built by grader/ingest_lists.py from licensed GitHub
+# question lists; the bank is generated locally and backed up privately
+# like rag_exp. The README (attribution) and license copies are tracked.
+rag_lists/*
+!rag_lists/README.md
+!rag_lists/licenses/

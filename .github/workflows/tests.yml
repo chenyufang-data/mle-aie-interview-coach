@@ -37,6 +37,9 @@ jobs:
       # rag_exp ingest, pure parsing/dedupe/chunk helpers on synthetic
       # fixtures (no spreadsheets, no private bank needed).
       - run: python tests/test_ingest.py
+      # rag_lists ingest (GitHub lists): parsing, tier selection, module
+      # routing, question-vs-question dedupe, chunk assembly - synthetic.
+      - run: python tests/test_ingest_lists.py
       # Voice loop, deterministic parts: endpointer state machine, sentence
       # chunker, keyterm policy, SSE parsing, two-transcript report block.
       - run: python tests/test_voice.py

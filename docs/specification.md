@@ -63,7 +63,8 @@ mle-aie-interview-coach/
 ├── tools/                  (3 files)     level1_up, strip_chunks, backup_private
 ├── rag_ml/                               MLE bank: 191 chunks over 15 modules
 ├── rag_ai/                               AIE bank: 91 chunks over 6 modules
-└── rag_exp/                              "Real Qs" bank: 57 chunks from real interview reports
+├── rag_exp/                              "Real Qs" bank: 57 chunks from real interview reports
+└── rag_lists/                            "Lists" bank: licensed GitHub question lists rewritten into rubrics (generated locally)
 ```
 
 The public banks are **stripped**: each chunk carries only `id`, the
@@ -72,7 +73,9 @@ followups) and retrieval `metadata` (module, topic, tags, difficulty).
 The complete banks — with course-derived lesson text and source references —
 live in a private repository; `tools/strip_chunks.py` produces the public
 versions. `rag_exp/all_chunks.jsonl` itself is generated locally by
-`grader/ingest_questions.py` and only its README is tracked here.
+`grader/ingest_questions.py`, and `rag_lists/all_chunks.jsonl` by
+`grader/ingest_lists.py`; only their READMEs (and `rag_lists/licenses/`,
+the redistributed source licenses) are tracked here.
 
 Runtime-only files (gitignored, never committed): `.env` (API keys),
 `users.json` (real access keys), and everything under `data/` — resume text,
@@ -160,8 +163,10 @@ Key behaviors:
 Short per-question documents (module + topic + tags + question + key
 points), not raw lesson text, across three tracks: MLE (`rag_ml`, 191
 chunks), AIE (`rag_ai`, 91), and the optional "Real Qs" track (`rag_exp`,
-57 chunks distilled from real interview reports — absent in a fresh clone;
-`coach/kb.py` warn-skips it). Query-time filters: module and
+57 chunks distilled from real interview reports) and the optional "Lists"
+track (`rag_lists`, licensed GitHub question lists rewritten into rubrics,
+retrieval plan §12) — both absent in a fresh clone; `coach/kb.py`
+warn-skips them). Query-time filters: module and
 difficulty-by-level metadata, plus a session `exclude` list so questions do
 not repeat. One of the top-5 hits is sampled at random for variety.
 
@@ -206,6 +211,7 @@ The LLM-distillation pipeline, in dependency order:
 | `judge_agreement.py` | Re-grades the 121 held-out gold rows with candidate judge models: DeepSeek Flash 0.59 MAE / 94% within-±1 / QWK 0.93 vs the teacher; regrade consistency 57% exact (vs Claude's 95%) — hence "runtime judge yes, teacher no". |
 | `evaluate_on_real.py` | The real-distribution check: compares local predictions against Claude scores on actual logged practice answers as they accumulate. |
 | `ingest_questions.py` | Builds `rag_exp/` from hand-collected interview experiences (gitignored spreadsheets/pastes under `data/interview_exp/`): parse → normalize → dedupe (lexical containment) → intent-merge HR-screen phrasings → classify by round → free dry-run preview with cost estimate → `--generate --confirm` teacher run writing rubric chunks. Idempotent (existing ids skip); the teacher prompt strips person/employer names. 57 chunks for ≈$1.77. |
+| `ingest_lists.py` | Builds `rag_lists/` from shallow clones of licensed GitHub question lists (`data/interview_exp/github/`, gitignored): parse (ombharatiya tiered `questions.md`, Kalyan `QA_*.md`) → select tiers (intermediate + advanced; Kalyan capped at 30, internals first) → dedupe (lexical 0.65 within the pool; question-vs-question containment ≥ 0.8 against every bank, 3-token floor; bge-small cosine ≥ 0.90 against banks and pool) → free dry run with cost estimate → `--generate --confirm --workers N` teacher run with the source answer as material to rewrite, never copy. Chunks carry `source`, `source_url` pinned to the clone commit, `license`, `attribution`, `original`; the source answer is not stored. Idempotent by id. |
 | `stt_testset.py`, `stt_text.py`, `stt_lexicon.json`, `stt_sentences.jsonl` | Phase 0 STT experiment: test-set builder, pure-text metrics layer (normalization, WER, term error rate over a 339-term lexicon, keyterm-selection policy), the committed lexicon and 88-item test set. |
 | `stt_eval.py`, `stt_eval_results.json`, `make_failure_rates.py`, `stt_failure_rates.json` | Runs STT conditions over the recordings, measures WER/TER **and downstream grade damage**, renders `docs/stt_evaluation.md`; per-term failure rates feed the runtime keyterm policy. |
 | `loop_eval.py`, `loop_eval_results.json` | Phase 2 harness: drives the live voice loop end to end with the 20 real human answer recordings as the scripted "candidate" and measures live TER, first-audio latency p50/p95, cut-offs, and downstream damage per audio backend. The evidence behind the Deepgram rejection and the barge-in number. |
@@ -331,6 +337,9 @@ CI (`.github/workflows/tests.yml`) runs six suites on every push:
   (roles → plan → turns → report).
 - `tests/test_ingest.py` — rag_exp parsing/dedupe/classify on synthetic
   fixtures (no private data needed).
+- `tests/test_ingest_lists.py` — rag_lists parsing (tiers, collapsible
+  answers), module routing, question-vs-question dedupe, caps, chunk
+  assembly on synthetic markdown.
 - `tests/test_voice.py` — deterministic voice parts: endpointer state
   machine, sentence chunker, keyterm policy, two-transcript report block.
 

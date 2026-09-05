@@ -37,12 +37,13 @@ const GENERAL_TOPICS = {
 
 // Knowledge-base module lists come from the server (/api/meta), so the
 // frontend never hard-codes corpus contents: MLE -> rag_ml, AIE -> rag_ai,
-// EXP -> rag_exp (private bank; its track button stays hidden unless the
-// server reports it loaded).
+// EXP -> rag_exp, LISTS -> rag_lists (private / generated banks; their
+// track buttons stay hidden unless the server reports them loaded).
 const KB_GROUP_LABELS = {
   MLE: "ML course knowledge base (real course questions)",
   AIE: "AI course knowledge base (real course questions)",
   EXP: "Real interview questions (gathered from actual interviews)",
+  LISTS: "Community question lists (public GitHub repos, MIT / Apache-2.0)",
 };
 
 const setupPage = document.querySelector(".setup-page");
@@ -181,10 +182,13 @@ function initSetupPage() {
       Object.entries(meta.kb || {}).forEach(([role, info]) => {
         state.kbModules[role] = info.modules || [];
       });
-      const expButton = document.querySelector('[data-role="EXP"]');
-      if (expButton) {
-        expButton.hidden = !(meta.kb || {}).EXP;
-      }
+      // Private / generated banks show their track only when loaded.
+      ["EXP", "LISTS"].forEach((role) => {
+        const button = document.querySelector(`[data-role="${role}"]`);
+        if (button) {
+          button.hidden = !(meta.kb || {})[role];
+        }
+      });
     } catch (error) {
       // Server meta unavailable (e.g. corpus missing): the dropdown simply
       // offers AI-generated topics without a knowledge-base group.

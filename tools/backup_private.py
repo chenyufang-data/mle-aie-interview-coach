@@ -48,9 +48,10 @@ def main():
         sys.exit(f"private checkout not found at {PRIVATE_DIR} "
                  "(set PRIVATE_REPO_DIR)")
     changed = 0
-    for name in ("all_chunks.jsonl", "README.md"):
-        changed += sync(BASE_DIR / "rag_exp" / name,
-                        PRIVATE_DIR / "rag_exp" / name)
+    for bank in ("rag_exp", "rag_lists"):
+        for name in ("all_chunks.jsonl", "README.md"):
+            changed += sync(BASE_DIR / bank / name,
+                            PRIVATE_DIR / bank / name)
     pastes = BASE_DIR / "data" / "interview_exp" / "pastes"
     if pastes.is_dir():
         for src in sorted(pastes.glob("*.txt")) + sorted(pastes.glob("*.md")):
