@@ -28,6 +28,11 @@ schema the app serves. Re-runs are idempotent - existing ids are skipped.
 First run (2026-09-04): 331 chunks, 301 from ombharatiya and 30 from
 Kalyan, $11.78 of teacher calls; details in docs/dense_retrieval_plan.md §12.6.
 
+Review the chunks with `tools/review_bank.py rag_lists` (local page under
+`data/review/`), then `--apply` the saved decisions: retired chunks stay
+in the file with `metadata.review.status = "retire"` and the app skips
+them.
+
 ## Sources and attribution
 
 | Source | License | Attribution carried in every chunk |

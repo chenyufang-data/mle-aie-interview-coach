@@ -590,7 +590,9 @@ AIE resume-project fairness from the 40s to above 60% under `bm25@10`.
    before generation, so no chunk is written from nothing.
 4. GitHub lists: license recorded per file header; ingest dry run shows
    keep/drop counts before the teacher run.
-5. After the runs: author review of every kept chunk; `strip_chunks.py`
+5. After the runs: author review of every kept chunk (`tools/review_bank.py
+   <bank>` → keep / fix / retire, `--apply` stamps `metadata.review`;
+   retire is a flag the loader honors, never a deletion); `strip_chunks.py`
    regenerates the public banks; retrieval eval re-run (12.4 step 1);
    `tools/backup_private.py`; commit with the usual scan.
 6. Then 12.4 steps 2–6, once.

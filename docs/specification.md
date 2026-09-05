@@ -60,7 +60,7 @@ mle-aie-interview-coach/
 ├── public/                 (10 files)    dependency-free frontend
 ├── grader/                 (28 files)    distillation subsystem + experiment harnesses (§5)
 ├── tests/                  (8 files)     regression suites + Playwright e2e (§8)
-├── tools/                  (3 files)     level1_up, strip_chunks, backup_private
+├── tools/                  (4 files)     level1_up, strip_chunks, backup_private, review_bank
 ├── rag_ml/                               MLE bank: 191 chunks over 15 modules
 ├── rag_ai/                               AIE bank: 91 chunks over 6 modules
 ├── rag_exp/                              "Real Qs" bank: 57 chunks from real interview reports
@@ -370,6 +370,10 @@ the deeper evaluation layer.
   enters it — `data/` is gitignored, the public banks are stripped of course
   lesson text (`tools/strip_chunks.py`), and the generated `rag_exp` bank
   plus its raw paste sources are mirrored to a private sibling repository by
+  `tools/review_bank.py` writes a local triage page for any bank
+  (keep / fix / retire + note per chunk, decisions saved as JSON and
+  stamped back as `metadata.review`; `coach/kb.py` skips `retire`, ids
+  never change);
   `tools/backup_private.py` (raw interview spreadsheets stay local-only,
   they name real people).
 

@@ -48,6 +48,13 @@ def load_chunks():
             continue
         with path.open(encoding="utf-8") as handle:
             chunks = [json.loads(line) for line in handle if line.strip()]
+        # Author review (tools/review_bank.py) retires a chunk by flag, never
+        # by deletion: ids stay stable for labels and bookmarks.
+        live = [c for c in chunks
+                if c["metadata"].get("review", {}).get("status") != "retire"]
+        if len(live) != len(chunks):
+            print(f"{role}: {len(chunks) - len(live)} retired chunk(s) skipped")
+        chunks = live
         bm25 = Retriever(chunks)
         retriever = bm25
         if embedder is not None:
