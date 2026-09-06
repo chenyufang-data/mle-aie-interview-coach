@@ -18,6 +18,14 @@ Two stages, so the paid step is always inspected first:
       data/interview_exp/expand_<bank>_proposals.json (gitignored: it holds
       lesson text).
 
+  .venv\\Scripts\\python grader\\expand_chunks.py --page --bank ai
+  .venv\\Scripts\\python grader\\expand_chunks.py --apply data\\review\\expand_ai.decisions.json --bank ai
+      Author review before any Claude spend: --page writes
+      data/review/expand_<bank>_proposals.html (kept proposals under their
+      parent, keep / drop, k / d keys, Save downloads the decisions);
+      --apply stamps them onto the proposals file - undecided proposals
+      count as drops, so --generate only spends on explicit keeps.
+
   .venv\\Scripts\\python grader\\expand_chunks.py --generate --confirm --bank ai [--workers N]
       Claude teacher writes one rubric per kept proposal with the excerpt
       and the parent lesson text as source, then APPENDS the chunk to the
@@ -428,10 +436,121 @@ def generate(bank, workers, limit):
           f"then tools\\review_bank.py on the private bank")
 
 
+# ---------------------------------------------------------------------------
+# Author review of proposals (before any Claude spend)
+
+PROPOSAL_PAGE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>Review proposals __BANK__</title>
+<style>
+:root{color-scheme:light dark;--bg:#f7f6f2;--card:#fffefb;--ink:#1f2320;--mute:#6b6f6a;--line:#dedbd2;--keep:#2f7d4f;--drop:#b23a3a;--accent:#3b5f8a;--parent:#eef1f6}
+@media (prefers-color-scheme:dark){:root{--bg:#191b1a;--card:#232624;--ink:#e8e6df;--mute:#9a9e97;--line:#3a3e3b;--parent:#20262e}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,Segoe UI,Roboto,sans-serif}
+header{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--line);padding:10px 20px;display:flex;gap:14px;flex-wrap:wrap;align-items:center;z-index:2}
+header h1{font-size:16px;margin:0 12px 0 0}.stat{color:var(--mute);font-variant-numeric:tabular-nums}
+header select,header button{font:inherit;padding:4px 8px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink)}
+header button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+main{max-width:980px;margin:0 auto;padding:16px 20px 80px}
+.parent{background:var(--parent);border:1px solid var(--line);border-radius:8px;padding:10px 16px;margin:22px 0 6px}
+.parent .meta{color:var(--mute);font-size:13px}.parent .q{font-weight:600;margin:2px 0}
+.prop{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--line);border-radius:8px;padding:10px 16px;margin:8px 0 8px 24px}
+.prop[data-v=keep]{border-left-color:var(--keep)}.prop[data-v=drop]{border-left-color:var(--drop);opacity:.8}
+.prop .q{font-weight:600;margin:0 0 4px}.prop .claim{color:var(--mute);font-size:13px}.prop blockquote{margin:6px 0;padding:4px 10px;border-left:3px solid var(--line);color:var(--mute);font-size:14px}
+.seed{display:inline-block;font-size:12px;padding:1px 8px;border-radius:999px;background:var(--parent);color:var(--accent);margin-left:6px}
+.decide{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.decide label{padding:3px 10px;border:1px solid var(--line);border-radius:999px;cursor:pointer;font-size:13px}
+.decide input[type=text]{flex:1;min-width:180px;font:inherit;padding:4px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+.hidden{display:none}kbd{font:12px ui-monospace,monospace;border:1px solid var(--line);border-radius:4px;padding:0 4px}
+p.guide{color:var(--mute);font-size:13px;max-width:72ch}
+</style></head><body>
+<header><h1>Review proposals __BANK__</h1><span class="stat" id="stat"></span>
+<select id="show"><option value="">all</option><option value="undecided">undecided only</option><option value="seed">seed topics only</option></select>
+<select id="module"><option value="">all modules</option></select>
+<button id="save" class="primary">Save decisions</button><button id="copy">Copy JSON</button><button id="reset">Clear all</button></header>
+<main><p class="guide">Keep a proposal when an interviewer would ask it and the quoted excerpt really answers it; drop trivia, tool minutiae, anything the excerpt does not support, and near-repeats of the parent. Undecided proposals are treated as dropped. Keys: <kbd>k</kbd> keep, <kbd>d</kbd> drop on the top visible card.</p>
+<div id="main"></div></main>
+<script id="data" type="application/json">__DATA__</script>
+<script>
+const BANK=__BANK_JSON__;const data=JSON.parse(document.getElementById('data').textContent);
+const key=id=>`expand:${BANK}:${id}`;
+const load=id=>{try{return JSON.parse(localStorage.getItem(key(id))||'null')}catch(e){return null}};
+const store=(id,d)=>{try{d?localStorage.setItem(key(id),JSON.stringify(d)):localStorage.removeItem(key(id))}catch(e){}};
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const groups={};data.rows.forEach(r=>{(groups[r.parent_id]=groups[r.parent_id]||[]).push(r)});
+const mods=[...new Set(data.rows.map(r=>r.module))];const modSel=document.getElementById('module');mods.forEach(m=>{const o=document.createElement('option');o.textContent=m;modSel.appendChild(o)});
+function prop(r){const d=load(r.id)||{};return `<div class="prop" data-id="${esc(r.id)}" data-v="${esc(d.v||'')}" data-seed="${r.seed_topic?'1':''}" data-module="${esc(r.module)}">
+ <p class="q">${esc(r.question)}${r.seed_topic?`<span class="seed">${esc(r.seed_topic)}</span>`:''}</p><div class="claim">claim: ${esc(r.claim)} · ${esc(r.difficulty)}</div>
+ <blockquote>${esc(r.excerpt)}</blockquote>
+ <div class="decide"><label><input type="radio" name="v-${esc(r.id)}" value="keep" ${d.v==='keep'?'checked':''}> keep</label><label><input type="radio" name="v-${esc(r.id)}" value="drop" ${d.v==='drop'?'checked':''}> drop</label>
+ <input type="text" placeholder="note (optional)" value="${esc(d.note||'')}"></div></div>`}
+function render(){const main=document.getElementById('main');main.innerHTML=Object.entries(groups).map(([pid,rs])=>`<section data-module="${esc(rs[0].module)}"><div class="parent"><div class="meta">${esc(rs[0].module)} · ${esc(pid)}</div><p class="q">parent: ${esc(data.parents[pid]||'')}</p></div>${rs.map(prop).join('')}</section>`).join('');filter();stat()}
+function decisions(){return data.rows.map(r=>({id:r.id,...(load(r.id)||{})})).filter(x=>x.v)}
+function stat(){const d=decisions();document.getElementById('stat').textContent=`${d.length}/${data.rows.length} decided · keep ${d.filter(x=>x.v==='keep').length} · drop ${d.filter(x=>x.v==='drop').length}`}
+function filter(){const show=document.getElementById('show').value,mod=modSel.value;document.querySelectorAll('.prop').forEach(el=>{let ok=!mod||el.dataset.module===mod;if(show==='undecided')ok=ok&&!el.dataset.v;if(show==='seed')ok=ok&&el.dataset.seed==='1';el.classList.toggle('hidden',!ok)});
+ document.querySelectorAll('section').forEach(s=>{const any=[...s.querySelectorAll('.prop')].some(p=>!p.classList.contains('hidden'));s.classList.toggle('hidden',!any)})}
+document.getElementById('main').addEventListener('change',e=>{const el=e.target.closest('.prop');if(!el)return;const v=(el.querySelector('input[type=radio]:checked')||{}).value||'';const note=el.querySelector('input[type=text]').value.trim();store(el.dataset.id,v?{v,note}:null);el.dataset.v=v;stat();if(document.getElementById('show').value)filter()});
+document.getElementById('main').addEventListener('input',e=>{if(e.target.type!=='text')return;const el=e.target.closest('.prop');const d=load(el.dataset.id);if(d){d.note=e.target.value.trim();store(el.dataset.id,d)}});
+['show','module'].forEach(id=>document.getElementById(id).addEventListener('change',filter));
+const payload=()=>JSON.stringify({bank:BANK,exported:new Date().toISOString(),decided:decisions()},null,1);
+document.getElementById('save').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([payload()],{type:'application/json'}));a.download=`expand_${BANK}.decisions.json`;a.click()};
+document.getElementById('copy').onclick=async()=>{try{await navigator.clipboard.writeText(payload());alert('copied')}catch(e){prompt('copy this',payload())}};
+document.getElementById('reset').onclick=()=>{if(confirm('Clear every decision stored in this browser?')){data.rows.forEach(r=>store(r.id,null));render()}};
+document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT'&&e.target.type==='text')return;const map={k:'keep',d:'drop'};if(!map[e.key])return;const vis=[...document.querySelectorAll('.prop:not(.hidden)')];const el=vis.find(c=>c.getBoundingClientRect().bottom>70);if(!el)return;el.querySelector(`input[value=${map[e.key]}]`).checked=true;el.dispatchEvent(new Event('change',{bubbles:true}));const nx=vis[vis.indexOf(el)+1];if(nx)nx.scrollIntoView({block:'start'})});
+render();
+</script></body></html>
+"""
+
+
+def write_proposal_page(bank):
+    """A local page listing every KEPT proposal under its parent, for the
+    author to keep or drop before the rubric stage (data/review/, never
+    committed: it quotes lesson text)."""
+    proposals_path = PROPOSALS_DIR / f"expand_{bank}_proposals.json"
+    data = json.loads(proposals_path.read_text(encoding="utf-8"))
+    rows = [r for r in data["rows"] if r["verdict"] == "keep"]
+    parents = {c["id"]: c["interview"]["question"] for c in load_jsonl(private_bank_path(bank))}
+    out = BASE_DIR / "data" / "review" / f"expand_{bank}_proposals.html"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    payload = json.dumps({"rows": rows, "parents": parents}, ensure_ascii=False).replace("</", "<\\/")
+    out.write_text(PROPOSAL_PAGE.replace("__BANK_JSON__", json.dumps(bank))
+                   .replace("__BANK__", bank).replace("__DATA__", payload), encoding="utf-8")
+    print(f"{len(rows)} kept proposals -> {out}")
+    print("open it in a browser, decide, Save; then --apply <decisions.json> before --generate")
+
+
+def apply_decisions(bank, decisions_path):
+    """Stamp the author's keep/drop onto the proposals file: undecided
+    proposals become drops, so --generate only spends on explicit keeps."""
+    proposals_path = PROPOSALS_DIR / f"expand_{bank}_proposals.json"
+    data = json.loads(proposals_path.read_text(encoding="utf-8"))
+    decided = json.loads(Path(decisions_path).read_text(encoding="utf-8"))
+    if decided.get("bank") != bank:
+        raise SystemExit(f"decisions are for bank {decided.get('bank')!r}, not {bank!r}")
+    by_id = {d["id"]: d for d in decided.get("decided", []) if d.get("v")}
+    kept = dropped = 0
+    for row in data["rows"]:
+        if row["verdict"] != "keep" and not row["reason"].startswith("author"):
+            continue
+        d = by_id.get(row.get("id"))
+        if d and d["v"] == "keep":
+            row["verdict"], row["reason"] = "keep", "author: keep" + (f" - {d['note']}" if d.get("note") else "")
+            kept += 1
+        else:
+            row["verdict"], row["reason"] = "drop", "author: " + (
+                f"drop - {d['note']}" if d and d.get("note") else "drop" if d else "undecided")
+            dropped += 1
+    proposals_path.write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8")
+    cost = sum((EST_IN_TOKENS + int(len(r["excerpt"].split()) * 1.4) + 400) * IN_PRICE
+               + EST_OUT_TOKENS * OUT_PRICE for r in data["rows"] if r["verdict"] == "keep")
+    print(f"author decisions applied: keep {kept}, drop {dropped}; Claude cost for the keeps ~${cost:.2f}")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--bank", choices=list(BANKS), default="ai")
     parser.add_argument("--propose", action="store_true")
+    parser.add_argument("--page", action="store_true",
+                        help="write the author review page for the kept proposals")
+    parser.add_argument("--apply", metavar="DECISIONS_JSON",
+                        help="stamp the saved keep/drop decisions onto the proposals file")
     parser.add_argument("--generate", action="store_true")
     parser.add_argument("--confirm", action="store_true")
     parser.add_argument("--seed-only", action="store_true")
@@ -443,6 +562,10 @@ def main():
         raise SystemExit(f"private bank not found at {private_bank_path(args.bank)} (set PRIVATE_REPO_DIR)")
     if args.propose:
         propose(args.bank, args.seed_only, args.ids, args.limit, args.workers)
+    elif args.page:
+        write_proposal_page(args.bank)
+    elif args.apply:
+        apply_decisions(args.bank, args.apply)
     elif args.generate:
         if not args.confirm:
             raise SystemExit("--generate spends real Claude tokens: re-run with --confirm "

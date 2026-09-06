@@ -91,6 +91,42 @@ def test_parents_for_skips_children_and_filters_seeds():
             ex.PRIVATE_DIR = old
 
 
+def test_apply_decisions_undecided_means_drop():
+    with tempfile.TemporaryDirectory() as tmp:
+        scratch = Path(tmp)
+        rows = [
+            {"id": "p1__x01_a", "verdict": "keep", "reason": "", "excerpt": "x y z", "question": "a?"},
+            {"id": "p1__x02_b", "verdict": "keep", "reason": "", "excerpt": "x y z", "question": "b?"},
+            {"id": "p1__x03_c", "verdict": "keep", "reason": "", "excerpt": "x y z", "question": "c?"},
+            {"verdict": "drop", "reason": "excerpt not found in the lesson text", "excerpt": "q",
+             "question": "d?"},
+        ]
+        (scratch / "expand_ai_proposals.json").write_text(
+            json.dumps({"bank": "ai", "rows": rows}), encoding="utf-8")
+        (scratch / "d.json").write_text(json.dumps({"bank": "ai", "decided": [
+            {"id": "p1__x01_a", "v": "keep", "note": "good"},
+            {"id": "p1__x02_b", "v": "drop", "note": "trivia"}]}), encoding="utf-8")
+        old = ex.PROPOSALS_DIR
+        ex.PROPOSALS_DIR = scratch
+        try:
+            ex.apply_decisions("ai", scratch / "d.json")
+            data = json.loads((scratch / "expand_ai_proposals.json").read_text(encoding="utf-8"))
+            verdicts = {r.get("id", "auto"): (r["verdict"], r["reason"]) for r in data["rows"]}
+            assert verdicts["p1__x01_a"] == ("keep", "author: keep - good")
+            assert verdicts["p1__x02_b"] == ("drop", "author: drop - trivia")
+            assert verdicts["p1__x03_c"] == ("drop", "author: undecided")
+            # Automatic drops are left alone.
+            assert verdicts["auto"] == ("drop", "excerpt not found in the lesson text")
+            (scratch / "wrong.json").write_text(json.dumps({"bank": "ml", "decided": []}), encoding="utf-8")
+            try:
+                ex.apply_decisions("ai", scratch / "wrong.json")
+                raise AssertionError("bank mismatch not caught")
+            except SystemExit:
+                pass
+        finally:
+            ex.PROPOSALS_DIR = old
+
+
 if __name__ == "__main__":
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):
