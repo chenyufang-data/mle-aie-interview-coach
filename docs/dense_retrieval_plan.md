@@ -580,6 +580,25 @@ at roughly 45–55% coverage; `dense≥0.70` lands near 85–90% precision at
 ~80% coverage and may miss the bar by a little; the grown AIE bank moves
 AIE resume-project fairness from the 40s to above 60% under `bm25@10`.
 
+**12.6c Lesson-text expansion, stage A (2026-09-05/06).** `grader/expand_chunks.py
+--propose` over the PRIVATE banks: DeepSeek proposes 0-4 finer sub-questions
+per parent with the verbatim supporting excerpt; a grounding guard drops
+excerpts not found in the lesson; lexical + bge-small dedupe against every
+bank and the parent; Claude fallback when DeepSeek's thinking overruns its
+output budget (10 of 91 AIE parents). AIE: 289 proposed from 91 parents, 279
+kept (10 near the parent or a duplicate), 73 on seed topics — but the mix is
+shallow (88 beginner, 89 beginner-intermediate, 102 intermediate, 0
+advanced) and some are bound to a lesson's worked example; Claude estimate
+for all 279: $9.26. MLE: the course text touches the seed topics in only
+10/191 chunks; those 10 yielded 25 keeps that are notebook-level pandas
+detail (3 on seed topics) — not worth rubric spend; the MLOps gaps need
+12.2 item 3 (primary docs). Author review pages: `--page` writes
+`data/review/expand_<bank>_proposals.html` (keep/drop, seed and difficulty
+filters); `--apply` stamps decisions, undecided = drop; stage B (Claude
+rubrics into the private bank, then `strip_chunks.py`) waits for that review
+and for R4's gap list. Recommendation recorded: keep roughly the seed-topic
+and intermediate proposals (~100, ≈ $3.3), skip beginner-tier restatements.
+
 **12.4 progress (2026-09-05, evening).** Step 1 re-checked on the reloaded
 harness after the lists bank and the retire flag: A 23/23, B hybrid 49/61 vs
 bm25 41/61 (+13.1) — holds. Step 2: the 77 resume-only probes regenerated
