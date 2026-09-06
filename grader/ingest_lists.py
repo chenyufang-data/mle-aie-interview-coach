@@ -21,6 +21,13 @@ Two stages, same shape as ingest_questions.py:
       chunks append to rag_lists/all_chunks.jsonl. Idempotent by id, so an
       interrupted run just re-runs. --workers N runs calls concurrently.
 
+  .venv\\Scripts\\python grader\\ingest_lists.py --fix [--generate --confirm]
+      FIX PASS: chunks the author marked "fix" in tools/review_bank.py go
+      back to the teacher with the reviewer's note (authoritative), the
+      source answer, the current rubric, and any chunk the note cites.
+      The corrected rubric replaces the chunk's interview fields in place
+      (same id, review.status -> "fixed"). Dry run prints the list + cost.
+
 Chunks store the question verbatim (`metadata.original`) plus a source URL
 pinned to the clone's commit; the source answer itself is not stored -
 the rubric is the teacher's own words.
@@ -391,7 +398,7 @@ def teacher_prompt(row):
     )
 
 
-def generate_rubric(row):
+def call_teacher(prompt):
     from coach import llm
 
     response = llm.get_client().messages.create(
@@ -399,7 +406,7 @@ def generate_rubric(row):
         max_tokens=8000,
         system=TEACHER_SYSTEM,
         thinking={"type": "adaptive"},
-        messages=[{"role": "user", "content": teacher_prompt(row)}],
+        messages=[{"role": "user", "content": prompt}],
         output_config={"format": {"type": "json_schema", "schema": RUBRIC_SCHEMA}},
     )
     if response.stop_reason == "refusal":
@@ -408,6 +415,141 @@ def generate_rubric(row):
     usage = getattr(response, "usage", None)
     tokens = (getattr(usage, "input_tokens", 0) or 0, getattr(usage, "output_tokens", 0) or 0)
     return json.loads(text), tokens
+
+
+def generate_rubric(row):
+    return call_teacher(teacher_prompt(row))
+
+
+# ---------------------------------------------------------------------------
+# Fix pass: chunks the author marked "fix" in tools/review_bank.py go back
+# to the teacher with the reviewer's note (authoritative), the source
+# answer, the current rubric, and any chunk the note cites for
+# consistency. The corrected rubric replaces the interview fields in place
+# (same id); review.status becomes "fixed".
+
+REF = re.compile(r"\b(omb_\d\d_\d{3}|kal_\d{3})\b")
+ID_PREFIX = re.compile(r"^list_(omb_\d\d_\d{3}|kal_\d{3})")
+
+
+def load_bank_chunks():
+    with OUT_PATH.open(encoding="utf-8") as handle:
+        return [json.loads(line) for line in handle if line.strip()]
+
+
+def write_bank_chunks(chunks):
+    tmp = OUT_PATH.with_suffix(".jsonl.tmp")
+    with tmp.open("w", encoding="utf-8") as handle:
+        for chunk in chunks:
+            handle.write(json.dumps(chunk, ensure_ascii=False) + "\n")
+    tmp.replace(OUT_PATH)
+
+
+def fix_work(chunks, answers_by_id):
+    by_prefix = {}
+    for chunk in chunks:
+        m = ID_PREFIX.match(chunk["id"])
+        if m:
+            by_prefix[m.group(1)] = chunk
+    work = []
+    for chunk in chunks:
+        review = chunk["metadata"].get("review", {})
+        if review.get("status") != "fix":
+            continue
+        note = review.get("note", "")
+        refs = [by_prefix[p] for p in dict.fromkeys(REF.findall(note))
+                if p in by_prefix and by_prefix[p] is not chunk]
+        work.append({"chunk": chunk, "note": note, "refs": refs,
+                     "answer": answers_by_id.get(chunk["id"], "")})
+    return work
+
+
+def fix_prompt(item):
+    chunk, meta = item["chunk"], item["chunk"]["metadata"]
+    refs = "\n".join(
+        f"- {r['id']}: {r['interview']['question']} | key points: "
+        f"{'; '.join(r['interview']['key_points'])}" for r in item["refs"])
+    return (
+        f"Source list: {meta['source']} ({meta['license']}), tier: "
+        f"{meta.get('tier') or 'unspecified'}. Bank module: {meta['module']}.\n\n"
+        f"Question (verbatim):\n{meta['original']}\n\n"
+        f"Source answer (the list author's; rewrite, never copy; correct where wrong):\n"
+        f"{item['answer'] or '(none given)'}\n\n"
+        f"Current rubric (written earlier from that source):\n"
+        f"{json.dumps(chunk['interview'], ensure_ascii=False, indent=1)}\n\n"
+        f"Reviewer's correction (a senior engineer read the rubric; this is authoritative):\n"
+        f"{item['note']}\n\n"
+        + (f"Chunks the reviewer cites; keep the corrected rubric consistent with them:\n{refs}\n\n"
+           if refs else "")
+        + f"Difficulty hint: {meta['difficulty']}.\n"
+          "Rewrite the rubric so the correction holds throughout (question, model_answer, "
+          "key_points, common_mistakes, followups). Keep everything the reviewer did not "
+          "object to; do not reject a correct alternative the reviewer named as acceptable."
+    )
+
+
+def estimate_fix(work):
+    total = 0.0
+    for item in work:
+        extra = int(len(item["answer"].split()) * 1.4) + int(
+            len(json.dumps(item["chunk"]["interview"]).split()) * 1.4) + 80
+        total += (EST_IN_TOKENS + extra) * IN_PRICE + EST_OUT_TOKENS * OUT_PRICE
+    return total
+
+
+def run_fix(args):
+    if not OUT_PATH.exists():
+        raise SystemExit(f"no bank at {OUT_PATH}")
+    chunks = load_bank_chunks()
+    answers = {}
+    for row in read_sources():
+        answers[candidate_id(row)] = row["answer"]
+    work = fix_work(chunks, answers)
+    if args.limit:
+        work = work[:args.limit]
+    print(f"fix pass: {len(work)} chunks marked \"fix\" "
+          f"({sum(bool(w['refs']) for w in work)} cite another chunk; "
+          f"{sum(not w['answer'] for w in work)} without a source answer); "
+          f"estimated cost ~${estimate_fix(work):.2f}")
+    for item in work[:15]:
+        print(f"  {item['chunk']['id'][:46]:46} {item['note'][:80]}")
+    if len(work) > 15:
+        print(f"  ... {len(work) - 15} more")
+    if not args.generate:
+        print("dry run only - re-run with --fix --generate --confirm to send them")
+        return
+    if not args.confirm:
+        raise SystemExit("--generate spends real Claude tokens: re-run with --confirm")
+
+    import datetime as dt
+    today = dt.date.today().isoformat()
+    lock = threading.Lock()
+    spent, done = [0, 0], 0
+    with ThreadPoolExecutor(max_workers=args.workers) as pool:
+        futures = {pool.submit(call_teacher, fix_prompt(item)): item for item in work}
+        for future in as_completed(futures):
+            item = futures[future]
+            done += 1
+            chunk = item["chunk"]
+            try:
+                rubric, tokens = future.result()
+            except Exception as exc:  # stays "fix"; the re-run picks it up
+                print(f"  [{done}/{len(work)}] {chunk['id']}: FAILED ({exc})", flush=True)
+                continue
+            with lock:
+                chunk["interview"] = {k: rubric[k] for k in
+                                      ("question", "model_answer", "key_points",
+                                       "common_mistakes", "followups")}
+                for key in ("topic", "tags", "difficulty", "round"):
+                    chunk["metadata"][key] = rubric[key]
+                chunk["metadata"]["review"] = {**chunk["metadata"]["review"],
+                                               "status": "fixed", "fixed": today}
+                write_bank_chunks(chunks)
+                spent[0] += tokens[0]
+                spent[1] += tokens[1]
+            print(f"  [{done}/{len(work)}] {chunk['id']} -> fixed", flush=True)
+    cost = spent[0] * IN_PRICE + spent[1] * OUT_PRICE
+    print(f"\nbank rewritten in place; actual usage {spent[0]} in / {spent[1]} out tokens = ~${cost:.2f}")
 
 
 def build_chunk(row, rubric, sha):
@@ -490,7 +632,14 @@ def main():
     parser.add_argument("--no-semantic", action="store_true",
                         help="skip the bge-small near-duplicate pass")
     parser.add_argument("--workers", type=int, default=4)
+    parser.add_argument("--fix", action="store_true",
+                        help="fix pass: re-teach the chunks marked \"fix\" by tools/review_bank.py "
+                             "(with --generate --confirm), instead of ingesting")
     args = parser.parse_args()
+
+    if args.fix:
+        run_fix(args)
+        return
 
     rows, merges, bank_dups, sem_dropped, stats = collect(
         cap=args.cap, kalyan_cap=args.kalyan_cap, semantic=not args.no_semantic)
