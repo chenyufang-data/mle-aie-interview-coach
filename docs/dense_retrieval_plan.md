@@ -669,6 +669,29 @@ review pass before they ground anything - the 53% fix rate is the
 measured cost of that source. Retired chunks are skipped by the loader
 (319 serve); fix chunks stay live until the fix pass (12.6b).
 
+**12.6b Fix pass (2026-09-05).** `ingest_lists.py --fix`: each of the 175
+flagged chunks went back to the teacher with the reviewer's note
+(authoritative), the source answer, the previous rubric, and any chunk the
+note cites (9 did); the prompt tells the teacher to apply only the parts of
+a shared note that concern that chunk and to date any version or vendor
+claim. Before the run the author asked whether the assistant agreed with
+the notes: all 175 were read against their rubrics and agreed with; two
+external claims were checked (TGI archived: true; AI Act Annex III /
+Annex I dates 2027-12-02 / 2028-08-02: confirmed on the implementation
+timeline, updated 2026-08-31). Result: 175/175 corrected, 0 failures,
+actual usage 552,232 in / 252,847 out tokens = **$9.08** (estimate $6.44;
+the old rubric and source answer ride along as input and the corrections
+ran long). Ids unchanged; key points changed in 174/175 (Jaccard to the
+old key points: min 0.30, median 0.70 — targeted edits, not rewrites);
+question reworded in 6 (false premises, e.g. the "decoder self-attention
+is cross-attention" item); difficulty unchanged; verbatim probe vs source
+max 0.10. `review.status` is now `fixed` on those chunks (note kept).
+Loader serves 319; mock suite passes; vector cache rebuilt.
+
+Cumulative spend on this bank: $11.78 + $9.08 = $20.86 for 319 serving
+chunks, ≈ $0.065 per chunk after review — roughly double the rag_exp
+figure, the price of the 53% fix rate a synthesized source carries.
+
 Consequence for 12.4: the mock's rubric grounding walks every loaded
 bank, so `rag_lists` grounds probes from now on; R4 measures the policies
 with the bank present and, as a slice, with `LISTS` excluded.
