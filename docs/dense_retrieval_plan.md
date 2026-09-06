@@ -580,6 +580,19 @@ at roughly 45–55% coverage; `dense≥0.70` lands near 85–90% precision at
 ~80% coverage and may miss the bar by a little; the grown AIE bank moves
 AIE resume-project fairness from the 40s to above 60% under `bm25@10`.
 
+**12.4 progress (2026-09-05, evening).** Step 1 re-checked on the reloaded
+harness after the lists bank and the retire flag: A 23/23, B hybrid 49/61 vs
+bm25 41/61 (+13.1) — holds. Step 2: the 77 resume-only probes regenerated
+on 2026-09-04 (never labeled) are the fresh set; no real pasted JDs exist
+yet. Step 4 harness: `grader/grounding_r4.py --pool` runs the four
+policies on two bank sets (all banks / without rag_lists) and writes 204
+(probe, chunk) pairs to `grader/grounding_r4_pool.jsonl` plus the labeling
+page `data/review/grounding_r4.html`. Attach counts, all banks: bm25@10
+77/77 (best-hit score min 12.4, so the threshold never filters — same
+inflation as set C), agree 27, dense≥0.70 70, hybrid 77; without
+rag_lists: 77 / 26 / 51 / 77. 69 of the 204 candidates come from
+rag_lists. Step 3 (author labels) is pending; `--score` then applies R4.
+
 ### 12.5 Build-session checklist
 
 1. Author has read §12 and changed anything that looks wrong (before the
