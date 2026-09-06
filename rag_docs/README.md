@@ -29,6 +29,10 @@ Build / update it locally:
     .venv\Scripts\python grader\ingest_docs.py --apply data\review\expand_docs.decisions.json
     .venv\Scripts\python grader\ingest_docs.py --generate --confirm # paid teacher run, appends to all_chunks.jsonl
 
+First run (2026-09-06): 20 sections, 116 proposals, 72 kept after review,
+72 chunks (52 intermediate / 20 advanced; 7 pointer-only from the two
+reference-only sources); details in docs/dense_retrieval_plan.md §12.6d.
+
 Re-runs are idempotent - existing ids are skipped. Review the built chunks
 with `tools/review_bank.py rag_docs`, then `--apply` the decisions (retire
 is a flag the app honors, never a deletion). The bank file is gitignored

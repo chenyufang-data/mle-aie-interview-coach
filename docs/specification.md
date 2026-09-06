@@ -62,7 +62,7 @@ mle-aie-interview-coach/
 ├── tests/                  (9 files)     regression suites + Playwright e2e (§8)
 ├── tools/                  (4 files)     level1_up, strip_chunks, backup_private, review_bank
 ├── rag_ml/                               MLE bank: 191 chunks over 15 modules
-├── rag_ai/                               AIE bank: 91 chunks over 6 modules
+├── rag_ai/                               AIE bank: 222 chunks over 6 modules (91 course + 131 lesson-text expansions)
 ├── rag_exp/                              "Real Qs" bank: 57 chunks from real interview reports
 ├── rag_lists/                            "Lists" bank: licensed GitHub question lists rewritten into rubrics (generated locally)
 └── rag_docs/                             "Docs" bank: rubrics from primary documentation on the MLOps gaps (generated locally)
@@ -164,7 +164,7 @@ Key behaviors:
 
 Short per-question documents (module + topic + tags + question + key
 points), not raw lesson text, across three tracks: MLE (`rag_ml`, 191
-chunks), AIE (`rag_ai`, 91), and the optional "Real Qs" track (`rag_exp`,
+chunks), AIE (`rag_ai`, 222), and the optional "Real Qs" track (`rag_exp`,
 57 chunks distilled from real interview reports) and the optional "Lists"
 track (`rag_lists`, licensed GitHub question lists rewritten into rubrics,
 retrieval plan §12) and the optional "Docs" track (`rag_docs`, rubrics

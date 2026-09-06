@@ -14,8 +14,15 @@ triage chunks, and the step that writes the decisions back.
       (additive, per plan §12.1). coach/kb.py skips status "retire";
       "fix" chunks stay live and are listed for a later teacher re-run.
 
-Any bank works (rag_ml, rag_ai, rag_exp, rag_lists); the page is written
-under data/ so it is never committed.
+Any bank works (rag_ml, rag_ai, rag_exp, rag_lists, rag_docs); the page is
+written under data/ so it is never committed.
+
+  .venv\\Scripts\\python tools\\review_bank.py rag_ai --path ..\\mle-aie-interview-coach-private\\rag_ai\\all_chunks.jsonl --only unreviewed
+      --path reads (and, with --apply, stamps) another edition of the bank -
+      the PRIVATE complete one for the course banks, since tools/strip_chunks.py
+      carries metadata.review from private to public. --only narrows the page
+      to unreviewed chunks, or to those with origin "expand" / "docs"; the
+      card then also shows the source excerpt the rubric was written from.
 """
 
 import argparse
@@ -83,6 +90,7 @@ function card(c){const d=load(c.id)||{};const m=c.metadata;
  <ul class="kp">${(c.interview.key_points||[]).map(k=>`<li>${esc(k)}</li>`).join('')}</ul>
  <details><summary>more: model answer, mistakes, follow-ups${m.original&&m.original!==c.interview.question?', original wording':''}</summary>
  <p>${esc(c.interview.model_answer)}</p><b>Common mistakes</b>${list(c.interview.common_mistakes)}<b>Follow-ups</b>${list(c.interview.followups)}
+ ${(m.origin==='expand'||m.origin==='docs')&&c.content?`<b>Source excerpt</b><p>${esc(c.content)}</p>`:''}
  ${m.original&&m.original!==c.interview.question?`<b>Original</b><p>${esc(m.original)}</p>`:''}</details>
  <div class="decide">
  ${['keep','fix','retire'].map(s=>`<label><input type="radio" name="s-${esc(c.id)}" value="${s}" ${d.status===s?'checked':''}>${s}</label>`).join('')}
@@ -157,7 +165,8 @@ def apply(name, path, decisions_path):
     with path.open("w", encoding="utf-8") as handle:
         for chunk in chunks:
             handle.write(json.dumps(chunk, ensure_ascii=False) + "\n")
-    print(f"{path.relative_to(BASE_DIR)}: stamped {sum(counts.values())} of {len(chunks)} chunks "
+    shown = path.relative_to(BASE_DIR) if path.is_relative_to(BASE_DIR) else path
+    print(f"{shown}: stamped {sum(counts.values())} of {len(chunks)} chunks "
           f"(keep {counts['keep']}, fix {counts['fix']}, retire {counts['retire']})")
     if unknown:
         print(f"  {len(unknown)} decision ids not in the bank (ignored): {sorted(unknown)[:5]}")
@@ -174,15 +183,27 @@ def main():
     parser.add_argument("bank", help="bank directory name, e.g. rag_lists")
     parser.add_argument("--apply", metavar="DECISIONS_JSON",
                         help="stamp the saved decisions onto the bank instead of writing the page")
+    parser.add_argument("--path", metavar="ALL_CHUNKS_JSONL",
+                        help="read / stamp this bank file instead of <bank>/all_chunks.jsonl "
+                             "(e.g. the private complete edition)")
+    parser.add_argument("--only", choices=["unreviewed", "expand", "docs"],
+                        help="page: only chunks still unreviewed, or with this metadata.origin")
     args = parser.parse_args()
-    path = bank_path(args.bank)
+    path = Path(args.path).resolve() if args.path else bank_path(args.bank)
+    if not path.exists():
+        sys.exit(f"no bank at {path}")
     if args.apply:
         apply(args.bank, path, args.apply)
         return
     chunks = load(path)
+    total = len(chunks)
+    if args.only == "unreviewed":
+        chunks = [c for c in chunks if c["metadata"].get("review", {}).get("status") == "unreviewed"]
+    elif args.only:
+        chunks = [c for c in chunks if c["metadata"].get("origin") == args.only]
     retired = sum(1 for c in chunks if c["metadata"].get("review", {}).get("status") == "retire")
     out = write_page(args.bank, chunks)
-    print(f"{len(chunks)} chunks ({retired} already retired) -> {out}")
+    print(f"{len(chunks)} of {total} chunks ({retired} already retired) -> {out}")
     print("open it in a browser; decisions live in that browser until you Save.")
 
 

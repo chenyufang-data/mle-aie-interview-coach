@@ -8,7 +8,8 @@ model answers, and grading rubrics:
 
 - `rag_ml/` (191 chunks over 20 modules of classical ML and data analysis) -
   serves the **MLE** track.
-- `rag_ai/` (91 chunks over 6 modules of LLM and agent engineering) - serves
+- `rag_ai/` (222 chunks over 6 modules of LLM and agent engineering, 131 of
+  them finer sub-questions expanded from the lesson text) - serves
   the **AIE** track.
 - `rag_exp/` (optional, private) - questions actually asked in recent MLE/AIE
   interviews, hand-collected and rebuilt with Claude-generated rubrics by
