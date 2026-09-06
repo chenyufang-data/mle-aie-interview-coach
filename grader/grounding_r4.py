@@ -8,9 +8,11 @@ dense floor:
   agree       attach only when BM25's and dense's best eligible chunk coincide
   dense>=0.70 best eligible dense hit, attached at cosine >= 0.70
   hybrid      best eligible hybrid hit, attached at the frozen RRF threshold
-Each policy runs over two bank sets: every bank (rag_ml, rag_ai, rag_exp,
-rag_lists) and the same without rag_lists, so the effect of the new bank
-is a slice, not a confound.
+Each policy runs over three bank sets: every bank (rag_ml, rag_ai, rag_exp,
+rag_lists, rag_docs), the same without rag_lists, and the same without
+rag_docs, so the effect of each source-grown bank is a slice, not a
+confound. (The first run, 2026-09-05/06, predates rag_docs and the AIE
+expansion; its pool had two sets, all / no_lists.)
 
 Rule R4 (frozen): a policy may replace bm25@10 only if precision >= 90% at
 coverage >= 40% on the author's labels; among passes the highest coverage
@@ -27,6 +29,12 @@ rubric / probes; precision = fair / attached.
   .venv\\Scripts\\python grader\\grounding_r4.py --score grader\\grounding_r4_labels.json
       Applies R4 mechanically, writes grader/grounding_r4_results.json and
       docs/grounding_r4.md.
+
+  --run NAME (either mode) suffixes the results and report files
+  (grounding_r4_results_NAME.json, docs/grounding_r4_NAME.md) so a re-run
+  on grown banks sits beside the first run instead of overwriting it. The
+  pool file is always grader/grounding_r4_pool.jsonl (gitignored: it
+  quotes rubric text); keep a copy elsewhere if the old pool matters.
 """
 
 import argparse
@@ -51,7 +59,12 @@ REPORT_PATH = BASE_DIR / "docs" / "grounding_r4.md"
 PAGE_PATH = BASE_DIR / "data" / "review" / "grounding_r4.html"
 
 DENSE_FLOOR = 0.70
-BANK_SETS = {"all": ["ml", "ai", "exp", "lists"], "no_lists": ["ml", "ai", "exp"]}
+BANK_SETS = {"all": ["ml", "ai", "exp", "lists", "docs"],
+             "no_lists": ["ml", "ai", "exp", "docs"],
+             "no_docs": ["ml", "ai", "exp", "lists"]}
+BANK_SHORT = {"MLE": "ml", "AIE": "ai", "EXP": "exp", "LISTS": "lists", "DOCS": "docs"}
+# The first run's pool rows carry no bank_sets field; this is what they used.
+LEGACY_BANK_SETS = {"all": ["ml", "ai", "exp", "lists"], "no_lists": ["ml", "ai", "exp"]}
 POLICIES = ("bm25@10", "agree", "dense>=0.70", "hybrid")
 R4 = {"precision_min": 0.90, "coverage_min": 0.40}
 # Simplicity order for ties (fewer moving parts first).
@@ -86,8 +99,9 @@ def pool():
     print("thresholds:", thresholds)
     kb.load_chunks()
     embedder = Embedder()
-    arms_all, _ = build_arms(embedder, BANK_SETS["all"], use_chroma=False)
-    arm_sets = {"all": arms_all, "no_lists": {c: arms_all[c] for c in BANK_SETS["no_lists"]}}
+    arms_all, stats = build_arms(embedder, BANK_SETS["all"], use_chroma=False)
+    print("bank sizes:", {c: stats[c]["chunks"] for c in BANK_SETS["all"]})
+    arm_sets = {name: {c: arms_all[c] for c in corpora} for name, corpora in BANK_SETS.items()}
     rows = []
     for probe in read_jsonl(PROBES_PATH):
         query = f"{probe['topic']} {probe['question_hint']}"
@@ -110,16 +124,17 @@ def pool():
                      "level": probe["level"], "topic": probe["topic"],
                      "question_hint": probe["question_hint"],
                      "expected_points": probe.get("expected_points", []),
-                     "query": query, "thresholds": thresholds, "sets": by_set,
-                     "candidates": list(candidates.values())})
+                     "query": query, "thresholds": thresholds, "bank_sets": BANK_SETS,
+                     "bank_sizes": {c: stats[c]["chunks"] for c in BANK_SETS["all"]},
+                     "sets": by_set, "candidates": list(candidates.values())})
     write_jsonl(POOL_PATH, rows)
     pairs = sum(len(r["candidates"]) for r in rows)
     print(f"{len(rows)} probes, {pairs} (probe, chunk) pairs to label")
     for name in BANK_SETS:
         counts = {p: sum(1 for r in rows if r["sets"][name]["policies"][p]) for p in POLICIES}
         print(f"  attached on '{name}': {counts}")
-    lists_share = sum(1 for r in rows for c in r["candidates"] if c["bank"] == "lists")
-    print(f"  candidates from rag_lists: {lists_share}/{pairs}")
+    by_bank = collections.Counter(c["bank"] for r in rows for c in r["candidates"])
+    print(f"  candidates by bank: {dict(by_bank)} of {pairs}")
     # BM25 score distribution of the best eligible hit per bank set (threshold re-check)
     for name in BANK_SETS:
         scores = sorted(r["sets"][name]["tops"]["bm25"][1] for r in rows if r["sets"][name]["tops"]["bm25"])
@@ -133,7 +148,7 @@ def pool():
 def kb_bank(chunk_id):
     for role, info in kb.KB.items():
         if any(c["id"] == chunk_id for c in info["chunks"]):
-            return {"MLE": "ml", "AIE": "ai", "EXP": "exp", "LISTS": "lists"}.get(role, role)
+            return BANK_SHORT.get(role, role)
     return "?"
 
 
@@ -215,9 +230,11 @@ def score(labels_path, labeler):
                if (r["probe_id"], c["chunk_id"]) not in lab]
     if missing:
         sys.exit(f"{len(missing)} attached pair(s) unlabeled, e.g. {missing[:3]} - finish the page first")
+    bank_sets = rows[0].get("bank_sets", LEGACY_BANK_SETS)
     out = {"generated": datetime.now().isoformat(timespec="seconds"), "probes": n, "labeler": labeler,
-           "rule": R4, "thresholds": rows[0]["thresholds"], "sets": {}}
-    for name in BANK_SETS:
+           "rule": R4, "thresholds": rows[0]["thresholds"], "bank_sets": bank_sets,
+           "bank_sizes": rows[0].get("bank_sizes"), "sets": {}}
+    for name in bank_sets:
         stats = {}
         for policy in POLICIES:
             attached = [(r, r["sets"][name]["policies"][policy][0]) for r in rows
@@ -248,35 +265,56 @@ def score(labels_path, labeler):
                     f = sum(1 for r, cid in att if lab[(r["probe_id"], cid)] == "yes")
                     entry[policy] = f"{f}/{len(att)}"
                 slices[keyname][g] = entry
-        lists_att = sum(1 for r in rows if r["sets"][name]["policies"]["bm25@10"]
-                        and r["sets"][name]["policies"]["bm25@10"][0] in {c["chunk_id"] for c in r["candidates"] if c["bank"] == "lists"})
+        bank_of = {(r["probe_id"], c["chunk_id"]): c["bank"] for r in rows for c in r["candidates"]}
+        bm25_by_bank = collections.Counter(
+            bank_of[(r["probe_id"], r["sets"][name]["policies"]["bm25@10"][0])]
+            for r in rows if r["sets"][name]["policies"]["bm25@10"])
+        fair_by_bank = collections.Counter(
+            bank_of[(r["probe_id"], r["sets"][name]["policies"]["bm25@10"][0])]
+            for r in rows if r["sets"][name]["policies"]["bm25@10"]
+            and lab[(r["probe_id"], r["sets"][name]["policies"]["bm25@10"][0])] == "yes")
+        no_fair = [r["probe_id"] for r in rows
+                   if not any(lab[(r["probe_id"], c["chunk_id"])] == "yes" for c in r["candidates"])]
         out["sets"][name] = {"policies": stats, "passing": passing, "ships": winner or "bm25@10 (no policy passed)",
                              "agree_falsified": stats["agree"]["precision"] is not None and stats["agree"]["precision"] < R4["precision_min"],
-                             "bm25_attachments_from_lists": lists_att, "slices": slices}
-    RESULTS_PATH.write_text(json.dumps(out, indent=1, ensure_ascii=False), encoding="utf-8")
-    render_report(out)
+                             "bm25_attachments_by_bank": dict(bm25_by_bank),
+                             "bm25_fair_by_bank": dict(fair_by_bank),
+                             "probes_without_fair_candidate": no_fair, "slices": slices}
+    results_path, report_path = run_paths(RUN)
+    results_path.write_text(json.dumps(out, indent=1, ensure_ascii=False), encoding="utf-8")
+    render_report(out, report_path)
     for name, s in out["sets"].items():
         print(f"[{name}]")
         for policy, st in s["policies"].items():
             print(f"  {policy:12} attached {st['attached']:3d}/{n}  fair {st['fair']:3d}  precision "
                   f"{st['precision'] if st['precision'] is not None else '-':<7} coverage {st['coverage']:.0%}  "
                   f"{'PASS' if st['passes_r4'] else 'fail'}")
-        print(f"  ships: {s['ships']}; agree falsified: {s['agree_falsified']}")
-    print(f"results: {RESULTS_PATH.relative_to(BASE_DIR)}; report: {REPORT_PATH.relative_to(BASE_DIR)}")
+        print(f"  ships: {s['ships']}; agree falsified: {s['agree_falsified']}; "
+              f"bm25 fair by bank {s['bm25_fair_by_bank']} of {s['bm25_attachments_by_bank']}; "
+              f"probes with no fair candidate: {len(s['probes_without_fair_candidate'])}")
+    print(f"results: {results_path.relative_to(BASE_DIR)}; report: {report_path.relative_to(BASE_DIR)}")
 
 
-def render_report(out):
+def run_paths(run):
+    if not run:
+        return RESULTS_PATH, REPORT_PATH
+    return (RESULTS_PATH.with_name(f"grounding_r4_results_{run}.json"),
+            REPORT_PATH.with_name(f"grounding_r4_{run}.md"))
+
+
+def render_report(out, report_path):
     n = out["probes"]
     lines = ["# Grounding experiment R4 — which policy attaches a bank rubric",
              "",
-             f"Generated {out['generated']} by `grader/grounding_r4.py --score`. Probes: {n} fresh resume-only "
-             f"mock probes (`grader/grounding_probes_resume_only.jsonl`, never labeled before). Labels: {out['labeler']}. "
+             f"Generated {out['generated']} by `grader/grounding_r4.py --score`"
+             f"{' --run ' + RUN if RUN else ''}. Probes: {n} resume-only "
+             f"mock probes (`grader/grounding_probes_resume_only.jsonl`). Labels: {out['labeler']}. "
              f"Rule R4 (frozen in docs/dense_retrieval_plan.md §12.4): precision ≥ {out['rule']['precision_min']:.0%} at "
              f"coverage ≥ {out['rule']['coverage_min']:.0%}; coverage = probes receiving a fair rubric / probes; "
              f"precision = fair / attached. Thresholds: {out['thresholds']}.",
              ""]
     for name, s in out["sets"].items():
-        banks = ", ".join(f"rag_{c}" for c in BANK_SETS[name])
+        banks = ", ".join(f"rag_{c}" for c in out["bank_sets"][name])
         lines += [f"## Bank set `{name}` ({banks})", "",
                   "| Policy | Attached | Fair | Precision | Coverage | R4 |", "|---|---|---|---|---|---|"]
         for policy, st in s["policies"].items():
@@ -284,22 +322,31 @@ def render_report(out):
             lines.append(f"| `{policy}` | {st['attached']}/{n} | {st['fair']} | {p} | {st['coverage']:.1%} | "
                          f"{'**PASS**' if st['passes_r4'] else 'fail'} |")
         lines += ["", f"Ships: **{s['ships']}**. Agreement finding falsified: {'yes' if s['agree_falsified'] else 'no'}. "
-                      f"bm25@10 attachments drawn from rag_lists: {s['bm25_attachments_from_lists']}.", ""]
+                      f"bm25@10 attachments by bank: {s['bm25_attachments_by_bank']}; fair among them: "
+                      f"{s['bm25_fair_by_bank']}. Probes with no fair candidate under any policy: "
+                      f"{len(s['probes_without_fair_candidate'])}.", ""]
         for keyname, groups in s["slices"].items():
             lines += [f"Fair/attached by {keyname}:", "", "| " + keyname + " | n | " + " | ".join(f"`{p}`" for p in POLICIES) + " |",
                       "|---|---|" + "---|" * len(POLICIES)]
             for g, entry in groups.items():
                 lines.append(f"| {g} | {entry['n']} | " + " | ".join(entry[p] for p in POLICIES) + " |")
             lines.append("")
-    REPORT_PATH.write_text("\n".join(lines), encoding="utf-8")
+    report_path.write_text("\n".join(lines), encoding="utf-8")
+
+
+RUN = ""
 
 
 def main():
+    global RUN
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--pool", action="store_true")
     parser.add_argument("--score", metavar="LABELS_JSON")
     parser.add_argument("--labeler", default="the author")
+    parser.add_argument("--run", default="", metavar="NAME",
+                        help="suffix for the results/report files (e.g. grown); the pool path is fixed")
     args = parser.parse_args()
+    RUN = args.run
     if args.pool:
         pool()
     elif args.score:

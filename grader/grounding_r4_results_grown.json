@@ -1,0 +1,452 @@
+{
+ "generated": "2026-09-06T03:45:15",
+ "probes": 77,
+ "labeler": "Claude (assistant), blind to policy attachment, at the author's request; 156 of 237 pair labels reused verbatim from the first run, 81 new",
+ "rule": {
+  "precision_min": 0.9,
+  "coverage_min": 0.4
+ },
+ "thresholds": {
+  "bm25": 10.0,
+  "dense": 0.5746,
+  "hybrid": 0.0284,
+  "dense_floor": 0.7
+ },
+ "bank_sets": {
+  "all": [
+   "ml",
+   "ai",
+   "exp",
+   "lists",
+   "docs"
+  ],
+  "no_lists": [
+   "ml",
+   "ai",
+   "exp",
+   "docs"
+  ],
+  "no_docs": [
+   "ml",
+   "ai",
+   "exp",
+   "lists"
+  ]
+ },
+ "bank_sizes": {
+  "ml": 191,
+  "ai": 222,
+  "exp": 57,
+  "lists": 319,
+  "docs": 72
+ },
+ "sets": {
+  "all": {
+   "policies": {
+    "bm25@10": {
+     "attached": 77,
+     "fair": 34,
+     "precision": 0.4416,
+     "coverage": 0.4416,
+     "attach_rate": 1.0,
+     "passes_r4": false
+    },
+    "agree": {
+     "attached": 21,
+     "fair": 16,
+     "precision": 0.7619,
+     "coverage": 0.2078,
+     "attach_rate": 0.2727,
+     "passes_r4": false
+    },
+    "dense>=0.70": {
+     "attached": 73,
+     "fair": 31,
+     "precision": 0.4247,
+     "coverage": 0.4026,
+     "attach_rate": 0.9481,
+     "passes_r4": false
+    },
+    "hybrid": {
+     "attached": 77,
+     "fair": 26,
+     "precision": 0.3377,
+     "coverage": 0.3377,
+     "attach_rate": 1.0,
+     "passes_r4": false
+    }
+   },
+   "passing": [],
+   "ships": "bm25@10 (no policy passed)",
+   "agree_falsified": true,
+   "bm25_attachments_by_bank": {
+    "ml": 13,
+    "docs": 11,
+    "lists": 36,
+    "exp": 9,
+    "ai": 8
+   },
+   "bm25_fair_by_bank": {
+    "ml": 9,
+    "docs": 5,
+    "lists": 14,
+    "exp": 5,
+    "ai": 1
+   },
+   "probes_without_fair_candidate": [
+    "mle|Mid-level|probe_2",
+    "mle|Mid-level|probe_4",
+    "mle|Mid-level|probe_8",
+    "mle|Senior|probe_3",
+    "mle|Senior|probe_5",
+    "mle|Senior|probe_6",
+    "mle|Senior|probe_8",
+    "aie|Mid-level|probe_6",
+    "aie|Mid-level|probe_7",
+    "aie|Senior|probe_6",
+    "ds|Mid-level|probe_4",
+    "ds|Mid-level|probe_5",
+    "ds|Senior|probe_1",
+    "ds|Senior|probe_3",
+    "ds|Senior|probe_5",
+    "platform|Mid-level|probe_1",
+    "platform|Mid-level|probe_3",
+    "platform|Mid-level|probe_6",
+    "platform|Mid-level|probe_7",
+    "platform|Senior|probe_2",
+    "platform|Senior|probe_4",
+    "platform|Senior|probe_5",
+    "platform|Senior|probe_7",
+    "applied_sci|Mid-level|probe_2",
+    "applied_sci|Mid-level|probe_6",
+    "applied_sci|Mid-level|probe_7",
+    "applied_sci|Senior|probe_2"
+   ],
+   "slices": {
+    "template": {
+     "aie": {
+      "n": 15,
+      "bm25@10": "8/15",
+      "agree": "1/2",
+      "dense>=0.70": "5/14",
+      "hybrid": "6/15"
+     },
+     "applied_sci": {
+      "n": 16,
+      "bm25@10": "7/16",
+      "agree": "5/6",
+      "dense>=0.70": "10/15",
+      "hybrid": "5/16"
+     },
+     "ds": {
+      "n": 15,
+      "bm25@10": "8/15",
+      "agree": "5/6",
+      "dense>=0.70": "8/13",
+      "hybrid": "7/15"
+     },
+     "mle": {
+      "n": 16,
+      "bm25@10": "6/16",
+      "agree": "3/3",
+      "dense>=0.70": "4/16",
+      "hybrid": "4/16"
+     },
+     "platform": {
+      "n": 15,
+      "bm25@10": "5/15",
+      "agree": "2/4",
+      "dense>=0.70": "4/15",
+      "hybrid": "4/15"
+     }
+    },
+    "level": {
+     "Mid-level": {
+      "n": 37,
+      "bm25@10": "16/37",
+      "agree": "7/10",
+      "dense>=0.70": "14/36",
+      "hybrid": "12/37"
+     },
+     "Senior": {
+      "n": 40,
+      "bm25@10": "18/40",
+      "agree": "9/11",
+      "dense>=0.70": "17/37",
+      "hybrid": "14/40"
+     }
+    }
+   }
+  },
+  "no_lists": {
+   "policies": {
+    "bm25@10": {
+     "attached": 77,
+     "fair": 30,
+     "precision": 0.3896,
+     "coverage": 0.3896,
+     "attach_rate": 1.0,
+     "passes_r4": false
+    },
+    "agree": {
+     "attached": 21,
+     "fair": 14,
+     "precision": 0.6667,
+     "coverage": 0.1818,
+     "attach_rate": 0.2727,
+     "passes_r4": false
+    },
+    "dense>=0.70": {
+     "attached": 68,
+     "fair": 27,
+     "precision": 0.3971,
+     "coverage": 0.3506,
+     "attach_rate": 0.8831,
+     "passes_r4": false
+    },
+    "hybrid": {
+     "attached": 77,
+     "fair": 24,
+     "precision": 0.3117,
+     "coverage": 0.3117,
+     "attach_rate": 1.0,
+     "passes_r4": false
+    }
+   },
+   "passing": [],
+   "ships": "bm25@10 (no policy passed)",
+   "agree_falsified": true,
+   "bm25_attachments_by_bank": {
+    "ml": 18,
+    "docs": 28,
+    "exp": 16,
+    "ai": 15
+   },
+   "bm25_fair_by_bank": {
+    "ml": 11,
+    "docs": 9,
+    "exp": 8,
+    "ai": 2
+   },
+   "probes_without_fair_candidate": [
+    "mle|Mid-level|probe_2",
+    "mle|Mid-level|probe_4",
+    "mle|Mid-level|probe_8",
+    "mle|Senior|probe_3",
+    "mle|Senior|probe_5",
+    "mle|Senior|probe_6",
+    "mle|Senior|probe_8",
+    "aie|Mid-level|probe_6",
+    "aie|Mid-level|probe_7",
+    "aie|Senior|probe_6",
+    "ds|Mid-level|probe_4",
+    "ds|Mid-level|probe_5",
+    "ds|Senior|probe_1",
+    "ds|Senior|probe_3",
+    "ds|Senior|probe_5",
+    "platform|Mid-level|probe_1",
+    "platform|Mid-level|probe_3",
+    "platform|Mid-level|probe_6",
+    "platform|Mid-level|probe_7",
+    "platform|Senior|probe_2",
+    "platform|Senior|probe_4",
+    "platform|Senior|probe_5",
+    "platform|Senior|probe_7",
+    "applied_sci|Mid-level|probe_2",
+    "applied_sci|Mid-level|probe_6",
+    "applied_sci|Mid-level|probe_7",
+    "applied_sci|Senior|probe_2"
+   ],
+   "slices": {
+    "template": {
+     "aie": {
+      "n": 15,
+      "bm25@10": "5/15",
+      "agree": "2/4",
+      "dense>=0.70": "4/13",
+      "hybrid": "5/15"
+     },
+     "applied_sci": {
+      "n": 16,
+      "bm25@10": "7/16",
+      "agree": "3/4",
+      "dense>=0.70": "9/14",
+      "hybrid": "4/16"
+     },
+     "ds": {
+      "n": 15,
+      "bm25@10": "7/15",
+      "agree": "4/5",
+      "dense>=0.70": "6/12",
+      "hybrid": "6/15"
+     },
+     "mle": {
+      "n": 16,
+      "bm25@10": "6/16",
+      "agree": "3/3",
+      "dense>=0.70": "4/16",
+      "hybrid": "4/16"
+     },
+     "platform": {
+      "n": 15,
+      "bm25@10": "5/15",
+      "agree": "2/5",
+      "dense>=0.70": "4/13",
+      "hybrid": "5/15"
+     }
+    },
+    "level": {
+     "Mid-level": {
+      "n": 37,
+      "bm25@10": "17/37",
+      "agree": "7/10",
+      "dense>=0.70": "12/34",
+      "hybrid": "13/37"
+     },
+     "Senior": {
+      "n": 40,
+      "bm25@10": "13/40",
+      "agree": "7/11",
+      "dense>=0.70": "15/34",
+      "hybrid": "11/40"
+     }
+    }
+   }
+  },
+  "no_docs": {
+   "policies": {
+    "bm25@10": {
+     "attached": 77,
+     "fair": 33,
+     "precision": 0.4286,
+     "coverage": 0.4286,
+     "attach_rate": 1.0,
+     "passes_r4": false
+    },
+    "agree": {
+     "attached": 27,
+     "fair": 19,
+     "precision": 0.7037,
+     "coverage": 0.2468,
+     "attach_rate": 0.3506,
+     "passes_r4": false
+    },
+    "dense>=0.70": {
+     "attached": 71,
+     "fair": 33,
+     "precision": 0.4648,
+     "coverage": 0.4286,
+     "attach_rate": 0.9221,
+     "passes_r4": false
+    },
+    "hybrid": {
+     "attached": 77,
+     "fair": 25,
+     "precision": 0.3247,
+     "coverage": 0.3247,
+     "attach_rate": 1.0,
+     "passes_r4": false
+    }
+   },
+   "passing": [],
+   "ships": "bm25@10 (no policy passed)",
+   "agree_falsified": true,
+   "bm25_attachments_by_bank": {
+    "ml": 17,
+    "lists": 40,
+    "exp": 11,
+    "ai": 9
+   },
+   "bm25_fair_by_bank": {
+    "ml": 10,
+    "lists": 17,
+    "exp": 5,
+    "ai": 1
+   },
+   "probes_without_fair_candidate": [
+    "mle|Mid-level|probe_2",
+    "mle|Mid-level|probe_4",
+    "mle|Mid-level|probe_8",
+    "mle|Senior|probe_3",
+    "mle|Senior|probe_5",
+    "mle|Senior|probe_6",
+    "mle|Senior|probe_8",
+    "aie|Mid-level|probe_6",
+    "aie|Mid-level|probe_7",
+    "aie|Senior|probe_6",
+    "ds|Mid-level|probe_4",
+    "ds|Mid-level|probe_5",
+    "ds|Senior|probe_1",
+    "ds|Senior|probe_3",
+    "ds|Senior|probe_5",
+    "platform|Mid-level|probe_1",
+    "platform|Mid-level|probe_3",
+    "platform|Mid-level|probe_6",
+    "platform|Mid-level|probe_7",
+    "platform|Senior|probe_2",
+    "platform|Senior|probe_4",
+    "platform|Senior|probe_5",
+    "platform|Senior|probe_7",
+    "applied_sci|Mid-level|probe_2",
+    "applied_sci|Mid-level|probe_6",
+    "applied_sci|Mid-level|probe_7",
+    "applied_sci|Senior|probe_2"
+   ],
+   "slices": {
+    "template": {
+     "aie": {
+      "n": 15,
+      "bm25@10": "9/15",
+      "agree": "2/3",
+      "dense>=0.70": "5/14",
+      "hybrid": "6/15"
+     },
+     "applied_sci": {
+      "n": 16,
+      "bm25@10": "6/16",
+      "agree": "4/5",
+      "dense>=0.70": "9/14",
+      "hybrid": "6/16"
+     },
+     "ds": {
+      "n": 15,
+      "bm25@10": "7/15",
+      "agree": "5/7",
+      "dense>=0.70": "8/13",
+      "hybrid": "6/15"
+     },
+     "mle": {
+      "n": 16,
+      "bm25@10": "6/16",
+      "agree": "4/8",
+      "dense>=0.70": "5/16",
+      "hybrid": "3/16"
+     },
+     "platform": {
+      "n": 15,
+      "bm25@10": "5/15",
+      "agree": "4/4",
+      "dense>=0.70": "6/14",
+      "hybrid": "4/15"
+     }
+    },
+    "level": {
+     "Mid-level": {
+      "n": 37,
+      "bm25@10": "16/37",
+      "agree": "8/12",
+      "dense>=0.70": "15/34",
+      "hybrid": "11/37"
+     },
+     "Senior": {
+      "n": 40,
+      "bm25@10": "17/40",
+      "agree": "11/15",
+      "dense>=0.70": "18/37",
+      "hybrid": "14/40"
+     }
+    }
+   }
+  }
+ }
+}

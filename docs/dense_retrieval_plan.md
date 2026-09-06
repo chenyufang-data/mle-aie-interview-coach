@@ -749,6 +749,54 @@ synced by `tools/backup_private.py`; it had been committed in 22c4ac7
 (never pushed to origin), and rewriting those seven commits is the
 author's call.
 
+**12.4 post-growth run (2026-09-06, evening).** The honest check after
+§12.6c/d: `grounding_r4.py --pool --run grown` on the same 77 probes
+against the five grown banks (rag_ml 191, rag_ai 222, rag_exp 57,
+rag_lists 319 serving, rag_docs 72) over three bank sets — all,
+without rag_lists, without rag_docs — so each source-grown bank is a
+slice. 237 (probe, chunk) pairs: 156 are the same pairs as the first run
+and reuse its labels verbatim; 81 are new (51 rag_docs, 24 AIE
+expansions, 6 rag_exp re-rankings) and were labeled blind by the
+assistant under the same standard, 18 fair / 63 unfair
+(`grader/grounding_r4_labels_grown.json` records the source of every
+label). Policy thresholds unchanged (bm25 10, hybrid 0.0284, dense floor
+0.70; the per-arm dense figure read from the regenerated retrieval
+results moved 0.5638 → 0.5746 and plays no part in the policies).
+Result, all banks (`docs/grounding_r4_grown.md`,
+`grader/grounding_r4_results_grown.json`): `bm25@10` 34/77 fair
+(precision 44.2%, was 41.6%); `agree` 16/21 (76.2%, coverage 20.8%);
+`dense≥0.70` 31/73 (42.5%, 40.3%); `hybrid` 26/77 (33.8%). Without
+rag_lists 30/77, 14/21, 27/68, 24/77; without rag_docs 33/77, 19/27,
+33/71, 25/77. No policy passes R4 on any set; `bm25@10` stays; the
+agreement finding stays falsified. What growth bought: probes with a
+fair candidate under any policy 48 → 50 — four gained (three PSI
+threshold probes through `doc_nanny_thresholds_01`, "why plain
+TimeSeriesSplit was not enough" through `doc_sk_cv_groups_time_01`) and
+two lost (a latency probe whose fair rag_exp chunk is now outranked; the
+offline-vs-online probe where the finer AIE child chunk displaced its
+fair parent and is itself unfair). `bm25@10` picks the same chunk as
+before on 58/77 probes; of the 19 that moved to a new bank, rag_docs
+takes 11 (5 fair) and the AIE expansions 8 (1 fair — the self-hosting
+motivation chunk attaches to three distillation probes on "serving cost"
+words). Without rag_lists, rag_docs takes 28 of the 77 attachments and
+is fair in 9. Gap list, probes with no fair candidate, 29 → 27: PSI /
+drift playbook 5 (was 8), cost-based operating point and baseline
+attribution 5, distillation label QA 5, CI gate and golden set 3,
+latency and feature-store consistency 4, framing and decision change 2,
+reproducible pipeline 1, measured prompt iteration 1, offline-to-online
+impact 1. Reading: the docs bank was written at claim level to this gap
+list, and it grounds exactly where a probe asks that claim ("why 0.2",
+"why not shuffle") — but most gap probes ask for a playbook or a cost
+model that spans several claims, and one chunk's key points cannot be
+the rubric for a multi-part probe. The level mismatch is structural,
+not a retrieval defect, and chunk-level growth has diminishing returns
+for grounding: 203 reviewed chunks moved fair probes by two. The next
+lever is on the mock's side — grade against the probe's own expected
+points and attach bank chunks as supporting hints, or compose a rubric
+from the key points of the top few chunks — a product decision recorded
+here, not made. The pool file stays gitignored; the first-run pool
+survives in the private repo's history.
+
 ### 12.5 Build-session checklist
 
 1. Author has read §12 and changed anything that looks wrong (before the

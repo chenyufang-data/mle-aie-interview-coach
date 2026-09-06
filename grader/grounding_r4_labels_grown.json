@@ -1,0 +1,1668 @@
+{
+ "experiment": "grounding_r4",
+ "run": "grown",
+ "exported": "2026-09-06T08:45:15+00:00",
+ "labeler": "Claude (assistant), blind to policy attachment, at the author's request; 156 of 237 pair labels reused verbatim from the first run, 81 new",
+ "standard": "fair = the chunk's key points state the same claim/decision/trade-off the probe asks for and a strong answer would satisfy them (at most one incidental point outside the probe); unfair = prerequisite, neighbouring technique, generic project rubric, or two or more points the probe never raised",
+ "labels": [
+  {
+   "probe_id": "mle|Mid-level|probe_1",
+   "chunk_id": "18_logistic_regression_predict__11_other_imbalance_methods",
+   "label": "yes",
+   "note": "same variants (resampling/SMOTE/class weights), same PR metric, same train-fold-only pitfall",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_2",
+   "chunk_id": "19_logistic_regression_proba__05_threshold_precision_recall_tradeoff",
+   "label": "no",
+   "note": "thresholding mechanics (default 0.5, F1); probe asks how 90% precision was derived from cost and kept right under drift",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_3",
+   "chunk_id": "list_omb_07_018_what_do_mmlu_gsm8k",
+   "label": "no",
+   "note": "LLM benchmarks; unrelated",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_3",
+   "chunk_id": "12_time_series__10_timeseriessplit_cv",
+   "label": "no",
+   "note": "explains what TimeSeriesSplit is; probe explicitly asks why plain TimeSeriesSplit was not enough (gap, entity grouping, feature look-ahead)",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_4",
+   "chunk_id": "exp_009_how_was_the_model",
+   "label": "no",
+   "note": "demands serving stack and rollout strategy the drift-playbook probe never raised",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_4",
+   "chunk_id": "04_timestamp_analysis__08_rolling_window",
+   "label": "no",
+   "note": "pandas rolling windows; unrelated",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_5",
+   "chunk_id": "list_omb_02_040_mamba_and_state_space",
+   "label": "no",
+   "note": "unrelated",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_5",
+   "chunk_id": "list_kal_040_explain_the_trade_offs",
+   "label": "no",
+   "note": "LLM-serving batching (KV state, continuous batching); probe is an XGBoost service",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_5",
+   "chunk_id": "exp_053_can_you_please_tell",
+   "label": "yes",
+   "note": "same decision: isolate which layer made p99 high with instrumentation, then fix and quantify",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_6",
+   "chunk_id": "list_omb_07_023_how_do_you_measure",
+   "label": "yes",
+   "note": "same claim: faithfulness judged claim-level and calibrated against human labels, bias checked",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_7",
+   "chunk_id": "list_omb_07_024_how_do_you_wire",
+   "label": "yes",
+   "note": "same decision: gate on significant drops vs baseline, per-case diffs, re-baseline, keep the blocking suite stable",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_8",
+   "chunk_id": "list_omb_02_040_mamba_and_state_space",
+   "label": "no",
+   "note": "unrelated",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_8",
+   "chunk_id": "list_omb_05_026_explain_distillation_for_llms",
+   "label": "no",
+   "note": "black-box vs logit taxonomy and licensing; probe asks how the student was compared to the teacher",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_8",
+   "chunk_id": "exp_048_are_there_cheaper_faster",
+   "label": "no",
+   "note": "prompt->RAG->fine-tune ladder; different decision",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_8",
+   "chunk_id": "18_logistic_regression_predict__01_binary_target_and_imbalance",
+   "label": "no",
+   "note": "unrelated",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "mle|Senior|probe_1",
+   "chunk_id": "18_logistic_regression_predict__11_other_imbalance_methods",
+   "label": "yes",
+   "note": "same ablation variants, PR metric, fold-leakage pitfall",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "mle|Senior|probe_2",
+   "chunk_id": "list_omb_02_040_mamba_and_state_space",
+   "label": "no",
+   "note": "unrelated",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "mle|Senior|probe_2",
+   "chunk_id": "09_collinearity__08_drop_collinear_features_refit",
+   "label": "no",
+   "note": "unrelated",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "mle|Senior|probe_2",
+   "chunk_id": "12_time_series__09_historical_features_leakage",
+   "label": "yes",
+   "note": "same decision: historical aggregates fit on train only, lags reflect availability latency; one incidental sklearn point",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "mle|Senior|probe_2",
+   "chunk_id": "list_omb_09_040_a_customer_reports_that",
+   "label": "no",
+   "note": "tenant data leak; different meaning of leak",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "mle|Senior|probe_3",
+   "chunk_id": "19_logistic_regression_proba__05_threshold_precision_recall_tradeoff",
+   "label": "no",
+   "note": "mechanics of thresholding; probe asks cost-based operating point and verification of the lift",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "mle|Senior|probe_4",
+   "chunk_id": "list_omb_07_031_you_are_swapping_the",
+   "label": "yes",
+   "note": "same decision: canary = blast radius with guardrails, A/B for proof; one incidental agentic point",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "mle|Senior|probe_4",
+   "chunk_id": "06_harness_engineering_and_evaluation__15_online_evaluation",
+   "label": "no",
+   "note": "offline-vs-online contrast; probe asks canary metrics and ramp decisions",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "mle|Senior|probe_4",
+   "chunk_id": "exp_009_how_was_the_model",
+   "label": "yes",
+   "note": "same question: serving, rollout strategy, monitoring, rollback trigger",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "mle|Senior|probe_5",
+   "chunk_id": "exp_009_how_was_the_model",
+   "label": "no",
+   "note": "serving stack and rollout strategy not raised; probe is the PSI playbook",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "mle|Senior|probe_6",
+   "chunk_id": "list_omb_02_040_mamba_and_state_space",
+   "label": "no",
+   "note": "unrelated",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "mle|Senior|probe_6",
+   "chunk_id": "list_omb_08_014_why_do_we_obsess",
+   "label": "no",
+   "note": "LLM tail-latency causes and mitigations",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "mle|Senior|probe_6",
+   "chunk_id": "exp_047_what_is_the_acceptable",
+   "label": "no",
+   "note": "bid SLA question; RTB specifics not raised",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "mle|Senior|probe_7",
+   "chunk_id": "list_omb_07_023_how_do_you_measure",
+   "label": "yes",
+   "note": "same claim: judge design and human calibration",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "mle|Senior|probe_7",
+   "chunk_id": "exp_024_rag_project_example",
+   "label": "no",
+   "note": "generic project rubric",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "mle|Senior|probe_7",
+   "chunk_id": "list_omb_04_042_how_do_you_evaluate",
+   "label": "no",
+   "note": "citation quality, refusal, cadence not raised; only the judge-hygiene point matches",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "mle|Senior|probe_8",
+   "chunk_id": "list_omb_04_041_what_retrieval_metrics_would",
+   "label": "no",
+   "note": "metric taxonomy (MRR, nDCG); probe asks what the gate looked like and why it was trusted",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "mle|Senior|probe_8",
+   "chunk_id": "06_harness_engineering_and_evaluation__15_online_evaluation",
+   "label": "no",
+   "note": "offline vs online; not the gate",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_1",
+   "chunk_id": "list_omb_04_035_your_corpus_is_multilingual",
+   "label": "no",
+   "note": "multilingual retrieval; RRF incidental",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_1",
+   "chunk_id": "03_rag_and_retrieval__07_semantic_vs_keyword_hybrid",
+   "label": "yes",
+   "note": "same decision: complementary failure modes, fuse (RRF) then rerank",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_2",
+   "chunk_id": "exp_024_rag_project_example",
+   "label": "yes",
+   "note": "chunking problems, better chunking, eval, chunk-size trade-off are its own points",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_2",
+   "chunk_id": "list_omb_04_016_explain_contextual_retrieval_what",
+   "label": "no",
+   "note": "contextual retrieval / late chunking techniques not raised",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_4",
+   "chunk_id": "list_omb_07_023_how_do_you_measure",
+   "label": "yes",
+   "note": "same claim: claim-level faithfulness, human calibration",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_5",
+   "chunk_id": "exp_010_how_would_you_design",
+   "label": "no",
+   "note": "recommender design",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_5",
+   "chunk_id": "list_omb_07_021_how_do_you_evaluate",
+   "label": "yes",
+   "note": "same decision: component vs end-to-end layers, labelled query->chunk sets, faithfulness and abstention cases",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_6",
+   "chunk_id": "17_simplest_classification_models__01_target_generation_temporal_split",
+   "label": "no",
+   "note": "unrelated",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_7",
+   "chunk_id": "list_omb_03_031_a_user_reports_a",
+   "label": "no",
+   "note": "single-answer debugging; probe is a measured prompt iteration",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_7",
+   "chunk_id": "list_omb_03_032_how_is_a_system",
+   "label": "no",
+   "note": "agent system prompts",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_7",
+   "chunk_id": "exp_006_walk_me_through_a",
+   "label": "no",
+   "note": "generic project rubric",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "aie|Senior|probe_1",
+   "chunk_id": "list_omb_04_023_how_does_reciprocal_rank",
+   "label": "yes",
+   "note": "same question: how the two lists were combined and why by rank",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "aie|Senior|probe_1",
+   "chunk_id": "03_rag_and_retrieval__07_semantic_vs_keyword_hybrid",
+   "label": "yes",
+   "note": "same decision: why hybrid",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "aie|Senior|probe_1",
+   "chunk_id": "exp_024_rag_project_example",
+   "label": "no",
+   "note": "generic; fusion not addressed",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "aie|Senior|probe_1",
+   "chunk_id": "03_rag_and_retrieval__04_rag_architecture_pipeline",
+   "label": "no",
+   "note": "architecture overview; offline pipeline and store not raised",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "aie|Senior|probe_2",
+   "chunk_id": "list_omb_04_016_explain_contextual_retrieval_what",
+   "label": "no",
+   "note": "contextual retrieval technique not raised",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "aie|Senior|probe_2",
+   "chunk_id": "exp_024_rag_project_example",
+   "label": "yes",
+   "note": "chunking, eval, chunk-size trade-off are its own points",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "aie|Senior|probe_2",
+   "chunk_id": "03_rag_and_retrieval__14_rag_failure_modes",
+   "label": "no",
+   "note": "failure-mode menu; only the missing-context point touches chunking",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "aie|Senior|probe_3",
+   "chunk_id": "exp_024_rag_project_example",
+   "label": "yes",
+   "note": "reranking fix, recall@k, trade-offs are its own points",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "aie|Senior|probe_4",
+   "chunk_id": "list_omb_07_023_how_do_you_measure",
+   "label": "yes",
+   "note": "same claim: human calibration, bias",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "aie|Senior|probe_4",
+   "chunk_id": "exp_024_rag_project_example",
+   "label": "no",
+   "note": "generic project rubric",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "aie|Senior|probe_5",
+   "chunk_id": "list_omb_03_022_walk_me_through_your",
+   "label": "yes",
+   "note": "same decision: eval set first, bucket failures, one variable at a time, version, guard regressions",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "aie|Senior|probe_5",
+   "chunk_id": "list_omb_03_020_you_have_a_200k",
+   "label": "no",
+   "note": "context placement claims (cache order, position U-curve) not raised",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "aie|Senior|probe_5",
+   "chunk_id": "exp_024_rag_project_example",
+   "label": "no",
+   "note": "generic project rubric",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "aie|Senior|probe_5",
+   "chunk_id": "04_timestamp_analysis__08_rolling_window",
+   "label": "no",
+   "note": "unrelated",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "aie|Senior|probe_6",
+   "chunk_id": "list_omb_07_028_how_would_you_use",
+   "label": "no",
+   "note": "synthetic eval sets; probe is labelling tickets for training",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "aie|Senior|probe_6",
+   "chunk_id": "list_omb_05_025_how_do_you_generate",
+   "label": "no",
+   "note": "generation recipes, mode collapse, verifiers not raised",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "aie|Senior|probe_6",
+   "chunk_id": "15_categorical_values_II__07_ordinality_label_vs_onehot",
+   "label": "no",
+   "note": "unrelated",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "aie|Senior|probe_7",
+   "chunk_id": "list_omb_04_041_what_retrieval_metrics_would",
+   "label": "no",
+   "note": "metric taxonomy; golden-set construction and freshness not addressed",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "aie|Senior|probe_7",
+   "chunk_id": "list_omb_07_024_how_do_you_wire",
+   "label": "yes",
+   "note": "same decision: versioned datasets, significant-drop gating, re-baseline on dataset change",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "aie|Senior|probe_7",
+   "chunk_id": "06_harness_engineering_and_evaluation__15_online_evaluation",
+   "label": "no",
+   "note": "offline vs online",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "aie|Senior|probe_8",
+   "chunk_id": "list_kal_037_what_is_latency_in",
+   "label": "yes",
+   "note": "probe asks how the lesson transfers to LLM latency: TTFT/TPOT, batching trade-off, p99 SLOs",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "aie|Senior|probe_8",
+   "chunk_id": "list_kal_063_how_would_you_design",
+   "label": "no",
+   "note": "infra design (parallelism, quantization, engine) not raised",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "aie|Senior|probe_8",
+   "chunk_id": "exp_032_system_design_question_you",
+   "label": "no",
+   "note": "photo pipeline design",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "ds|Mid-level|probe_1",
+   "chunk_id": "18_logistic_regression_predict__10_class_weight_balanced",
+   "label": "yes",
+   "note": "same decision: class weights vs resampling, precision/recall effect",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "ds|Mid-level|probe_1",
+   "chunk_id": "18_logistic_regression_predict__11_other_imbalance_methods",
+   "label": "yes",
+   "note": "same variants and metric",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "ds|Mid-level|probe_2",
+   "chunk_id": "19_logistic_regression_proba__05_threshold_precision_recall_tradeoff",
+   "label": "no",
+   "note": "mechanics; F1 rule differs from the cost rule the probe asks for",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "ds|Mid-level|probe_2",
+   "chunk_id": "19_logistic_regression_proba__06_choosing_threshold_not_hyperparameter",
+   "label": "yes",
+   "note": "same decision: threshold chosen by FP/FN cost on validation data",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "ds|Mid-level|probe_3",
+   "chunk_id": "12_time_series__10_timeseriessplit_cv",
+   "label": "yes",
+   "note": "probe asks how the folds were structured; same claim about shuffled folds",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "ds|Mid-level|probe_4",
+   "chunk_id": "exp_014_what_do_you_understand",
+   "label": "no",
+   "note": "definitions; not online impact",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "ds|Mid-level|probe_5",
+   "chunk_id": "exp_009_how_was_the_model",
+   "label": "no",
+   "note": "serving stack and rollout not raised; probe is what to check first on drift",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "ds|Mid-level|probe_6",
+   "chunk_id": "list_omb_07_031_you_are_swapping_the",
+   "label": "no",
+   "note": "rollout-stage choice; probe asks A/B design (metric, unit, sample size)",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "ds|Mid-level|probe_6",
+   "chunk_id": "list_omb_07_025_how_do_you_evaluate",
+   "label": "yes",
+   "note": "same decision: user-level randomization, primary metric, guardrails, power",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "ds|Mid-level|probe_6",
+   "chunk_id": "06_harness_engineering_and_evaluation__15_online_evaluation",
+   "label": "no",
+   "note": "names A/B but no design content",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "ds|Mid-level|probe_7",
+   "chunk_id": "list_omb_07_021_how_do_you_evaluate",
+   "label": "yes",
+   "note": "same claim: component vs end-to-end numbers, faithfulness never alone",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "ds|Mid-level|probe_7",
+   "chunk_id": "exp_024_rag_project_example",
+   "label": "no",
+   "note": "generic project rubric",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "ds|Mid-level|probe_7",
+   "chunk_id": "03_rag_and_retrieval__04_rag_architecture_pipeline",
+   "label": "no",
+   "note": "architecture overview",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "ds|Senior|probe_1",
+   "chunk_id": "18_logistic_regression_predict__10_class_weight_balanced",
+   "label": "no",
+   "note": "class-weight mechanics; probe is business framing",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "ds|Senior|probe_1",
+   "chunk_id": "exp_006_walk_me_through_a",
+   "label": "no",
+   "note": "whole-project rubric; modelling/production/monitoring not raised",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "ds|Senior|probe_2",
+   "chunk_id": "18_logistic_regression_predict__11_other_imbalance_methods",
+   "label": "yes",
+   "note": "same ablation variants, metric, pitfall",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "ds|Senior|probe_3",
+   "chunk_id": "19_logistic_regression_proba__05_threshold_precision_recall_tradeoff",
+   "label": "no",
+   "note": "mechanics; probe is cost model at the operating point",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "ds|Senior|probe_4",
+   "chunk_id": "list_omb_07_019_what_is_benchmark_contamination",
+   "label": "no",
+   "note": "benchmark contamination",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "ds|Senior|probe_4",
+   "chunk_id": "06_linear_regression_model__02_time_based_train_test_split",
+   "label": "yes",
+   "note": "same claim: time split matches production, shuffle leaks future; one incidental pandas point",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "ds|Senior|probe_5",
+   "chunk_id": "list_omb_07_044_a_team_ships_prompt",
+   "label": "no",
+   "note": "eval maturity for prompts",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "ds|Senior|probe_5",
+   "chunk_id": "exp_039_looking_back_now_would",
+   "label": "no",
+   "note": "retrospective; not decision change",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "ds|Senior|probe_6",
+   "chunk_id": "exp_009_how_was_the_model",
+   "label": "no",
+   "note": "serving and rollout not raised; probe is PSI threshold and blind spots",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "ds|Senior|probe_6",
+   "chunk_id": "list_omb_07_041_how_do_you_monitor",
+   "label": "no",
+   "note": "LLM drift classes (model version, refusal rate, tokens) not raised",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "ds|Senior|probe_7",
+   "chunk_id": "list_omb_07_023_how_do_you_measure",
+   "label": "yes",
+   "note": "same claim: judge calibration and failure modes",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "ds|Senior|probe_8",
+   "chunk_id": "list_omb_02_050_what_is_distillation_and",
+   "label": "yes",
+   "note": "same claim: black-box distillation, student inherits teacher errors without filtering",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "ds|Senior|probe_8",
+   "chunk_id": "19_logistic_regression_proba__05_threshold_precision_recall_tradeoff",
+   "label": "no",
+   "note": "unrelated",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "platform|Mid-level|probe_1",
+   "chunk_id": "list_omb_08_021_describe_the_throughput_latency",
+   "label": "no",
+   "note": "LLM goodput curve",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "platform|Mid-level|probe_1",
+   "chunk_id": "list_omb_08_014_why_do_we_obsess",
+   "label": "no",
+   "note": "LLM tail causes",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "platform|Mid-level|probe_1",
+   "chunk_id": "15_categorical_values_II__01_setup_time_split",
+   "label": "no",
+   "note": "unrelated",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "platform|Mid-level|probe_2",
+   "chunk_id": "exp_009_how_was_the_model",
+   "label": "yes",
+   "note": "same question: serving, canary, monitoring, rollback",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "platform|Mid-level|probe_3",
+   "chunk_id": "exp_009_how_was_the_model",
+   "label": "no",
+   "note": "serving and rollout not raised; probe is what PSI measures and what to do",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "platform|Mid-level|probe_4",
+   "chunk_id": "18_logistic_regression_predict__11_other_imbalance_methods",
+   "label": "yes",
+   "note": "same ablation and threshold/PR points",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "platform|Mid-level|probe_5",
+   "chunk_id": "list_omb_07_019_what_is_benchmark_contamination",
+   "label": "no",
+   "note": "benchmark contamination",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "platform|Mid-level|probe_5",
+   "chunk_id": "12_time_series__10_timeseriessplit_cv",
+   "label": "yes",
+   "note": "probe asks how the splits were structured; same claim",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "platform|Mid-level|probe_6",
+   "chunk_id": "exp_049_have_you_tried_other",
+   "label": "no",
+   "note": "agent harnesses; homonym",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "platform|Mid-level|probe_7",
+   "chunk_id": "list_omb_05_026_explain_distillation_for_llms",
+   "label": "no",
+   "note": "logit distillation and licensing not raised",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "platform|Mid-level|probe_7",
+   "chunk_id": "exp_048_are_there_cheaper_faster",
+   "label": "no",
+   "note": "different decision",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "platform|Senior|probe_1",
+   "chunk_id": "exp_053_can_you_please_tell",
+   "label": "yes",
+   "note": "same decision: isolate where the 180 ms went",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "platform|Senior|probe_1",
+   "chunk_id": "list_omb_08_049_your_traffic_is_shifting",
+   "label": "no",
+   "note": "agent traffic serving",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "platform|Senior|probe_2",
+   "chunk_id": "list_omb_08_040_traffic_doubles_overnight_and",
+   "label": "no",
+   "note": "GPU degradation ladder",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "platform|Senior|probe_2",
+   "chunk_id": "exp_010_how_would_you_design",
+   "label": "no",
+   "note": "recommender design",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "platform|Senior|probe_2",
+   "chunk_id": "list_omb_04_028_how_do_you_keep",
+   "label": "no",
+   "note": "RAG index freshness; different system",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "platform|Senior|probe_3",
+   "chunk_id": "exp_009_how_was_the_model",
+   "label": "yes",
+   "note": "same question: release, rollback trigger, registry",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "platform|Senior|probe_4",
+   "chunk_id": "list_omb_08_038_what_do_you_monitor",
+   "label": "no",
+   "note": "LLM serving pages",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "platform|Senior|probe_4",
+   "chunk_id": "list_omb_07_041_how_do_you_monitor",
+   "label": "no",
+   "note": "LLM drift classes",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "platform|Senior|probe_4",
+   "chunk_id": "exp_009_how_was_the_model",
+   "label": "no",
+   "note": "serving and rollout not raised; probe is PSI computation and response",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "platform|Senior|probe_5",
+   "chunk_id": "list_omb_07_019_what_is_benchmark_contamination",
+   "label": "no",
+   "note": "benchmark contamination",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "platform|Senior|probe_5",
+   "chunk_id": "list_omb_02_033_describe_the_modern_llm",
+   "label": "no",
+   "note": "LLM training stages",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "platform|Senior|probe_5",
+   "chunk_id": "06_linear_regression_model__05_sklearn_pipeline_custom_transformers",
+   "label": "no",
+   "note": "sklearn Pipeline API; probe is platform reproducibility",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "platform|Senior|probe_6",
+   "chunk_id": "18_logistic_regression_predict__11_other_imbalance_methods",
+   "label": "yes",
+   "note": "same ablation and leakage pitfall",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "platform|Senior|probe_7",
+   "chunk_id": "list_omb_05_042_design_an_end_to",
+   "label": "no",
+   "note": "fine-tuning pipeline; only the ship-gate point overlaps",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "platform|Senior|probe_7",
+   "chunk_id": "06_harness_engineering_and_evaluation__15_online_evaluation",
+   "label": "no",
+   "note": "offline vs online",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "platform|Senior|probe_7",
+   "chunk_id": "exp_049_have_you_tried_other",
+   "label": "no",
+   "note": "agent harnesses; homonym",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "platform|Senior|probe_8",
+   "chunk_id": "list_omb_08_042_your_llm_bill_tripled",
+   "label": "yes",
+   "note": "same decision: cost attribution and the cascade inequality that justifies a cheap model with escalation",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_1",
+   "chunk_id": "18_logistic_regression_predict__10_class_weight_balanced",
+   "label": "yes",
+   "note": "same decision and precision/recall effect",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_1",
+   "chunk_id": "18_logistic_regression_predict__11_other_imbalance_methods",
+   "label": "yes",
+   "note": "same variants and metric",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_2",
+   "chunk_id": "19_logistic_regression_proba__05_threshold_precision_recall_tradeoff",
+   "label": "no",
+   "note": "mechanics; probe is baseline attribution and the business trade-off",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_3",
+   "chunk_id": "06_linear_regression_model__02_time_based_train_test_split",
+   "label": "yes",
+   "note": "same claim: time split vs random and why",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_3",
+   "chunk_id": "12_time_series__10_timeseriessplit_cv",
+   "label": "yes",
+   "note": "same claim about fold structure",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_4",
+   "chunk_id": "list_omb_07_023_how_do_you_measure",
+   "label": "yes",
+   "note": "same claim: judge calibrated against humans, bias",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_5",
+   "chunk_id": "list_omb_04_035_your_corpus_is_multilingual",
+   "label": "no",
+   "note": "multilingual",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_5",
+   "chunk_id": "03_rag_and_retrieval__07_semantic_vs_keyword_hybrid",
+   "label": "yes",
+   "note": "same decision: complementary failure modes justify hybrid then rerank",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_6",
+   "chunk_id": "list_omb_05_031_you_have_500k_instruction",
+   "label": "no",
+   "note": "data selection for SFT",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_6",
+   "chunk_id": "17_simplest_classification_models__01_target_generation_temporal_split",
+   "label": "no",
+   "note": "unrelated",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_7",
+   "chunk_id": "list_omb_02_040_mamba_and_state_space",
+   "label": "no",
+   "note": "unrelated",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_7",
+   "chunk_id": "list_omb_08_014_why_do_we_obsess",
+   "label": "no",
+   "note": "LLM tail causes",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_7",
+   "chunk_id": "exp_053_can_you_please_tell",
+   "label": "no",
+   "note": "layer isolation; probe asks how correctness was verified after the change",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_7",
+   "chunk_id": "09_collinearity__08_drop_collinear_features_refit",
+   "label": "no",
+   "note": "unrelated",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_7",
+   "chunk_id": "exp_014_what_do_you_understand",
+   "label": "no",
+   "note": "definitions",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_8",
+   "chunk_id": "exp_009_how_was_the_model",
+   "label": "no",
+   "note": "serving and rollout not raised; probe is PSI blind spots",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_1",
+   "chunk_id": "17_simplest_classification_models__10_all_positive_vs_all_negative",
+   "label": "no",
+   "note": "constant-baseline metrics",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_1",
+   "chunk_id": "18_logistic_regression_predict__10_class_weight_balanced",
+   "label": "yes",
+   "note": "same decision: class weights vs resampling, precision/recall effect",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_2",
+   "chunk_id": "05_simplest_regression_models__07_data_leakage_fit_on_train_only",
+   "label": "no",
+   "note": "lesson-specific leakage check",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_2",
+   "chunk_id": "19_logistic_regression_proba__05_threshold_precision_recall_tradeoff",
+   "label": "no",
+   "note": "mechanics; probe is baseline attribution",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_3",
+   "chunk_id": "list_omb_09_040_a_customer_reports_that",
+   "label": "no",
+   "note": "tenant data leak",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_3",
+   "chunk_id": "12_time_series__09_historical_features_leakage",
+   "label": "yes",
+   "note": "same decision: leak-free historical features",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_3",
+   "chunk_id": "12_time_series__10_timeseriessplit_cv",
+   "label": "yes",
+   "note": "same claim: the leakage path a time split guards against",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_4",
+   "chunk_id": "exp_009_how_was_the_model",
+   "label": "no",
+   "note": "serving and rollout not raised; probe is PSI threshold and rollback-vs-retrain",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_4",
+   "chunk_id": "19_logistic_regression_proba__06_choosing_threshold_not_hyperparameter",
+   "label": "no",
+   "note": "classification threshold, not a PSI threshold",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_4",
+   "chunk_id": "list_omb_03_038_how_would_you_a",
+   "label": "no",
+   "note": "prompt A/B testing",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_5",
+   "chunk_id": "list_omb_07_031_you_are_swapping_the",
+   "label": "yes",
+   "note": "same decision: canary slice, guardrails, shadow comparison, depth by risk",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_5",
+   "chunk_id": "exp_009_how_was_the_model",
+   "label": "yes",
+   "note": "same question: rollout, monitoring, rollback trigger",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_6",
+   "chunk_id": "list_kal_063_how_would_you_design",
+   "label": "no",
+   "note": "LLM infra design",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_6",
+   "chunk_id": "list_kal_040_explain_the_trade_offs",
+   "label": "no",
+   "note": "LLM batching (KV state, continuous batching)",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_6",
+   "chunk_id": "exp_053_can_you_please_tell",
+   "label": "yes",
+   "note": "same decision: isolate which lookups were slow",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_6",
+   "chunk_id": "exp_032_system_design_question_you",
+   "label": "no",
+   "note": "photo pipeline design",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_7",
+   "chunk_id": "list_omb_07_023_how_do_you_measure",
+   "label": "yes",
+   "note": "same claim: human-calibrated faithfulness judge",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_7",
+   "chunk_id": "exp_024_rag_project_example",
+   "label": "no",
+   "note": "generic project rubric",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_8",
+   "chunk_id": "list_omb_02_050_what_is_distillation_and",
+   "label": "yes",
+   "note": "same claim: student inherits teacher errors unless filtered; teacher not a ceiling",
+   "source": "reused from the 2026-09-06 first-run labels"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_2",
+   "chunk_id": "doc_sk_threshold_02_in_a_cancer_detection",
+   "label": "no",
+   "note": "threshold direction for a recall-heavy case; the probe asks the cost origin of a precision target and recalibration under drift",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_3",
+   "chunk_id": "doc_sk_timeseriessplit_gap_05_if_you_need_a",
+   "label": "no",
+   "note": "max_train_size rolling window: a parameter the probe never raised",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_3",
+   "chunk_id": "doc_sk_cv_groups_time_01_on_transaction_data_ordered",
+   "label": "yes",
+   "note": "same leakage claim (a random split leaks future-like samples and inflates the score); gap / group / label-delay halves of the probe ungraded but nothing unfair",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_4",
+   "chunk_id": "doc_nanny_thresholds_01_a_fixed_psi_alert",
+   "label": "no",
+   "note": "threshold-design limitation; the probe asks the response playbook when the alert fires",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_5",
+   "chunk_id": "doc_g_mlops_pipelines_04_why_centralize_feature_definitions",
+   "label": "no",
+   "note": "feature-store rationale (train/serve skew), not what the probe asks (p99 bottleneck, batching risks)",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_5",
+   "chunk_id": "01_llm_foundations_and_prompting__09_llm_inference_prefill_decode__x03_how_does_the_kv",
+   "label": "no",
+   "note": "LLM KV cache; a different system",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_5",
+   "chunk_id": "exp_047_what_is_the_acceptable",
+   "label": "no",
+   "note": "generic latency-budget question, not the bottleneck diagnosis asked",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_6",
+   "chunk_id": "doc_claude_evals_02_your_llm_judged_eval",
+   "label": "yes",
+   "note": "same decision: validate the judge against human labels before trusting the 89%; trade-off point incidental",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_7",
+   "chunk_id": "05_agent_loop_and_context_engineering__09_rag_grows_context_fast__x01_why_do_you_retrieve",
+   "label": "no",
+   "note": "retrieve-then-rerank sizing; the probe is about CI gate stability",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_7",
+   "chunk_id": "doc_promptfoo_ci_02_what_s_the_difference",
+   "label": "no",
+   "note": "strict-vs-threshold gating in promptfoo terms; two tool-mechanics points the probe never raised and the golden-set question unaddressed",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_8",
+   "chunk_id": "06_harness_engineering_and_evaluation__13_evaluation_graders",
+   "label": "no",
+   "note": "grader taxonomy; the probe asks the student-vs-teacher comparison",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "mle|Senior|probe_2",
+   "chunk_id": "doc_sk_timeseriessplit_gap_05_if_you_need_a",
+   "label": "no",
+   "note": "max_train_size rolling window: a parameter the probe never raised",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "mle|Senior|probe_2",
+   "chunk_id": "doc_sk_cv_groups_time_01_on_transaction_data_ordered",
+   "label": "yes",
+   "note": "same leakage claim (a random split leaks future-like samples and inflates the score); gap / group / label-delay halves of the probe ungraded but nothing unfair",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "mle|Senior|probe_3",
+   "chunk_id": "doc_sk_threshold_02_in_a_cancer_detection",
+   "label": "no",
+   "note": "threshold direction for a recall-heavy case; the probe asks the cost origin of a precision target and its verification",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "mle|Senior|probe_3",
+   "chunk_id": "doc_sk_threshold_04_when_tuning_a_threshold",
+   "label": "no",
+   "note": "metric choice inside TunedThresholdClassifierCV; the probe asks how the precision target was derived and verified",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "mle|Senior|probe_4",
+   "chunk_id": "doc_k8s_rollouts_02_what_must_you_create",
+   "label": "no",
+   "note": "Kubernetes canary mechanics; the probe asks success metrics, slices or abort criteria, not the Deployment layout",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "mle|Senior|probe_5",
+   "chunk_id": "doc_nanny_thresholds_01_a_fixed_psi_alert",
+   "label": "no",
+   "note": "threshold-design limitation; the probe asks the response playbook when the alert fires",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "mle|Senior|probe_6",
+   "chunk_id": "doc_g_mlops_pipelines_04_why_centralize_feature_definitions",
+   "label": "no",
+   "note": "feature-store rationale (train/serve skew), not what the probe asks; the probe asks bottleneck evidence and offline/online value consistency; three points never raised",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "mle|Senior|probe_7",
+   "chunk_id": "doc_claude_evals_02_your_llm_judged_eval",
+   "label": "yes",
+   "note": "same decision: validate the judge against human labels before trusting the 89%; trade-off point incidental",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "mle|Senior|probe_8",
+   "chunk_id": "doc_promptfoo_ci_02_what_s_the_difference",
+   "label": "no",
+   "note": "strict-vs-threshold gating in promptfoo terms; two tool-mechanics points the probe never raised and the golden-set question unaddressed",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_2",
+   "chunk_id": "03_rag_and_retrieval__15_small_to_big_and_hyde__x01_why_does_small_to",
+   "label": "no",
+   "note": "small-to-big is one technique the probe never raised; a strong fixed-chunk answer would fail three points",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_3",
+   "chunk_id": "03_rag_and_retrieval__04_rag_architecture_pipeline__x01_why_do_production_rag",
+   "label": "yes",
+   "note": "the probe asks why rerank instead of taking top-k from hybrid; the chunk is that rationale",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_3",
+   "chunk_id": "03_rag_and_retrieval__04_rag_architecture_pipeline__x02_what_retrieval_methods_may",
+   "label": "no",
+   "note": "four retrieval methods and routing never raised",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_4",
+   "chunk_id": "doc_claude_evals_02_your_llm_judged_eval",
+   "label": "yes",
+   "note": "same decision: validate the judge against human labels before trusting the 89%; trade-off point incidental",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_5",
+   "chunk_id": "doc_promptfoo_ci_02_what_s_the_difference",
+   "label": "no",
+   "note": "strict-vs-threshold gating in promptfoo terms; two tool-mechanics points the probe never raised and the golden-set question unaddressed",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_6",
+   "chunk_id": "02_llm_apis_and_prompting_in_code__02_api_hosting_and_routing__x04_what_motivates_a_team",
+   "label": "no",
+   "note": "self-hosting motivation; the probe asks distillation labels and routing impact",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_6",
+   "chunk_id": "doc_g_rules_of_ml_01_your_team_says_offline",
+   "label": "no",
+   "note": "serving-feature logging; unrelated",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_6",
+   "chunk_id": "04_ai_workflows_and_agents__04_workflow_patterns__x02_when_handling_a_mix",
+   "label": "no",
+   "note": "model routing by difficulty, not ticket routing",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_7",
+   "chunk_id": "05_agent_loop_and_context_engineering__02_what_is_context__x02_walk_me_through_the",
+   "label": "no",
+   "note": "context-stack anatomy; the probe asks a measured prompt iteration",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_7",
+   "chunk_id": "05_agent_loop_and_context_engineering__05_system_prompt__x01_why_should_you_avoid",
+   "label": "no",
+   "note": "cache-busting timestamps; not raised",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "aie|Senior|probe_2",
+   "chunk_id": "06_harness_engineering_and_evaluation__05_sandbox_is_the_real_guardrail__x02_you_need_the_agent",
+   "label": "no",
+   "note": "sandbox egress; unrelated to chunking",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "aie|Senior|probe_3",
+   "chunk_id": "03_rag_and_retrieval__04_rag_architecture_pipeline__x02_what_retrieval_methods_may",
+   "label": "no",
+   "note": "four retrieval methods and routing never raised",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "aie|Senior|probe_4",
+   "chunk_id": "doc_claude_evals_02_your_llm_judged_eval",
+   "label": "yes",
+   "note": "same decision: validate the judge against human labels before trusting the 89%; trade-off point incidental",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "aie|Senior|probe_4",
+   "chunk_id": "doc_claude_evals_04_would_you_ask_an",
+   "label": "no",
+   "note": "judge output-format decision; the probe asks judge validation",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "aie|Senior|probe_5",
+   "chunk_id": "01_llm_foundations_and_prompting__10_emergent_abilities__x01_why_might_some_emergent",
+   "label": "no",
+   "note": "emergence-metric critique; unrelated",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "aie|Senior|probe_6",
+   "chunk_id": "doc_g_rules_of_ml_05_your_spam_filter_blocks",
+   "label": "no",
+   "note": "held-out traffic for unbiased labels under filtering; the probe asks LLM-label QA",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "aie|Senior|probe_7",
+   "chunk_id": "doc_promptfoo_ci_02_what_s_the_difference",
+   "label": "no",
+   "note": "strict-vs-threshold gating in promptfoo terms; two tool-mechanics points the probe never raised and the golden-set question unaddressed",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "aie|Senior|probe_7",
+   "chunk_id": "doc_promptfoo_ci_04_how_would_you_tie",
+   "label": "no",
+   "note": "commit traceability; the probe asks golden-set construction and staleness",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "ds|Mid-level|probe_2",
+   "chunk_id": "doc_sk_threshold_02_in_a_cancer_detection",
+   "label": "yes",
+   "note": "the FN-cost-100x half is exactly the chunk's decision (lower the threshold, accept precision loss); operating-point KP incidental",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "ds|Mid-level|probe_2",
+   "chunk_id": "exp_014_what_do_you_understand",
+   "label": "no",
+   "note": "definition medley; overfitting and vanishing gradients never raised",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "ds|Mid-level|probe_3",
+   "chunk_id": "doc_sk_timeseriessplit_gap_05_if_you_need_a",
+   "label": "no",
+   "note": "max_train_size rolling window: a parameter the probe never raised",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "ds|Mid-level|probe_4",
+   "chunk_id": "06_harness_engineering_and_evaluation__15_online_evaluation__x01_what_specific_blind_spots",
+   "label": "no",
+   "note": "offline blind spots in agent framing; system-effects and trade-off points never raised; feedback loops / label generation unaddressed",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "ds|Senior|probe_3",
+   "chunk_id": "doc_sk_threshold_03_if_a_vanilla_and",
+   "label": "no",
+   "note": "threshold-tuning mechanism; the probe asks the cost model",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "ds|Senior|probe_5",
+   "chunk_id": "doc_g_framing_ml_05_your_click_prediction_model",
+   "label": "no",
+   "note": "proxy-label failure; the probe asks how the decision process changed",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "ds|Senior|probe_6",
+   "chunk_id": "doc_nanny_thresholds_01_a_fixed_psi_alert",
+   "label": "yes",
+   "note": "the probe asks why 0.2 and where PSI misleads; the fixed-vs-adaptive threshold claim answers both; trade-off KP incidental",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "ds|Senior|probe_7",
+   "chunk_id": "doc_claude_evals_02_your_llm_judged_eval",
+   "label": "yes",
+   "note": "same decision: validate the judge against human labels before trusting the 89%; trade-off point incidental",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "ds|Senior|probe_8",
+   "chunk_id": "doc_claude_evals_01_if_budget_lets_you",
+   "label": "no",
+   "note": "eval volume-vs-quality decision; the probe asks teacher-label QA",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "ds|Senior|probe_8",
+   "chunk_id": "doc_claude_evals_02_your_llm_judged_eval",
+   "label": "yes",
+   "note": "LLM-labeler validation is judge validation: human-labeled subset and agreement before trusting; trade-off KP incidental",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "platform|Mid-level|probe_1",
+   "chunk_id": "doc_g_mlops_pipelines_04_why_centralize_feature_definitions",
+   "label": "no",
+   "note": "feature-store rationale (train/serve skew), not what the probe asks (latency breakdown)",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "platform|Mid-level|probe_1",
+   "chunk_id": "01_llm_foundations_and_prompting__09_llm_inference_prefill_decode__x03_how_does_the_kv",
+   "label": "no",
+   "note": "LLM KV cache; a different system",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "platform|Mid-level|probe_2",
+   "chunk_id": "doc_k8s_rollouts_02_what_must_you_create",
+   "label": "yes",
+   "note": "the probe asks what the Kubernetes canary pipeline looks like and how rollback executes; two-Deployment layout and scale-down rollback are that; 'no native controller' incidental; the safe-canary metrics half ungraded",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "platform|Mid-level|probe_3",
+   "chunk_id": "doc_nanny_thresholds_01_a_fixed_psi_alert",
+   "label": "no",
+   "note": "what PSI measures and the response; threshold design not raised",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "platform|Mid-level|probe_5",
+   "chunk_id": "05_agent_loop_and_context_engineering__07_mcp__x01_you_mentioned_skills_and",
+   "label": "no",
+   "note": "skills vs MCP; unrelated",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "platform|Mid-level|probe_5",
+   "chunk_id": "doc_sk_timeseriessplit_gap_05_if_you_need_a",
+   "label": "no",
+   "note": "max_train_size rolling window: a parameter the probe never raised",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "platform|Mid-level|probe_6",
+   "chunk_id": "06_harness_engineering_and_evaluation__02_harness_structure_and_reference_impls__x01_a_teammate_says_let",
+   "label": "no",
+   "note": "missing-eval-layer diagnosis; the probe asks what the harness checked and a caught regression",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "platform|Mid-level|probe_6",
+   "chunk_id": "06_harness_engineering_and_evaluation__15_online_evaluation__x01_what_specific_blind_spots",
+   "label": "no",
+   "note": "offline blind spots; the probe asks the harness contents",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "platform|Mid-level|probe_7",
+   "chunk_id": "02_llm_apis_and_prompting_in_code__02_api_hosting_and_routing__x04_what_motivates_a_team",
+   "label": "no",
+   "note": "self-hosting motivation; the probe asks distillation design and cost measurement",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "platform|Senior|probe_1",
+   "chunk_id": "doc_k8s_rollouts_04_when_a_deployment_exceeds",
+   "label": "no",
+   "note": "progress deadline; the probe asks the request path",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "platform|Senior|probe_1",
+   "chunk_id": "exp_031_why_self_serve_the",
+   "label": "no",
+   "note": "self-host vs managed; not raised",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "platform|Senior|probe_2",
+   "chunk_id": "doc_g_mlops_pipelines_04_why_centralize_feature_definitions",
+   "label": "no",
+   "note": "definition-level train/serve consistency; the probe asks store contents, misses, delays, backfill",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "platform|Senior|probe_3",
+   "chunk_id": "doc_mlflow_registry_02_if_you_needed_to",
+   "label": "yes",
+   "note": "why rollback takes minutes: repoint an alias to an immutable known-good version, no redeploy; the MLflow URI KP incidental",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "platform|Senior|probe_4",
+   "chunk_id": "doc_nanny_thresholds_01_a_fixed_psi_alert",
+   "label": "no",
+   "note": "four-part probe (computation, windows, why 0.2, response); the chunk grades only threshold design and its adaptive-threshold points were not raised",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "platform|Senior|probe_5",
+   "chunk_id": "doc_g_mlops_pipelines_06_why_is_automated_retraining",
+   "label": "no",
+   "note": "CT vs CI/CD; the probe asks pipeline reproducibility",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "platform|Senior|probe_7",
+   "chunk_id": "doc_promptfoo_ci_02_what_s_the_difference",
+   "label": "no",
+   "note": "strict-vs-threshold gating in promptfoo terms; two tool-mechanics points the probe never raised and the golden-set question unaddressed",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "platform|Senior|probe_8",
+   "chunk_id": "06_harness_engineering_and_evaluation__14_reading_transcripts__x04_several_failed_transcripts_show",
+   "label": "no",
+   "note": "transcript clustering; unrelated",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "platform|Senior|probe_8",
+   "chunk_id": "doc_g_rules_of_ml_05_your_spam_filter_blocks",
+   "label": "no",
+   "note": "held-out traffic for unbiased labels; the probe asks how the cost number was measured",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "platform|Senior|probe_8",
+   "chunk_id": "exp_031_why_self_serve_the",
+   "label": "no",
+   "note": "self-host vs managed; not raised",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_3",
+   "chunk_id": "doc_sk_cv_groups_time_01_on_transaction_data_ordered",
+   "label": "yes",
+   "note": "expected point 1 is the chunk's claim (random shuffling leaks future transactions and inflates performance)",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_4",
+   "chunk_id": "doc_claude_evals_02_your_llm_judged_eval",
+   "label": "yes",
+   "note": "same decision: validate the judge against human labels before trusting the 89%; trade-off point incidental",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_4",
+   "chunk_id": "01_llm_foundations_and_prompting__11_hallucination__x02_why_does_hallucination_become",
+   "label": "no",
+   "note": "fluency masks errors; the probe asks judge validation",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_5",
+   "chunk_id": "exp_024_rag_project_example",
+   "label": "no",
+   "note": "generic project rubric",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_5",
+   "chunk_id": "03_rag_and_retrieval__04_rag_architecture_pipeline__x01_why_do_production_rag",
+   "label": "no",
+   "note": "design rationale for reranking; the probe asks baselines and ablation evidence (borderline)",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_6",
+   "chunk_id": "02_llm_apis_and_prompting_in_code__02_api_hosting_and_routing__x04_what_motivates_a_team",
+   "label": "no",
+   "note": "self-hosting motivation; not raised",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_6",
+   "chunk_id": "exp_048_are_there_cheaper_faster",
+   "label": "no",
+   "note": "build-vs-buy ladder; the probe asks the F1 ground truth and the quality/cost boundary",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_8",
+   "chunk_id": "doc_nanny_thresholds_01_a_fixed_psi_alert",
+   "label": "yes",
+   "note": "the probe asks why 0.2 and a drift the policy misses; noisy-feature false negatives under a fixed cutoff is such a scenario; trade-off KP incidental",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_8",
+   "chunk_id": "06_harness_engineering_and_evaluation__15_online_evaluation__x01_what_specific_blind_spots",
+   "label": "no",
+   "note": "offline blind spots; not raised",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_3",
+   "chunk_id": "doc_sk_timeseriessplit_gap_05_if_you_need_a",
+   "label": "no",
+   "note": "max_train_size rolling window: a parameter the probe never raised",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_4",
+   "chunk_id": "doc_nanny_thresholds_01_a_fixed_psi_alert",
+   "label": "yes",
+   "note": "'how did you choose 0.2 rather than adopting the convention' is the chunk's claim; the rollback-vs-retrain half ungraded",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_5",
+   "chunk_id": "doc_k8s_rollouts_02_what_must_you_create",
+   "label": "no",
+   "note": "Kubernetes canary mechanics; the probe asks success metrics, slices or abort criteria, not the Deployment layout",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_7",
+   "chunk_id": "doc_claude_evals_02_your_llm_judged_eval",
+   "label": "yes",
+   "note": "same decision: validate the judge against human labels before trusting the 89%; trade-off point incidental",
+   "source": "new label, post-growth pool 2026-09-06"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_8",
+   "chunk_id": "doc_g_rules_of_ml_05_your_spam_filter_blocks",
+   "label": "no",
+   "note": "held-out traffic for unbiased labels; the probe asks silver-label QA and teacher blind spots",
+   "source": "new label, post-growth pool 2026-09-06"
+  }
+ ]
+}
