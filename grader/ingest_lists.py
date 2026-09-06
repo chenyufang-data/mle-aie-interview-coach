@@ -484,7 +484,11 @@ def fix_prompt(item):
         + f"Difficulty hint: {meta['difficulty']}.\n"
           "Rewrite the rubric so the correction holds throughout (question, model_answer, "
           "key_points, common_mistakes, followups). Keep everything the reviewer did not "
-          "object to; do not reject a correct alternative the reviewer named as acceptable."
+          "object to; do not reject a correct alternative the reviewer named as acceptable. "
+          "The same note may have been written for several chunks: apply only the parts "
+          "that concern THIS rubric and add nothing about topics this question does not "
+          "raise. Where a correction involves a date, version, or vendor feature, state it "
+          "as of a date rather than as a timeless fact."
     )
 
 
