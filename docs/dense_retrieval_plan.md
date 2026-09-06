@@ -681,8 +681,10 @@ needed hands were eight rubrics that leaked course-internal references
 into interview text ("as the deck puts it", "metrics the lesson doesn't
 mention", "the parent question") — reworded in place, and the deck-cited
 model names in the 1M-context chunk re-anchored to a date — plus one typo.
-The five close paraphrases from the verbatim probe are kept with a note
-(fine as rubrics; reword only if lesson text must stay fully private).
+The five close paraphrases from the verbatim probe are kept: the author
+decided (2026-09-06) that only the original lesson files stay private;
+rubric text derived from them is not sensitive, so the verbatim probe is
+a copy check, not a privacy gate.
 Decisions were stamped on the private edition and carried to the public
 one by `strip_chunks.py`; notes record the checks and the overlaps
 (six near-pairs, e.g. offloading x01/x03, kept as different angles).
