@@ -29,7 +29,7 @@ from grader.dense_retrieval import (INDEX_DIR, ChromaRetriever, DenseRetriever, 
                                     load_or_build, rss_mb)
 from retrieval import Retriever  # noqa: E402
 
-CORPUS_ROLE = {"ml": "MLE", "ai": "AIE", "exp": "EXP"}
+CORPUS_ROLE = {"ml": "MLE", "ai": "AIE", "exp": "EXP", "lists": "LISTS"}
 SET_PATHS = {"A": BASE_DIR / "tests" / "retrieval_cases.json",
              "B": BASE_DIR / "tests" / "retrieval_cases_paraphrase.json"}
 RESULTS_PATH = BASE_DIR / "grader" / "retrieval_eval_results.json"
@@ -57,7 +57,9 @@ def is_relevant(chunk, case):
 def load_bank(corpus):
     path = config.CORPUS_PATHS[CORPUS_ROLE[corpus]]
     with path.open(encoding="utf-8") as handle:
-        return [json.loads(line) for line in handle if line.strip()]
+        chunks = [json.loads(line) for line in handle if line.strip()]
+    # Same view as coach/kb.py: author-retired chunks do not serve.
+    return [c for c in chunks if c["metadata"].get("review", {}).get("status") != "retire"]
 
 
 def load_sets():
