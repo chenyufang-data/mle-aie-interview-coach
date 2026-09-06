@@ -1,5 +1,5 @@
 {
- "generated": "2026-09-04T00:51:29",
+ "generated": "2026-09-06T02:55:18",
  "hardware": {
   "cpu": "AMD Ryzen 7 9800X3D 8-Core Processor",
   "threads": 16,
@@ -13,31 +13,31 @@
   "query_prefix": "Represent this sentence for searching relevant passages: "
  },
  "memory": {
-  "rss_before_mb": 31.7,
-  "rss_runtime_mb": 231.6,
-  "rss_after_mb": 281.5,
-  "growth_mb": 200.0,
-  "chroma_extra_mb": 49.8
+  "rss_before_mb": 31.9,
+  "rss_runtime_mb": 232.9,
+  "rss_after_mb": 285.8,
+  "growth_mb": 201.1,
+  "chroma_extra_mb": 52.9
  },
  "build": {
   "ai": {
-   "chunks": 91,
-   "bm25_build_s": 0.0022,
-   "embed_s": 0.007,
+   "chunks": 222,
+   "bm25_build_s": 0.0061,
+   "embed_s": 0.001,
    "embed_from_cache": true,
-   "chroma_build_s": 0.071
+   "chroma_build_s": 0.176
   },
   "ml": {
    "chunks": 191,
-   "bm25_build_s": 0.0031,
-   "embed_s": 0.005,
+   "bm25_build_s": 0.0028,
+   "embed_s": 0.0,
    "embed_from_cache": true,
-   "chroma_build_s": 0.113
+   "chroma_build_s": 0.111
   }
  },
  "index_mb": {
-  "npz": 0.414,
-  "chroma": 3.71
+  "npz": 1.157,
+  "chroma": 5.62
  },
  "sets": {
   "A": {
@@ -48,28 +48,28 @@
      "hits": 23,
      "recall5": 1.0,
      "recall1": 0.8696,
-     "mrr": 0.9087
+     "mrr": 0.9145
     },
     "dense": {
      "n": 23,
      "hits": 23,
      "recall5": 1.0,
-     "recall1": 0.8696,
-     "mrr": 0.9348
+     "recall1": 0.913,
+     "mrr": 0.9457
     },
     "chroma": {
      "n": 23,
      "hits": 23,
      "recall5": 1.0,
-     "recall1": 0.8696,
-     "mrr": 0.9348
+     "recall1": 0.913,
+     "mrr": 0.9457
     },
     "hybrid": {
      "n": 23,
      "hits": 23,
      "recall5": 1.0,
-     "recall1": 0.913,
-     "mrr": 0.9493
+     "recall1": 0.8696,
+     "mrr": 0.9348
     }
    },
    "rows": [
@@ -308,10 +308,10 @@
      "query": "compact the context window when a long agent session grows",
      "corpus": "ai",
      "ranks": {
-      "bm25": 5,
-      "dense": 2,
-      "chroma": 2,
-      "hybrid": 3
+      "bm25": 3,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 2
      },
      "parent": null
     },
@@ -320,9 +320,9 @@
      "corpus": "ai",
      "ranks": {
       "bm25": 1,
-      "dense": 2,
-      "chroma": 2,
-      "hybrid": 1
+      "dense": 4,
+      "chroma": 4,
+      "hybrid": 2
      },
      "parent": null
     }
@@ -333,31 +333,31 @@
    "metrics": {
     "bm25": {
      "n": 61,
-     "hits": 41,
-     "recall5": 0.6721,
-     "recall1": 0.3607,
-     "mrr": 0.4904
+     "hits": 44,
+     "recall5": 0.7213,
+     "recall1": 0.4098,
+     "mrr": 0.5355
     },
     "dense": {
      "n": 61,
-     "hits": 47,
-     "recall5": 0.7705,
-     "recall1": 0.5738,
-     "mrr": 0.6421
+     "hits": 48,
+     "recall5": 0.7869,
+     "recall1": 0.6066,
+     "mrr": 0.6749
     },
     "chroma": {
      "n": 61,
-     "hits": 47,
-     "recall5": 0.7705,
-     "recall1": 0.5738,
-     "mrr": 0.6421
+     "hits": 48,
+     "recall5": 0.7869,
+     "recall1": 0.6066,
+     "mrr": 0.6749
     },
     "hybrid": {
      "n": 61,
-     "hits": 49,
-     "recall5": 0.8033,
-     "recall1": 0.4918,
-     "mrr": 0.6041
+     "hits": 51,
+     "recall5": 0.8361,
+     "recall1": 0.5738,
+     "mrr": 0.6746
     }
    },
    "rows": [
@@ -805,7 +805,7 @@
      "query": "why do language models split text into word pieces and how does that affect billing",
      "corpus": "ai",
      "ranks": {
-      "bm25": 2,
+      "bm25": 1,
       "dense": 1,
       "chroma": 1,
       "hybrid": 1
@@ -816,10 +816,10 @@
      "query": "how does breaking prompts into chunks relate to what I pay per request",
      "corpus": "ai",
      "ranks": {
-      "bm25": 2,
+      "bm25": 3,
       "dense": null,
       "chroma": null,
-      "hybrid": 5
+      "hybrid": 3
      },
      "parent": "why llms use sub-word tokens and how token counts drive api cost"
     },
@@ -827,10 +827,10 @@
      "query": "explain why input is chopped into fragments and how that drives usage cost",
      "corpus": "ai",
      "ranks": {
-      "bm25": 1,
+      "bm25": 2,
       "dense": null,
       "chroma": null,
-      "hybrid": 4
+      "hybrid": 2
      },
      "parent": "why llms use sub-word tokens and how token counts drive api cost"
     },
@@ -838,10 +838,10 @@
      "query": "what are the two knobs that make model output more or less random",
      "corpus": "ai",
      "ranks": {
-      "bm25": null,
+      "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 5
+      "hybrid": 1
      },
      "parent": "temperature versus top p nucleus sampling to control randomness"
     },
@@ -849,7 +849,7 @@
      "query": "difference between the setting that flattens probabilities and the one that trims the tail",
      "corpus": "ai",
      "ranks": {
-      "bm25": null,
+      "bm25": 1,
       "dense": 1,
       "chroma": 1,
       "hybrid": 1
@@ -871,7 +871,7 @@
      "query": "how do I let the model trigger my own functions to fetch data",
      "corpus": "ai",
      "ranks": {
-      "bm25": 3,
+      "bm25": null,
       "dense": 1,
       "chroma": 1,
       "hybrid": 1
@@ -882,10 +882,10 @@
      "query": "enabling the model to invoke external actions instead of just talking",
      "corpus": "ai",
      "ranks": {
-      "bm25": null,
-      "dense": 4,
-      "chroma": 4,
-      "hybrid": 3
+      "bm25": 1,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
      },
      "parent": "let the model call external tools with function calling"
     },
@@ -904,10 +904,10 @@
      "query": "when is a predetermined sequence better than a self-directing system",
      "corpus": "ai",
      "ranks": {
-      "bm25": 1,
+      "bm25": null,
       "dense": 4,
       "chroma": 4,
-      "hybrid": 4
+      "hybrid": null
      },
      "parent": "when to build a fixed workflow versus an autonomous agent"
     },
@@ -918,7 +918,7 @@
       "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 2
+      "hybrid": 1
      },
      "parent": "when to build a fixed workflow versus an autonomous agent"
     },
@@ -927,8 +927,8 @@
      "corpus": "ai",
      "ranks": {
       "bm25": null,
-      "dense": 3,
-      "chroma": 3,
+      "dense": 2,
+      "chroma": 2,
       "hybrid": null
      },
      "parent": "prompt caching to cut cost and latency"
@@ -960,8 +960,8 @@
      "corpus": "ai",
      "ranks": {
       "bm25": null,
-      "dense": 3,
-      "chroma": 3,
+      "dense": null,
+      "chroma": null,
       "hybrid": null
      },
      "parent": "llm as judge graders for evaluating agent outputs"
@@ -973,7 +973,7 @@
       "bm25": 4,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 2
+      "hybrid": 3
      },
      "parent": "compact the context window when a long agent session grows"
     },
@@ -981,10 +981,10 @@
      "query": "summarizing old messages so a long-running chat stays within limits",
      "corpus": "ai",
      "ranks": {
-      "bm25": null,
-      "dense": null,
-      "chroma": null,
-      "hybrid": null
+      "bm25": 1,
+      "dense": 3,
+      "chroma": 3,
+      "hybrid": 4
      },
      "parent": "compact the context window when a long agent session grows"
     },
@@ -993,9 +993,9 @@
      "corpus": "ai",
      "ranks": {
       "bm25": 1,
-      "dense": 4,
-      "chroma": 4,
-      "hybrid": 3
+      "dense": 3,
+      "chroma": 3,
+      "hybrid": 1
      },
      "parent": "compact the context window when a long agent session grows"
     },
@@ -1003,10 +1003,10 @@
      "query": "how do I stop the model from making things up by tying answers to sources",
      "corpus": "ai",
      "ranks": {
-      "bm25": 2,
-      "dense": 2,
-      "chroma": 2,
-      "hybrid": 4
+      "bm25": 4,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 5
      },
      "parent": "reduce hallucinations by grounding answers in retrieved documents"
     },
@@ -1015,9 +1015,9 @@
      "corpus": "ai",
      "ranks": {
       "bm25": null,
-      "dense": 1,
-      "chroma": 1,
-      "hybrid": null
+      "dense": 2,
+      "chroma": 2,
+      "hybrid": 2
      },
      "parent": "reduce hallucinations by grounding answers in retrieved documents"
     },
@@ -1025,10 +1025,10 @@
      "query": "my assistant invents facts, how does pulling in documents fix that",
      "corpus": "ai",
      "ranks": {
-      "bm25": null,
-      "dense": null,
-      "chroma": null,
-      "hybrid": null
+      "bm25": 2,
+      "dense": 1,
+      "chroma": 1,
+      "hybrid": 1
      },
      "parent": "reduce hallucinations by grounding answers in retrieved documents"
     }
@@ -1049,33 +1049,33 @@
  "latency": {
   "bm25": {
    "n": 420,
-   "p50_ms": 0.214,
-   "p95_ms": 0.454,
-   "mean_ms": 0.226
+   "p50_ms": 0.282,
+   "p95_ms": 0.515,
+   "mean_ms": 0.3
   },
   "dense": {
    "n": 420,
-   "p50_ms": 1.829,
-   "p95_ms": 2.268,
-   "mean_ms": 1.851
+   "p50_ms": 1.882,
+   "p95_ms": 2.329,
+   "mean_ms": 1.897
   },
   "chroma": {
    "n": 420,
-   "p50_ms": 2.529,
-   "p95_ms": 3.162,
-   "mean_ms": 2.566
+   "p50_ms": 2.545,
+   "p95_ms": 3.079,
+   "mean_ms": 2.562
   },
   "hybrid": {
    "n": 420,
-   "p50_ms": 2.181,
-   "p95_ms": 2.761,
-   "mean_ms": 2.196
+   "p50_ms": 2.354,
+   "p95_ms": 2.858,
+   "mean_ms": 2.341
   },
   "embed_only": {
    "n": 420,
-   "p50_ms": 1.731,
-   "p95_ms": 2.106,
-   "mean_ms": 1.739
+   "p50_ms": 1.757,
+   "p95_ms": 2.181,
+   "mean_ms": 1.783
   }
  },
  "chroma_agreement": {
@@ -1087,33 +1087,33 @@
   "n": 84,
   "bm25": {
    "threshold": 10.0,
-   "attached": 52,
-   "attach_rate": 0.619,
-   "precision": 0.5962
+   "attached": 58,
+   "attach_rate": 0.6905,
+   "precision": 0.6379
   },
   "dense": {
    "chosen": {
-    "threshold": 0.5638,
+    "threshold": 0.5746,
     "attached": 84,
     "attach_rate": 1.0,
-    "precision": 0.6548
+    "precision": 0.6905
    },
-   "target_precision": 0.5962,
+   "target_precision": 0.6379,
    "curve": [
     {
-     "threshold": 0.6402,
+     "threshold": 0.6423,
      "attached": 75,
      "attach_rate": 0.8929,
-     "precision": 0.6667
+     "precision": 0.68
     },
     {
-     "threshold": 0.6766,
+     "threshold": 0.6831,
      "attached": 63,
      "attach_rate": 0.75,
-     "precision": 0.6984
+     "precision": 0.7143
     },
     {
-     "threshold": 0.711,
+     "threshold": 0.7148,
      "attached": 42,
      "attach_rate": 0.5,
      "precision": 0.8333
@@ -1122,18 +1122,18 @@
      "threshold": 0.7755,
      "attached": 21,
      "attach_rate": 0.25,
-     "precision": 0.9048
+     "precision": 0.9524
     },
     {
-     "threshold": 0.847,
+     "threshold": 0.8479,
      "attached": 9,
      "attach_rate": 0.1071,
      "precision": 1.0
     }
    ],
    "score_range": [
-    0.5638,
-    0.8757
+    0.5746,
+    0.8824
    ]
   },
   "hybrid": {
@@ -1141,39 +1141,39 @@
     "threshold": 0.0284,
     "attached": 84,
     "attach_rate": 1.0,
-    "precision": 0.6071
+    "precision": 0.6548
    },
-   "target_precision": 0.5962,
+   "target_precision": 0.6379,
    "curve": [
     {
      "threshold": 0.0309,
      "attached": 75,
      "attach_rate": 0.8929,
-     "precision": 0.64
+     "precision": 0.68
     },
     {
      "threshold": 0.0315,
-     "attached": 66,
-     "attach_rate": 0.7857,
-     "precision": 0.697
+     "attached": 65,
+     "attach_rate": 0.7738,
+     "precision": 0.7385
     },
     {
      "threshold": 0.0323,
-     "attached": 49,
-     "attach_rate": 0.5833,
-     "precision": 0.7959
+     "attached": 48,
+     "attach_rate": 0.5714,
+     "precision": 0.8333
     },
     {
      "threshold": 0.0328,
-     "attached": 23,
-     "attach_rate": 0.2738,
-     "precision": 0.7826
+     "attached": 25,
+     "attach_rate": 0.2976,
+     "precision": 0.8
     },
     {
      "threshold": 0.0328,
-     "attached": 23,
-     "attach_rate": 0.2738,
-     "precision": 0.7826
+     "attached": 25,
+     "attach_rate": 0.2976,
+     "precision": 0.8
     }
    ],
    "score_range": [
@@ -1183,27 +1183,27 @@
   },
   "chroma": {
    "chosen": {
-    "threshold": 0.5638,
+    "threshold": 0.5746,
     "attached": 84,
     "attach_rate": 1.0,
-    "precision": 0.6548
+    "precision": 0.6905
    },
-   "target_precision": 0.5962,
+   "target_precision": 0.6379,
    "curve": [
     {
-     "threshold": 0.6402,
+     "threshold": 0.6423,
      "attached": 75,
      "attach_rate": 0.8929,
-     "precision": 0.6667
+     "precision": 0.68
     },
     {
-     "threshold": 0.6766,
+     "threshold": 0.6831,
      "attached": 63,
      "attach_rate": 0.75,
-     "precision": 0.6984
+     "precision": 0.7143
     },
     {
-     "threshold": 0.711,
+     "threshold": 0.7148,
      "attached": 42,
      "attach_rate": 0.5,
      "precision": 0.8333
@@ -1212,18 +1212,18 @@
      "threshold": 0.7755,
      "attached": 21,
      "attach_rate": 0.25,
-     "precision": 0.9048
+     "precision": 0.9524
     },
     {
-     "threshold": 0.847,
+     "threshold": 0.8479,
      "attached": 9,
      "attach_rate": 0.1071,
      "precision": 1.0
     }
    ],
    "score_range": [
-    0.5638,
-    0.8757
+    0.5746,
+    0.8824
    ]
   }
  },
@@ -1233,19 +1233,19 @@
    "checks": {
     "1_A_no_regression": {
      "pass": true,
-     "detail": "A hits 23/23 (bm25 23), MRR 0.935 vs 0.909"
+     "detail": "A hits 23/23 (bm25 23), MRR 0.946 vs 0.914"
     },
     "2_B_gain": {
      "pass": false,
-     "detail": "B Recall@5 77.0% vs bm25 67.2% (+9.8 pts; need +10)"
+     "detail": "B Recall@5 78.7% vs bm25 72.1% (+6.6 pts; need +10)"
     },
     "3_latency": {
      "pass": true,
-     "detail": "p95 2.268 ms (max 50)"
+     "detail": "p95 2.329 ms (max 50)"
     },
     "4_model_size": {
      "pass": true,
-     "detail": "model 126.7 MB (max 200); RSS growth 200.0 MB (reported)"
+     "detail": "model 126.7 MB (max 200); RSS growth 201.1 MB (reported)"
     }
    }
   },
@@ -1254,19 +1254,19 @@
    "checks": {
     "1_A_no_regression": {
      "pass": true,
-     "detail": "A hits 23/23 (bm25 23), MRR 0.949 vs 0.909"
+     "detail": "A hits 23/23 (bm25 23), MRR 0.935 vs 0.914"
     },
     "2_B_gain": {
      "pass": true,
-     "detail": "B Recall@5 80.3% vs bm25 67.2% (+13.1 pts; need +10)"
+     "detail": "B Recall@5 83.6% vs bm25 72.1% (+11.5 pts; need +10)"
     },
     "3_latency": {
      "pass": true,
-     "detail": "p95 2.761 ms (max 50)"
+     "detail": "p95 2.858 ms (max 50)"
     },
     "4_model_size": {
      "pass": true,
-     "detail": "model 126.7 MB (max 200); RSS growth 200.0 MB (reported)"
+     "detail": "model 126.7 MB (max 200); RSS growth 201.1 MB (reported)"
     }
    }
   },
@@ -1275,19 +1275,19 @@
    "checks": {
     "1_A_no_regression": {
      "pass": true,
-     "detail": "A hits 23/23 (bm25 23), MRR 0.935 vs 0.909"
+     "detail": "A hits 23/23 (bm25 23), MRR 0.946 vs 0.914"
     },
     "2_B_gain": {
      "pass": false,
-     "detail": "B Recall@5 77.0% vs bm25 67.2% (+9.8 pts; need +10)"
+     "detail": "B Recall@5 78.7% vs bm25 72.1% (+6.6 pts; need +10)"
     },
     "3_latency": {
      "pass": true,
-     "detail": "p95 3.162 ms (max 50)"
+     "detail": "p95 3.079 ms (max 50)"
     },
     "4_model_size": {
      "pass": true,
-     "detail": "model 126.7 MB (max 200); RSS growth 200.0 MB (reported)"
+     "detail": "model 126.7 MB (max 200); RSS growth 201.1 MB (reported)"
     }
    }
   }
