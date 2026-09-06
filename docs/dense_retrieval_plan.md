@@ -517,6 +517,14 @@ public repo.
    source; the teacher writes the rubric in its own words. Books (Huyen's
    *AI Engineering*, Xu's ML system design) contribute topic lists only —
    no text is ingested.
+   *Amended 2026-09-06 after R4:* the gap list is MLE/DS, not AIE, so the
+   source set became MLOps documentation with open licenses — scikit-learn
+   (BSD), NannyML, Feast, MLflow (Apache-2.0), promptfoo (MIT), Kubernetes
+   and Google's ML guides (CC BY 4.0) — plus Anthropic's and Evidently's
+   pages as reference-only sources (no text stored). The paste step is a
+   script (`grader/ingest_docs.py --fetch`) so the sections are pinned and
+   reproducible; the bank is its own track, `rag_docs`, like `rag_lists`.
+   See §12.6d.
 4. **GitHub question lists** for LLM and ML interviews (the author is
    gathering these). Two filters: the license first — MIT / CC BY lists
    can be ingested with attribution recorded in the bank README; a repo
@@ -598,6 +606,36 @@ filters); `--apply` stamps decisions, undecided = drop; stage B (Claude
 rubrics into the private bank, then `strip_chunks.py`) waits for that review
 and for R4's gap list. Recommendation recorded: keep roughly the seed-topic
 and intermediate proposals (~100, ≈ $3.3), skip beginner-tier restatements.
+
+**12.6d Primary documentation, stage A (2026-09-06).** `grader/ingest_docs.py`
+built for §12.2 item 3, aimed at R4's gap list: `--fetch` pulls 20 sections
+from 8 source families (scikit-learn threshold tuning, grouped/time-series
+CV, common pitfalls and the `TimeSeriesSplit` docstring; NannyML univariate,
+multivariate, thresholds and CBPE; Feast point-in-time joins; MLflow model
+registry; promptfoo CI/CD and assertions; Kubernetes Deployments; Google's
+Rules of ML, MLOps pipelines, problem framing and Vertex model monitoring;
+Anthropic's evals page and Evidently's drift explainer as reference-only),
+converts them to text (rst / markdown / html / a numpydoc docstring),
+slices the listed headings, pins GitHub sources to the commit read and
+saves license texts under `rag_docs/licenses/`. 19.8k words of sections.
+`--propose` (DeepSeek, Claude fallback on 5 of 20 sections): 116 proposals,
+each aimed at the seed topic and at two paraphrased R4 probes for it; 1
+semantic duplicate. Author review (assistant, at the author's request):
+72 keep / 43 drop — drops are tool defaults and CLI syntax, worked
+examples, near-duplicates of existing bank chunks (time split, fit on
+train only, default 0.5), vendor marketing, and one claim the excerpt did
+not support. Keeps by seed: PSI thresholds and blind spots 14, problem
+framing 11, time-aware validation (incl. the `gap` parameter) 8,
+retraining triggers / pipeline CI/CD 6, training-serving skew 5, evals and
+judge grading 5, canary/rollback 4, registry 4, delayed labels 3,
+point-in-time 3, cost-based threshold 3, LLM eval gates 2 + 2, leakage 2;
+52 intermediate / 20 advanced; 7 carry reviewer notes for the teacher.
+Still uncovered: LLM-label QA for distillation (no open source found;
+Anthropic's grading tips are adjacent). Stage B (`--generate --confirm`,
+≈ $2.39) waits for the go; then `tools/review_bank.py rag_docs`, backup,
+and an R4 re-score over the pool with the new bank is NOT possible (the
+pool was frozen with the old banks) — a fresh `--pool` on the same probes
+would be the honest check, labeled again.
 
 Stage A review (2026-09-06): AIE decided by the assistant at the author's
 request — 131 keep / 148 drop, the drops being restatements of the parent

@@ -29,7 +29,7 @@ from grader.dense_retrieval import (INDEX_DIR, ChromaRetriever, DenseRetriever, 
                                     load_or_build, rss_mb)
 from retrieval import Retriever  # noqa: E402
 
-CORPUS_ROLE = {"ml": "MLE", "ai": "AIE", "exp": "EXP", "lists": "LISTS"}
+CORPUS_ROLE = {"ml": "MLE", "ai": "AIE", "exp": "EXP", "lists": "LISTS", "docs": "DOCS"}
 SET_PATHS = {"A": BASE_DIR / "tests" / "retrieval_cases.json",
              "B": BASE_DIR / "tests" / "retrieval_cases_paraphrase.json"}
 RESULTS_PATH = BASE_DIR / "grader" / "retrieval_eval_results.json"

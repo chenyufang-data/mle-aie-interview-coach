@@ -311,7 +311,8 @@ def semantic_pass(rows, bank_questions, parents, threshold=0.90, parent_threshol
     cand = embedder.embed_docs([r["question"] for r in live])
     bank_vecs = embedder.embed_docs([q for _, q in bank_questions])
     parent_q = {p["id"]: p["interview"]["question"] for p in parents}
-    parent_vecs = {pid: v for pid, v in zip(parent_q, embedder.embed_docs(list(parent_q.values())))}
+    parent_vecs = ({pid: v for pid, v in zip(parent_q, embedder.embed_docs(list(parent_q.values())))}
+                   if parent_q else {})
     sims = cand @ bank_vecs.T
     kept_idx = []
     for i, row in enumerate(live):
@@ -511,15 +512,17 @@ render();
 """
 
 
-def write_proposal_page(bank):
+def write_proposal_page(bank, parents=None, proposals_path=None, out=None):
     """A local page listing every KEPT proposal under its parent, for the
     author to keep or drop before the rubric stage (data/review/, never
-    committed: it quotes lesson text)."""
-    proposals_path = PROPOSALS_DIR / f"expand_{bank}_proposals.json"
+    committed: it quotes lesson text). Other ingests (ingest_docs.py) pass
+    their own parents map and paths."""
+    proposals_path = proposals_path or PROPOSALS_DIR / f"expand_{bank}_proposals.json"
     data = json.loads(proposals_path.read_text(encoding="utf-8"))
     rows = [r for r in data["rows"] if r["verdict"] == "keep"]
-    parents = {c["id"]: c["interview"]["question"] for c in load_jsonl(private_bank_path(bank))}
-    out = BASE_DIR / "data" / "review" / f"expand_{bank}_proposals.html"
+    if parents is None:
+        parents = {c["id"]: c["interview"]["question"] for c in load_jsonl(private_bank_path(bank))}
+    out = out or BASE_DIR / "data" / "review" / f"expand_{bank}_proposals.html"
     out.parent.mkdir(parents=True, exist_ok=True)
     payload = json.dumps({"rows": rows, "parents": parents}, ensure_ascii=False).replace("</", "<\\/")
     out.write_text(PROPOSAL_PAGE.replace("__BANK_JSON__", json.dumps(bank))
@@ -528,10 +531,10 @@ def write_proposal_page(bank):
     print("open it in a browser, decide, Save; then --apply <decisions.json> before --generate")
 
 
-def apply_decisions(bank, decisions_path):
+def apply_decisions(bank, decisions_path, proposals_path=None):
     """Stamp the author's keep/drop onto the proposals file: undecided
     proposals become drops, so --generate only spends on explicit keeps."""
-    proposals_path = PROPOSALS_DIR / f"expand_{bank}_proposals.json"
+    proposals_path = proposals_path or PROPOSALS_DIR / f"expand_{bank}_proposals.json"
     data = json.loads(proposals_path.read_text(encoding="utf-8"))
     decided = json.loads(Path(decisions_path).read_text(encoding="utf-8"))
     if decided.get("bank") != bank:

@@ -51,7 +51,7 @@ def main():
         sys.exit(f"private checkout not found at {PRIVATE_DIR} "
                  "(set PRIVATE_REPO_DIR)")
     changed = 0
-    for bank in ("rag_exp", "rag_lists"):
+    for bank in ("rag_exp", "rag_lists", "rag_docs"):
         for name in ("all_chunks.jsonl", "README.md"):
             changed += sync(BASE_DIR / bank / name,
                             PRIVATE_DIR / bank / name)

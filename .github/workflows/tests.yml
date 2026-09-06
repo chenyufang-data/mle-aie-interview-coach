@@ -43,6 +43,8 @@ jobs:
       # Lesson-text expansion (plan §12.2 item 1): excerpt grounding, dedupe,
       # child ids, chunk assembly, parent selection - synthetic private bank.
       - run: python tests/test_expand_chunks.py
+      - name: ingest_docs (offline: converters, slicing, header, chunk assembly)
+        run: python tests/test_ingest_docs.py
       # Voice loop, deterministic parts: endpointer state machine, sentence
       # chunker, keyterm policy, SSE parsing, two-transcript report block.
       - run: python tests/test_voice.py

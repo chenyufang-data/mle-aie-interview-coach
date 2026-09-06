@@ -22,6 +22,11 @@ model answers, and grading rubrics:
   from the course banks on purpose: its own **Lists** track, switchable, and
   measurable with and without in the grounding experiment. These are prep-list
   questions, not real interview reports.
+- `rag_docs/` (optional, generated) - rubrics written from sections of primary
+  documentation (scikit-learn, Google ML guides, NannyML, Feast, MLflow,
+  promptfoo, Kubernetes; licenses and attribution in `rag_docs/`) on the MLOps
+  decisions the course banks never covered, built by `grader/ingest_docs.py`.
+  Its own **Docs** track, same treatment as `rag_lists/`.
 
 The two course banks are derived from course material I studied; the public repository
 ships the interview questions, model answers, and rubrics only. The complete
@@ -60,6 +65,7 @@ retrieval_dense.py   bge-small embeddings + BM25 hybrid (serves when its stack i
 rag_ml/  rag_ai/     question banks, public stripped edition (schema in their READMEs)
 rag_exp/             real gathered interview questions - private bank, README explains
 rag_lists/           licensed GitHub question lists rewritten into rubrics - generated bank, README explains
+rag_docs/            rubrics from primary documentation on MLOps gaps - generated bank, README explains
 grader/              training + every measurement script with its committed results
 tests/               offline suite (CI) + a browser e2e smoke (local, Playwright)
 docs/                specs, measured reports, and the design/lab notebook

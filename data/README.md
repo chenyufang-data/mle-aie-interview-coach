@@ -11,7 +11,9 @@ data/
 ├── interview_exp/   interview questions you gather (spreadsheets, notes) — the
 │                    source for the rag_exp/ question bank; keep adding to it
 │                    (github/: shallow clones of licensed question lists,
-│                    the source for rag_lists/ via grader/ingest_lists.py)
+│                    the source for rag_lists/ via grader/ingest_lists.py;
+│                    docs/: fetched sections of primary documentation, the
+│                    source for rag_docs/ via grader/ingest_docs.py)
 ├── sessions/        practice logs written by server.py:
 │                      real_sessions.jsonl   LLM-graded answers (Claude rows = gold pairs
 │                                            for grader/evaluate_on_real.py)

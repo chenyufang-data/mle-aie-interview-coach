@@ -44,6 +44,7 @@ const KB_GROUP_LABELS = {
   AIE: "AI course knowledge base (real course questions)",
   EXP: "Real interview questions (gathered from actual interviews)",
   LISTS: "Community question lists (public GitHub repos, MIT / Apache-2.0)",
+  DOCS: "Primary documentation (scikit-learn, Google ML guides, NannyML, Feast, MLflow, promptfoo, Kubernetes)",
 };
 
 const setupPage = document.querySelector(".setup-page");
@@ -183,7 +184,7 @@ function initSetupPage() {
         state.kbModules[role] = info.modules || [];
       });
       // Private / generated banks show their track only when loaded.
-      ["EXP", "LISTS"].forEach((role) => {
+      ["EXP", "LISTS", "DOCS"].forEach((role) => {
         const button = document.querySelector(`[data-role="${role}"]`);
         if (button) {
           button.hidden = !(meta.kb || {})[role];

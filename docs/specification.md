@@ -59,12 +59,13 @@ mle-aie-interview-coach/
 ├── data/                   (gitignored)  personal + runtime data; only data/README.md tracked
 ├── public/                 (10 files)    dependency-free frontend
 ├── grader/                 (28 files)    distillation subsystem + experiment harnesses (§5)
-├── tests/                  (8 files)     regression suites + Playwright e2e (§8)
+├── tests/                  (9 files)     regression suites + Playwright e2e (§8)
 ├── tools/                  (4 files)     level1_up, strip_chunks, backup_private, review_bank
 ├── rag_ml/                               MLE bank: 191 chunks over 15 modules
 ├── rag_ai/                               AIE bank: 91 chunks over 6 modules
 ├── rag_exp/                              "Real Qs" bank: 57 chunks from real interview reports
-└── rag_lists/                            "Lists" bank: licensed GitHub question lists rewritten into rubrics (generated locally)
+├── rag_lists/                            "Lists" bank: licensed GitHub question lists rewritten into rubrics (generated locally)
+└── rag_docs/                             "Docs" bank: rubrics from primary documentation on the MLOps gaps (generated locally)
 ```
 
 The public banks are **stripped**: each chunk carries only `id`, the
@@ -73,8 +74,9 @@ followups) and retrieval `metadata` (module, topic, tags, difficulty).
 The complete banks — with course-derived lesson text and source references —
 live in a private repository; `tools/strip_chunks.py` produces the public
 versions. `rag_exp/all_chunks.jsonl` itself is generated locally by
-`grader/ingest_questions.py`, and `rag_lists/all_chunks.jsonl` by
-`grader/ingest_lists.py`; only their READMEs (and `rag_lists/licenses/`,
+`grader/ingest_questions.py`, `rag_lists/all_chunks.jsonl` by
+`grader/ingest_lists.py`, and `rag_docs/all_chunks.jsonl` by
+`grader/ingest_docs.py`; only their READMEs (and the `licenses/` folders,
 the redistributed source licenses) are tracked here.
 
 Runtime-only files (gitignored, never committed): `.env` (API keys),
@@ -165,8 +167,9 @@ points), not raw lesson text, across three tracks: MLE (`rag_ml`, 191
 chunks), AIE (`rag_ai`, 91), and the optional "Real Qs" track (`rag_exp`,
 57 chunks distilled from real interview reports) and the optional "Lists"
 track (`rag_lists`, licensed GitHub question lists rewritten into rubrics,
-retrieval plan §12) — both absent in a fresh clone; `coach/kb.py`
-warn-skips them). Query-time filters: module and
+retrieval plan §12) and the optional "Docs" track (`rag_docs`, rubrics
+from primary documentation on the MLOps gaps R4 found, §12.2 item 3) —
+all absent in a fresh clone; `coach/kb.py` warn-skips them). Query-time filters: module and
 difficulty-by-level metadata, plus a session `exclude` list so questions do
 not repeat. One of the top-5 hits is sampled at random for variety.
 
@@ -213,6 +216,7 @@ The LLM-distillation pipeline, in dependency order:
 | `ingest_questions.py` | Builds `rag_exp/` from hand-collected interview experiences (gitignored spreadsheets/pastes under `data/interview_exp/`): parse → normalize → dedupe (lexical containment) → intent-merge HR-screen phrasings → classify by round → free dry-run preview with cost estimate → `--generate --confirm` teacher run writing rubric chunks. Idempotent (existing ids skip); the teacher prompt strips person/employer names. 57 chunks for ≈$1.77. |
 | `ingest_lists.py` | Builds `rag_lists/` from shallow clones of licensed GitHub question lists (`data/interview_exp/github/`, gitignored): parse (ombharatiya tiered `questions.md`, Kalyan `QA_*.md`) → select tiers (intermediate + advanced; Kalyan capped at 30, internals first) → dedupe (lexical 0.65 within the pool; question-vs-question containment ≥ 0.8 against every bank, 3-token floor; bge-small cosine ≥ 0.90 against banks and pool) → free dry run with cost estimate → `--generate --confirm --workers N` teacher run with the source answer as material to rewrite, never copy. Chunks carry `source`, `source_url` pinned to the clone commit, `license`, `attribution`, `original`; the source answer is not stored. Idempotent by id. |
 | `grounding_r4.py` | Grounding experiment R4 (retrieval plan §12.4): runs the pre-registered policies `bm25@10` / `agree` / `dense>=0.70` / `hybrid` over the fresh resume-only probes on two bank sets (all banks, without `rag_lists`), writes the (probe, chunk) pool and a local labeling page; `--score` applies rule R4 mechanically (precision ≥ 90% at coverage ≥ 40%) and renders `docs/grounding_r4.md`. |
+| `ingest_docs.py` | Builds `rag_docs/` from sections of primary documentation (retrieval plan §12.2 item 3, aimed at the R4 gap list): `--fetch` downloads each source in its table (raw GitHub file or HTML page), converts it to text, keeps the listed sections, pins GitHub sources to the commit read and saves the license texts; `--propose` has DeepSeek write 3-8 interview questions per section with the verbatim excerpt (grounding guard, lexical + bge-small dedupe against every bank), aimed at the probes the banks could not ground; `--page` / `--apply` are the author's keep/drop step; `--generate --confirm` has the Claude teacher write one rubric per keep and appends the chunk (excerpt stored only under an open license, pointer otherwise). |
 | `expand_chunks.py` | Lesson-text expansion (retrieval plan §12.2 item 1): DeepSeek proposes 0-4 finer sub-questions per PRIVATE-bank chunk, each with the verbatim supporting excerpt (grounding guard, lexical + bge-small dedupe, seed-topic preference, Claude fallback on truncated output); the author keeps/drops on a local page (`--page`, `--apply`); `--generate --confirm` has the Claude teacher write a rubric per keep and appends the chunk to the private bank (`expanded_from`, review `unreviewed`); `tools/strip_chunks.py` then regenerates the public edition. |
 | `stt_testset.py`, `stt_text.py`, `stt_lexicon.json`, `stt_sentences.jsonl` | Phase 0 STT experiment: test-set builder, pure-text metrics layer (normalization, WER, term error rate over a 339-term lexicon, keyterm-selection policy), the committed lexicon and 88-item test set. |
 | `stt_eval.py`, `stt_eval_results.json`, `make_failure_rates.py`, `stt_failure_rates.json` | Runs STT conditions over the recordings, measures WER/TER **and downstream grade damage**, renders `docs/stt_evaluation.md`; per-term failure rates feed the runtime keyterm policy. |
@@ -345,6 +349,9 @@ CI (`.github/workflows/tests.yml`) runs six suites on every push:
 - `tests/test_expand_chunks.py` — expansion helpers: excerpt grounding,
   lexical dedupe, child ids, chunk assembly, parent selection, author
   decisions (undecided = drop) on a synthetic private bank.
+- `tests/test_ingest_docs.py` — primary-doc ingest: rst / markdown / html
+  converters, section slicing and dropping, the paste header round trip,
+  the license gate on stored excerpts, ids and the sources table.
 - `tests/test_voice.py` — deterministic voice parts: endpointer state
   machine, sentence chunker, keyterm policy, two-transcript report block.
 

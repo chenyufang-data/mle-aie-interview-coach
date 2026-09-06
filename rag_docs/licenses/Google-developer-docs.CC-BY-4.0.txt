@@ -1,0 +1,1 @@
+Content on developers.google.com and cloud.google.com is licensed under the Creative Commons Attribution 4.0 License (https://creativecommons.org/licenses/by/4.0/); code samples are licensed under the Apache 2.0 License. Attribution: Google LLC. Sections used as rubric source material are listed in rag_docs/README.md.

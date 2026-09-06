@@ -20,6 +20,10 @@ CORPUS_PATHS = {
     # teacher; separate from the course banks so the grounding experiment
     # can measure with and without it (docs/dense_retrieval_plan.md §12).
     "LISTS": BASE_DIR / "rag_lists" / "all_chunks.jsonl",
+    # rag_docs: rubrics written from sections of primary documentation on
+    # the MLOps topics the course banks lack (grader/ingest_docs.py); same
+    # private/generated treatment as rag_lists.
+    "DOCS": BASE_DIR / "rag_docs" / "all_chunks.jsonl",
 }
 DEFAULT_MODEL = "claude-opus-4-8"
 
