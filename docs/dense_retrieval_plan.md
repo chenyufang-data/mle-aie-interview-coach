@@ -636,8 +636,13 @@ Anthropic's grading tips are adjacent). Stage B run by the author on
 points each, model answers ~150 words, 7 pointer-only (Anthropic,
 Evidently); verbatim probe against the section text: max 1.3% shared
 8-grams, i.e. the teacher rewrote. Public track "Docs" live once the file
-is present. Author review of the 72 (`tools/review_bank.py rag_docs`) is
-pending. An R4 re-score over the frozen pool cannot see the new bank; a
+is present. Chunk review of the 72 (assistant, at the author's request,
+2026-09-06, each rubric read against its source excerpt): 72 keep, 0 fix,
+0 retire; three text glitches fixed by hand (a garbled dash, a literal
+`–`, `kubestl`), three "the source says" phrasings reworded, and four
+claims re-verified in the fetched pages (NannyML's 50%-accuracy floor for
+CBPE, the 65% variance / 3-sigma defaults, promptfoo's weight-normalised
+named scores). An R4 re-score over the frozen pool cannot see the new bank; a
 fresh `--pool` on the same 77 probes, with the old labels reused for
 unchanged pairs and only the new pairs labeled, is the honest next check.
 
@@ -665,9 +670,23 @@ against its parent lesson: median 0% shared 8-grams, 5 chunks above 5%
 excerpt closely rather than copy sentences; flagged for the review. R1
 re-check on the grown banks (12.4 step 1): set A 23/23 for every arm;
 set B hybrid 51/61 vs bm25 44/61 (+11.5 points, ≥ +10 holds), dense
-48/61 (+6.6, fails as before) — hybrid stays shipped. Review of the 131
-(`tools/review_bank.py rag_ai --path <private> --only unreviewed`) is
-pending; MLE stage B (22 keeps, ≈ $0.73) was not run.
+48/61 (+6.6, fails as before) — hybrid stays shipped. MLE stage B (22
+keeps, ≈ $0.73) was not run.
+
+Chunk review of the 131 (assistant, at the author's request, 2026-09-06,
+`tools/review_bank.py rag_ai --path <private> --only unreviewed`, each
+rubric read against its lesson excerpt and general knowledge): 131 keep,
+0 fix, 0 retire. Nothing was factually wrong against the excerpt; what
+needed hands were eight rubrics that leaked course-internal references
+into interview text ("as the deck puts it", "metrics the lesson doesn't
+mention", "the parent question") — reworded in place, and the deck-cited
+model names in the 1M-context chunk re-anchored to a date — plus one typo.
+The five close paraphrases from the verbatim probe are kept with a note
+(fine as rubrics; reword only if lesson text must stay fully private).
+Decisions were stamped on the private edition and carried to the public
+one by `strip_chunks.py`; notes record the checks and the overlaps
+(six near-pairs, e.g. offloading x01/x03, kept as different angles).
+Hybrid gate after the edits: 23/23.
 
 **12.4 progress (2026-09-05, evening).** Step 1 re-checked on the reloaded
 harness after the lists bank and the retire flag: A 23/23, B hybrid 49/61 vs
