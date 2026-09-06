@@ -464,6 +464,7 @@ p.guide{color:var(--mute);font-size:13px;max-width:72ch}
 <header><h1>Review proposals __BANK__</h1><span class="stat" id="stat"></span>
 <select id="show"><option value="">all</option><option value="undecided">undecided only</option><option value="seed">seed topics only</option></select>
 <select id="module"><option value="">all modules</option></select>
+<select id="difficulty"><option value="">any difficulty</option><option>advanced</option><option>intermediate</option><option>beginner-intermediate</option><option>beginner</option></select>
 <button id="save" class="primary">Save decisions</button><button id="copy">Copy JSON</button><button id="reset">Clear all</button></header>
 <main><p class="guide">Keep a proposal when an interviewer would ask it and the quoted excerpt really answers it; drop trivia, tool minutiae, anything the excerpt does not support, and near-repeats of the parent. Undecided proposals are treated as dropped. Keys: <kbd>k</kbd> keep, <kbd>d</kbd> drop on the top visible card.</p>
 <div id="main"></div></main>
@@ -476,7 +477,7 @@ const store=(id,d)=>{try{d?localStorage.setItem(key(id),JSON.stringify(d)):local
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const groups={};data.rows.forEach(r=>{(groups[r.parent_id]=groups[r.parent_id]||[]).push(r)});
 const mods=[...new Set(data.rows.map(r=>r.module))];const modSel=document.getElementById('module');mods.forEach(m=>{const o=document.createElement('option');o.textContent=m;modSel.appendChild(o)});
-function prop(r){const d=load(r.id)||{};return `<div class="prop" data-id="${esc(r.id)}" data-v="${esc(d.v||'')}" data-seed="${r.seed_topic?'1':''}" data-module="${esc(r.module)}">
+function prop(r){const d=load(r.id)||{};return `<div class="prop" data-id="${esc(r.id)}" data-v="${esc(d.v||'')}" data-seed="${r.seed_topic?'1':''}" data-module="${esc(r.module)}" data-difficulty="${esc(r.difficulty)}">
  <p class="q">${esc(r.question)}${r.seed_topic?`<span class="seed">${esc(r.seed_topic)}</span>`:''}</p><div class="claim">claim: ${esc(r.claim)} · ${esc(r.difficulty)}</div>
  <blockquote>${esc(r.excerpt)}</blockquote>
  <div class="decide"><label><input type="radio" name="v-${esc(r.id)}" value="keep" ${d.v==='keep'?'checked':''}> keep</label><label><input type="radio" name="v-${esc(r.id)}" value="drop" ${d.v==='drop'?'checked':''}> drop</label>
@@ -484,11 +485,11 @@ function prop(r){const d=load(r.id)||{};return `<div class="prop" data-id="${esc
 function render(){const main=document.getElementById('main');main.innerHTML=Object.entries(groups).map(([pid,rs])=>`<section data-module="${esc(rs[0].module)}"><div class="parent"><div class="meta">${esc(rs[0].module)} · ${esc(pid)}</div><p class="q">parent: ${esc(data.parents[pid]||'')}</p></div>${rs.map(prop).join('')}</section>`).join('');filter();stat()}
 function decisions(){return data.rows.map(r=>({id:r.id,...(load(r.id)||{})})).filter(x=>x.v)}
 function stat(){const d=decisions();document.getElementById('stat').textContent=`${d.length}/${data.rows.length} decided · keep ${d.filter(x=>x.v==='keep').length} · drop ${d.filter(x=>x.v==='drop').length}`}
-function filter(){const show=document.getElementById('show').value,mod=modSel.value;document.querySelectorAll('.prop').forEach(el=>{let ok=!mod||el.dataset.module===mod;if(show==='undecided')ok=ok&&!el.dataset.v;if(show==='seed')ok=ok&&el.dataset.seed==='1';el.classList.toggle('hidden',!ok)});
+function filter(){const show=document.getElementById('show').value,mod=modSel.value,dif=document.getElementById('difficulty').value;document.querySelectorAll('.prop').forEach(el=>{let ok=(!mod||el.dataset.module===mod)&&(!dif||el.dataset.difficulty===dif);if(show==='undecided')ok=ok&&!el.dataset.v;if(show==='seed')ok=ok&&el.dataset.seed==='1';el.classList.toggle('hidden',!ok)});
  document.querySelectorAll('section').forEach(s=>{const any=[...s.querySelectorAll('.prop')].some(p=>!p.classList.contains('hidden'));s.classList.toggle('hidden',!any)})}
 document.getElementById('main').addEventListener('change',e=>{const el=e.target.closest('.prop');if(!el)return;const v=(el.querySelector('input[type=radio]:checked')||{}).value||'';const note=el.querySelector('input[type=text]').value.trim();store(el.dataset.id,v?{v,note}:null);el.dataset.v=v;stat();if(document.getElementById('show').value)filter()});
 document.getElementById('main').addEventListener('input',e=>{if(e.target.type!=='text')return;const el=e.target.closest('.prop');const d=load(el.dataset.id);if(d){d.note=e.target.value.trim();store(el.dataset.id,d)}});
-['show','module'].forEach(id=>document.getElementById(id).addEventListener('change',filter));
+['show','module','difficulty'].forEach(id=>document.getElementById(id).addEventListener('change',filter));
 const payload=()=>JSON.stringify({bank:BANK,exported:new Date().toISOString(),decided:decisions()},null,1);
 document.getElementById('save').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([payload()],{type:'application/json'}));a.download=`expand_${BANK}.decisions.json`;a.click()};
 document.getElementById('copy').onclick=async()=>{try{await navigator.clipboard.writeText(payload());alert('copied')}catch(e){prompt('copy this',payload())}};
