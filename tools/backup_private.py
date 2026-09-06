@@ -5,6 +5,9 @@
 Copies into PRIVATE_REPO_DIR (default: ../mle-aie-interview-coach-private):
   - rag_exp/all_chunks.jsonl + README   (the built bank: rephrased
     questions and generated rubrics - no interviewee names)
+  - grader/grounding_r4_pool.jsonl      (the R4 labeling pool: it quotes
+    questions and key points from rag_exp and rag_lists, so it is
+    gitignored publicly and kept here)
   - data/interview_exp/pastes/*         (questions hand-gathered from
     public 面经 posts, the ingest's drop folder)
   - data/notes/interview_prep*.md       (the author's interview-prep notes;
@@ -52,6 +55,8 @@ def main():
         for name in ("all_chunks.jsonl", "README.md"):
             changed += sync(BASE_DIR / bank / name,
                             PRIVATE_DIR / bank / name)
+    changed += sync(BASE_DIR / "grader" / "grounding_r4_pool.jsonl",
+                    PRIVATE_DIR / "grader" / "grounding_r4_pool.jsonl")
     pastes = BASE_DIR / "data" / "interview_exp" / "pastes"
     if pastes.is_dir():
         for src in sorted(pastes.glob("*.txt")) + sorted(pastes.glob("*.md")):

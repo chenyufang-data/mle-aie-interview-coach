@@ -1,0 +1,1232 @@
+{
+ "experiment": "grounding_r4",
+ "exported": "2026-09-06T05:53:05+00:00",
+ "labeler": "Claude (assistant), blind to policy attachment, at the author's request",
+ "standard": "fair = the chunk's key points state the same claim/decision/trade-off the probe asks for and a strong answer would satisfy them (at most one incidental point outside the probe); unfair = prerequisite, neighbouring technique, generic project rubric, or two or more points the probe never raised",
+ "labels": [
+  {
+   "probe_id": "mle|Mid-level|probe_1",
+   "chunk_id": "18_logistic_regression_predict__11_other_imbalance_methods",
+   "label": "yes",
+   "note": "same variants (resampling/SMOTE/class weights), same PR metric, same train-fold-only pitfall"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_2",
+   "chunk_id": "19_logistic_regression_proba__05_threshold_precision_recall_tradeoff",
+   "label": "no",
+   "note": "thresholding mechanics (default 0.5, F1); probe asks how 90% precision was derived from cost and kept right under drift"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_3",
+   "chunk_id": "list_omb_07_018_what_do_mmlu_gsm8k",
+   "label": "no",
+   "note": "LLM benchmarks; unrelated"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_3",
+   "chunk_id": "12_time_series__10_timeseriessplit_cv",
+   "label": "no",
+   "note": "explains what TimeSeriesSplit is; probe explicitly asks why plain TimeSeriesSplit was not enough (gap, entity grouping, feature look-ahead)"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_4",
+   "chunk_id": "exp_009_how_was_the_model",
+   "label": "no",
+   "note": "demands serving stack and rollout strategy the drift-playbook probe never raised"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_4",
+   "chunk_id": "04_timestamp_analysis__08_rolling_window",
+   "label": "no",
+   "note": "pandas rolling windows; unrelated"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_5",
+   "chunk_id": "list_omb_02_040_mamba_and_state_space",
+   "label": "no",
+   "note": "unrelated"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_5",
+   "chunk_id": "list_kal_040_explain_the_trade_offs",
+   "label": "no",
+   "note": "LLM-serving batching (KV state, continuous batching); probe is an XGBoost service"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_5",
+   "chunk_id": "01_llm_foundations_and_prompting__09_llm_inference_prefill_decode",
+   "label": "no",
+   "note": "LLM prefill/decode; unrelated"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_5",
+   "chunk_id": "exp_053_can_you_please_tell",
+   "label": "yes",
+   "note": "same decision: isolate which layer made p99 high with instrumentation, then fix and quantify"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_6",
+   "chunk_id": "list_omb_07_023_how_do_you_measure",
+   "label": "yes",
+   "note": "same claim: faithfulness judged claim-level and calibrated against human labels, bias checked"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_6",
+   "chunk_id": "06_harness_engineering_and_evaluation__13_evaluation_graders",
+   "label": "no",
+   "note": "grader taxonomy; probe asks how the judge was validated"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_6",
+   "chunk_id": "exp_024_rag_project_example",
+   "label": "no",
+   "note": "generic whole-project rubric; demands pipeline/fixes the probe never raised"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_7",
+   "chunk_id": "list_omb_07_024_how_do_you_wire",
+   "label": "yes",
+   "note": "same decision: gate on significant drops vs baseline, per-case diffs, re-baseline, keep the blocking suite stable"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_7",
+   "chunk_id": "exp_024_rag_project_example",
+   "label": "no",
+   "note": "generic project rubric; probe is gate stability"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_8",
+   "chunk_id": "list_omb_02_040_mamba_and_state_space",
+   "label": "no",
+   "note": "unrelated"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_8",
+   "chunk_id": "list_omb_05_026_explain_distillation_for_llms",
+   "label": "no",
+   "note": "black-box vs logit taxonomy and licensing; probe asks how the student was compared to the teacher"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_8",
+   "chunk_id": "exp_048_are_there_cheaper_faster",
+   "label": "no",
+   "note": "prompt->RAG->fine-tune ladder; different decision"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_8",
+   "chunk_id": "08_cross_validation__06_kfold_vs_holdout",
+   "label": "no",
+   "note": "unrelated"
+  },
+  {
+   "probe_id": "mle|Mid-level|probe_8",
+   "chunk_id": "18_logistic_regression_predict__01_binary_target_and_imbalance",
+   "label": "no",
+   "note": "unrelated"
+  },
+  {
+   "probe_id": "mle|Senior|probe_1",
+   "chunk_id": "18_logistic_regression_predict__11_other_imbalance_methods",
+   "label": "yes",
+   "note": "same ablation variants, PR metric, fold-leakage pitfall"
+  },
+  {
+   "probe_id": "mle|Senior|probe_2",
+   "chunk_id": "list_omb_02_040_mamba_and_state_space",
+   "label": "no",
+   "note": "unrelated"
+  },
+  {
+   "probe_id": "mle|Senior|probe_2",
+   "chunk_id": "12_time_series__09_historical_features_leakage",
+   "label": "yes",
+   "note": "same decision: historical aggregates fit on train only, lags reflect availability latency; one incidental sklearn point"
+  },
+  {
+   "probe_id": "mle|Senior|probe_2",
+   "chunk_id": "list_omb_09_040_a_customer_reports_that",
+   "label": "no",
+   "note": "tenant data leak; different meaning of leak"
+  },
+  {
+   "probe_id": "mle|Senior|probe_2",
+   "chunk_id": "09_collinearity__08_drop_collinear_features_refit",
+   "label": "no",
+   "note": "unrelated"
+  },
+  {
+   "probe_id": "mle|Senior|probe_2",
+   "chunk_id": "06_linear_regression_model__02_time_based_train_test_split",
+   "label": "no",
+   "note": "why split by time; probe asks about feature/label look-ahead beyond the split"
+  },
+  {
+   "probe_id": "mle|Senior|probe_3",
+   "chunk_id": "19_logistic_regression_proba__05_threshold_precision_recall_tradeoff",
+   "label": "no",
+   "note": "mechanics of thresholding; probe asks cost-based operating point and verification of the lift"
+  },
+  {
+   "probe_id": "mle|Senior|probe_4",
+   "chunk_id": "list_omb_07_031_you_are_swapping_the",
+   "label": "yes",
+   "note": "same decision: canary = blast radius with guardrails, A/B for proof; one incidental agentic point"
+  },
+  {
+   "probe_id": "mle|Senior|probe_4",
+   "chunk_id": "06_harness_engineering_and_evaluation__15_online_evaluation",
+   "label": "no",
+   "note": "offline-vs-online contrast; probe asks canary metrics and ramp decisions"
+  },
+  {
+   "probe_id": "mle|Senior|probe_4",
+   "chunk_id": "exp_009_how_was_the_model",
+   "label": "yes",
+   "note": "same question: serving, rollout strategy, monitoring, rollback trigger"
+  },
+  {
+   "probe_id": "mle|Senior|probe_5",
+   "chunk_id": "exp_009_how_was_the_model",
+   "label": "no",
+   "note": "serving stack and rollout strategy not raised; probe is the PSI playbook"
+  },
+  {
+   "probe_id": "mle|Senior|probe_6",
+   "chunk_id": "list_omb_02_040_mamba_and_state_space",
+   "label": "no",
+   "note": "unrelated"
+  },
+  {
+   "probe_id": "mle|Senior|probe_6",
+   "chunk_id": "list_omb_08_014_why_do_we_obsess",
+   "label": "no",
+   "note": "LLM tail-latency causes and mitigations"
+  },
+  {
+   "probe_id": "mle|Senior|probe_6",
+   "chunk_id": "exp_047_what_is_the_acceptable",
+   "label": "no",
+   "note": "bid SLA question; RTB specifics not raised"
+  },
+  {
+   "probe_id": "mle|Senior|probe_6",
+   "chunk_id": "exp_053_can_you_please_tell",
+   "label": "yes",
+   "note": "same decision: instrument and isolate the bottleneck layer"
+  },
+  {
+   "probe_id": "mle|Senior|probe_7",
+   "chunk_id": "list_omb_07_023_how_do_you_measure",
+   "label": "yes",
+   "note": "same claim: judge design and human calibration"
+  },
+  {
+   "probe_id": "mle|Senior|probe_7",
+   "chunk_id": "list_omb_04_042_how_do_you_evaluate",
+   "label": "no",
+   "note": "citation quality, refusal, cadence not raised; only the judge-hygiene point matches"
+  },
+  {
+   "probe_id": "mle|Senior|probe_7",
+   "chunk_id": "06_harness_engineering_and_evaluation__13_evaluation_graders",
+   "label": "no",
+   "note": "grader taxonomy"
+  },
+  {
+   "probe_id": "mle|Senior|probe_7",
+   "chunk_id": "exp_024_rag_project_example",
+   "label": "no",
+   "note": "generic project rubric"
+  },
+  {
+   "probe_id": "mle|Senior|probe_8",
+   "chunk_id": "list_omb_04_041_what_retrieval_metrics_would",
+   "label": "no",
+   "note": "metric taxonomy (MRR, nDCG); probe asks what the gate looked like and why it was trusted"
+  },
+  {
+   "probe_id": "mle|Senior|probe_8",
+   "chunk_id": "06_harness_engineering_and_evaluation__15_online_evaluation",
+   "label": "no",
+   "note": "offline vs online; not the gate"
+  },
+  {
+   "probe_id": "mle|Senior|probe_8",
+   "chunk_id": "exp_049_have_you_tried_other",
+   "label": "no",
+   "note": "agent harnesses; homonym"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_1",
+   "chunk_id": "list_omb_04_035_your_corpus_is_multilingual",
+   "label": "no",
+   "note": "multilingual retrieval; RRF incidental"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_1",
+   "chunk_id": "03_rag_and_retrieval__07_semantic_vs_keyword_hybrid",
+   "label": "yes",
+   "note": "same decision: complementary failure modes, fuse (RRF) then rerank"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_2",
+   "chunk_id": "exp_024_rag_project_example",
+   "label": "yes",
+   "note": "chunking problems, better chunking, eval, chunk-size trade-off are its own points"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_2",
+   "chunk_id": "list_omb_04_016_explain_contextual_retrieval_what",
+   "label": "no",
+   "note": "contextual retrieval / late chunking techniques not raised"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_3",
+   "chunk_id": "list_omb_04_023_how_does_reciprocal_rank",
+   "label": "no",
+   "note": "fusion, not reranking"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_3",
+   "chunk_id": "03_rag_and_retrieval__07_semantic_vs_keyword_hybrid",
+   "label": "no",
+   "note": "hybrid rationale; reranking only in passing"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_3",
+   "chunk_id": "exp_024_rag_project_example",
+   "label": "yes",
+   "note": "reranking as fix, recall@k eval, k-vs-precision and latency trade-offs are its own points"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_4",
+   "chunk_id": "list_omb_07_023_how_do_you_measure",
+   "label": "yes",
+   "note": "same claim: claim-level faithfulness, human calibration"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_4",
+   "chunk_id": "02_llm_apis_and_prompting_in_code__13_function_tool_calling",
+   "label": "no",
+   "note": "unrelated"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_4",
+   "chunk_id": "06_harness_engineering_and_evaluation__13_evaluation_graders",
+   "label": "no",
+   "note": "grader taxonomy"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_5",
+   "chunk_id": "list_omb_07_021_how_do_you_evaluate",
+   "label": "yes",
+   "note": "same decision: component vs end-to-end layers, labelled query->chunk sets, faithfulness and abstention cases"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_5",
+   "chunk_id": "exp_010_how_would_you_design",
+   "label": "no",
+   "note": "recommender design"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_6",
+   "chunk_id": "19_logistic_regression_proba__04_predict_proba_vs_predict",
+   "label": "no",
+   "note": "unrelated"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_6",
+   "chunk_id": "17_simplest_classification_models__01_target_generation_temporal_split",
+   "label": "no",
+   "note": "unrelated"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_6",
+   "chunk_id": "01_llm_foundations_and_prompting__06_pretraining",
+   "label": "no",
+   "note": "unrelated"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_7",
+   "chunk_id": "list_omb_03_031_a_user_reports_a",
+   "label": "no",
+   "note": "single-answer debugging; probe is a measured prompt iteration"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_7",
+   "chunk_id": "list_omb_03_032_how_is_a_system",
+   "label": "no",
+   "note": "agent system prompts"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_7",
+   "chunk_id": "exp_006_walk_me_through_a",
+   "label": "no",
+   "note": "generic project rubric"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_7",
+   "chunk_id": "05_agent_loop_and_context_engineering__01_agent_loop",
+   "label": "no",
+   "note": "unrelated"
+  },
+  {
+   "probe_id": "aie|Mid-level|probe_7",
+   "chunk_id": "05_agent_loop_and_context_engineering__04_context_engineering_goal",
+   "label": "no",
+   "note": "technique menu; not a measured iteration"
+  },
+  {
+   "probe_id": "aie|Senior|probe_1",
+   "chunk_id": "list_omb_04_023_how_does_reciprocal_rank",
+   "label": "yes",
+   "note": "same question: how the two lists were combined and why by rank"
+  },
+  {
+   "probe_id": "aie|Senior|probe_1",
+   "chunk_id": "03_rag_and_retrieval__07_semantic_vs_keyword_hybrid",
+   "label": "yes",
+   "note": "same decision: why hybrid"
+  },
+  {
+   "probe_id": "aie|Senior|probe_1",
+   "chunk_id": "exp_024_rag_project_example",
+   "label": "no",
+   "note": "generic; fusion not addressed"
+  },
+  {
+   "probe_id": "aie|Senior|probe_1",
+   "chunk_id": "03_rag_and_retrieval__04_rag_architecture_pipeline",
+   "label": "no",
+   "note": "architecture overview; offline pipeline and store not raised"
+  },
+  {
+   "probe_id": "aie|Senior|probe_2",
+   "chunk_id": "list_omb_04_016_explain_contextual_retrieval_what",
+   "label": "no",
+   "note": "contextual retrieval technique not raised"
+  },
+  {
+   "probe_id": "aie|Senior|probe_2",
+   "chunk_id": "exp_024_rag_project_example",
+   "label": "yes",
+   "note": "chunking, eval, chunk-size trade-off are its own points"
+  },
+  {
+   "probe_id": "aie|Senior|probe_2",
+   "chunk_id": "01_pandas_kickoff__05_iloc_vs_loc",
+   "label": "no",
+   "note": "unrelated"
+  },
+  {
+   "probe_id": "aie|Senior|probe_2",
+   "chunk_id": "03_rag_and_retrieval__14_rag_failure_modes",
+   "label": "no",
+   "note": "failure-mode menu; only the missing-context point touches chunking"
+  },
+  {
+   "probe_id": "aie|Senior|probe_3",
+   "chunk_id": "exp_024_rag_project_example",
+   "label": "yes",
+   "note": "reranking fix, recall@k, trade-offs are its own points"
+  },
+  {
+   "probe_id": "aie|Senior|probe_3",
+   "chunk_id": "list_omb_04_041_what_retrieval_metrics_would",
+   "label": "yes",
+   "note": "measuring reranker impact: pre/post-rerank cutoffs, ordering metrics on a golden set"
+  },
+  {
+   "probe_id": "aie|Senior|probe_3",
+   "chunk_id": "03_rag_and_retrieval__04_rag_architecture_pipeline",
+   "label": "no",
+   "note": "architecture overview"
+  },
+  {
+   "probe_id": "aie|Senior|probe_4",
+   "chunk_id": "list_omb_07_023_how_do_you_measure",
+   "label": "yes",
+   "note": "same claim: human calibration, bias"
+  },
+  {
+   "probe_id": "aie|Senior|probe_4",
+   "chunk_id": "06_harness_engineering_and_evaluation__13_evaluation_graders",
+   "label": "no",
+   "note": "grader taxonomy"
+  },
+  {
+   "probe_id": "aie|Senior|probe_4",
+   "chunk_id": "exp_024_rag_project_example",
+   "label": "no",
+   "note": "generic project rubric"
+  },
+  {
+   "probe_id": "aie|Senior|probe_5",
+   "chunk_id": "list_omb_03_022_walk_me_through_your",
+   "label": "yes",
+   "note": "same decision: eval set first, bucket failures, one variable at a time, version, guard regressions"
+  },
+  {
+   "probe_id": "aie|Senior|probe_5",
+   "chunk_id": "list_omb_03_020_you_have_a_200k",
+   "label": "no",
+   "note": "context placement claims (cache order, position U-curve) not raised"
+  },
+  {
+   "probe_id": "aie|Senior|probe_5",
+   "chunk_id": "exp_024_rag_project_example",
+   "label": "no",
+   "note": "generic project rubric"
+  },
+  {
+   "probe_id": "aie|Senior|probe_5",
+   "chunk_id": "04_timestamp_analysis__08_rolling_window",
+   "label": "no",
+   "note": "unrelated"
+  },
+  {
+   "probe_id": "aie|Senior|probe_6",
+   "chunk_id": "list_omb_07_028_how_would_you_use",
+   "label": "no",
+   "note": "synthetic eval sets; probe is labelling tickets for training"
+  },
+  {
+   "probe_id": "aie|Senior|probe_6",
+   "chunk_id": "list_omb_05_025_how_do_you_generate",
+   "label": "no",
+   "note": "generation recipes, mode collapse, verifiers not raised"
+  },
+  {
+   "probe_id": "aie|Senior|probe_6",
+   "chunk_id": "15_categorical_values_II__07_ordinality_label_vs_onehot",
+   "label": "no",
+   "note": "unrelated"
+  },
+  {
+   "probe_id": "aie|Senior|probe_6",
+   "chunk_id": "exp_011_have_you_fine_tuned",
+   "label": "no",
+   "note": "SFT vs RLHF of LLMs; probe is a small classifier"
+  },
+  {
+   "probe_id": "aie|Senior|probe_7",
+   "chunk_id": "list_omb_04_041_what_retrieval_metrics_would",
+   "label": "no",
+   "note": "metric taxonomy; golden-set construction and freshness not addressed"
+  },
+  {
+   "probe_id": "aie|Senior|probe_7",
+   "chunk_id": "list_omb_07_024_how_do_you_wire",
+   "label": "yes",
+   "note": "same decision: versioned datasets, significant-drop gating, re-baseline on dataset change"
+  },
+  {
+   "probe_id": "aie|Senior|probe_7",
+   "chunk_id": "06_harness_engineering_and_evaluation__15_online_evaluation",
+   "label": "no",
+   "note": "offline vs online"
+  },
+  {
+   "probe_id": "aie|Senior|probe_7",
+   "chunk_id": "exp_010_how_would_you_design",
+   "label": "no",
+   "note": "recommender design"
+  },
+  {
+   "probe_id": "aie|Senior|probe_8",
+   "chunk_id": "list_kal_037_what_is_latency_in",
+   "label": "yes",
+   "note": "probe asks how the lesson transfers to LLM latency: TTFT/TPOT, batching trade-off, p99 SLOs"
+  },
+  {
+   "probe_id": "aie|Senior|probe_8",
+   "chunk_id": "list_kal_063_how_would_you_design",
+   "label": "no",
+   "note": "infra design (parallelism, quantization, engine) not raised"
+  },
+  {
+   "probe_id": "aie|Senior|probe_8",
+   "chunk_id": "exp_032_system_design_question_you",
+   "label": "no",
+   "note": "photo pipeline design"
+  },
+  {
+   "probe_id": "ds|Mid-level|probe_1",
+   "chunk_id": "18_logistic_regression_predict__10_class_weight_balanced",
+   "label": "yes",
+   "note": "same decision: class weights vs resampling, precision/recall effect"
+  },
+  {
+   "probe_id": "ds|Mid-level|probe_1",
+   "chunk_id": "18_logistic_regression_predict__11_other_imbalance_methods",
+   "label": "yes",
+   "note": "same variants and metric"
+  },
+  {
+   "probe_id": "ds|Mid-level|probe_2",
+   "chunk_id": "19_logistic_regression_proba__06_choosing_threshold_not_hyperparameter",
+   "label": "yes",
+   "note": "same decision: threshold chosen by FP/FN cost on validation data"
+  },
+  {
+   "probe_id": "ds|Mid-level|probe_2",
+   "chunk_id": "19_logistic_regression_proba__05_threshold_precision_recall_tradeoff",
+   "label": "no",
+   "note": "mechanics; F1 rule differs from the cost rule the probe asks for"
+  },
+  {
+   "probe_id": "ds|Mid-level|probe_2",
+   "chunk_id": "03_rag_and_retrieval__11_ann_tradeoffs",
+   "label": "no",
+   "note": "unrelated"
+  },
+  {
+   "probe_id": "ds|Mid-level|probe_3",
+   "chunk_id": "12_time_series__10_timeseriessplit_cv",
+   "label": "yes",
+   "note": "probe asks how the folds were structured; same claim about shuffled folds"
+  },
+  {
+   "probe_id": "ds|Mid-level|probe_4",
+   "chunk_id": "03_rag_and_retrieval__04_rag_architecture_pipeline",
+   "label": "no",
+   "note": "unrelated"
+  },
+  {
+   "probe_id": "ds|Mid-level|probe_4",
+   "chunk_id": "exp_014_what_do_you_understand",
+   "label": "no",
+   "note": "definitions; not online impact"
+  },
+  {
+   "probe_id": "ds|Mid-level|probe_4",
+   "chunk_id": "06_harness_engineering_and_evaluation__15_online_evaluation",
+   "label": "yes",
+   "note": "same claim: offline metrics need online A/B or shadow to prove real impact"
+  },
+  {
+   "probe_id": "ds|Mid-level|probe_5",
+   "chunk_id": "exp_009_how_was_the_model",
+   "label": "no",
+   "note": "serving stack and rollout not raised; probe is what to check first on drift"
+  },
+  {
+   "probe_id": "ds|Mid-level|probe_5",
+   "chunk_id": "06_harness_engineering_and_evaluation__14_reading_transcripts",
+   "label": "no",
+   "note": "agent transcript diagnosis"
+  },
+  {
+   "probe_id": "ds|Mid-level|probe_6",
+   "chunk_id": "list_omb_07_031_you_are_swapping_the",
+   "label": "no",
+   "note": "rollout-stage choice; probe asks A/B design (metric, unit, sample size)"
+  },
+  {
+   "probe_id": "ds|Mid-level|probe_6",
+   "chunk_id": "list_omb_07_025_how_do_you_evaluate",
+   "label": "yes",
+   "note": "same decision: user-level randomization, primary metric, guardrails, power"
+  },
+  {
+   "probe_id": "ds|Mid-level|probe_6",
+   "chunk_id": "06_harness_engineering_and_evaluation__15_online_evaluation",
+   "label": "no",
+   "note": "names A/B but no design content"
+  },
+  {
+   "probe_id": "ds|Mid-level|probe_7",
+   "chunk_id": "list_omb_07_021_how_do_you_evaluate",
+   "label": "yes",
+   "note": "same claim: component vs end-to-end numbers, faithfulness never alone"
+  },
+  {
+   "probe_id": "ds|Mid-level|probe_7",
+   "chunk_id": "exp_024_rag_project_example",
+   "label": "no",
+   "note": "generic project rubric"
+  },
+  {
+   "probe_id": "ds|Mid-level|probe_7",
+   "chunk_id": "03_rag_and_retrieval__04_rag_architecture_pipeline",
+   "label": "no",
+   "note": "architecture overview"
+  },
+  {
+   "probe_id": "ds|Senior|probe_1",
+   "chunk_id": "18_logistic_regression_predict__10_class_weight_balanced",
+   "label": "no",
+   "note": "class-weight mechanics; probe is business framing"
+  },
+  {
+   "probe_id": "ds|Senior|probe_1",
+   "chunk_id": "exp_006_walk_me_through_a",
+   "label": "no",
+   "note": "whole-project rubric; modelling/production/monitoring not raised"
+  },
+  {
+   "probe_id": "ds|Senior|probe_2",
+   "chunk_id": "18_logistic_regression_predict__11_other_imbalance_methods",
+   "label": "yes",
+   "note": "same ablation variants, metric, pitfall"
+  },
+  {
+   "probe_id": "ds|Senior|probe_3",
+   "chunk_id": "19_logistic_regression_proba__05_threshold_precision_recall_tradeoff",
+   "label": "no",
+   "note": "mechanics; probe is cost model at the operating point"
+  },
+  {
+   "probe_id": "ds|Senior|probe_4",
+   "chunk_id": "list_omb_07_019_what_is_benchmark_contamination",
+   "label": "no",
+   "note": "benchmark contamination"
+  },
+  {
+   "probe_id": "ds|Senior|probe_4",
+   "chunk_id": "06_linear_regression_model__02_time_based_train_test_split",
+   "label": "yes",
+   "note": "same claim: time split matches production, shuffle leaks future; one incidental pandas point"
+  },
+  {
+   "probe_id": "ds|Senior|probe_5",
+   "chunk_id": "list_omb_07_044_a_team_ships_prompt",
+   "label": "no",
+   "note": "eval maturity for prompts"
+  },
+  {
+   "probe_id": "ds|Senior|probe_5",
+   "chunk_id": "exp_039_looking_back_now_would",
+   "label": "no",
+   "note": "retrospective; not decision change"
+  },
+  {
+   "probe_id": "ds|Senior|probe_6",
+   "chunk_id": "exp_009_how_was_the_model",
+   "label": "no",
+   "note": "serving and rollout not raised; probe is PSI threshold and blind spots"
+  },
+  {
+   "probe_id": "ds|Senior|probe_6",
+   "chunk_id": "list_omb_07_041_how_do_you_monitor",
+   "label": "no",
+   "note": "LLM drift classes (model version, refusal rate, tokens) not raised"
+  },
+  {
+   "probe_id": "ds|Senior|probe_7",
+   "chunk_id": "list_omb_07_023_how_do_you_measure",
+   "label": "yes",
+   "note": "same claim: judge calibration and failure modes"
+  },
+  {
+   "probe_id": "ds|Senior|probe_7",
+   "chunk_id": "06_harness_engineering_and_evaluation__13_evaluation_graders",
+   "label": "no",
+   "note": "grader taxonomy"
+  },
+  {
+   "probe_id": "ds|Senior|probe_8",
+   "chunk_id": "list_omb_02_050_what_is_distillation_and",
+   "label": "yes",
+   "note": "same claim: black-box distillation, student inherits teacher errors without filtering"
+  },
+  {
+   "probe_id": "ds|Senior|probe_8",
+   "chunk_id": "19_logistic_regression_proba__05_threshold_precision_recall_tradeoff",
+   "label": "no",
+   "note": "unrelated"
+  },
+  {
+   "probe_id": "platform|Mid-level|probe_1",
+   "chunk_id": "list_omb_08_021_describe_the_throughput_latency",
+   "label": "no",
+   "note": "LLM goodput curve"
+  },
+  {
+   "probe_id": "platform|Mid-level|probe_1",
+   "chunk_id": "list_omb_08_014_why_do_we_obsess",
+   "label": "no",
+   "note": "LLM tail causes"
+  },
+  {
+   "probe_id": "platform|Mid-level|probe_1",
+   "chunk_id": "15_categorical_values_II__01_setup_time_split",
+   "label": "no",
+   "note": "unrelated"
+  },
+  {
+   "probe_id": "platform|Mid-level|probe_1",
+   "chunk_id": "09_collinearity__08_drop_collinear_features_refit",
+   "label": "no",
+   "note": "unrelated"
+  },
+  {
+   "probe_id": "platform|Mid-level|probe_1",
+   "chunk_id": "exp_047_what_is_the_acceptable",
+   "label": "no",
+   "note": "bid SLA framing; RTB specifics not raised"
+  },
+  {
+   "probe_id": "platform|Mid-level|probe_2",
+   "chunk_id": "exp_009_how_was_the_model",
+   "label": "yes",
+   "note": "same question: serving, canary, monitoring, rollback"
+  },
+  {
+   "probe_id": "platform|Mid-level|probe_3",
+   "chunk_id": "exp_009_how_was_the_model",
+   "label": "no",
+   "note": "serving and rollout not raised; probe is what PSI measures and what to do"
+  },
+  {
+   "probe_id": "platform|Mid-level|probe_4",
+   "chunk_id": "18_logistic_regression_predict__11_other_imbalance_methods",
+   "label": "yes",
+   "note": "same ablation and threshold/PR points"
+  },
+  {
+   "probe_id": "platform|Mid-level|probe_5",
+   "chunk_id": "list_omb_07_019_what_is_benchmark_contamination",
+   "label": "no",
+   "note": "benchmark contamination"
+  },
+  {
+   "probe_id": "platform|Mid-level|probe_5",
+   "chunk_id": "12_time_series__10_timeseriessplit_cv",
+   "label": "yes",
+   "note": "probe asks how the splits were structured; same claim"
+  },
+  {
+   "probe_id": "platform|Mid-level|probe_5",
+   "chunk_id": "13_decision_tree__01_temporal_train_test_split",
+   "label": "no",
+   "note": "lesson specifics (DecisionTreeRegressor, reset_index) not raised"
+  },
+  {
+   "probe_id": "platform|Mid-level|probe_6",
+   "chunk_id": "exp_049_have_you_tried_other",
+   "label": "no",
+   "note": "agent harnesses; homonym"
+  },
+  {
+   "probe_id": "platform|Mid-level|probe_6",
+   "chunk_id": "06_harness_engineering_and_evaluation__15_online_evaluation",
+   "label": "no",
+   "note": "offline vs online"
+  },
+  {
+   "probe_id": "platform|Mid-level|probe_7",
+   "chunk_id": "list_omb_05_025_how_do_you_generate",
+   "label": "no",
+   "note": "generation recipes not raised"
+  },
+  {
+   "probe_id": "platform|Mid-level|probe_7",
+   "chunk_id": "list_omb_05_026_explain_distillation_for_llms",
+   "label": "no",
+   "note": "logit distillation and licensing not raised"
+  },
+  {
+   "probe_id": "platform|Mid-level|probe_7",
+   "chunk_id": "exp_048_are_there_cheaper_faster",
+   "label": "no",
+   "note": "different decision"
+  },
+  {
+   "probe_id": "platform|Mid-level|probe_7",
+   "chunk_id": "01_llm_foundations_and_prompting__07_supervised_fine_tuning",
+   "label": "no",
+   "note": "SFT of LLMs vs pretraining"
+  },
+  {
+   "probe_id": "platform|Senior|probe_1",
+   "chunk_id": "exp_053_can_you_please_tell",
+   "label": "yes",
+   "note": "same decision: isolate where the 180 ms went"
+  },
+  {
+   "probe_id": "platform|Senior|probe_1",
+   "chunk_id": "list_omb_08_049_your_traffic_is_shifting",
+   "label": "no",
+   "note": "agent traffic serving"
+  },
+  {
+   "probe_id": "platform|Senior|probe_1",
+   "chunk_id": "03_rag_and_retrieval__04_rag_architecture_pipeline",
+   "label": "no",
+   "note": "unrelated"
+  },
+  {
+   "probe_id": "platform|Senior|probe_2",
+   "chunk_id": "list_omb_08_040_traffic_doubles_overnight_and",
+   "label": "no",
+   "note": "GPU degradation ladder"
+  },
+  {
+   "probe_id": "platform|Senior|probe_2",
+   "chunk_id": "list_omb_04_028_how_do_you_keep",
+   "label": "no",
+   "note": "RAG index freshness; different system"
+  },
+  {
+   "probe_id": "platform|Senior|probe_2",
+   "chunk_id": "exp_010_how_would_you_design",
+   "label": "no",
+   "note": "recommender design"
+  },
+  {
+   "probe_id": "platform|Senior|probe_3",
+   "chunk_id": "exp_009_how_was_the_model",
+   "label": "yes",
+   "note": "same question: release, rollback trigger, registry"
+  },
+  {
+   "probe_id": "platform|Senior|probe_4",
+   "chunk_id": "list_omb_08_038_what_do_you_monitor",
+   "label": "no",
+   "note": "LLM serving pages"
+  },
+  {
+   "probe_id": "platform|Senior|probe_4",
+   "chunk_id": "list_omb_07_041_how_do_you_monitor",
+   "label": "no",
+   "note": "LLM drift classes"
+  },
+  {
+   "probe_id": "platform|Senior|probe_4",
+   "chunk_id": "exp_009_how_was_the_model",
+   "label": "no",
+   "note": "serving and rollout not raised; probe is PSI computation and response"
+  },
+  {
+   "probe_id": "platform|Senior|probe_5",
+   "chunk_id": "list_omb_07_019_what_is_benchmark_contamination",
+   "label": "no",
+   "note": "benchmark contamination"
+  },
+  {
+   "probe_id": "platform|Senior|probe_5",
+   "chunk_id": "list_omb_02_033_describe_the_modern_llm",
+   "label": "no",
+   "note": "LLM training stages"
+  },
+  {
+   "probe_id": "platform|Senior|probe_5",
+   "chunk_id": "06_linear_regression_model__05_sklearn_pipeline_custom_transformers",
+   "label": "no",
+   "note": "sklearn Pipeline API; probe is platform reproducibility"
+  },
+  {
+   "probe_id": "platform|Senior|probe_5",
+   "chunk_id": "11_categorical_features__08_pipeline_scores_leakage_overfit",
+   "label": "no",
+   "note": "unrelated"
+  },
+  {
+   "probe_id": "platform|Senior|probe_6",
+   "chunk_id": "18_logistic_regression_predict__11_other_imbalance_methods",
+   "label": "yes",
+   "note": "same ablation and leakage pitfall"
+  },
+  {
+   "probe_id": "platform|Senior|probe_7",
+   "chunk_id": "list_omb_05_042_design_an_end_to",
+   "label": "no",
+   "note": "fine-tuning pipeline; only the ship-gate point overlaps"
+  },
+  {
+   "probe_id": "platform|Senior|probe_7",
+   "chunk_id": "06_harness_engineering_and_evaluation__15_online_evaluation",
+   "label": "no",
+   "note": "offline vs online"
+  },
+  {
+   "probe_id": "platform|Senior|probe_7",
+   "chunk_id": "exp_049_have_you_tried_other",
+   "label": "no",
+   "note": "agent harnesses; homonym"
+  },
+  {
+   "probe_id": "platform|Senior|probe_8",
+   "chunk_id": "list_omb_06_022_explain_the_orchestrator_worker",
+   "label": "no",
+   "note": "unrelated"
+  },
+  {
+   "probe_id": "platform|Senior|probe_8",
+   "chunk_id": "list_omb_08_042_your_llm_bill_tripled",
+   "label": "yes",
+   "note": "same decision: cost attribution and the cascade inequality that justifies a cheap model with escalation"
+  },
+  {
+   "probe_id": "platform|Senior|probe_8",
+   "chunk_id": "03_rag_and_retrieval__15_small_to_big_and_hyde",
+   "label": "no",
+   "note": "unrelated"
+  },
+  {
+   "probe_id": "platform|Senior|probe_8",
+   "chunk_id": "exp_053_can_you_please_tell",
+   "label": "no",
+   "note": "layer isolation; probe is cost measurement"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_1",
+   "chunk_id": "18_logistic_regression_predict__10_class_weight_balanced",
+   "label": "yes",
+   "note": "same decision and precision/recall effect"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_1",
+   "chunk_id": "18_logistic_regression_predict__11_other_imbalance_methods",
+   "label": "yes",
+   "note": "same variants and metric"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_2",
+   "chunk_id": "19_logistic_regression_proba__05_threshold_precision_recall_tradeoff",
+   "label": "no",
+   "note": "mechanics; probe is baseline attribution and the business trade-off"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_3",
+   "chunk_id": "06_linear_regression_model__02_time_based_train_test_split",
+   "label": "yes",
+   "note": "same claim: time split vs random and why"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_3",
+   "chunk_id": "12_time_series__10_timeseriessplit_cv",
+   "label": "yes",
+   "note": "same claim about fold structure"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_4",
+   "chunk_id": "list_omb_07_023_how_do_you_measure",
+   "label": "yes",
+   "note": "same claim: judge calibrated against humans, bias"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_4",
+   "chunk_id": "exp_024_rag_project_example",
+   "label": "no",
+   "note": "generic project rubric"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_5",
+   "chunk_id": "list_omb_04_035_your_corpus_is_multilingual",
+   "label": "no",
+   "note": "multilingual"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_5",
+   "chunk_id": "03_rag_and_retrieval__07_semantic_vs_keyword_hybrid",
+   "label": "yes",
+   "note": "same decision: complementary failure modes justify hybrid then rerank"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_6",
+   "chunk_id": "exp_011_have_you_fine_tuned",
+   "label": "no",
+   "note": "SFT vs RLHF"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_6",
+   "chunk_id": "list_omb_05_031_you_have_500k_instruction",
+   "label": "no",
+   "note": "data selection for SFT"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_6",
+   "chunk_id": "02_llm_apis_and_prompting_in_code__02_api_hosting_and_routing",
+   "label": "no",
+   "note": "unrelated"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_6",
+   "chunk_id": "17_simplest_classification_models__01_target_generation_temporal_split",
+   "label": "no",
+   "note": "unrelated"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_7",
+   "chunk_id": "list_omb_02_040_mamba_and_state_space",
+   "label": "no",
+   "note": "unrelated"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_7",
+   "chunk_id": "list_omb_08_014_why_do_we_obsess",
+   "label": "no",
+   "note": "LLM tail causes"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_7",
+   "chunk_id": "exp_053_can_you_please_tell",
+   "label": "no",
+   "note": "layer isolation; probe asks how correctness was verified after the change"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_7",
+   "chunk_id": "09_collinearity__08_drop_collinear_features_refit",
+   "label": "no",
+   "note": "unrelated"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_7",
+   "chunk_id": "exp_014_what_do_you_understand",
+   "label": "no",
+   "note": "definitions"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_8",
+   "chunk_id": "11_categorical_features__06_categorical_missing_values",
+   "label": "no",
+   "note": "unrelated"
+  },
+  {
+   "probe_id": "applied_sci|Mid-level|probe_8",
+   "chunk_id": "exp_009_how_was_the_model",
+   "label": "no",
+   "note": "serving and rollout not raised; probe is PSI blind spots"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_1",
+   "chunk_id": "17_simplest_classification_models__10_all_positive_vs_all_negative",
+   "label": "no",
+   "note": "constant-baseline metrics"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_1",
+   "chunk_id": "18_logistic_regression_predict__10_class_weight_balanced",
+   "label": "yes",
+   "note": "same decision: class weights vs resampling, precision/recall effect"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_2",
+   "chunk_id": "05_simplest_regression_models__07_data_leakage_fit_on_train_only",
+   "label": "no",
+   "note": "lesson-specific leakage check"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_2",
+   "chunk_id": "19_logistic_regression_proba__05_threshold_precision_recall_tradeoff",
+   "label": "no",
+   "note": "mechanics; probe is baseline attribution"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_3",
+   "chunk_id": "list_omb_09_040_a_customer_reports_that",
+   "label": "no",
+   "note": "tenant data leak"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_3",
+   "chunk_id": "12_time_series__10_timeseriessplit_cv",
+   "label": "yes",
+   "note": "same claim: the leakage path a time split guards against"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_3",
+   "chunk_id": "12_time_series__09_historical_features_leakage",
+   "label": "yes",
+   "note": "same decision: leak-free historical features"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_4",
+   "chunk_id": "exp_009_how_was_the_model",
+   "label": "no",
+   "note": "serving and rollout not raised; probe is PSI threshold and rollback-vs-retrain"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_4",
+   "chunk_id": "list_omb_03_038_how_would_you_a",
+   "label": "no",
+   "note": "prompt A/B testing"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_4",
+   "chunk_id": "19_logistic_regression_proba__06_choosing_threshold_not_hyperparameter",
+   "label": "no",
+   "note": "classification threshold, not a PSI threshold"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_5",
+   "chunk_id": "list_omb_07_031_you_are_swapping_the",
+   "label": "yes",
+   "note": "same decision: canary slice, guardrails, shadow comparison, depth by risk"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_5",
+   "chunk_id": "exp_009_how_was_the_model",
+   "label": "yes",
+   "note": "same question: rollout, monitoring, rollback trigger"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_6",
+   "chunk_id": "list_kal_063_how_would_you_design",
+   "label": "no",
+   "note": "LLM infra design"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_6",
+   "chunk_id": "list_kal_040_explain_the_trade_offs",
+   "label": "no",
+   "note": "LLM batching (KV state, continuous batching)"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_6",
+   "chunk_id": "01_llm_foundations_and_prompting__09_llm_inference_prefill_decode",
+   "label": "no",
+   "note": "unrelated"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_6",
+   "chunk_id": "exp_053_can_you_please_tell",
+   "label": "yes",
+   "note": "same decision: isolate which lookups were slow"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_6",
+   "chunk_id": "exp_032_system_design_question_you",
+   "label": "no",
+   "note": "photo pipeline design"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_7",
+   "chunk_id": "list_omb_07_023_how_do_you_measure",
+   "label": "yes",
+   "note": "same claim: human-calibrated faithfulness judge"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_7",
+   "chunk_id": "06_harness_engineering_and_evaluation__13_evaluation_graders",
+   "label": "no",
+   "note": "grader taxonomy"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_7",
+   "chunk_id": "exp_024_rag_project_example",
+   "label": "no",
+   "note": "generic project rubric"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_8",
+   "chunk_id": "list_omb_02_050_what_is_distillation_and",
+   "label": "yes",
+   "note": "same claim: student inherits teacher errors unless filtered; teacher not a ceiling"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_8",
+   "chunk_id": "exp_019_one_hour_sla_why",
+   "label": "no",
+   "note": "build vs AWS"
+  },
+  {
+   "probe_id": "applied_sci|Senior|probe_8",
+   "chunk_id": "03_rag_and_retrieval__15_small_to_big_and_hyde",
+   "label": "no",
+   "note": "unrelated"
+  }
+ ]
+}

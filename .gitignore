@@ -46,3 +46,8 @@ rag_exp/*
 rag_lists/*
 !rag_lists/README.md
 !rag_lists/licenses/
+
+# The R4 grounding pool (grader/grounding_r4.py --pool) quotes question text
+# and key points from rag_exp and rag_lists, so it stays local and is backed
+# up privately by tools/backup_private.py like the banks themselves.
+grader/grounding_r4_pool.jsonl

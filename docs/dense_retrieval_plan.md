@@ -599,6 +599,20 @@ rubrics into the private bank, then `strip_chunks.py`) waits for that review
 and for R4's gap list. Recommendation recorded: keep roughly the seed-topic
 and intermediate proposals (~100, ≈ $3.3), skip beginner-tier restatements.
 
+Stage A review (2026-09-06): AIE decided by the assistant at the author's
+request — 131 keep / 148 drop, the drops being restatements of the parent
+or a sibling, lesson worked examples (churn copy, the 3-4-5 gate, Front
+Row), course logistics and product specifics (dev environment, Claude Code
+install, OpenClaw, Hermes), API-surface details that will date
+(`choices[0].delta.content`, `content[0].text`, a dated model id), one
+tokenizer-dependent number, and two misleading claims ("templates are safe
+to fill" and "older content is truncated" as if the API did it). Seven
+keeps carry reviewer notes (date the model names; temperature 0 is only
+near-deterministic; labeling retrieved content is a mitigation, not a full
+injection defense), and `rubric_prompt` now passes such notes to the
+teacher. MLE decided by the author — 22 keep / 3 drop. Stage B cost for the
+keeps: AIE ≈ $4.35, MLE ≈ $0.73; it waits for the go.
+
 **12.4 progress (2026-09-05, evening).** Step 1 re-checked on the reloaded
 harness after the lists bank and the retire flag: A 23/23, B hybrid 49/61 vs
 bm25 41/61 (+13.1) — holds. Step 2: the 77 resume-only probes regenerated
@@ -611,6 +625,52 @@ page `data/review/grounding_r4.html`. Attach counts, all banks: bm25@10
 inflation as set C), agree 27, dense≥0.70 70, hybrid 77; without
 rag_lists: 77 / 26 / 51 / 77. 69 of the 204 candidates come from
 rag_lists. Step 3 (author labels) is pending; `--score` then applies R4.
+
+**12.4 outcome (2026-09-06).** Step 3 deviated from the pre-registration:
+at the author's request the assistant labeled all 204 pairs
+(`grader/grounding_r4_labels.json`), blind to which policy had attached
+each pair, under the page's own guide — fair when the chunk's key points
+state the same claim, decision or trade-off the probe asks for and a strong
+answer would satisfy them (at most one incidental point outside the probe);
+unfair when the chunk is a prerequisite, a neighbouring technique, a generic
+"walk me through the project" rubric, or asks for two or more things the
+probe never raised. 56/204 fair; 48/77 probes have at least one fair
+candidate. The author's spot-check is pending and the numbers below carry
+that caveat. Step 5, applied mechanically by `--score`
+(`docs/grounding_r4.md`, `grader/grounding_r4_results.json`), all banks:
+`bm25@10` 32/77 fair (precision 41.6%, coverage 41.6%); `agree` 19/27
+(70.4%, 24.7%); `dense≥0.70` 34/70 (48.6%, 44.2%); `hybrid` 24/77 (31.2%).
+Without rag_lists: 25/77, 14/26, 22/51, 22/77. No policy reaches 90%
+precision, so grounding stays on `bm25@10` and the report keeps disclosing
+the rubric tier. Step 6: `agree` at 70% falsifies the set-C agreement
+finding — the 25/25 was fitted to those labels — and the policy is dropped.
+Predictions checked against the result: `agree` was predicted to pass at
+45–55% coverage (wrong on both counts); `dense≥0.70` was predicted at
+85–90% precision and ~80% coverage (it attaches to 91% of probes but is
+fair on half); the grown banks were predicted to lift AIE fairness above
+60% under `bm25@10` — rag_lists lifts it from 4/15 to 8/15 (27% → 53%),
+short of the prediction, and lifts every template (fair 25 → 32 overall;
+44 of the 77 `bm25@10` attachments now come from rag_lists). What the
+labels say about the failure mode: the unfair majority is a *level*
+mismatch, not off-topic retrieval. The probes ask for a decision (why 90%
+precision, why TimeSeriesSplit was not enough, what the CI gate looked
+like) and the nearest bank chunk answers the prerequisite (thresholding
+mechanics, what TimeSeriesSplit is, the metric taxonomy) or is a generic
+project rubric: `exp_009` and `exp_024` together attach to 25 pairs and are
+fair in 8, exactly where the probe is itself a rollout, chunking or
+reranking question. The pool quotes 13 rag_exp and 39 rag_lists chunks. Gap list for 12.2 item 3, from the 29 probes with no
+fair candidate: PSI drift threshold and playbook (8 probes, 0 fair);
+cost-based operating point and baseline attribution (5; the one fair pair
+is `19_..._06_choosing_threshold_not_hyperparameter`); LLM-label QA and
+student evaluation for distillation (5); golden-set construction and CI
+gate trust (3); latency correctness and feature-store consistency (3);
+reproducible training pipeline (1); problem framing and decision change
+(2); "why plain TimeSeriesSplit is not enough" (1); measured prompt
+iteration (1). Housekeeping: the pool file quotes question text and key
+points from rag_exp and rag_lists, so it is gitignored from here and
+synced by `tools/backup_private.py`; it had been committed in 22c4ac7
+(never pushed to origin), and rewriting those seven commits is the
+author's call.
 
 ### 12.5 Build-session checklist
 
