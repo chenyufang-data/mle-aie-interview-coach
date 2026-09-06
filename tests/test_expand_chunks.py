@@ -62,6 +62,17 @@ def test_child_id_and_chunk():
     assert meta["module"] == "RAG & Retrieval" and meta["topic"] == "reranker budget"
 
 
+def test_rubric_prompt_carries_reviewer_note():
+    parent = {"metadata": {"module": "RAG"}, "interview": {"question": "q"}, "content": LESSON}
+    row = {"question": "nq", "claim": "c", "excerpt": "e", "difficulty": "intermediate",
+           "reason": "author: keep - state the window sizes as of a date"}
+    assert "Reviewer note (apply it in the rubric): state the window sizes as of a date" in ex.rubric_prompt(row, parent)
+    row["reason"] = "author: keep"
+    assert "Reviewer note" not in ex.rubric_prompt(row, parent)
+    assert ex.reviewer_note({"reason": "author: drop - trivia"}) == ""
+    assert ex.reviewer_note({}) == ""
+
+
 def test_parents_for_skips_children_and_filters_seeds():
     with tempfile.TemporaryDirectory() as tmp:
         bank_dir = Path(tmp) / "rag_ai"

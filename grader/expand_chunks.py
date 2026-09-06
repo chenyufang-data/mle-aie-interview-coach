@@ -359,13 +359,24 @@ def call_teacher(prompt):
                               getattr(usage, "output_tokens", 0) or 0)
 
 
+KEEP_NOTE = "author: keep - "
+
+
+def reviewer_note(row):
+    """The note the reviewer attached when keeping the proposal (--apply), if any."""
+    reason = row.get("reason", "")
+    return reason[len(KEEP_NOTE):].strip() if reason.startswith(KEEP_NOTE) else ""
+
+
 def rubric_prompt(row, parent):
+    note = reviewer_note(row)
     return (
         f"Bank module: {parent['metadata']['module']}. Parent question (already in the bank, "
         f"do not duplicate it): {parent['interview']['question']}\n\n"
         f"New question:\n{row['question']}\n\n"
         f"The claim it targets: {row['claim']}\n\n"
-        f"Supporting excerpt (source of truth):\n\"\"\"\n{row['excerpt']}\n\"\"\"\n\n"
+        + (f"Reviewer note (apply it in the rubric): {note}\n\n" if note else "")
+        + f"Supporting excerpt (source of truth):\n\"\"\"\n{row['excerpt']}\n\"\"\"\n\n"
         f"Wider lesson text (context):\n\"\"\"\n{parent['content']}\n\"\"\"\n\n"
         f"Difficulty hint: {row['difficulty']}.\nWrite the rubric."
     )
