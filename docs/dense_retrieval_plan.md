@@ -653,7 +653,21 @@ for — acceptable, noted). Verbatim probe (share of the rubric's 8-grams
 found in the source answer): max 0.13, median 0.02 — rewritten, not
 copied. Runtime: `LISTS` loads as a hybrid-served bank, vector cache
 `data/index/LISTS.*.npz`; mock suite and hybrid retrieval gate pass with
-it present. Author review of the kept chunks (12.5 item 5) is still open.
+it present.
+
+Author review (2026-09-05, `tools/review_bank.py`, all 331 decided): **144
+keep / 175 fix / 12 retire**. Every retire is a duplicate ("merge to
+<id>": 7 ombharatiya cross-folder pairs, 5 Kalyan decoding/batching pairs
+the 0.90 cosine pass let through). Every fix carries a technical
+correction note (136 distinct; 10 cite another chunk for consistency):
+typical findings are over-strong claims in the source answers carried
+into rubrics ("SFT cannot learn new facts", "vocabulary cannot be updated
+post-hoc", "student cannot outperform teacher"), mislabeled techniques
+(AWQ as activation quantization), and rubrics that reject a correct
+alternative. Lesson for 12.2: a synthesized list's answers need this
+review pass before they ground anything - the 53% fix rate is the
+measured cost of that source. Retired chunks are skipped by the loader
+(319 serve); fix chunks stay live until the fix pass (12.6b).
 
 Consequence for 12.4: the mock's rubric grounding walks every loaded
 bank, so `rag_lists` grounds probes from now on; R4 measures the policies
