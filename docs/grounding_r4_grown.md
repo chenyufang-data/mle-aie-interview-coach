@@ -85,3 +85,29 @@ Fair/attached by level:
 |---|---|---|---|---|---|
 | Mid-level | 37 | 16/37 | 8/12 | 15/34 | 11/37 |
 | Senior | 40 | 17/40 | 11/15 | 18/37 | 14/40 |
+
+## Author spot-check
+
+Generated 2026-09-08T00:58:13 by `grader/grounding_r4.py --spotcheck-apply` --run grown. Sample: 40 of 237 labeled pairs (seed 7), stratified by the assistant's label (20 unfair, 20 fair) and spread over banks and policies; reviewed by author on `data/review/grounding_r4_spotcheck_grown.html` with the assistant's label and reason shown and pre-selected on every pair (a review, not a blind check; bank and policy hidden): 40 of 40 decided pairs were explicitly confirmed or changed, 0 left at the prefilled label. Decided: 40/40.
+
+| Measure | Value |
+|---|---|
+| Agreement | 39/40 (97.5%) |
+| Cohen's kappa | 0.95 |
+| Assistant fair → author fair / unfair | 19 / 1 |
+| Assistant unfair → author fair / unfair | 0 / 20 |
+| Agreement on assistant-fair pairs | 19/20 (95.0%) |
+| Agreement on assistant-unfair pairs | 20/20 (100.0%) |
+| Pairs attached by `bm25@10` | 26/27 (96.3%) |
+| Pairs attached by `agree` | 20/21 (95.2%) |
+| Pairs attached by `dense>=0.70` | 26/27 (96.3%) |
+| Pairs attached by `hybrid` | 24/25 (96.0%) |
+| Pairs from rag_ai | 8/8 (100.0%) |
+| Pairs from rag_docs | 8/8 (100.0%) |
+| Pairs from rag_exp | 8/8 (100.0%) |
+| Pairs from rag_lists | 8/8 (100.0%) |
+| Pairs from rag_ml | 7/8 (87.5%) |
+
+Disagreements (assistant → author): `ds|Senior|probe_2` × `18_logistic_regression_predict__11_other_imbalance_methods` fair → unfair (The probe asks candidates to defend a specific ablation and the resulting choice. The chunk tests general imbalance techniques and a leakage precaution.).
+
+Source: `grader/grounding_r4_spotcheck_grown.json`.

@@ -8,8 +8,9 @@
 > Conventions: every number names the file it comes from; "README only"
 > means the producing script prints the value and no results file is
 > committed; "assistant labels" means the fairness judgments were made by
-> the AI pair programmer at the author's request and await the author's
-> spot-check. Cell sizes are small everywhere (23 to 121 items), so
+> the AI pair programmer at the author's request; the author reviewed a
+> stratified 40-pair sample on 2026-09-08 and agreed on 39 (Cohen's kappa
+> 0.95, see 1.9). Cell sizes are small everywhere (23 to 121 items), so
 > differences under about ten points are direction, not ranking.
 
 ---
@@ -224,7 +225,11 @@ Four policies on 77 fresh resume-only probes: `bm25@10` (today), `agree`
 (attach only when BM25 and dense pick the same chunk), `dense ≥ 0.70`,
 `hybrid`. Rule R4, frozen: a policy replaces `bm25@10` only at ≥ 90%
 precision and ≥ 40% coverage. Labels were made blind to policy by the
-assistant at the author's request (spot-check pending); the standard is
+assistant at the author's request; the author reviewed 40 stratified
+pairs with the assistant's reasons shown (2026-09-08): 39/40 agreement,
+Cohen's kappa 0.95, one fair-to-unfair change where a technique-list chunk
+had been attached to a decision probe (`docs/grounding_r4_grown.md`,
+"Author spot-check"); the standard is
 recorded in `grader/grounding_r4_labels*.json`.
 
 | Policy, all banks | First run (204 pairs): fair / attached | After growth (237 pairs): fair / attached |
@@ -295,8 +300,9 @@ mismatches are listed there and are fixed in roadmap step 1.
 7. Nothing paid runs without a dry run and `--confirm`; every rule is
    written before its experiment runs; predictions are checked against
    results and kept when wrong.
-8. Assistant-made labels are flagged as such everywhere until the author
-   spot-checks them.
+8. Assistant-made labels are flagged as such everywhere; the R4 labels
+   were spot-checked by the author on 2026-09-08 (39/40), the R2 set C
+   labels were not.
 
 ### 1.13 Loose ends carried into the roadmap
 
@@ -307,7 +313,7 @@ mismatches are listed there and are fixed in roadmap step 1.
   no request-body cap; hybrid CI gate passes vacuously without the model.
 - 51 files with CRLF endings and no `.gitattributes`; no lock file; three
   Python versions named across docs, CI and Docker.
-- Author spot-check of assistant labels (R2 and R4).
+- Author spot-check of the R2 (set C) assistant labels; R4 done 2026-09-08.
 - Optional, unchanged: MLE expansion rubric run (≈ $0.73); Level 1 hosted
   voice live session and the blind TTS preference (needs the mic and the
   ElevenLabs balance); the grounding lever (product decision).
@@ -347,8 +353,8 @@ voice path and `tests/test_container.sh` (green locally, its own CI job);
 `docs/deployment.md` with the recording script; the spot-check tooling
 (commands below). Found on the way: CI had been red since 2026-09-06
 because an unquoted colon in a step name made the workflow file invalid
-YAML — fixed. Left for the author, in this order: the author spot-check
-itself; the server's `users.json` and `.env` (the separate DeepSeek key
+YAML — fixed. Spot-check done 2026-09-08 (39/40, kappa 0.95). Left for the author,
+in this order: the server's `users.json` and `.env` (the separate DeepSeek key
 never enters a chat or a commit); the t3.small, DNS and Caddy deploy per
 the runbook; the recording; the README link to both.
 

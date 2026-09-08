@@ -1,0 +1,120 @@
+{
+ "experiment": "grounding_r4_spotcheck",
+ "run": "grown",
+ "generated": "2026-09-08T00:58:13",
+ "labeler": "author",
+ "exported": "2026-09-08T05:56:53.168Z",
+ "mode": "prefill",
+ "unconfirmed": [],
+ "assistant_labels": "grounding_r4_labels_grown.json",
+ "seed": 7,
+ "pool_pairs": 237,
+ "sampled": 40,
+ "composition": {
+  "n": 40,
+  "probes": 34,
+  "labels": {
+   "unfair": 20,
+   "fair": 20
+  },
+  "banks": {
+   "ai": 8,
+   "docs": 8,
+   "exp": 8,
+   "lists": 8,
+   "ml": 8
+  },
+  "policies": {
+   "bm25@10": 27,
+   "agree": 21,
+   "dense>=0.70": 27,
+   "hybrid": 25
+  }
+ },
+ "undecided": [],
+ "decided_outside_sample": [],
+ "n": 40,
+ "agree": 39,
+ "agreement": 0.975,
+ "kappa": 0.95,
+ "confusion": {
+  "fair": {
+   "fair": 19,
+   "unfair": 1
+  },
+  "unfair": {
+   "fair": 0,
+   "unfair": 20
+  }
+ },
+ "by_assistant_label": {
+  "fair": {
+   "n": 20,
+   "agree": 19,
+   "agreement": 0.95
+  },
+  "unfair": {
+   "n": 20,
+   "agree": 20,
+   "agreement": 1.0
+  }
+ },
+ "by_policy": {
+  "bm25@10": {
+   "n": 27,
+   "agree": 26,
+   "agreement": 0.963
+  },
+  "agree": {
+   "n": 21,
+   "agree": 20,
+   "agreement": 0.9524
+  },
+  "dense>=0.70": {
+   "n": 27,
+   "agree": 26,
+   "agreement": 0.963
+  },
+  "hybrid": {
+   "n": 25,
+   "agree": 24,
+   "agreement": 0.96
+  }
+ },
+ "by_bank": {
+  "ai": {
+   "n": 8,
+   "agree": 8,
+   "agreement": 1.0
+  },
+  "docs": {
+   "n": 8,
+   "agree": 8,
+   "agreement": 1.0
+  },
+  "exp": {
+   "n": 8,
+   "agree": 8,
+   "agreement": 1.0
+  },
+  "lists": {
+   "n": 8,
+   "agree": 8,
+   "agreement": 1.0
+  },
+  "ml": {
+   "n": 8,
+   "agree": 7,
+   "agreement": 0.875
+  }
+ },
+ "disagreements": [
+  {
+   "probe_id": "ds|Senior|probe_2",
+   "chunk_id": "18_logistic_regression_predict__11_other_imbalance_methods",
+   "assistant": "fair",
+   "author": "unfair",
+   "note": "The probe asks candidates to defend a specific ablation and the resulting choice. The chunk tests general imbalance techniques and a leakage precaution."
+  }
+ ]
+}
