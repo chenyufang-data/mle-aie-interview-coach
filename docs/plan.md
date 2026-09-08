@@ -374,10 +374,18 @@ loop on the free Deepgram credit, and voice is metered like the LLM calls
 `VOICE_SESSION_MAX_MINUTES` per session, one LLM unit per interviewer turn,
 re-transcription paid-key only and charged by clip length; covered by
 `tests/test_users.py::test_voice_budget` and
-`tests/test_voice.py::test_voice_session_budget`. Left for the author: add
-the Deepgram key, `AUDIO_BACKEND` and `VOICE_DAILY_MINUTES` to the box's
-`.env`, `daily_voice_minutes` to the demo key, pull and rebuild, and run
-one live session from another device (runbook sections 4 and 8).
+`tests/test_voice.py::test_voice_session_budget`. Deployed the same day
+(the author added the Deepgram key, `AUDIO_BACKEND` and the caps to the
+box's `.env` and `daily_voice_minutes` to the demo key) and verified from
+outside with one scripted session over `wss://coach.cyfang.org/ws/voice`:
+`ready` 0.3 s after the hello (engine deepseek, Nova-3 + Aura-2 at 24 kHz),
+first spoken sentence at 0.8 s, the opening's two sentences as 522 KB of
+audio, `listening` at 3.6 s; afterwards the counters read voice 30 → 29
+and 120 → 119 minutes, LLM 59 → 56 (roles, plan, connect). The first
+verification pass found a regression the deploy had shipped — an inner
+import shadowing `users` in `coach/mock/routes.py` made every mock POST
+route answer 500 — fixed in 2e47431 with a route-level test. Still open:
+a spoken session from a browser on another device (the microphone path).
 
 **Steps.**
 
