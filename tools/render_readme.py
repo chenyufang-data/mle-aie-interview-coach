@@ -225,8 +225,7 @@ def main():
               f"- run tools/render_readme.py and commit the result")
         return 1
     with path.open("w", encoding="utf-8", newline="") as handle:
-        handle.write(rendered.replace("
-", eol))
+        handle.write(rendered.replace("\n", eol))
     print(f"{path.name}: rewrote {len(seen)} result blocks")
     return 0
 
