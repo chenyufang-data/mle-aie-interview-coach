@@ -35,12 +35,31 @@ rubric / probes; precision = fair / attached.
   on grown banks sits beside the first run instead of overwriting it. The
   pool file is always grader/grounding_r4_pool.jsonl (gitignored: it
   quotes rubric text); keep a copy elsewhere if the old pool matters.
+
+Author spot-check of the assistant's labels (docs/plan.md Part 2 step 1):
+
+  .venv\\Scripts\\python grader\\grounding_r4.py --spotcheck --run grown [--n 40] [--seed 7]
+      Draws N pairs from the run's pool, half per assistant label, spread
+      over banks and attaching policies, and writes a BLIND labeling page
+      data/review/grounding_r4_spotcheck_grown.html (no assistant label,
+      bank or policy shown) plus the sampled ids in
+      data/review/grounding_r4_spotcheck_grown.sample.json. Export downloads
+      grounding_r4_spotcheck_grown.decisions.json.
+
+  .venv\\Scripts\\python grader\\grounding_r4.py --spotcheck-apply PATH --run grown
+      Scores the exported decisions against the assistant labels (percent
+      agreement, Cohen's kappa, confusion matrix, splits by assistant label,
+      policy and bank), writes grader/grounding_r4_spotcheck_grown.json
+      (pair ids only, no bank text) and refreshes the "## Author spot-check"
+      section at the end of docs/grounding_r4_grown.md. --score keeps that
+      section when it re-renders the report.
 """
 
 import argparse
 import collections
 import html
 import json
+import random
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -55,8 +74,11 @@ from grader.grounding_eval import (best_eligible, frozen_thresholds,  # noqa: E4
 PROBES_PATH = BASE_DIR / "grader" / "grounding_probes_resume_only.jsonl"
 POOL_PATH = BASE_DIR / "grader" / "grounding_r4_pool.jsonl"
 RESULTS_PATH = BASE_DIR / "grader" / "grounding_r4_results.json"
+LABELS_PATH = BASE_DIR / "grader" / "grounding_r4_labels.json"
 REPORT_PATH = BASE_DIR / "docs" / "grounding_r4.md"
 PAGE_PATH = BASE_DIR / "data" / "review" / "grounding_r4.html"
+SPOTCHECK_HEADING = "## Author spot-check"
+LABEL_NAME = {"yes": "fair", "no": "unfair"}
 
 DENSE_FLOOR = 0.70
 BANK_SETS = {"all": ["ml", "ai", "exp", "lists", "docs"],
@@ -153,7 +175,7 @@ def kb_bank(chunk_id):
 
 
 PAGE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1"><title>Grounding R4 labels</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>__TITLE__</title>
 <style>
 :root{color-scheme:light dark;--bg:#f6f5f1;--card:#fffefb;--ink:#1f2320;--mute:#6b6f6a;--line:#dcd9d0;--yes:#2f7d4f;--no:#b23a3a;--accent:#3b5f8a;--probe:#eef1f6}
 @media (prefers-color-scheme:dark){:root{--bg:#191b1a;--card:#232624;--ink:#e8e6df;--mute:#9a9e97;--line:#3a3e3b;--probe:#20262e}}
@@ -173,23 +195,23 @@ main{max-width:1000px;margin:0 auto;padding:16px 20px 80px}
 .hidden{display:none}kbd{font:12px ui-monospace,monospace;border:1px solid var(--line);border-radius:4px;padding:0 4px}
 p.guide{color:var(--mute);font-size:13px;max-width:70ch}
 </style></head><body>
-<header><h1>Grounding R4 labels</h1><span class="stat" id="stat"></span>
+<header><h1>__TITLE__</h1><span class="stat" id="stat"></span>
 <select id="show"><option value="">all</option><option value="undecided">undecided only</option></select>
 <select id="tpl"><option value="">all templates</option></select>
-<button id="save" class="primary">Save labels</button><button id="copy">Copy JSON</button><button id="reset">Clear all</button></header>
+<button id="save" class="primary">__SAVE__</button><button id="copy">Copy JSON</button><button id="reset">Clear all</button></header>
 <main>
-<p class="guide">A chunk is <b>fair</b> when a strong answer to the probe would be graded correctly against the chunk's key points: same claim, same decision, same trade-off. It is <b>unfair</b> when the key points ask for things the probe never raised, or miss what it asks. The probe's own expected points show what the plan wanted. Keys: <kbd>y</kbd> fair, <kbd>n</kbd> unfair on the top visible candidate.</p>
+<p class="guide">A chunk is <b>fair</b> when a strong answer to the probe would be graded correctly against the chunk's key points: same claim, same decision, same trade-off. It is <b>unfair</b> when the key points ask for things the probe never raised, or miss what it asks. The probe's own expected points show what the plan wanted.__GUIDE_EXTRA__ Keys: <kbd>y</kbd> fair, <kbd>n</kbd> unfair on the top visible candidate.</p>
 <div id="main"></div></main>
 <script id="data" type="application/json">__DATA__</script>
 <script>
 const rows=JSON.parse(document.getElementById('data').textContent);
-const key=(p,c)=>`r4:${p}|${c}`;
+const key=(p,c)=>`__KEY__${p}|${c}`;
 const load=(p,c)=>{try{return JSON.parse(localStorage.getItem(key(p,c))||'null')}catch(e){return null}};
 const store=(p,c,d)=>{try{d?localStorage.setItem(key(p,c),JSON.stringify(d)):localStorage.removeItem(key(p,c))}catch(e){}};
 const esc=s=>String(s??'').replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
 const tpl=document.getElementById('tpl');[...new Set(rows.map(r=>r.template))].forEach(t=>{const o=document.createElement('option');o.textContent=t;tpl.appendChild(o)});
 function cand(r,c){const d=load(r.probe_id,c.chunk_id)||{};return `<div class="cand" data-probe="${esc(r.probe_id)}" data-chunk="${esc(c.chunk_id)}" data-label="${esc(d.label||'')}">
- <p class="q">${esc(c.question)}</p><div class="by">${esc(c.bank)} · ${esc(c.chunk_id)} · attached by ${esc(c.attached_by.join(', '))}</div>
+ <p class="q">${esc(c.question)}</p><div class="by">__BY__</div>
  <ul>${c.key_points.map(k=>`<li>${esc(k)}</li>`).join('')}</ul>
  <div class="decide"><label><input type="radio" name="l-${esc(r.probe_id)}-${esc(c.chunk_id)}" value="yes" ${d.label==='yes'?'checked':''}> fair</label>
  <label><input type="radio" name="l-${esc(r.probe_id)}-${esc(c.chunk_id)}" value="no" ${d.label==='no'?'checked':''}> unfair</label>
@@ -205,8 +227,8 @@ function filter(){const show=document.getElementById('show').value,t=tpl.value;d
 document.getElementById('main').addEventListener('change',e=>{const el=e.target.closest('.cand');if(!el)return;const label=(el.querySelector('input[type=radio]:checked')||{}).value||'';const note=el.querySelector('input[type=text]').value.trim();store(el.dataset.probe,el.dataset.chunk,label?{label,note}:null);el.dataset.label=label;stat();if(document.getElementById('show').value)filter()});
 document.getElementById('main').addEventListener('input',e=>{if(e.target.type!=='text')return;const el=e.target.closest('.cand');const d=load(el.dataset.probe,el.dataset.chunk);if(d){d.note=e.target.value.trim();store(el.dataset.probe,el.dataset.chunk,d)}});
 ['show','tpl'].forEach(id=>document.getElementById(id).addEventListener('change',filter));
-const payload=()=>JSON.stringify({experiment:'grounding_r4',exported:new Date().toISOString(),labels:labels()},null,1);
-document.getElementById('save').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([payload()],{type:'application/json'}));a.download='grounding_r4.labels.json';a.click()};
+const payload=()=>JSON.stringify({__META__,exported:new Date().toISOString(),__LISTKEY__:labels()},null,1);
+document.getElementById('save').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([payload()],{type:'application/json'}));a.download='__FILENAME__';a.click()};
 document.getElementById('copy').onclick=async()=>{try{await navigator.clipboard.writeText(payload());alert('copied')}catch(e){prompt('copy this',payload())}};
 document.getElementById('reset').onclick=()=>{if(confirm('Clear every label stored in this browser?')){rows.forEach(r=>r.candidates.forEach(c=>store(r.probe_id,c.chunk_id,null)));render()}};
 document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT'&&e.target.type==='text')return;const map={y:'yes',n:'no'};if(!map[e.key])return;const vis=[...document.querySelectorAll('.cand:not(.hidden)')];const el=vis.find(c=>c.getBoundingClientRect().bottom>70);if(!el)return;el.querySelector(`input[value=${map[e.key]}]`).checked=true;el.dispatchEvent(new Event('change',{bubbles:true}));const nx=vis[vis.indexOf(el)+1];if(nx)nx.scrollIntoView({block:'start'})});
@@ -215,10 +237,32 @@ render();
 """
 
 
+# What the placeholders in PAGE mean on the main labeling page; the blind
+# spot-check page overrides them (see spotcheck()).
+PAGE_DEFAULTS = {
+    "__TITLE__": "Grounding R4 labels",
+    "__SAVE__": "Save labels",
+    "__GUIDE_EXTRA__": "",
+    "__KEY__": "r4:",
+    "__BY__": "${esc(c.bank)} · ${esc(c.chunk_id)} · attached by ${esc(c.attached_by.join(', '))}",
+    "__META__": "experiment:'grounding_r4'",
+    "__LISTKEY__": "labels",
+    "__FILENAME__": "grounding_r4.labels.json",
+}
+
+
+def render_page(rows, **fields):
+    """The labeling page HTML for `rows`; `fields` override PAGE_DEFAULTS."""
+    page = PAGE
+    for name, value in {**PAGE_DEFAULTS, **fields}.items():
+        page = page.replace(name, value)
+    data = json.dumps(rows, ensure_ascii=False).replace("</", "<\\/")
+    return page.replace("__DATA__", data)
+
+
 def write_page(rows):
     PAGE_PATH.parent.mkdir(parents=True, exist_ok=True)
-    data = json.dumps(rows, ensure_ascii=False).replace("</", "<\\/")
-    PAGE_PATH.write_text(PAGE.replace("__DATA__", data), encoding="utf-8")
+    PAGE_PATH.write_text(render_page(rows), encoding="utf-8")
 
 
 def score(labels_path, labeler):
@@ -331,7 +375,311 @@ def render_report(out, report_path):
             for g, entry in groups.items():
                 lines.append(f"| {g} | {entry['n']} | " + " | ".join(entry[p] for p in POLICIES) + " |")
             lines.append("")
-    report_path.write_text("\n".join(lines), encoding="utf-8")
+    text = "\n".join(lines)
+    spot = spotcheck_paths(RUN)["result"]
+    if spot.exists():  # keep the author's spot-check section across re-scores
+        text = replace_section(text, SPOTCHECK_HEADING,
+                               spotcheck_section(json.loads(spot.read_text(encoding="utf-8")), RUN))
+    report_path.write_text(text, encoding="utf-8")
+
+
+# ---------------------------------------------------------------------------
+# Author spot-check of the assistant's labels
+# ---------------------------------------------------------------------------
+
+def spotcheck_paths(run):
+    """Files of one run's spot-check; the pool path is fixed (POOL_PATH)."""
+    suffix = f"_{run}" if run else ""
+    return {"labels": LABELS_PATH.with_name(f"grounding_r4_labels{suffix}.json"),
+            "page": PAGE_PATH.with_name(f"grounding_r4_spotcheck{suffix}.html"),
+            "sample": PAGE_PATH.with_name(f"grounding_r4_spotcheck{suffix}.sample.json"),
+            "result": RESULTS_PATH.with_name(f"grounding_r4_spotcheck{suffix}.json"),
+            "report": run_paths(run)[1]}
+
+
+def policies_of(candidate):
+    """Names of the policies that attached a pool candidate on any bank set
+    ('bm25@10@all' -> 'bm25@10')."""
+    names = {entry.rsplit("@", 1)[0] for entry in candidate.get("attached_by", [])}
+    return sorted(names, key=lambda p: (SIMPLICITY.get(p, len(SIMPLICITY)), p))
+
+
+def pool_pairs(rows, labels):
+    """One record per labeled (probe, chunk) pair of the pool: ids, bank, the
+    attaching policies and the assistant's label ('yes' / 'no')."""
+    lab = {(x["probe_id"], x["chunk_id"]): x["label"] for x in labels if x.get("label")}
+    pairs = []
+    for r in rows:
+        for c in r["candidates"]:
+            key = (r["probe_id"], c["chunk_id"])
+            if key in lab:
+                pairs.append({"probe_id": r["probe_id"], "chunk_id": c["chunk_id"], "bank": c["bank"],
+                              "policies": policies_of(c), "label": lab[key]})
+    return pairs
+
+
+def stratified_sample(pairs, n=40, seed=7):
+    """N pairs, half per assistant label (fair / unfair; a short stratum is
+    topped up from the other), each half spread over banks and attaching
+    policies as evenly as the pool allows. Greedy: the next pick comes from
+    the least-filled bank and, within it, is the pair whose attaching
+    policies are on average the least represented so far; ties fall to a
+    seed-shuffled order, so the draw is deterministic under the seed."""
+    order = list(pairs)
+    random.Random(seed).shuffle(order)
+    chosen = []
+
+    def take(remaining, quota):
+        by_bank, by_policy = collections.Counter(), collections.Counter()
+        picked = []
+        while remaining and len(picked) < quota:
+            pick = min(remaining, key=lambda p: (
+                by_bank[p["bank"]],
+                sum(by_policy[q] for q in p["policies"]) / max(len(p["policies"]), 1)))
+            remaining.remove(pick)
+            picked.append(pick)
+            by_bank[pick["bank"]] += 1
+            for q in pick["policies"]:
+                by_policy[q] += 1
+        return picked
+
+    quotas = {"yes": n // 2, "no": n - n // 2}
+    leftover = []
+    for label, quota in quotas.items():
+        remaining = [p for p in order if p["label"] == label]
+        chosen += take(remaining, quota)
+        leftover += remaining
+    if len(chosen) < n:  # one label was short of its quota
+        chosen += take(leftover, n - len(chosen))
+    return chosen
+
+
+def composition(pairs):
+    """Counts of a sample by assistant label, bank and attaching policy."""
+    return {"n": len(pairs), "probes": len({p["probe_id"] for p in pairs}),
+            "labels": {LABEL_NAME[k]: v for k, v in sorted(collections.Counter(p["label"] for p in pairs).items())},
+            "banks": dict(sorted(collections.Counter(p["bank"] for p in pairs).items())),
+            "policies": {q: sum(1 for p in pairs if q in p["policies"]) for q in POLICIES}}
+
+
+def spotcheck_rows(rows, selected, seed):
+    """Rows for the blind page: the sampled pairs under their probes, probe
+    order shuffled under the seed; no bank, chunk id, policy or label is
+    displayed (the chunk id rides along only so the export can name the pair)."""
+    picked = {(p["probe_id"], p["chunk_id"]) for p in selected}
+    by_probe = {r["probe_id"]: r for r in rows}
+    order = sorted({p["probe_id"] for p in selected})
+    random.Random(seed).shuffle(order)
+    out, ordinal = [], 0
+    for pid in order:
+        r = by_probe[pid]
+        cands = []
+        for c in r["candidates"]:
+            if (pid, c["chunk_id"]) in picked:
+                ordinal += 1
+                cands.append({"chunk_id": c["chunk_id"], "question": c["question"],
+                              "key_points": c["key_points"], "ord": ordinal})
+        out.append({"probe_id": pid, "template": r["template"], "level": r["level"], "topic": r["topic"],
+                    "question_hint": r["question_hint"], "expected_points": r.get("expected_points", []),
+                    "candidates": cands})
+    return out
+
+
+def spotcheck(run, n=40, seed=7, pool_path=None, labels_path=None, page_path=None, sample_path=None):
+    """Draw the blind spot-check sample; write the page and the sample ids."""
+    paths = spotcheck_paths(run)
+    pool_path = pool_path or POOL_PATH
+    labels_path = labels_path or paths["labels"]
+    page_path = page_path or paths["page"]
+    sample_path = sample_path or paths["sample"]
+    rows = read_jsonl(pool_path)
+    labels = json.loads(Path(labels_path).read_text(encoding="utf-8"))["labels"]
+    pairs = pool_pairs(rows, labels)
+    if not pairs:
+        sys.exit(f"no labeled pair of {pool_path} found in {labels_path}")
+    selected = stratified_sample(pairs, n, seed)
+    comp = composition(selected)
+    total = sum(len(r["candidates"]) for r in rows)
+    page = render_page(
+        spotcheck_rows(rows, selected, seed),
+        __TITLE__=f"Grounding R4 spot-check{' (' + run + ')' if run else ''}",
+        __SAVE__="Export decisions",
+        __GUIDE_EXTRA__=(f" This is a blind spot-check of {len(selected)} of the {total} pool pairs: "
+                         "the bank, chunk id, attaching policy and the earlier label are hidden on purpose."),
+        __KEY__=f"r4sc:{run}:",
+        __BY__="pair ${c.ord} of ${rows.reduce((n,r)=>n+r.candidates.length,0)}",
+        __META__=f"experiment:'grounding_r4_spotcheck',run:{json.dumps(run)},seed:{seed},labeler:'author'",
+        __LISTKEY__="decisions",
+        __FILENAME__=f"grounding_r4_spotcheck{'_' + run if run else ''}.decisions.json")
+    Path(page_path).parent.mkdir(parents=True, exist_ok=True)
+    Path(page_path).write_text(page, encoding="utf-8")
+    Path(sample_path).write_text(json.dumps(
+        {"experiment": "grounding_r4_spotcheck", "run": run, "seed": seed, "n": len(selected),
+         "generated": datetime.now().isoformat(timespec="seconds"),
+         "pool_pairs": len(pairs), "composition": comp,
+         "pairs": [{"probe_id": p["probe_id"], "chunk_id": p["chunk_id"]} for p in selected]},
+        indent=1, ensure_ascii=False), encoding="utf-8")
+    print(f"sampled {comp['n']} of {len(pairs)} labeled pairs (seed {seed}) over {comp['probes']} probes")
+    print(f"  by assistant label: {comp['labels']}")
+    print(f"  by policy (a pair may count for several): {comp['policies']}")
+    print(f"  by bank: {comp['banks']}")
+    print(f"page: {page_path}\nsample ids: {sample_path}")
+    return selected, comp
+
+
+def normalize_label(value):
+    v = str(value or "").strip().lower()
+    return {"yes": "yes", "fair": "yes", "no": "no", "unfair": "no"}.get(v)
+
+
+def agreement(assistant, author, meta):
+    """Agreement of two label maps {(probe_id, chunk_id): 'yes'|'no'} over the
+    pairs both hold. `meta` gives each pair's bank and policies for the
+    splits; notes may come along as meta[key]['note'] (kept for disagreements).
+    Cohen's kappa is None when chance agreement is 1 (both raters constant)."""
+    keys = [k for k in author if k in assistant]
+    n = len(keys)
+    conf = {a: {b: 0 for b in LABEL_NAME.values()} for a in LABEL_NAME.values()}
+    for k in keys:
+        conf[LABEL_NAME[assistant[k]]][LABEL_NAME[author[k]]] += 1
+    agree = sum(conf[x][x] for x in LABEL_NAME.values())
+    po = agree / n if n else None
+    pe = (sum(sum(conf[a].values()) * sum(conf[b][a] for b in conf) for a in conf) / (n * n)) if n else None
+    kappa = None if po is None or pe >= 1 else round((po - pe) / (1 - pe), 4)
+
+    def split(subset):
+        m = len(subset)
+        a = sum(1 for k in subset if assistant[k] == author[k])
+        return {"n": m, "agree": a, "agreement": round(a / m, 4) if m else None}
+
+    by_label = {LABEL_NAME[lab]: split([k for k in keys if assistant[k] == lab]) for lab in LABEL_NAME}
+    by_policy = {p: split([k for k in keys if p in meta[k]["policies"]]) for p in POLICIES}
+    banks = sorted({meta[k]["bank"] for k in keys})
+    by_bank = {b: split([k for k in keys if meta[k]["bank"] == b]) for b in banks}
+    disagreements = [{"probe_id": k[0], "chunk_id": k[1], "assistant": LABEL_NAME[assistant[k]],
+                      "author": LABEL_NAME[author[k]], "note": meta[k].get("note", "")}
+                     for k in keys if assistant[k] != author[k]]
+    return {"n": n, "agree": agree, "agreement": round(po, 4) if po is not None else None, "kappa": kappa,
+            "confusion": conf, "by_assistant_label": by_label, "by_policy": by_policy, "by_bank": by_bank,
+            "disagreements": disagreements}
+
+
+def replace_section(text, heading, section):
+    """`text` with the section that starts at the `heading` line (up to the
+    next '## ' heading or the end) replaced by `section`; appended if absent."""
+    lines = text.split("\n")
+    start = next((i for i, line in enumerate(lines) if line.strip() == heading), None)
+    if start is None:
+        before, after = text.rstrip("\n"), ""
+    else:
+        end = next((i for i in range(start + 1, len(lines)) if lines[i].startswith("## ")), len(lines))
+        before = "\n".join(lines[:start]).rstrip("\n")
+        after = "\n".join(lines[end:]).strip("\n")
+    out = (before + "\n\n" if before else "") + section.rstrip("\n") + "\n"
+    return out + ("\n" + after + "\n" if after else "")
+
+
+def spotcheck_section(out, run):
+    """Markdown for the report's spot-check section, from the result dict."""
+    suffix = f"_{run}" if run else ""
+
+    def frac(s):
+        return f"{s['agree']}/{s['n']} ({s['agreement']:.1%})" if s["n"] else "-"
+
+    comp = out.get("composition") or {}
+    strata = ", ".join(f"{v} {k}" for k, v in comp.get("labels", {}).items()) or "balanced"
+    conf = out["confusion"]
+    lines = [SPOTCHECK_HEADING, "",
+             f"Generated {out['generated']} by `grader/grounding_r4.py --spotcheck-apply`"
+             f"{' --run ' + run if run else ''}. Sample: {out['sampled']} of {out['pool_pairs']} labeled "
+             f"pairs (seed {out['seed']}), stratified by the assistant's label ({strata}) and spread over "
+             f"banks and policies; labeled blind by {out['labeler']} on "
+             f"`data/review/grounding_r4_spotcheck{suffix}.html` (no assistant label, bank or policy shown). "
+             f"Decided: {out['n']}/{out['sampled']}.", "",
+             "| Measure | Value |", "|---|---|",
+             f"| Agreement | {out['agree']}/{out['n']} ({out['agreement']:.1%}) |" if out["n"] else "| Agreement | - |",
+             f"| Cohen's kappa | {out['kappa']:.2f} |" if out["kappa"] is not None else "| Cohen's kappa | - |",
+             f"| Assistant fair → author fair / unfair | {conf['fair']['fair']} / {conf['fair']['unfair']} |",
+             f"| Assistant unfair → author fair / unfair | {conf['unfair']['fair']} / {conf['unfair']['unfair']} |"]
+    for lab, s in out["by_assistant_label"].items():
+        lines.append(f"| Agreement on assistant-{lab} pairs | {frac(s)} |")
+    for p, s in out["by_policy"].items():
+        lines.append(f"| Pairs attached by `{p}` | {frac(s)} |")
+    for b, s in out["by_bank"].items():
+        lines.append(f"| Pairs from rag_{b} | {frac(s)} |")
+    lines.append("")
+    if out["disagreements"]:
+        items = "; ".join(f"`{d['probe_id']}` × `{d['chunk_id']}` {d['assistant']} → {d['author']}"
+                          + (f" ({d['note']})" if d["note"] else "") for d in out["disagreements"])
+        lines.append(f"Disagreements (assistant → author): {items}.")
+    else:
+        lines.append("No disagreements.")
+    lines += ["", f"Source: `grader/grounding_r4_spotcheck{suffix}.json`."]
+    return "\n".join(lines)
+
+
+def spotcheck_apply(decisions_path, run, pool_path=None, labels_path=None, sample_path=None,
+                    result_path=None, report_path=None):
+    """Score the author's exported decisions against the assistant labels;
+    write the result JSON and refresh the report section."""
+    paths = spotcheck_paths(run)
+    pool_path = pool_path or POOL_PATH
+    labels_path = labels_path or paths["labels"]
+    sample_path = Path(sample_path or paths["sample"])
+    result_path = Path(result_path or paths["result"])
+    report_path = Path(report_path or paths["report"])
+    rows = read_jsonl(pool_path)
+    labels = json.loads(Path(labels_path).read_text(encoding="utf-8"))["labels"]
+    pairs = pool_pairs(rows, labels)
+    meta = {(p["probe_id"], p["chunk_id"]): dict(p) for p in pairs}
+    assistant = {k: p["label"] for k, p in meta.items()}
+    dec = json.loads(Path(decisions_path).read_text(encoding="utf-8"))
+    entries = dec.get("decisions") or dec.get("labels") or []
+    author = {}
+    for x in entries:
+        label = normalize_label(x.get("label"))
+        if label:
+            key = (x["probe_id"], x["chunk_id"])
+            author[key] = label
+            if key in meta:
+                meta[key]["note"] = (x.get("note") or "").strip()
+    unknown = [k for k in author if k not in assistant]
+    if unknown:
+        sys.exit(f"{len(unknown)} decided pair(s) are not in the labeled pool, e.g. {unknown[:3]}")
+    if not author:
+        sys.exit(f"no decision with a label in {decisions_path}")
+    sample = json.loads(sample_path.read_text(encoding="utf-8")) if sample_path.exists() else None
+    sampled = [(p["probe_id"], p["chunk_id"]) for p in sample["pairs"]] if sample else list(author)
+    undecided = [k for k in sampled if k not in author]
+    outside = [k for k in author if k not in set(sampled)]
+    seed = dec.get("seed", sample["seed"] if sample else None)
+    out = {"experiment": "grounding_r4_spotcheck", "run": run,
+           "generated": datetime.now().isoformat(timespec="seconds"),
+           "labeler": dec.get("labeler") or "author", "exported": dec.get("exported"),
+           "assistant_labels": str(Path(labels_path).name), "seed": seed,
+           "pool_pairs": len(pairs), "sampled": len(sampled),
+           "composition": sample["composition"] if sample else composition([meta[k] for k in author]),
+           "undecided": [{"probe_id": k[0], "chunk_id": k[1]} for k in undecided],
+           "decided_outside_sample": [{"probe_id": k[0], "chunk_id": k[1]} for k in outside]}
+    out.update(agreement(assistant, author, meta))
+    result_path.write_text(json.dumps(out, indent=1, ensure_ascii=False), encoding="utf-8")
+    existing = report_path.read_text(encoding="utf-8") if report_path.exists() else ""
+    report_path.write_text(replace_section(existing, SPOTCHECK_HEADING, spotcheck_section(out, run)),
+                           encoding="utf-8")
+    print(f"decided {out['n']}/{out['sampled']} sampled pairs"
+          + (f" ({len(undecided)} undecided)" if undecided else "")
+          + (f"; {len(outside)} decided pair(s) outside the sample were scored too" if outside else ""))
+    def brief(splits):
+        return {k: f"{v['agree']}/{v['n']}" for k, v in splits.items()}
+
+    print(f"  agreement {out['agree']}/{out['n']} = {out['agreement']:.1%}; kappa "
+          f"{out['kappa'] if out['kappa'] is not None else '-'}; confusion {out['confusion']}")
+    print(f"  by assistant label: {brief(out['by_assistant_label'])}")
+    print(f"  by policy: {brief(out['by_policy'])}")
+    print(f"  by bank: {brief(out['by_bank'])}")
+    print(f"  disagreements: {len(out['disagreements'])}")
+    print(f"result: {result_path}; report section refreshed in {report_path}")
+    return out
 
 
 RUN = ""
@@ -345,12 +693,24 @@ def main():
     parser.add_argument("--labeler", default="the author")
     parser.add_argument("--run", default="", metavar="NAME",
                         help="suffix for the results/report files (e.g. grown); the pool path is fixed")
+    parser.add_argument("--spotcheck", action="store_true",
+                        help="draw a blind author spot-check sample of the run's assistant labels")
+    parser.add_argument("--spotcheck-apply", metavar="DECISIONS_JSON",
+                        help="score the author's exported spot-check decisions against the assistant labels")
+    parser.add_argument("--n", type=int, default=40, help="spot-check sample size (default 40)")
+    parser.add_argument("--seed", type=int, default=7, help="spot-check sampling seed (default 7)")
+    parser.add_argument("--labels", metavar="LABELS_JSON",
+                        help="assistant labels for the spot-check (default grader/grounding_r4_labels[_RUN].json)")
     args = parser.parse_args()
     RUN = args.run
     if args.pool:
         pool()
     elif args.score:
         score(args.score, args.labeler)
+    elif args.spotcheck:
+        spotcheck(args.run, n=args.n, seed=args.seed, labels_path=args.labels)
+    elif args.spotcheck_apply:
+        spotcheck_apply(args.spotcheck_apply, args.run, labels_path=args.labels)
     else:
         parser.print_help()
 

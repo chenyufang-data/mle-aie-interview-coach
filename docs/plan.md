@@ -336,6 +336,22 @@ because it waits on other people. Steps 4 and 5 are gated on step 1.
 in the README traceable to a committed file, and a two-minute recording.
 Zero new skills, highest return: it backs every claim on the résumé.
 
+**Status 2026-09-07 (evening).** Done and pushed: the push itself (all
+prior commits on origin); the results files (`grader/train_results.json`,
+`cascade_results.json`, `judge_agreement_summary.json` — the shipped
+artifact reproduces the README numbers exactly), `tools/render_readme.py`
+with the eight marker blocks and its CI check, and the nine stale items;
+the demo spend cap, public-bind refusal, body caps and generic 500s
+(`tests/test_users.py`); the complete Docker image, Caddy override, wss
+voice path and `tests/test_container.sh` (green locally, its own CI job);
+`docs/deployment.md` with the recording script; the spot-check tooling
+(commands below). Found on the way: CI had been red since 2026-09-06
+because an unquoted colon in a step name made the workflow file invalid
+YAML — fixed. Left for the author, in this order: the author spot-check
+itself; the server's `users.json` and `.env` (the separate DeepSeek key
+never enters a chat or a commit); the t3.small, DNS and Caddy deploy per
+the runbook; the recording; the README link to both.
+
 **Steps.**
 
 1. *Push.* Final secret scan of `origin/main..main`, then `git push origin
@@ -365,6 +381,10 @@ Zero new skills, highest return: it backs every claim on the résumé.
      `data/review/grounding_r4_grown.html`, with the agreement number
      written into `docs/grounding_r4_grown.md`. One hour; it turns
      "assistant labels" into "assistant labels, author agreement N%".
+     Commands: `grader/grounding_r4.py --spotcheck --run grown` draws the
+     blind sample page (`data/review/grounding_r4_spotcheck_grown.html`),
+     and `grader/grounding_r4.py --spotcheck-apply PATH --run grown`
+     scores the exported decisions and writes the section.
 3. *Complete the Docker image.* `docker/backend.Dockerfile` adds
    `retrieval_dense.py`, `resume_parser.py`, `grader/stt_text.py` and
    `grader/stt_lexicon.json`, the public `rag_lists` and `rag_docs`
