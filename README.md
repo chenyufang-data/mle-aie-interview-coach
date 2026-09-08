@@ -657,7 +657,11 @@ works: around a target role, against your own resume.
 
 Engines follow the measured tiering above: **DeepSeek Flash** runs the
 interviewer turns (with thinking disabled — measured ~0.8 s vs ~1.4 s to
-first token), **Claude** writes the report when a key is present (its 95%
+first token) and the two setup calls (role proposal and the plan, also
+with thinking disabled: measured 2026-09-08 at about 12 s each, against
+65–178 s when V4 Flash was left to reason first — 6,301 reasoning tokens
+on one roles call — for the same role set and a fully grounded plan),
+**Claude** writes the report when a key is present (its 95%
 regrade consistency is what makes scorecards comparable across sessions),
 and `--mock` mode runs a deterministic offline demo interviewer — the same
 path `tests/test_mock.py` and CI exercise. The free tier cannot run a mock

@@ -160,6 +160,13 @@ report is written, and a new session is refused with a message.
   `llm` counts calls, `voice` counts seconds).
 - **Logs**: `docker compose ... logs --tail=200 backend`. Unhandled errors
   print their traceback there; the client only sees the exception class.
+  Every structured DeepSeek call prints one `deepseek json:` line with its
+  seconds, whether thinking was on, and its completion and reasoning
+  tokens — the first thing to read when a visitor says setup is slow.
+  Measured 2026-09-08: roles and plan take about 12 s each with thinking
+  off (the shipped setting); with thinking on they took 65–178 s, most of
+  it 6k+ reasoning tokens. The report keeps thinking on and takes about a
+  minute.
 - **Cost**: about $15/month for the instance and $2 for the disk on
   on-demand pricing; DeepSeek at 60 calls a day is under $2 a month even if
   every call is a mock turn; Deepgram at the 120-minute server cap is at

@@ -384,8 +384,17 @@ audio, `listening` at 3.6 s; afterwards the counters read voice 30 → 29
 and 120 → 119 minutes, LLM 59 → 56 (roles, plan, connect). The first
 verification pass found a regression the deploy had shipped — an inner
 import shadowing `users` in `coach/mock/routes.py` made every mock POST
-route answer 500 — fixed in 2e47431 with a route-level test. Still open:
-a spoken session from a browser on another device (the microphone path).
+route answer 500 — fixed in 2e47431 with a route-level test. The author's
+first browser session then found setup slow: measured from outside, a
+fresh roles call took 178 s (79 s from the home machine) and a fresh plan
+65 s, because the structured DeepSeek calls sent no thinking control and
+V4 Flash reasoned at length (6,301 reasoning tokens of 9,557 on one roles
+call). With thinking off for the two setup calls — extraction from the
+resume, not reasoning — both take about 12 s and return the same role set
+and a fully grounded 7-probe plan; grading and the report keep thinking
+on, the setting the judge agreement was measured under. Each structured
+call now logs its seconds and token counts. Still open: a spoken session
+from a browser on another device (the microphone path).
 
 **Steps.**
 

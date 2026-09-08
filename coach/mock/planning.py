@@ -77,7 +77,10 @@ Resume:
 """
     if jd_text:
         prompt += f"\nJob description:\n{jd_text}\n"
-    result = engines.structured(prompt, ROLES_SCHEMA, engine)
+    # thinking=False: extraction from the resume, not reasoning. Measured
+    # 2026-09-08 on DeepSeek V4 Flash from two machines: 79-178 s with
+    # thinking on for this call; see the timing below the call in the log.
+    result = engines.structured(prompt, ROLES_SCHEMA, engine, thinking=False)
     # Belt and braces: unknown template ids would break the setup page picker.
     for role in result.get("roles", []):
         if role.get("template_id") not in TEMPLATES:
@@ -132,7 +135,9 @@ Produce the hidden interview plan:
 - behavioral_targets: 2 short topics (a failure, a conflict, a deadline).
 
 Do not reveal the plan to the candidate; it drives the interviewer."""
-    plan = engines.structured(prompt, PLAN_SCHEMA, engine)
+    # thinking=False, as in propose_roles: the plan is written from the
+    # resume's own claims; measured 65 s with thinking on (2026-09-08).
+    plan = engines.structured(prompt, PLAN_SCHEMA, engine, thinking=False)
     if not config.MOCK_BEYOND_RESUME:
         # Belt and braces for the frozen path: a probe the resume does not
         # support has no claim to verify and, measured, no fair rubric.

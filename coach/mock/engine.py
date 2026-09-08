@@ -192,11 +192,11 @@ def fake_turn(state):
                       "hardest tradeoff, and how did you decide?", "meta": {}}
 
 
-def structured(prompt, schema, engine):
+def structured(prompt, schema, engine, thinking=True):
     if engine == "fake":
         return fake_structured(prompt, schema)
     from coach.llm import call_model
-    return call_model(prompt, schema, engine)
+    return call_model(prompt, schema, engine, thinking=thinking)
 
 
 def chat(system, messages, engine, thinking=False, max_tokens=700):

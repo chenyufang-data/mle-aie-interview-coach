@@ -3,6 +3,7 @@ Ollama (free local)."""
 
 import json
 import os
+import time
 from urllib import error as urlerror
 from urllib import request as urlrequest
 
@@ -118,13 +119,18 @@ def call_ollama(user_prompt, schema):
     return json.loads(content)
 
 
-def call_deepseek(user_prompt, schema):
+def call_deepseek(user_prompt, schema, thinking=True):
     """Grade with DeepSeek via its OpenAI-compatible API.
 
     Two quirks verified by grader/judge_agreement.py: DeepSeek's
     Anthropic-compat endpoint silently ignores output_config, so the schema
     rides in the prompt instead; and ~3% of json_object responses arrive as
     malformed JSON, so one parse-retry before giving up.
+
+    `thinking` maps to V4's hybrid reasoning. Grading and the report keep
+    it on (the measured judge agreement was taken that way); the mock's
+    setup calls turn it off (coach/mock/planning.py), where it was
+    measured to cost most of the wait - see the timing in the log line.
     """
     payload = {
         "model": config.deepseek_model(),
@@ -135,6 +141,7 @@ def call_deepseek(user_prompt, schema):
              + json.dumps(schema)},
         ],
         "response_format": {"type": "json_object"},
+        "thinking": {"type": "enabled" if thinking else "disabled"},
         # V4's hybrid thinking spends completion tokens on reasoning before
         # the JSON: the mock's 7-turn report measured ~6.2k completion tokens
         # with run-to-run variance even at temperature 0, so 8k truncated
@@ -143,6 +150,7 @@ def call_deepseek(user_prompt, schema):
         "temperature": 0,
     }
     last_error = None
+    started = time.perf_counter()
     for _attempt in range(2):
         req = urlrequest.Request(
             DEEPSEEK_URL,
@@ -156,6 +164,21 @@ def call_deepseek(user_prompt, schema):
                 body = json.loads(response.read().decode("utf-8"))
         except urlerror.URLError as exc:
             raise RuntimeError(f"Could not reach the DeepSeek API ({exc})") from exc
+        usage = body.get("usage") or {}
+        details = usage.get("completion_tokens_details") or {}
+        seconds = round(time.perf_counter() - started, 1)
+        _record_usage("deepseek", seconds=seconds,
+                      prompt_tokens=usage.get("prompt_tokens"),
+                      completion_tokens=usage.get("completion_tokens"),
+                      reasoning_tokens=details.get("reasoning_tokens"),
+                      cache_hit=usage.get("prompt_cache_hit_tokens"),
+                      cache_miss=usage.get("prompt_cache_miss_tokens"))
+        # One line per structured call, so a slow setup on a deployed box
+        # is diagnosable from the container log alone.
+        print(f"deepseek json: {seconds}s, thinking {'on' if thinking else 'off'}, "
+              f"{usage.get('completion_tokens', '?')} completion tokens "
+              f"({details.get('reasoning_tokens', 0)} reasoning), attempt {_attempt + 1}",
+              flush=True)
         try:
             choice = body["choices"][0]
             if choice.get("finish_reason") == "length":
@@ -238,11 +261,13 @@ def call_chat(system, messages, engine, thinking=False, max_tokens=700,
     return next((block.text for block in response.content if block.type == "text"), "").strip()
 
 
-def call_model(user_prompt, schema, engine):
+def call_model(user_prompt, schema, engine, thinking=True):
+    """Structured (JSON) call. `thinking` is honoured by DeepSeek only:
+    Claude's grading path and Ollama keep their own settings."""
     if engine == "ollama":
         return call_ollama(user_prompt, schema)
     if engine == "deepseek":
-        return call_deepseek(user_prompt, schema)
+        return call_deepseek(user_prompt, schema, thinking=thinking)
     return call_claude(user_prompt, schema)
 
 
