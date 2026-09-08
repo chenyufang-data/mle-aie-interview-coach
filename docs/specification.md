@@ -3,7 +3,7 @@
 A complete map of the codebase: what every file does, how the pieces connect,
 and where each measured number comes from. Companion documents:
 [backend.md](backend.md) and [frontend.md](frontend.md) hold the strict
-frontend/backend contracts; [mock_interview_plan.md](mock_interview_plan.md)
+frontend/backend contracts; [plan.md](plan.md)
 is the lab notebook behind the mock-interview subsystem;
 [stt_evaluation.md](stt_evaluation.md) is the generated Phase 0 STT report;
 the top-level [README](../README.md) is the user-facing guide.
@@ -185,7 +185,7 @@ Two rankers with identical interfaces and filter semantics:
   either). Document vectors cache under `data/index/` keyed by a content hash.
 
 The swap was an experiment with pre-registered rules
-([dense_retrieval_plan.md](dense_retrieval_plan.md); results in
+([plan.md](plan.md); results in
 [retrieval_evaluation.md](retrieval_evaluation.md)). The curated set was
 saturated (every arm 23/23), so a 61-query paraphrase set built to defeat
 lexical matching carried the decision: BM25 41/61, dense 47/61, hybrid
@@ -233,7 +233,7 @@ vs keyword baseline 2.05 / 45% / 0.574. Per-key-point classifier: **78%
 ## 6. The mock interview — `coach/mock/` and `coach/voice/`
 
 Design history and every measurement live in
-[mock_interview_plan.md](mock_interview_plan.md); this is the shipped shape.
+[plan.md](plan.md); this is the shipped shape.
 
 **Session flow** (`coach/mock/routes.py`, all under `/api/mock/`):
 `parse_file` (resume/JD upload → `resume_parser.py`) → `roles` (LLM proposes

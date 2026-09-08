@@ -248,7 +248,7 @@ http://127.0.0.1:8000
 ## Resume files → text
 
 The mock interview (section below; design history in
-`docs/mock_interview_plan.md`) and its transcription experiment need your
+`docs/plan.md`) and its transcription experiment need your
 resume as plain text. `resume_parser.py` converts PDF and Word files:
 
 ```powershell
@@ -297,7 +297,7 @@ evidence said so: 100% Recall@5 / 0.91 MRR on 23 curated queries left no
 room for an embedding index to earn its complexity. That set was saturated,
 though — it could show dense retrieval losing, never winning — so the
 comparison was re-run as a pre-registered experiment
-([`docs/dense_retrieval_plan.md`](docs/dense_retrieval_plan.md), rules
+([`docs/plan.md`](docs/plan.md), rules
 frozen before the first run; results in
 [`docs/retrieval_evaluation.md`](docs/retrieval_evaluation.md)):
 

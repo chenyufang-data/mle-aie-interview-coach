@@ -1,5 +1,5 @@
 """Dense and hybrid retrieval over the question banks - the runtime half of
-the retrieval experiment (docs/dense_retrieval_plan.md, results in
+the retrieval experiment (docs/plan.md, results in
 docs/retrieval_evaluation.md).
 
 Shipped because the pre-registered rule R1 passed for `hybrid` on

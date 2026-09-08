@@ -18,7 +18,7 @@ CORPUS_PATHS = {
     "EXP": BASE_DIR / "rag_exp" / "all_chunks.jsonl",
     # Public GitHub interview lists (MIT / Apache-2.0), rubrics by the
     # teacher; separate from the course banks so the grounding experiment
-    # can measure with and without it (docs/dense_retrieval_plan.md §12).
+    # can measure with and without it (docs/plan.md §1.8).
     "LISTS": BASE_DIR / "rag_lists" / "all_chunks.jsonl",
     # rag_docs: rubrics written from sections of primary documentation on
     # the MLOps topics the course banks lack (grader/ingest_docs.py); same
@@ -86,7 +86,7 @@ VOICE_DISABLED_REASON = None
 # bge-small retriever (retrieval_dense.py) when fastembed and the model are
 # available and falls back to BM25 with a stated reason; "bm25" forces the
 # fallback; "hybrid" forces the stack and fails loudly. The swap was earned
-# by the pre-registered rule in docs/dense_retrieval_plan.md (results:
+# by the pre-registered rule in docs/plan.md (results:
 # docs/retrieval_evaluation.md). RETRIEVAL_ACTIVE reports what is serving.
 RETRIEVAL_BACKEND = os.environ.get("RETRIEVAL_BACKEND", "auto").lower()
 RETRIEVAL_ACTIVE = "bm25"

@@ -1,6 +1,6 @@
 """The mock interview: an experience/project deep-dive round driven by a
 job description (pasted or defaulted), the candidate's resume, and the
-question banks (docs/mock_interview_plan.md §6–§8a).
+question banks (docs/plan.md §1.3).
 
     templates   default JD templates (role family × level, domain slot)
     schemas     structured-output schemas for roles / plan / report

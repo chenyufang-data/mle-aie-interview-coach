@@ -32,7 +32,7 @@ Build / update it locally:
 First run (2026-09-06): 20 sections, 116 proposals, 72 kept after review,
 72 chunks (52 intermediate / 20 advanced; 7 pointer-only from the two
 reference-only sources); chunk review 2026-09-06: 72 keep, three text
-glitches fixed by hand; details in docs/dense_retrieval_plan.md §12.6d.
+glitches fixed by hand; details in docs/plan.md §1.8.
 
 Re-runs are idempotent - existing ids are skipped. Review the built chunks
 with `tools/review_bank.py rag_docs`, then `--apply` the decisions (retire

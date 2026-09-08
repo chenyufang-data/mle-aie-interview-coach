@@ -1,4 +1,4 @@
-"""Experiment-only pieces of the retrieval experiment (docs/dense_retrieval_plan.md).
+"""Experiment-only pieces of the retrieval experiment (docs/plan.md).
 
 The dense and hybrid retrievers themselves live in retrieval_dense.py at the
 repo root since rule R1 passed and they ship in the runtime; this module

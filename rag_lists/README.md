@@ -26,7 +26,7 @@ question-against-question against every bank, and by bge-small cosine
 chunk per surviving question in the same `id / interview / metadata`
 schema the app serves. Re-runs are idempotent - existing ids are skipped.
 First run (2026-09-04): 331 chunks, 301 from ombharatiya and 30 from
-Kalyan, $11.78 of teacher calls; details in docs/dense_retrieval_plan.md §12.6.
+Kalyan, $11.78 of teacher calls; details in docs/plan.md §1.8.
 
 Review the chunks with `tools/review_bank.py rag_lists` (local page under
 `data/review/`), then `--apply` the saved decisions: retired chunks stay

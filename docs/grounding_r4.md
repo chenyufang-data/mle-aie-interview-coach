@@ -1,6 +1,6 @@
 # Grounding experiment R4 — which policy attaches a bank rubric
 
-Generated 2026-09-06T00:56:38 by `grader/grounding_r4.py --score`. Probes: 77 fresh resume-only mock probes (`grader/grounding_probes_resume_only.jsonl`, never labeled before). Labels: Claude (assistant), blind to policy attachment, at the author's request. Rule R4 (frozen in docs/dense_retrieval_plan.md §12.4): precision ≥ 90% at coverage ≥ 40%; coverage = probes receiving a fair rubric / probes; precision = fair / attached. Thresholds: {'bm25': 10.0, 'dense': 0.5638, 'hybrid': 0.0284, 'dense_floor': 0.7}.
+Generated 2026-09-06T00:56:38 by `grader/grounding_r4.py --score`. Probes: 77 fresh resume-only mock probes (`grader/grounding_probes_resume_only.jsonl`, never labeled before). Labels: Claude (assistant), blind to policy attachment, at the author's request. Rule R4 (frozen in docs/plan.md §1.9): precision ≥ 90% at coverage ≥ 40%; coverage = probes receiving a fair rubric / probes; precision = fair / attached. Thresholds: {'bm25': 10.0, 'dense': 0.5638, 'hybrid': 0.0284, 'dense_floor': 0.7}.
 
 ## Bank set `all` (rag_ml, rag_ai, rag_exp, rag_lists)
 

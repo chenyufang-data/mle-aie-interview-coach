@@ -1,4 +1,4 @@
-"""Set C of the retrieval experiment (docs/dense_retrieval_plan.md §3, R2, §9):
+"""Set C of the retrieval experiment (docs/plan.md §1.7):
 does dense retrieval ground more mock-interview probes in curated rubrics,
 without attaching worse ones? Three stages:
 

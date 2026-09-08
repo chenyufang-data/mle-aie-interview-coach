@@ -37,8 +37,8 @@ the repository as an end-to-end LLM + classical-ML case study — the README
 frames it explicitly that way (`README.md:41-47`).
 
 **Current stage.** Feature-complete for local use; all planned phases of the
-mock interview (0–3) are recorded as done in `docs/mock_interview_plan.md`;
-the bank-growth programme in `docs/dense_retrieval_plan.md` §12 finished on
+mock interview (0–3) are recorded as done in `docs/plan.md` §1.2–1.5;
+the bank-growth programme in `docs/plan.md` §1.8 finished on
 2026-09-06 with a negative result on rubric grounding. Deployment is *parked*
 (`docs/specification.md:377`). The public GitHub repository is 15 commits
 behind this working copy (`git rev-list --count origin/main..main` = 15), so
@@ -48,7 +48,7 @@ bank growth.
 **Strongest features.**
 - Every shipped component carries a held-out measurement and every rejected
   design is documented as a negative result: hybrid retrieval shipped under a
-  pre-registered rule (`docs/dense_retrieval_plan.md` §2, results in
+  pre-registered rule (`docs/plan.md` §1.7, results in
   `grader/retrieval_eval_results.json`); the Deepgram voice stack was built,
   harnessed and rejected (`grader/loop_eval_results.json`); a stacked scorer
   and an intuitive cascade rule were measured and declined (`README.md:413-416,
@@ -115,7 +115,7 @@ fail-closed tiers, no self-distillation (free-tier answers are logged
 unlabeled), opt-in mock logging.
 
 **Non-functional requirements (as documented and measured).** Retrieval
-p95 under 50 ms and model under 200 MB (rule R1, `docs/dense_retrieval_plan.md`
+p95 under 50 ms and model under 200 MB (rule R1, `docs/plan.md`
 §2); first agent audio within 2.0 s (`docs/specification.md:298-300`);
 backend RSS that fits a small host (measured 232.9 MB with the embedding
 model, `grader/retrieval_eval_results.json` `memory`); no personal data in
@@ -137,21 +137,20 @@ review, strip and private-backup tools (`grader/ingest_*.py`,
 
 **Planned but unfinished (verified in docs).**
 - Deployment with TLS and a domain: itemised as 3a/3b/3c in
-  `docs/dense_retrieval_plan.md:387` and as options in
-  `docs/mock_interview_plan.md:922-924`; not built. EC2 run is "currently
+  `docs/plan.md` §1.10; not built. EC2 run is "currently
   parked" (`docs/specification.md:377`).
 - MLE lesson-text expansion stage B (22 keeps, ≈ $0.73): "not run"
-  (`docs/dense_retrieval_plan.md`, §12.6c stage B paragraph).
+  (`docs/plan.md` §1.8).
 - Beyond-resume mock probes: frozen behind `MOCK_BEYOND_RESUME`
   (`coach/config.py:102`) until a bank of beyond-resume questions exists.
 - The grounding follow-up the post-growth run recommends — grading the mock
   against the probe's own expected points with bank chunks as hints — is
-  "a product decision recorded here, not made" (`docs/dense_retrieval_plan.md`
+  "a product decision recorded here, not made" (`docs/plan.md`
   §12.4 post-growth paragraph).
 - Author spot-check of the assistant-made grounding labels: "pending" in
   `grader/grounding_eval_results.json` `labeler` and never recorded as done.
 - Level 1 (ElevenLabs Speech Engine) retry and a blind TTS preference test
-  are listed as optional pending items in `docs/mock_interview_plan.md`.
+  are listed as optional pending items in `docs/plan.md` §1.13.
 
 **Outside scope.** Multi-tenant hosting, user accounts beyond a shared
 `users.json`, coding-interview execution, non-English interviews (set D of
@@ -230,8 +229,8 @@ variables read across the codebase), `.env.sample`, `users.sample.json`,
 (61).
 
 **Documentation.** `README.md` (689 lines), `docs/specification.md`,
-`docs/backend.md`, `docs/frontend.md`, `docs/mock_interview_plan.md` (959
-lines), `docs/dense_retrieval_plan.md` (914 lines), the bank READMEs,
+`docs/backend.md`, `docs/frontend.md`, `docs/plan.md` (the merged plan and
+roadmap), the bank READMEs,
 `data/README.md`.
 
 **Deployment and infrastructure.** `docker/`, `docker-compose.yml`,
@@ -426,10 +425,10 @@ unknown access keys fall back to the free tier (`coach/users.py:75`).
 - Construction labels share signal with the features; the README calls those
   metrics "optimistic" and reports gold-set numbers instead (`README.md:419-421`).
 - Set A (23 queries) is saturated by construction, so it can only show a
-  regression (`docs/dense_retrieval_plan.md:124-125`).
+  regression (`docs/plan.md` §1.7).
 - Grounding labels (R2, R4, post-growth) were made by the assistant in
   session; R4 records this as a deviation from the pre-registration
-  (`docs/dense_retrieval_plan.md`, §12.4 outcome). 156 of the 237 post-growth
+  (`docs/plan.md` §1.9). 156 of the 237 post-growth
   labels are reused verbatim from the first run.
 - The `agree` policy's earlier 25/25 finding was fitted to those labels and
   is retracted (`agree_falsified: true` in both R4 result files).
@@ -446,8 +445,7 @@ tiers)*.
 `data/` and the optional bank files are gitignored and verified absent from
 the index; `usage.json` keys are SHA-256 digests (`coach/users.py:52-58`).
 The R4 pool, which quotes private rubric text, was committed once and then
-removed from history by the author (`docs/dense_retrieval_plan.md` §12.4
-housekeeping). Google and Kubernetes content is CC-BY-4.0 and carries
+removed from history by the author (`docs/plan.md` §1.9). Google and Kubernetes content is CC-BY-4.0 and carries
 attribution in every chunk. The repository is MIT. Retraining needs the
 private checkout (`RAG_FULL_DIR`), so the distilled grader is reproducible
 only by the author.
@@ -553,8 +551,8 @@ paraphrases were dropped in hand review (`grader/paraphrase_draft.json`).
 **Stale copies.** `README.md:304-308` and `docs/specification.md:190-194`
 still show the previous run (41/47/49 of 61, "+13 points", p95 2.7 ms) and
 the README lists set-A MRR as 0.91/0.93/0.95, with dense and hybrid swapped
-relative to the file. `docs/dense_retrieval_plan.md:8-12` carries a third
-variant (A MRR 0.949 vs 0.909). The current run supersedes all three.
+relative to the file. The merged plan (`docs/plan.md` §1.7) carries the
+current run, which supersedes both.
 
 ### 7.2 Rubric grounding for mock probes
 
@@ -624,9 +622,9 @@ one. Cascade rule (12% of evaluations local at 100% within ±1; the rejected
 | Report consistency, Claude | 73.3% exact dimension scores (22/30), MAE 0.3 | 5 sessions × 6 dims × 2 reps | `grader/report_consistency_results.json` |
 | Report consistency, Flash | 43.3% (13/30), MAE 0.8 | same | same |
 | Hiring-call flips | 0/5 both engines — all 20 raw calls are "no hire", so uninformative | 5 | same |
-| Prompt cache, Claude turn 2 | 1,123 tokens read from cache, 374 fresh; "≈ −75% turn input" is a derivation | 2 calls | `grader/cache_check_results.json`; derivation in `docs/mock_interview_plan.md:788` |
+| Prompt cache, Claude turn 2 | 1,123 tokens read from cache, 374 fresh; "≈ −75% turn input" is a derivation | 2 calls | `grader/cache_check_results.json`; derivation in `docs/plan.md` §1.5 |
 | Prompt cache, DeepSeek | 512 prefix tokens hit | 2 calls | same |
-| Side finding | `temperature` returns 400 on current Claude models; fixed | — | `docs/mock_interview_plan.md:789-791` |
+| Side finding | `temperature` returns 400 on current Claude models; fixed | — | `docs/plan.md` §1.5 |
 
 ### 7.5 Voice loop (`grader/loop_eval_results.json`, 20 real recordings replayed, deterministic interviewer)
 
@@ -865,8 +863,7 @@ file is referenced by at least one other file.
 **Documentation–code mismatches (verified).**
 1. Set B retrieval numbers: README and spec show 41/47/49 of 61 and "+13";
    the current file says 44/48/51 and +11.5 (§7.1). README swaps dense and
-   hybrid MRR on set A. `docs/dense_retrieval_plan.md:8-12` shows a third
-   variant.
+   hybrid MRR on set A.
 2. `rag_ai/README.md:3` says 91 chunks; the bank has 222. `docs/backend.md:115-116`
    shows `"AIE": {"chunks": 91}` in the `/api/meta` example.
 3. `README.md:9` and `rag_ml/README.md:3` say 20 modules; the bank has 15
@@ -975,7 +972,7 @@ single process.
     Effort medium. Impact high for the mock's report quality.
 14. **Deployment with TLS and auth.** Caddy or nginx with Let's Encrypt,
     `wss://` for the voice socket, a billing alarm, and the security fixes
-    above, per `docs/dense_retrieval_plan.md:387`. Effort medium. Impact
+    above, per `docs/plan.md` §1.10. Effort medium. Impact
     high if the product is to be shared.
 15. **Confidence intervals on the small-n tables** (bootstrap over queries,
     probes and answers) so the reports state uncertainty instead of relying

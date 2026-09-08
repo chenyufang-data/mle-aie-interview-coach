@@ -1,4 +1,4 @@
-"""Grounding experiment R4 (docs/dense_retrieval_plan.md §12.4): which
+"""Grounding experiment R4 (docs/plan.md §1.9): which
 policy should attach a bank rubric to a mock-interview probe?
 
 Policies, all on the frozen per-arm thresholds from the retrieval
@@ -309,7 +309,7 @@ def render_report(out, report_path):
              f"Generated {out['generated']} by `grader/grounding_r4.py --score`"
              f"{' --run ' + RUN if RUN else ''}. Probes: {n} resume-only "
              f"mock probes (`grader/grounding_probes_resume_only.jsonl`). Labels: {out['labeler']}. "
-             f"Rule R4 (frozen in docs/dense_retrieval_plan.md §12.4): precision ≥ {out['rule']['precision_min']:.0%} at "
+             f"Rule R4 (frozen in docs/plan.md §1.9): precision ≥ {out['rule']['precision_min']:.0%} at "
              f"coverage ≥ {out['rule']['coverage_min']:.0%}; coverage = probes receiving a fair rubric / probes; "
              f"precision = fair / attached. Thresholds: {out['thresholds']}.",
              ""]

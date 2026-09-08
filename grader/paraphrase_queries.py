@@ -1,4 +1,4 @@
-"""Build evaluation set B for the retrieval experiment (docs/dense_retrieval_plan.md §3):
+"""Build evaluation set B for the retrieval experiment (docs/plan.md §1.7):
 paraphrases of the 23 curated retrieval cases, written the way a candidate
 would type them into an interview-prep chat, and filtered so they share no
 tag vocabulary with the target - a set that tests vocabulary mismatch

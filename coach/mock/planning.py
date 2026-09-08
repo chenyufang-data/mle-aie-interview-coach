@@ -151,7 +151,7 @@ def attach_rubric_chunks(plan, role):
 
     Reads the bank's BM25 retriever even when hybrid retrieval serves the
     practice track: RUBRIC_MIN_SCORE is in BM25 units, and the retrieval
-    plan's rule R2 (docs/dense_retrieval_plan.md) decides separately whether
+    plan's rule R2 (docs/plan.md) decides separately whether
     grounding moves to another arm."""
     level = role.get("level") or "Mid-level"
     used = set()
