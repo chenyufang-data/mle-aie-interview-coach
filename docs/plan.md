@@ -565,6 +565,15 @@ public in your own repo either way, and link accepted ones from a short
 repo; the reproducer script committed in `tools/` or `tests/`; CLA
 signature where required. Half a day per contribution plus waiting.
 
+**Status 2026-09-08.** Reordered by the author: step 3 starts now and
+this step runs alongside it rather than before it. Two things still
+happen in step 3's first week because their cost is an hour and their
+latency is weeks: the two drafted pull requests (candidates 1 and 2,
+drafts in `data/notes/upstream/`, verified against upstream on
+2026-09-07) get opened, and a camp colleague is asked to be the reviewer
+of record — candidate 5 counts only with branch protection, one required
+review, and step 3's pull requests actually going through them.
+
 ### Step 3 — A fine-tuned small-model grader against the sklearn grader (an experiment, not a replacement)
 
 **Goal.** Measure whether a LoRA-fine-tuned small language model, served
@@ -642,6 +651,21 @@ model is chosen (the plan avoids one).
 **Cost and time.** $0 on the local GPU; optionally one cloud L4 hour
 (about $1) for the cost line. Three to five days including the
 environment.
+
+**Status 2026-09-08 (started; taken ahead of step 2, see there).**
+Environment done the same evening: Ubuntu 26.04 under WSL2 (kernel
+6.18), the RTX 5080 visible with driver 595.97, `uv`-managed Python
+3.12 at `~/.venvs/slm` with torch 2.11.0+cu128 (sm_120 in the compiled
+arch list; bf16 matmul verified), transformers 5.16, peft 0.20, trl 1.12,
+scikit-learn 1.9; huggingface.co and PyPI reachable from WSL2 (the Hub
+was blocked on the Windows side, so no mirror is needed); 955 GB free;
+`.wslconfig` caps WSL2 at 16 GB and 8 threads so the desktop stays
+usable during runs. vLLM 0.28.0 ships a Linux wheel for 3.12 and will get
+its own venv at the serving step. Private inputs confirmed in the sibling
+checkout (3,866 rows, 598 teacher labels, 623 key-point labels). Still
+to do before the first run: Docker Desktop's WSL integration for the
+Ubuntu distro (only the vLLM step needs it) and the author's read of the
+pre-registered rule above.
 
 ### Step 4 — Postgres for state, then pgvector as a measured retrieval arm
 
