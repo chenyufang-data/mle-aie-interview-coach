@@ -2598,6 +2598,12 @@
    "n": 20,
    "ge1_rate": 0.5,
    "mean_abs": 0.65
+  },
+  "shipped_decision": {
+   "final_transcript": "scribe_batch_kt",
+   "live_transcript": "scribe_rt_policy50",
+   "offline": "whisper_local_prompt",
+   "note": "The mechanical 'decision' string names the lowest-damage condition (whisper_local_prompt). The author shipped the lowest term-loss pair instead, because the damage column mixes true transcription damage with the grader's own surface-form brittleness (README, docs/plan.md §1.2). Recorded as a judgment on 2026-08-30; annotated here 2026-09-07."
   }
  }
 }

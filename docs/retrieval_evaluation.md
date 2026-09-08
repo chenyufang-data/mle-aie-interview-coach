@@ -90,6 +90,8 @@ Replace BM25 only if ALL four hold (plan §2).
 
 ### R2 - rubric grounding (set C)
 
+Measured once, on 2026-09-04, at the thresholds frozen that day - the dense threshold in this table is that run's, not the calibration above - and superseded for policy decisions by R4 (docs/plan.md §1.9).
+
 77 probe targets from 10 generated plans (DeepSeek deepseek-v4-flash via planning.build_plan); candidates hand-labeled for rubric fairness (Claude (assistant), in-session 2026-09-04; author spot-check pending).
 
 | Arm | threshold | attached (coverage) | precision of attached | R2 |

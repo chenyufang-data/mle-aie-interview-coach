@@ -1,6 +1,8 @@
 # rag_ai — AIE question bank (public edition)
 
-91 interview chunks over 6 modules of LLM and agent engineering (LLM
+222 interview chunks (91 course chunks and 131 lesson-text expansions,
+`origin: "expand"`, reviewed 2026-09-06) over 6 modules of LLM and agent
+engineering (LLM
 foundations and prompting, LLM APIs and prompting in code, RAG and
 retrieval, AI workflows and agents, the agent loop and context engineering,
 harness engineering and evaluation). Serves the **AIE** track.

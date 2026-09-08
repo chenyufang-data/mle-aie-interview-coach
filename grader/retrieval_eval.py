@@ -392,6 +392,9 @@ def render(results, grounding):
     lines += ["### R2 - rubric grounding (set C)", ""]
     if grounding:
         g = grounding
+        lines += [f"Measured once, on {str(g.get('generated', '2026-09-04'))[:10]}, at the thresholds frozen "
+                  "that day - the dense threshold in this table is that run's, not the calibration "
+                  "above - and superseded for policy decisions by R4 (docs/plan.md §1.9).", ""]
         lines += [f"{g['probes']} probe targets from {g.get('plans', '?')} generated plans "
                   f"({g.get('generator', 'DeepSeek Flash')}); candidates hand-labeled for rubric fairness "
                   f"({g.get('labeler', 'labeler unrecorded')}).", "",

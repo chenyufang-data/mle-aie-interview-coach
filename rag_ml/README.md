@@ -1,6 +1,6 @@
 # rag_ml — MLE question bank (public edition)
 
-191 interview chunks over 20 modules of classical ML and data analysis
+191 interview chunks over 15 modules of classical ML and data analysis
 (pandas, regression, regularization, cross-validation, collinearity, PCA,
 categorical features, time series, trees, ensembles, classification,
 logistic regression, SVM, clustering). Serves the **MLE** track.

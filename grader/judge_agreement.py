@@ -4,6 +4,10 @@ Run:  .venv\\Scripts\\python grader\\judge_agreement.py            (cost estimat
       .venv\\Scripts\\python grader\\judge_agreement.py --confirm  (spends DeepSeek credits)
       .venv\\Scripts\\python grader\\judge_agreement.py --report   (metrics from saved results)
 
+--report (and every completed run) also writes grader/judge_agreement_summary.json,
+the numbers the README cites. The dataset lives in the private checkout:
+--dataset PATH or GRADER_DATASET=PATH.
+
 The substitution question: could a cheaper model (DeepSeek V4) replace Claude
 as the grading judge without a quality drop? This script replays the exact
 grouped split from train.py, takes the held-out Claude-labeled rows, and has
@@ -25,6 +29,7 @@ import json
 import os
 import sys
 import urllib.request
+from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
@@ -44,6 +49,7 @@ DATASET_PATH = BASE_DIR / "grader" / "dataset.jsonl"
 TEACHER_PATH = BASE_DIR / "grader" / "labels_teacher.jsonl"
 ARTIFACT_PATH = BASE_DIR / "grader" / "model.joblib"
 OUT_PATH = BASE_DIR / "grader" / "judge_agreement_results.jsonl"
+SUMMARY_PATH = BASE_DIR / "grader" / "judge_agreement_summary.json"
 
 API_URL = "https://api.deepseek.com/chat/completions"
 DEFAULT_MODELS = ["deepseek-v4-flash", "deepseek-v4-pro"]
@@ -52,10 +58,10 @@ PRICES = {"deepseek-v4-flash": (0.14, 0.28), "deepseek-v4-pro": (0.435, 0.87)}
 EST_OUTPUT_TOKENS = 1400  # thinking + JSON, observed ~1350 on v4-flash
 
 
-def load_gold_rows():
+def load_gold_rows(dataset_path=DATASET_PATH):
     """Replay train.py's grouped split; return held-out teacher-labeled rows."""
     server.load_chunks()
-    rows = [json.loads(line) for line in DATASET_PATH.open(encoding="utf-8")
+    rows = [json.loads(line) for line in Path(dataset_path).open(encoding="utf-8")
             if line.strip()]
     teacher = {}
     for line in TEACHER_PATH.open(encoding="utf-8"):
@@ -127,9 +133,15 @@ def metrics(pred, truth):
     }
 
 
-def report(gold, results):
+def report(gold, results, summary_path=SUMMARY_PATH):
+    """Print the agreement tables and write them as JSON (the README cites
+    the file, not the printout)."""
     truth = {row["row_id"]: row["teacher_score"] for row in gold}
     tiers = {row["row_id"]: row["tier"] for row in gold}
+    summary = {"generated": datetime.now().isoformat(timespec="seconds"),
+               "script": "grader/judge_agreement.py --report",
+               "gold_rows": len(gold), "teacher": "claude (labels_teacher.jsonl)",
+               "judges": {}, "consistency": {}, "per_tier": {}}
 
     artifact = joblib.load(ARTIFACT_PATH)
     extractor, student = artifact["extractor"], artifact["model"]
@@ -150,6 +162,7 @@ def report(gold, results):
     print(header)
     ids_all = [row["row_id"] for row in gold]
     m = metrics([student_pred[i] for i in ids_all], [truth[i] for i in ids_all])
+    summary["judges"]["distilled student"] = dict(m, n=len(ids_all))
     print(f"{'distilled student':22s} {len(ids_all):4d} {m['MAE']:6.2f} "
           f"{m['within1']:10.0%} {m['exact']:6.0%} {m['spearman']:6.2f} {m['QWK']:6.2f}")
     for model in sorted({model for model, p in lines if p == "main"}):
@@ -158,6 +171,7 @@ def report(gold, results):
         if not ids:
             continue
         m = metrics([graded[i]["overall"] for i in ids], [truth[i] for i in ids])
+        summary["judges"][model] = dict(m, n=len(ids))
         print(f"{model:22s} {len(ids):4d} {m['MAE']:6.2f} {m['within1']:10.0%} "
               f"{m['exact']:6.0%} {m['spearman']:6.2f} {m['QWK']:6.2f}")
 
@@ -170,6 +184,8 @@ def report(gold, results):
         same = np.mean([first[i]["overall"] == second[i]["overall"] for i in ids])
         w1 = np.mean([abs(first[i]["overall"] - second[i]["overall"]) <= 1
                       for i in ids])
+        summary["consistency"][model] = {"n": len(ids), "exact": float(same),
+                                         "within1": float(w1)}
         print(f"{model:22s} {len(ids):4d} rows   exact {same:4.0%}   within+/-1 {w1:4.0%}")
 
     print("\nPer-tier within+/-1 vs teacher (hardest tiers are the decision):")
@@ -181,15 +197,20 @@ def report(gold, results):
     for tier in tier_names:
         ids_t = [i for i in ids_all if tiers[i] == tier]
         cells = []
-        for _, preds in judges:
+        summary["per_tier"][tier] = {"n": len(ids_t)}
+        for name, preds in judges:
             ids = [i for i in ids_t if i in preds]
             if ids:
                 w1 = np.mean([abs(round(preds[i]) - round(truth[i])) <= 1
                               for i in ids])
+                summary["per_tier"][tier][name] = float(w1)
                 cells.append(f"{w1:>19.0%} ")
             else:
                 cells.append(f"{'-':>19s} ")
         print(f"{tier:28s}" + "".join(cells))
+    if summary_path:
+        Path(summary_path).write_text(json.dumps(summary, indent=1), encoding="utf-8")
+        print(f"\nSummary written to {summary_path}")
 
 
 def main():
@@ -202,17 +223,24 @@ def main():
                         help="Actually call the DeepSeek API")
     parser.add_argument("--report", action="store_true",
                         help="Only print metrics from saved results")
+    parser.add_argument("--dataset", default=os.environ.get("GRADER_DATASET") or str(DATASET_PATH),
+                        help="grader/dataset.jsonl (private checkout)")
+    parser.add_argument("--summary", default=str(SUMMARY_PATH),
+                        help="where --report writes the metrics JSON")
     args = parser.parse_args()
 
     server.load_env_file()
-    gold = load_gold_rows()
+    if not Path(args.dataset).exists():
+        print(f"No dataset at {args.dataset}; use --dataset / GRADER_DATASET.")
+        return 1
+    gold = load_gold_rows(args.dataset)
 
     done = []
     if OUT_PATH.exists():
         with OUT_PATH.open(encoding="utf-8") as handle:
             done = [json.loads(line) for line in handle if line.strip()]
     if args.report:
-        report(gold, done)
+        report(gold, done, args.summary)
         return 0
 
     models = [m.strip() for m in args.models.split(",") if m.strip()]
@@ -274,7 +302,7 @@ def main():
 
     print(f"\nDone, {failed} failed. Metrics:")
     with OUT_PATH.open(encoding="utf-8") as handle:
-        report(gold, [json.loads(line) for line in handle if line.strip()])
+        report(gold, [json.loads(line) for line in handle if line.strip()], args.summary)
     if failed:
         print(f"\n{failed} calls failed - re-run with --confirm to fill gaps "
               "(saved rows are skipped).")

@@ -1,0 +1,146 @@
+{
+ "generated": "2026-09-07T23:13:14",
+ "script": "grader/train.py",
+ "environment": {
+  "python": "3.13.7",
+  "sklearn": "1.9.0"
+ },
+ "dataset": {
+  "file": "dataset.jsonl",
+  "rows": 3866,
+  "chunks": 282,
+  "teacher_rows": 598,
+  "construction_rows": 3268,
+  "teacher_weight": 3.0
+ },
+ "split": {
+  "rule": "GroupShuffleSplit by chunk_id, test_size 0.2, random_state 42",
+  "train": 3083,
+  "test": 783,
+  "gold_test": 121
+ },
+ "retrained": {
+  "best": "hist_gradient_boosting",
+  "all_test": {
+   "keyword_baseline": {
+    "mae": 1.541507024265645,
+    "within1": 0.6053639846743295,
+    "spearman": 0.8416405754936678,
+    "qwk": 0.7930178029103598
+   },
+   "ridge": {
+    "mae": 0.99244661507641,
+    "within1": 0.776500638569604,
+    "spearman": 0.8454635854646342,
+    "qwk": 0.873528972023223
+   },
+   "hist_gradient_boosting": {
+    "mae": 0.6460502061449956,
+    "within1": 0.8684546615581098,
+    "spearman": 0.9187571982607049,
+    "qwk": 0.9273614223277089
+   }
+  },
+  "gold": {
+   "keyword_baseline": {
+    "mae": 2.0082644628099175,
+    "within1": 0.4380165289256198,
+    "spearman": 0.7109381847392255,
+    "qwk": 0.5975751292484552
+   },
+   "ridge": {
+    "mae": 1.2042047038003298,
+    "within1": 0.6363636363636364,
+    "spearman": 0.7119527714108903,
+    "qwk": 0.7459953200358145
+   },
+   "hist_gradient_boosting": {
+    "mae": 1.142665950998081,
+    "within1": 0.6942148760330579,
+    "spearman": 0.736569390075567,
+    "qwk": 0.7729862577451625
+   }
+  },
+  "subscores": {
+   "technical_depth": {
+    "mae": 0.9032471798036875,
+    "mae_overall_proxy": 0.9333775733998131
+   },
+   "structure": {
+    "mae": 1.27421382771809,
+    "mae_overall_proxy": 1.5250529440523026
+   },
+   "practical_judgment": {
+    "mae": 1.0847590157193523,
+    "mae_overall_proxy": 1.2001614768708342
+   },
+   "communication": {
+    "mae": 1.4364688770156735,
+    "mae_overall_proxy": 1.9182036192649263
+   }
+  },
+  "keypoints": {
+   "classifier": {
+    "acc3": 0.7886855241264559,
+    "macro_f1": 0.6769937021077874,
+    "hit_f1": 0.8706624605678234
+   },
+   "lexical_threshold": {
+    "acc3": 0.6955074875207987,
+    "macro_f1": 0.6195083847492485,
+    "hit_f1": 0.7755102040816326
+   },
+   "n_train": 2391,
+   "n_test": 601
+  },
+  "stacked": {
+   "gold": {
+    "mae": 1.1188923089226008,
+    "within1": 0.6859504132231405,
+    "spearman": 0.7602608295866433,
+    "qwk": 0.7863399964132489
+   },
+   "gold_plain": {
+    "mae": 1.142665950998081,
+    "within1": 0.6942148760330579,
+    "spearman": 0.736569390075567,
+    "qwk": 0.7729862577451625
+   }
+  },
+  "stacked_ships": true
+ },
+ "artifact_saved": false,
+ "artifact": {
+  "path": "grader\\model.joblib",
+  "sha256": "769034418c144be0",
+  "model_name": "hist_gradient_boosting",
+  "n_gold": 121,
+  "gold": {
+   "keyword_baseline": {
+    "mae": 2.049586776859504,
+    "within1": 0.4462809917355372,
+    "spearman": 0.6800664791843485,
+    "qwk": 0.5736502741036853
+   },
+   "hist_gradient_boosting": {
+    "mae": 1.1069282069377149,
+    "within1": 0.7024793388429752,
+    "spearman": 0.7302370527575933,
+    "qwk": 0.7838544038220397
+   }
+  },
+  "keypoints": {
+   "classifier": {
+    "acc3": 0.7820299500831946,
+    "macro_f1": 0.6660140913388416,
+    "hit_f1": 0.8672
+   },
+   "lexical_threshold": {
+    "acc3": 0.6955074875207987,
+    "macro_f1": 0.624026886035313,
+    "hit_f1": 0.7640449438202247
+   },
+   "n_test": 601
+  }
+ }
+}

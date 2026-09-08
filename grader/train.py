@@ -1,6 +1,13 @@
 """Train the distilled answer grader.
 
-Run:  .venv\\Scripts\\python grader\\train.py
+Run:  .venv\\Scripts\\python grader\\train.py                       (retrain + save the artifact)
+      .venv\\Scripts\\python grader\\train.py --no-save --evaluate-artifact
+                                    (metrics only: retrain in memory AND score the
+                                     shipped grader/model.joblib on the same rows)
+
+Every run writes grader/train_results.json - the numbers the README cites.
+The synthetic dataset lives in the private checkout; point at it with
+--dataset PATH or GRADER_DATASET=PATH.
 
 Fits two students on the synthetic dataset - a Ridge regression baseline
 (e-rater style linear model) and a HistGradientBoostingRegressor - compares
@@ -17,9 +24,14 @@ Until then, metrics are optimistic: construction labels are partly derived
 from the same coverage signal the features measure.
 """
 
+import argparse
+import hashlib
 import json
+import os
+import platform
 import sys
 from collections import Counter
+from datetime import datetime
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parents[1]
@@ -27,6 +39,7 @@ sys.path.insert(0, str(BASE_DIR))
 
 import joblib
 import numpy as np
+import sklearn
 from scipy.stats import spearmanr
 from sklearn.ensemble import HistGradientBoostingClassifier, HistGradientBoostingRegressor
 from sklearn.linear_model import Ridge
@@ -42,6 +55,7 @@ DATASET_PATH = BASE_DIR / "grader" / "dataset.jsonl"
 TEACHER_PATH = BASE_DIR / "grader" / "labels_teacher.jsonl"
 KEYPOINTS_PATH = BASE_DIR / "grader" / "labels_keypoints.jsonl"
 ARTIFACT_PATH = BASE_DIR / "grader" / "model.joblib"
+RESULTS_PATH = BASE_DIR / "grader" / "train_results.json"
 TEACHER_WEIGHT = 3.0
 SUBSCORE_NAMES = ("technical_depth", "structure", "practical_judgment", "communication")
 KP_AGG_NAMES = ("kp_pred_frac_hit", "kp_pred_frac_partial",
@@ -71,7 +85,82 @@ def print_table(results):
               f"{scores['spearman']:9.3f} {scores['qwk']:6.3f}")
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="Train / evaluate the distilled grader")
+    parser.add_argument("--dataset", default=os.environ.get("GRADER_DATASET") or str(DATASET_PATH),
+                        help="synthetic answers (grader/dataset.jsonl; private checkout)")
+    parser.add_argument("--results", default=str(RESULTS_PATH),
+                        help="where to write the metrics JSON")
+    parser.add_argument("--no-save", action="store_true",
+                        help="do not overwrite grader/model.joblib")
+    parser.add_argument("--evaluate-artifact", action="store_true",
+                        help="also score the shipped grader/model.joblib on the held-out rows")
+    return parser.parse_args()
+
+
+def kp_eval(pred, truth):
+    return {
+        "acc3": float(np.mean(pred == truth)),
+        "macro_f1": float(f1_score(truth, pred, average="macro")),
+        "hit_f1": float(f1_score(truth == "hit", pred == "hit")),
+    }
+
+
+def evaluate_artifact(artifact, kept, chunks_by_id, gold_idx, y, kp_labels, test_set):
+    """Score the SHIPPED artifact with its own fitted extractor on the same
+    held-out gold rows (and held-out key points) the retrain is scored on."""
+    extractor, model = artifact["extractor"], artifact["model"]
+    X = np.array([extractor.extract(kept[i]["answer"], chunks_by_id[kept[i]["chunk_id"]])
+                  for i in gold_idx])
+    truth = y[gold_idx]
+    frac_hit = X[:, artifact["feature_names"].index("kp_frac_hit")]
+    out = {
+        "model_name": artifact["model_name"],
+        "n_gold": int(len(gold_idx)),
+        "gold": {
+            "keyword_baseline": metrics(truth, np.clip(np.rint(2 + 8 * frac_hit), 1, 10)),
+            artifact["model_name"]: metrics(truth, model.predict(X)),
+        },
+    }
+    kp_classifier = artifact.get("kp_classifier")
+    if kp_classifier is not None and kp_labels:
+        feats, verdicts = [], []
+        for i in test_set:
+            row = kept[i]
+            chunk = chunks_by_id[row["chunk_id"]]
+            v = kp_labels.get(row["row_id"])
+            if not v or len(v) != len(chunk["interview"]["key_points"]):
+                continue
+            for f, verdict in zip(extractor.keypoint_features(row["answer"], chunk), v):
+                feats.append(f)
+                verdicts.append(verdict)
+        if feats:
+            kp_X, kp_truth = np.array(feats), np.array(verdicts)
+            cover = kp_X[:, artifact["kp_feature_names"].index("cover_best")]
+            lexical = np.where(cover >= 0.6, "hit", np.where(cover >= 0.35, "partial", "miss"))
+            out["keypoints"] = {"classifier": kp_eval(kp_classifier.predict(kp_X), kp_truth),
+                                "lexical_threshold": kp_eval(lexical, kp_truth),
+                                "n_test": int(len(kp_truth))}
+        stacked = artifact.get("stacked_model")
+        if stacked is not None:
+            classes = list(kp_classifier.classes_)
+            hit_col = classes.index("hit")
+            agg = np.zeros((len(gold_idx), len(artifact["kp_agg_names"])))
+            for k, i in enumerate(gold_idx):
+                f = extractor.keypoint_features(kept[i]["answer"], chunks_by_id[kept[i]["chunk_id"]])
+                if not f:
+                    continue
+                proba = kp_classifier.predict_proba(np.array(f))
+                pred = np.array(classes)[np.argmax(proba, axis=1)]
+                agg[k] = [float(np.mean(pred == "hit")), float(np.mean(pred == "partial")),
+                          float(proba[:, hit_col].mean()), float(proba[:, hit_col].min())]
+            out["gold"]["stacked"] = metrics(truth, stacked.predict(np.hstack([X, agg])))
+    return out
+
+
 def main():
+    args = parse_args()
+    dataset_path = Path(args.dataset)
     chunks_by_id = {}
     for folder in CORPORA.values():
         with (BASE_DIR / folder / "all_chunks.jsonl").open(encoding="utf-8") as handle:
@@ -80,10 +169,11 @@ def main():
                     chunk = json.loads(line)
                     chunks_by_id[chunk["id"]] = chunk
 
-    if not DATASET_PATH.exists():
-        print("No dataset found - run grader\\generate_answers.py first.")
+    if not dataset_path.exists():
+        print(f"No dataset at {dataset_path} - run grader\\generate_answers.py first, "
+              "or point --dataset / GRADER_DATASET at the private checkout's copy.")
         return 1
-    with DATASET_PATH.open(encoding="utf-8") as handle:
+    with dataset_path.open(encoding="utf-8") as handle:
         rows = [json.loads(line) for line in handle if line.strip()]
 
     teacher, teacher_sub = {}, {}
@@ -196,8 +286,8 @@ def main():
     # aggregates feed a stacked overall model. Both must beat their baseline
     # on the held-out gold rows to ship.
     kp_classifier = kp_metrics = stacked_model = stacked_metrics = None
+    kp_labels = {}
     if KEYPOINTS_PATH.exists():
-        kp_labels = {}
         with KEYPOINTS_PATH.open(encoding="utf-8") as handle:
             for line in handle:
                 if line.strip():
@@ -233,15 +323,8 @@ def main():
             base_pred = np.where(cover >= 0.6, "hit",
                                  np.where(cover >= 0.35, "partial", "miss"))
 
-            def kp_eval(pred):
-                return {
-                    "acc3": float(np.mean(pred == kp_truth)),
-                    "macro_f1": float(f1_score(kp_truth, pred, average="macro")),
-                    "hit_f1": float(f1_score(kp_truth == "hit", pred == "hit")),
-                }
-
-            kp_metrics = {"classifier": kp_eval(kp_pred),
-                          "lexical_threshold": kp_eval(base_pred),
+            kp_metrics = {"classifier": kp_eval(kp_pred, kp_truth),
+                          "lexical_threshold": kp_eval(base_pred, kp_truth),
                           "n_train": len(kp_train[0]), "n_test": len(kp_test[0])}
             print(f"\nKey-point coverage ({kp_metrics['n_train']} labeled points "
                   f"train / {kp_metrics['n_test']} held-out):")
@@ -309,8 +392,50 @@ def main():
         "stacked_model": stacked_model,
         "stacked_metrics": stacked_metrics,
     }
-    joblib.dump(artifact, ARTIFACT_PATH)
-    print(f"\nSaved {best_name} to {ARTIFACT_PATH.relative_to(BASE_DIR)}")
+    if args.no_save:
+        print(f"\n--no-save: {ARTIFACT_PATH.relative_to(BASE_DIR)} left untouched.")
+    else:
+        joblib.dump(artifact, ARTIFACT_PATH)
+        print(f"\nSaved {best_name} to {ARTIFACT_PATH.relative_to(BASE_DIR)}")
+
+    # ---- results file: what the README cites --------------------------
+    doc = {
+        "generated": datetime.now().isoformat(timespec="seconds"),
+        "script": "grader/train.py",
+        "environment": {"python": platform.python_version(), "sklearn": sklearn.__version__},
+        "dataset": {"file": dataset_path.name, "rows": int(len(y)),
+                    "chunks": int(len(set(groups))),
+                    "teacher_rows": int(Counter(sources)["teacher"]),
+                    "construction_rows": int(Counter(sources)["construction"]),
+                    "teacher_weight": TEACHER_WEIGHT},
+        "split": {"rule": "GroupShuffleSplit by chunk_id, test_size 0.2, random_state 42",
+                  "train": int(len(train_idx)), "test": int(len(test_idx)),
+                  "gold_test": int(len(gold_idx))},
+        "retrained": {"best": best_name, "all_test": results, "gold": gold_results,
+                      "subscores": sub_metrics or None, "keypoints": kp_metrics,
+                      "stacked": stacked_metrics, "stacked_ships": stacked_model is not None},
+        "artifact_saved": not args.no_save,
+    }
+    if args.evaluate_artifact and ARTIFACT_PATH.exists():
+        shipped = joblib.load(ARTIFACT_PATH)
+        doc["artifact"] = {
+            "path": str(ARTIFACT_PATH.relative_to(BASE_DIR)),
+            "sha256": hashlib.sha256(ARTIFACT_PATH.read_bytes()).hexdigest()[:16],
+            **evaluate_artifact(shipped, kept, chunks_by_id, gold_idx, y, kp_labels,
+                                set(test_idx)),
+        }
+        art = doc["artifact"]
+        print(f"\nShipped artifact ({art['model_name']}, {art['sha256']}) on the same "
+              f"{art['n_gold']} gold rows:")
+        print_table(art["gold"])
+        if art.get("keypoints"):
+            for name in ("classifier", "lexical_threshold"):
+                m = art["keypoints"][name]
+                print(f"  kp {name:18s} 3-class acc {m['acc3']:4.0%}  "
+                      f"macro-F1 {m['macro_f1']:.2f}  hit-F1 {m['hit_f1']:.2f}")
+    results_path = Path(args.results)
+    results_path.write_text(json.dumps(doc, indent=1), encoding="utf-8")
+    print(f"Results written to {results_path}")
     if not teacher:
         print("Note: labels are construction-only, so these metrics are optimistic. "
               "Run grader\\label_teacher.py for gold labels, then retrain.")

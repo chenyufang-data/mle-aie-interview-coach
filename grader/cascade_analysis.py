@@ -1,6 +1,10 @@
 """Measure candidate cascade rules on the held-out gold rows.
 
-Run:  .venv\\Scripts\\python grader\\cascade_analysis.py
+Run:  .venv\\Scripts\\python grader\\cascade_analysis.py [--dataset PATH]
+
+Writes grader/cascade_results.json (every candidate rule plus the shipped
+rule from coach/config.py). The dataset lives in the private checkout:
+--dataset PATH or GRADER_DATASET=PATH.
 
 The cascade question: for which answers can the distilled student grade
 INSTEAD of Claude without the paid user noticing a quality drop? A rule
@@ -16,8 +20,11 @@ sync. Rules are measured on synthetic answers - the population is not real
 users, so re-run against data/sessions/real_sessions.jsonl once it has volume.
 """
 
+import argparse
 import json
+import os
 import sys
+from datetime import datetime
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parents[1]
@@ -27,15 +34,25 @@ import joblib
 import numpy as np
 from sklearn.model_selection import GroupShuffleSplit
 
+from coach.config import CASCADE_FRAC_HIT_MAX, CASCADE_PRED_MAX
 from grader.features import FEATURE_NAMES, FeatureExtractor  # noqa: F401
 
 CORPORA = ("rag_ml", "rag_ai")
 DATASET_PATH = BASE_DIR / "grader" / "dataset.jsonl"
 TEACHER_PATH = BASE_DIR / "grader" / "labels_teacher.jsonl"
 ARTIFACT_PATH = BASE_DIR / "grader" / "model.joblib"
+RESULTS_PATH = BASE_DIR / "grader" / "cascade_results.json"
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Cascade rule analysis")
+    parser.add_argument("--dataset", default=os.environ.get("GRADER_DATASET") or str(DATASET_PATH))
+    parser.add_argument("--results", default=str(RESULTS_PATH))
+    args = parser.parse_args()
+    dataset_path = Path(args.dataset)
+    if not dataset_path.exists():
+        print(f"No dataset at {dataset_path}; use --dataset / GRADER_DATASET.")
+        return 1
     chunks_by_id = {}
     for folder in CORPORA:
         with (BASE_DIR / folder / "all_chunks.jsonl").open(encoding="utf-8") as handle:
@@ -44,7 +61,7 @@ def main():
                     chunk = json.loads(line)
                     chunks_by_id[chunk["id"]] = chunk
 
-    rows = [json.loads(line) for line in DATASET_PATH.open(encoding="utf-8") if line.strip()]
+    rows = [json.loads(line) for line in dataset_path.open(encoding="utf-8") if line.strip()]
     teacher = {}
     for line in TEACHER_PATH.open(encoding="utf-8"):
         if line.strip():
@@ -76,19 +93,31 @@ def main():
     frac_hit = X[gold_idx, FEATURE_NAMES.index("kp_frac_hit")]
     mistake = X[gold_idx, FEATURE_NAMES.index("mistake_sim_max")]
 
-    def report(name, mask):
+    rules = []
+
+    def report(name, mask, section="candidates"):
         n = int(mask.sum())
+        entry = {"rule": name, "section": section, "n": n, "of": int(len(gold_idx)),
+                 "coverage": n / len(gold_idx)}
         if n == 0:
             print(f"{name:52s}  coverage  0%")
+            rules.append(entry)
             return
         rounded = np.clip(np.rint(pred[mask]), 1, 10)
         within1 = float(np.mean(np.abs(rounded - np.clip(np.rint(truth[mask]), 1, 10)) <= 1))
         mae = float(np.mean(np.abs(pred[mask] - truth[mask])))
+        entry.update(within1=within1, mae=mae)
+        rules.append(entry)
         print(f"{name:52s}  coverage {n:3d}/{len(gold_idx)} ({n/len(gold_idx):4.0%})   "
               f"within+/-1 {within1:4.0%}   MAE {mae:.2f}")
 
     print("\nBaseline (route everything local):")
-    report("all rows", np.ones_like(truth, dtype=bool))
+    report("all rows", np.ones_like(truth, dtype=bool), "baseline")
+
+    print(f"\nShipped rule (coach/config.py): pred<={CASCADE_PRED_MAX} & "
+          f"frac_hit<={CASCADE_FRAC_HIT_MAX}")
+    report(f"SHIPPED pred<={CASCADE_PRED_MAX} & frac_hit<={CASCADE_FRAC_HIT_MAX}",
+           (pred <= CASCADE_PRED_MAX) & (frac_hit <= CASCADE_FRAC_HIT_MAX), "shipped")
 
     print("\nCandidate rules (route local when ...):")
     for hi in (7.5, 8.0):
@@ -107,7 +136,18 @@ def main():
     print("(low agreement there is GOOD: it means the rule escalates the hard ones):")
     for lo, hi in ((3.0, 8.0), (3.5, 7.5)):
         local = ((pred <= lo) & (frac_hit <= 0.25)) | ((pred >= hi) & (frac_hit >= 0.6))
-        report(f"escalated complement of lo<={lo} hi>={hi}", ~local)
+        report(f"escalated complement of lo<={lo} hi>={hi}", ~local, "escalation")
+
+    doc = {
+        "generated": datetime.now().isoformat(timespec="seconds"),
+        "script": "grader/cascade_analysis.py",
+        "dataset": {"file": dataset_path.name, "gold_rows": int(len(gold_idx))},
+        "artifact": {"model_name": artifact.get("model_name")},
+        "shipped_rule": {"pred_max": CASCADE_PRED_MAX, "frac_hit_max": CASCADE_FRAC_HIT_MAX},
+        "rules": rules,
+    }
+    Path(args.results).write_text(json.dumps(doc, indent=1), encoding="utf-8")
+    print(f"\nResults written to {args.results}")
     return 0
 
 

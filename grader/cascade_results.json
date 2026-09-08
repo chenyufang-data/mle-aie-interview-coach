@@ -1,0 +1,197 @@
+{
+ "generated": "2026-09-07T23:13:22",
+ "script": "grader/cascade_analysis.py",
+ "dataset": {
+  "file": "dataset.jsonl",
+  "gold_rows": 121
+ },
+ "artifact": {
+  "model_name": "hist_gradient_boosting"
+ },
+ "shipped_rule": {
+  "pred_max": 2.5,
+  "frac_hit_max": 0.25
+ },
+ "rules": [
+  {
+   "rule": "all rows",
+   "section": "baseline",
+   "n": 121,
+   "of": 121,
+   "coverage": 1.0,
+   "within1": 0.7024793388429752,
+   "mae": 1.1069282069377149
+  },
+  {
+   "rule": "SHIPPED pred<=2.5 & frac_hit<=0.25",
+   "section": "shipped",
+   "n": 15,
+   "of": 121,
+   "coverage": 0.12396694214876033,
+   "within1": 1.0,
+   "mae": 0.4778316979716169
+  },
+  {
+   "rule": "pred>=7.5 & frac_hit>=0.6",
+   "section": "candidates",
+   "n": 15,
+   "of": 121,
+   "coverage": 0.12396694214876033,
+   "within1": 0.4666666666666667,
+   "mae": 1.6275782028574757
+  },
+  {
+   "rule": "pred>=7.5 & frac_hit>=0.75",
+   "section": "candidates",
+   "n": 15,
+   "of": 121,
+   "coverage": 0.12396694214876033,
+   "within1": 0.4666666666666667,
+   "mae": 1.6275782028574757
+  },
+  {
+   "rule": "pred>=8.0 & frac_hit>=0.6",
+   "section": "candidates",
+   "n": 8,
+   "of": 121,
+   "coverage": 0.06611570247933884,
+   "within1": 0.625,
+   "mae": 1.0693956524935029
+  },
+  {
+   "rule": "pred>=8.0 & frac_hit>=0.75",
+   "section": "candidates",
+   "n": 8,
+   "of": 121,
+   "coverage": 0.06611570247933884,
+   "within1": 0.625,
+   "mae": 1.0693956524935029
+  },
+  {
+   "rule": "pred<=2.5 & frac_hit<=0.15",
+   "section": "candidates",
+   "n": 12,
+   "of": 121,
+   "coverage": 0.09917355371900827,
+   "within1": 1.0,
+   "mae": 0.5659875220646994
+  },
+  {
+   "rule": "pred<=2.5 & frac_hit<=0.25",
+   "section": "candidates",
+   "n": 15,
+   "of": 121,
+   "coverage": 0.12396694214876033,
+   "within1": 1.0,
+   "mae": 0.4778316979716169
+  },
+  {
+   "rule": "pred<=3.0 & frac_hit<=0.15",
+   "section": "candidates",
+   "n": 15,
+   "of": 121,
+   "coverage": 0.12396694214876033,
+   "within1": 0.8666666666666667,
+   "mae": 0.9009119177882028
+  },
+  {
+   "rule": "pred<=3.0 & frac_hit<=0.25",
+   "section": "candidates",
+   "n": 21,
+   "of": 121,
+   "coverage": 0.17355371900826447,
+   "within1": 0.9047619047619048,
+   "mae": 0.7487354875200883
+  },
+  {
+   "rule": "pred<=3.5 & frac_hit<=0.15",
+   "section": "candidates",
+   "n": 15,
+   "of": 121,
+   "coverage": 0.12396694214876033,
+   "within1": 0.8666666666666667,
+   "mae": 0.9009119177882028
+  },
+  {
+   "rule": "pred<=3.5 & frac_hit<=0.25",
+   "section": "candidates",
+   "n": 22,
+   "of": 121,
+   "coverage": 0.18181818181818182,
+   "within1": 0.8636363636363636,
+   "mae": 0.7941490166975417
+  },
+  {
+   "rule": "extremes lo<=3.0 hi>=8.0 (frac-guarded)",
+   "section": "candidates",
+   "n": 29,
+   "of": 121,
+   "coverage": 0.2396694214876033,
+   "within1": 0.8275862068965517,
+   "mae": 0.8371934640644784
+  },
+  {
+   "rule": "  + mistake_sim below median",
+   "section": "candidates",
+   "n": 20,
+   "of": 121,
+   "coverage": 0.1652892561983471,
+   "within1": 0.9,
+   "mae": 0.6766992473916936
+  },
+  {
+   "rule": "extremes lo<=3.5 hi>=7.5 (frac-guarded)",
+   "section": "candidates",
+   "n": 37,
+   "of": 121,
+   "coverage": 0.30578512396694213,
+   "within1": 0.7027027027027027,
+   "mae": 1.1320257137894068
+  },
+  {
+   "rule": "  + mistake_sim below median",
+   "section": "candidates",
+   "n": 24,
+   "of": 121,
+   "coverage": 0.19834710743801653,
+   "within1": 0.75,
+   "mae": 1.0543984984315962
+  },
+  {
+   "rule": "extremes lo<=3.0 hi>=7.5 (frac-guarded)",
+   "section": "candidates",
+   "n": 36,
+   "of": 121,
+   "coverage": 0.2975206611570248,
+   "within1": 0.7222222222222222,
+   "mae": 1.1149199522439994
+  },
+  {
+   "rule": "  + mistake_sim below median",
+   "section": "candidates",
+   "n": 24,
+   "of": 121,
+   "coverage": 0.19834710743801653,
+   "within1": 0.75,
+   "mae": 1.0543984984315962
+  },
+  {
+   "rule": "escalated complement of lo<=3.0 hi>=8.0",
+   "section": "escalation",
+   "n": 92,
+   "of": 121,
+   "coverage": 0.7603305785123967,
+   "within1": 0.6630434782608695,
+   "mae": 1.1919532889303652
+  },
+  {
+   "rule": "escalated complement of lo<=3.5 hi>=7.5",
+   "section": "escalation",
+   "n": 84,
+   "of": 121,
+   "coverage": 0.6942148760330579,
+   "within1": 0.7023809523809523,
+   "mae": 1.0958733527292313
+  }
+ ]
+}

@@ -2,12 +2,15 @@
 
 Scope: `server.py` + the `coach/` package, `retrieval.py`, the `grader/`
 package, and the two question
-banks (`rag_ml/`, `rag_ai/`). The backend owns all data, retrieval, AI calls, and
+banks (`rag_ml/`, `rag_ai/`, plus the optional `rag_exp/`, `rag_lists/` and
+`rag_docs/` tracks when their files are present). The backend owns all data,
+retrieval, AI calls, and
 grading. It knows nothing about presentation.
 
 ## Runtime requirements
 
-- Python 3.10+ with the packages in `requirements.txt`
+- Python 3.12 or newer (CI runs 3.12; the Docker image and the author's
+  machine run 3.13) with the packages in `requirements.txt`
   (`anthropic`, `scikit-learn`). The standard-library `http.server` is the web
   server — no web framework.
 - Per grading mode:
@@ -113,7 +116,9 @@ when tiers are enabled.
 
 ```json
 { "kb": { "MLE": { "modules": ["..."], "chunks": 191 },
-          "AIE": { "modules": ["..."], "chunks": 91 } },
+          "AIE": { "modules": ["..."], "chunks": 222 },
+          "LISTS": { "modules": ["..."], "chunks": 319 },
+          "DOCS": { "modules": ["..."], "chunks": 72 } },
   "user": { "name": "anonymous", "tier": "free", "tiers_enabled": true,
             "paid_quota": 30, "paid_left_today": 0,
             "paid_grader": "deepseek-v4-flash",
@@ -260,7 +265,8 @@ the HTTP server. REST still owns setup, keyterms and the report; the
 socket runs only the audio loop, holding `{plan, role, transcript}` for
 its own lifetime and mirroring every entry to the client. Modules: `vad`
 (Silero VAD on onnxruntime — `data/models/silero_vad.onnx`, auto-downloaded
-— plus the patient endpointer: 1.2 s end-of-turn silence, 30 s turn
+— plus the patient endpointer: 2.0 s end-of-turn silence (swept; 1.2 s cut
+half the answers mid-thought), 30 s turn
 timeout, barge-in via speech-during-speaking), `chunker` (trailer-safe
 sentence chunking of the streamed LLM turn), `stt` / `tts` (backends),
 `keyterms` (the §7a policy), `final_transcript`, `loop` (the session

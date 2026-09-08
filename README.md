@@ -6,7 +6,7 @@ A local interview practice app for Machine Learning Engineer and AI Engineer int
 powered by Claude and two curated, rubric-grounded question banks with real questions,
 model answers, and grading rubrics:
 
-- `rag_ml/` (191 chunks over 20 modules of classical ML and data analysis) -
+- `rag_ml/` (191 chunks over 15 modules of classical ML and data analysis) -
   serves the **MLE** track.
 - `rag_ai/` (222 chunks over 6 modules of LLM and agent engineering, 131 of
   them finer sub-questions expanded from the lesson text) - serves
@@ -230,12 +230,20 @@ With `users.json` present, requests are routed per user instead of per server:
 **Smart cascade** (paid tier, `PAID_CASCADE=0` to disable): answers the
 distilled model grades reliably are served locally *without* spending quota.
 The routing rule is measured, not guessed — `grader/cascade_analysis.py`
-replays the 121 held-out gold rows and shows that routing only
-clearly-below-rubric answers (predicted <= 2.5, rubric coverage <= 0.25) keeps
-~12% of evaluations local at **100% within-±1 agreement** with Claude, while
-the intuitive "route confident-good answers" rule measured at only 47% — so it
-does not ship. The "Always Claude" checkbox on the answer page opts out per
-request.
+replays the 121 held-out gold rows (`grader/cascade_results.json`):
+
+<!-- results:cascade -->
+| Rule (gold rows: 121) | kept local | within ±1 vs Claude | MAE |
+| --- | --- | --- | --- |
+| **ships**: predicted ≤ 2.5 and rubric coverage ≤ 0.25 | 15/121 (12%) | **100%** | 0.48 |
+| rejected: predicted ≥ 7.5 and coverage ≥ 0.6 ("confident-good") | 15/121 (12%) | 47% | 1.63 |
+| everything local (no cascade) | 121/121 | 70% | 1.11 |
+<!-- /results:cascade -->
+
+Only clearly-below-rubric answers ship; the intuitive "route confident-good
+answers" rule fails on the same rows — polished-looking answers are exactly
+where lexical features get fooled. The "Always Claude" checkbox on the
+answer page opts out per request.
 
 Delete `users.json` (or never create it) and the app behaves exactly as before:
 single-user, every request graded by Claude — on localhost. Binding beyond it
@@ -314,16 +322,18 @@ comparison was re-run as a pre-registered experiment
 frozen before the first run; results in
 [`docs/retrieval_evaluation.md`](docs/retrieval_evaluation.md)):
 
+<!-- results:retrieval -->
 | Arm | Curated (23) | Paraphrased, tag words removed (61) | p95 latency |
 | --- | --- | --- | --- |
-| BM25 | 23/23, MRR 0.91 | 41/61 (67%), MRR 0.49 | 0.5 ms |
-| dense (bge-small, cosine) | 23/23, MRR 0.93 | 47/61 (77%), MRR 0.64 | 2.3 ms |
-| **hybrid (RRF of both)** | 23/23, MRR 0.95 | **49/61 (80%)**, MRR 0.60 | 2.7 ms |
+| BM25 | 23/23, MRR 0.91 | 44/61 (72%), MRR 0.54 | 0.5 ms |
+| dense (bge-small, cosine) | 23/23, MRR 0.95 | 48/61 (79%), MRR 0.67 | 2.3 ms |
+| **hybrid (RRF of both)** | 23/23, MRR 0.93 | **51/61 (84%)**, MRR 0.67 | 2.9 ms |
+<!-- /results:retrieval -->
 
 The 61 paraphrases were written the way a candidate would type them, with
 the target's tag vocabulary filtered out automatically and the meaning
 reviewed by hand — the queries lexical matching is built to lose. Hybrid
-cleared every clause of the shipping rule (+13 points there, no regression
+cleared every clause of the shipping rule (+11.5 points there, no regression
 on the curated set, p95 under 50 ms, model under 200 MB) and now serves
 the practice track; dense alone missed the +10-point bar by 0.2 points.
 Two more findings from the same run: a vector database (Chroma) adds
@@ -395,10 +405,12 @@ The shipped model was distilled from 598 Claude gold labels
 `row_id`). On 121 held-out gold rows — answers to questions the model never saw
 in training — agreement with the Claude teacher:
 
+<!-- results:grader -->
 | Model | MAE | within ±1 | Spearman | QWK |
 | --- | --- | --- | --- | --- |
 | Keyword baseline | 2.05 | 45% | 0.680 | 0.574 |
 | Distilled grader | **1.11** | **70%** | **0.730** | **0.784** |
+<!-- /results:grader -->
 
 The teacher itself is near-deterministic (95% exact agreement when regrading
 the same answers), so the remaining gap is real model error, not label noise.
@@ -418,10 +430,12 @@ hard hit↔miss flips. `train.py` distills them into a per-key-point classifier
 that replaces the fixed 0.35 lexical threshold behind the hit/miss feedback
 lists the app shows (601 held-out labeled points):
 
+<!-- results:keypoints -->
 | Hit/miss judge | 3-class acc | macro-F1 | hit-F1 |
 | --- | --- | --- | --- |
 | Lexical threshold (0.35/0.6) | 70% | 0.62 | 0.76 |
 | Distilled kp classifier | **78%** | **0.67** | **0.87** |
+<!-- /results:keypoints -->
 
 Honest negative result, same experiment: a stacked overall model fed the
 classifier's coverage aggregates did **not** improve gold agreement (MAE 1.10
@@ -443,11 +457,13 @@ the same evaluation prompt with candidate judge models (DeepSeek V4, via their
 OpenAI-compatible API — needs `DEEPSEEK_API_KEY` in `.env`; ~$0.35, dry-run by
 default, `--confirm` to spend). August 2026 results:
 
+<!-- results:judge -->
 | Judge | MAE | within ±1 | QWK | regrade consistency (exact) |
 | --- | --- | --- | --- | --- |
 | Distilled student | 1.11 | 70% | 0.78 | deterministic |
 | deepseek-v4-flash | 0.59 | **94%** | 0.93 | 57% |
 | deepseek-v4-pro | 0.57 | **96%** | 0.93 | 53% |
+<!-- /results:judge -->
 
 Both V4 judges track the Claude teacher about as closely as the teacher tracks
 itself (95% exact on regrade), and they fix the distilled model's known blind
@@ -488,16 +504,18 @@ grades moved ≥1 point and ≤3% lenient term error rate on the human set).
 Results on the synthetic set (ElevenLabs Flash v2.5 reading the items, 16.9
 min — clean pronunciation, so an optimistic bound; the human set decides):
 
+<!-- results:stt_synth -->
 | Condition | WER | TER strict | TER lenient | grade moved ≥1 | word errors only | cost / 17 min |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| --- | --- | --- | --- | --- | --- | --- |
 | Scribe v2 batch | 4.1% | 12.4% | 7.0% | 15% | 5% | $0.19 measured |
 | Scribe v2 batch + 339 keyterms | **2.0%** | **3.3%** | **2.3%** | 20% | 10% | ≈ $0.13 |
 | batch + post-hoc lexicon fix | 4.7% | 7.7% | 6.7% | 25% | 10% | $0 |
 | Scribe v2 Realtime, no keyterms | 4.4% | 16.7% | 9.0% | 30% | 15% | $0.11 measured |
-| Realtime + naive first-50 keyterms | 3.3% | 10.4% | 5.7% | 25% | 10% | $0.09 |
-| Realtime + policy-chosen 50 | 3.2% | 10.0% | 6.0% | 20% | 5% | $0.08 |
+| Realtime + naive first-50 keyterms | 3.3% | 10.4% | 5.7% | 25% | 10% | $0.09 measured |
+| Realtime + policy-chosen 50 | 3.2% | 10.0% | 6.0% | 20% | 5% | $0.08 measured |
 | local faster-whisper large-v3-turbo | 5.6% | 23.4% | 14.7% | 30% | 10% | $0 |
 | local Whisper + 50-term `initial_prompt` | 4.9% | 20.1% | 13.0% | 30% | 5% | $0 |
+<!-- /results:stt_synth -->
 
 Full tables, per-term failures and the keyterm lists: `docs/stt_evaluation.md`
 (generated; `grader/stt_eval_results.json` is the machine copy).
@@ -536,17 +554,19 @@ What it says so far:
 And on the human set — the author reading all 88 items once, natural pace,
 26.5 min, the set the rule is decided on:
 
+<!-- results:stt_human -->
 | Condition | WER | TER strict | TER lenient | grade moved ≥1 | word errors only | cost / 27 min |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| --- | --- | --- | --- | --- | --- | --- |
 | browser Web Speech (the app's old voice path) | 19.9% | 38.8% | **29.4%** | 60% | 45% | $0 |
 | Scribe v2 batch | 8.9% | 15.7% | 8.7% | 40% | 25% | $0.07 measured |
 | Scribe v2 batch + 339 keyterms | **5.9%** | **4.0%** | **3.0%** | 35% | 25% | $0.09 measured |
 | batch + post-hoc lexicon fix | 8.8% | 8.4% | 8.0% | 35% | 20% | $0 |
 | Scribe v2 Realtime, no keyterms | 13.6% | 21.1% | 15.4% | 40% | 40% | $0.13 measured |
 | Realtime + naive first-50 keyterms | 12.6% | 17.4% | 11.7% | 35% | 35% | $0.13 measured |
-| Realtime + policy-chosen 50 | 12.0% | 14.7% | **9.7%** | 35% | 35% | $0.14 measured |
+| Realtime + policy-chosen 50 | **12.0%** | **14.7%** | **9.7%** | 35% | 35% | $0.13 measured |
 | local faster-whisper large-v3-turbo | 9.2% | 22.7% | 16.1% | 25% | 20% | $0 |
 | local Whisper + 50-term `initial_prompt` | 8.4% | 17.7% | 13.4% | 20% | 15% | $0 |
+<!-- /results:stt_human -->
 
 What the human set adds:
 
@@ -668,16 +688,25 @@ that final transcript, shows both, and prices the difference —
 
 Measured, not assumed (`grader/loop_eval.py`: the 20 real Phase 0 answer
 recordings replayed through the live loop, with a deterministic
-interviewer so only the audio path varies). The end-of-turn silence
-threshold was chosen by sweep — 1.2 s cut 50% of real answers mid-thought,
-2.0 s ships at 5% — and the shipped config measures live term loss 5.6–9.3%
-lenient across runs (54 term occurrences; small-n variance), WER ~7%,
-first-agent-audio p50 0.77–0.83 s / p95 ≤ 1.74 s, and distilled-grader
-movement on 3/18 answers (both sides normalized, per the Phase 0
-decision). The same harness measured the DIY-cloud stack (Scribe Realtime
-+ Flash TTS): live term loss 3.7%, first audio p50 0.48 / p95 0.63 s, but
-grader movement 5/18 — cloud audio wins terms and latency, local wins
-grader stability, so local stays the main usage; getting that row stable
+interviewer so only the audio path varies; `grader/loop_eval_results.json`,
+54 term occurrences per row, so one term is about 1.9 points):
+
+<!-- results:loop -->
+| Backend | WER | live term loss (lenient) | first audio p50 / p95 | cut-off | grader moved ≥1 | measured |
+| --- | --- | --- | --- | --- | --- | --- |
+| local (faster-whisper + Kokoro) — **ships** | 7.3% | 9.3% | 0.77 / 1.73 s | 5% | 3/18 | 2026-08-31 |
+| ElevenLabs (Scribe Realtime + Flash TTS) | 7.5% | 3.7% | 0.48 / 0.63 s | 5% | 5/18 | 2026-08-31 |
+| Deepgram (Nova-3 + Aura-2) — rejected | 12.0% | 14.8% | 1.35 / 4.48 s | 5% | 6/18 | 2026-08-31 |
+| Deepgram, keyterms off (ablation) | 12.2% | 16.7% | 1.61 / 4.76 s | 5% | 6/18 | 2026-08-31 |
+<!-- /results:loop -->
+
+The end-of-turn silence threshold was chosen by sweep — 1.2 s cut 50% of
+real answers mid-thought, 2.0 s ships at 5% (the committed run is the 2.0 s
+configuration; the other sweep points are prose only) — and grader
+movement is measured with both sides normalized, per the Phase 0
+decision. Cloud audio (Scribe Realtime + Flash TTS) wins terms and
+latency, local wins grader stability, so local stays the main usage;
+getting that row stable
 surfaced five real loop/STT bugs (all fixed) that only cloud latencies
 could expose. Live smoke with real models end to end: 2.3 s from
 end-of-speech to first agent audio (Whisper 0.85 + Flash first token

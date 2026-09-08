@@ -39,11 +39,11 @@ documented as deliberate negative results — a "route confident-good answers
 locally" cascade rule, a stacked scorer, and a full STT/TTS vendor swap
 (Deepgram) that was built, harnessed, measured, and rejected.
 
-## 2. Repository layout (110 tracked files)
+## 2. Repository layout (153 tracked files)
 
 ```
 mle-aie-interview-coach/
-├── server.py               (205 lines)   entrypoint + backwards-compat facade
+├── server.py               (241 lines)   entrypoint + backwards-compat facade
 ├── coach/                  (31 files)    the backend package (see §3, §6)
 ├── retrieval.py            (127)         BM25 retrieval over question banks
 ├── resume_parser.py        (173)         PDF/.docx/.txt → plain text (CLI + library)
@@ -55,11 +55,11 @@ mle-aie-interview-coach/
 ├── .env.sample                           documented environment variables
 ├── docker-compose.yml                    two-service deployment
 ├── docker/                 (3 files)     backend.Dockerfile, frontend.Dockerfile, nginx.conf
-├── docs/                   (7 files)     contracts, this spec, mock plan, STT report, screenshots
+├── docs/                   (11 files)    contracts, this spec, the merged plan, evaluation reports, screenshots
 ├── data/                   (gitignored)  personal + runtime data; only data/README.md tracked
 ├── public/                 (10 files)    dependency-free frontend
-├── grader/                 (28 files)    distillation subsystem + experiment harnesses (§5)
-├── tests/                  (9 files)     regression suites + Playwright e2e (§8)
+├── grader/                 (47 files)    distillation subsystem + experiment harnesses (§5)
+├── tests/                  (14 files)    regression suites + Playwright e2e (§8)
 ├── tools/                  (4 files)     level1_up, strip_chunks, backup_private, review_bank
 ├── rag_ml/                               MLE bank: 191 chunks over 15 modules
 ├── rag_ai/                               AIE bank: 222 chunks over 6 modules (91 course + 131 lesson-text expansions)
@@ -89,7 +89,7 @@ documents the layout; in Docker the same tree is the `coach-data` volume at
 
 ## 3. Backend — the `coach/` package
 
-Python 3.10+ standard library only for serving (`http.server.
+Python 3.12+ standard library only for serving (`http.server.
 ThreadingHTTPServer`, thread per request — no Flask/FastAPI, a deliberate
 zero-dependency choice), plus the `anthropic` SDK for Claude and plain
 `urllib` for DeepSeek/Ollama. The voice stack (`requirements-stt.txt`) is
@@ -188,15 +188,17 @@ The swap was an experiment with pre-registered rules
 ([plan.md](plan.md); results in
 [retrieval_evaluation.md](retrieval_evaluation.md)). The curated set was
 saturated (every arm 23/23), so a 61-query paraphrase set built to defeat
-lexical matching carried the decision: BM25 41/61, dense 47/61, hybrid
-49/61 (+13 points, MRR 0.60 vs 0.49), no regression on the curated set
-(MRR 0.95 vs 0.91), p95 under 3 ms. Dense alone missed the +10-point bar
-by 0.2 points. The same experiment measured that a vector database (Chroma)
-earns nothing at this size — +0.6 ms p95, 6× the disk, identical top-5 to
-the numpy array — so no store ships. The mock's rubric grounding stays on
-BM25: it already grounds 77/77 planner probes, and the hand-labeled
-precision of what it attaches (56%, vs 65% dense) is the open problem, not
-coverage.
+lexical matching carried the decision (current run on the grown banks,
+2026-09-06, `grader/retrieval_eval_results.json`): BM25 44/61, dense
+48/61, hybrid 51/61 (+11.5 points, MRR 0.67 vs 0.54), no regression on
+the curated set (MRR 0.93 vs 0.91), p95 under 3 ms. Dense alone missed
+the +10-point bar (+6.6). The same experiment measured that a vector
+database (Chroma) earns nothing at this size — +0.75 ms p95, 5× the disk,
+identical top-5 to the numpy array — so no store ships. The mock's rubric
+grounding stays on BM25 (`bm25@10`): the R4 experiment (`docs/plan.md`
+§1.9) found no attachment policy reaching 90% precision, and the failure
+is a level mismatch between multi-claim probes and single-claim chunks,
+not retrieval.
 
 ## 5. The grader subsystem — `grader/`
 
@@ -295,8 +297,8 @@ fails loudly, `--no-voice` skips it, and a plain install degrades to
 HTTP-only with the reason surfaced on the mock page.
 
 Measured (harness: `grader/loop_eval.py`, 20 real recordings as the
-candidate): shipped local config live TER 5.6–9.3% lenient, first-audio
-p50 0.77–0.83 s / p95 ≤ 1.74 s (bar: 2.0 s); best cloud STT (Scribe
+candidate): shipped local config live TER 9.3% lenient, first-audio
+p50 0.77 s / p95 1.73 s (bar: 2.0 s; `grader/loop_eval_results.json`); best cloud STT (Scribe
 Realtime) live TER 3.7% lenient, first-audio p50 0.48 / p95 0.63 s;
 barge-in interrupts mid-question in 0.32 s. The Deepgram stack
 (Nova-3 + Aura-2) was fully built and measured through the same harness:
@@ -330,10 +332,15 @@ the keyless-cloud fallback.
 
 ## 8. Tests and evaluation harnesses
 
-CI (`.github/workflows/tests.yml`) runs six suites on every push:
+CI (`.github/workflows/tests.yml`) runs these suites on every push, plus
+`tools/render_readme.py --check` (README tables must match the results files):
 
 - `tests/test_retrieval.py` + `retrieval_cases.json` — 23 curated queries,
   fails below 90% Recall@5 (currently 100%, MRR 0.91).
+- `tests/test_dense_retrieval.py` — dense/hybrid arms offline: filter parity
+  with BM25, RRF math, ranking contracts (fake embedder, no model download).
+- `tests/test_users.py` — tier budgets and quota degradation, the mock
+  engine gate, the request-body cap, the anonymous-LLM refusal (no key).
 - `tests/test_grader.py` — artifact sanity: ordering invariants
   (reference ≫ vague ≫ off-topic) on probe answers per corpus.
 - `tests/test_stt_text.py` — the STT text layer: normalization, WER/TER,
