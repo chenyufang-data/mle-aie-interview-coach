@@ -1,0 +1,6 @@
+# Extras for the bank-building tools, on top of requirements.txt:
+#   .venv\Scripts\python -m pip install -r requirements-tools.txt
+# grader/ingest_docs.py converts fetched HTML documentation sections with
+# lxml (rst and markdown need nothing extra); CI installs this file before
+# tests/test_ingest_docs.py.
+lxml>=5

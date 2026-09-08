@@ -403,7 +403,11 @@ def md_to_text(text):
 
 
 def html_to_text(content):
-    from lxml import html as lhtml
+    try:
+        from lxml import html as lhtml
+    except ImportError as exc:
+        raise SystemExit("grader/ingest_docs.py needs lxml for HTML sources: "
+                         "pip install -r requirements-tools.txt") from exc
 
     doc = lhtml.fromstring(content)
     for bad in doc.xpath("//script|//style|//nav|//header|//footer|//devsite-toc|//aside"):
