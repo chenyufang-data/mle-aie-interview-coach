@@ -65,6 +65,14 @@ def parse_args():
         help="Skip the voice loop even when its dependencies are available "
         "(fast text-only server).",
     )
+    parser.add_argument(
+        "--allow-anonymous-llm",
+        action="store_true",
+        help="Serve Claude/DeepSeek grading to anonymous clients even when bound "
+        "beyond localhost without users.json (a trusted private network). "
+        "Without it that combination is refused, so a public bind cannot "
+        "spend your API keys on strangers. ALLOW_ANONYMOUS_LLM=1 does the same.",
+    )
     return parser.parse_args()
 
 
@@ -93,6 +101,15 @@ def voice_availability(host):
     return None
 
 
+def anonymous_llm_refused(host, allow):
+    """True when serving would hand LLM grading to anonymous clients: Claude
+    mode, no users.json, bound beyond loopback, and not explicitly allowed
+    (--allow-anonymous-llm or ALLOW_ANONYMOUS_LLM=1)."""
+    loopback = host in ("127.0.0.1", "localhost", "::1")
+    return (config.MODE == "claude" and not users.TIERS_ENABLED
+            and not loopback and not allow and not config.ALLOW_ANONYMOUS_LLM)
+
+
 def main():
     args = parse_args()
     if args.mock:
@@ -112,6 +129,12 @@ def main():
     # a bare `python server.py` private to this machine.
     host = os.environ.get("HOST", "127.0.0.1")
     port = int(os.environ.get("PORT", "8000"))
+    if anonymous_llm_refused(host, args.allow_anonymous_llm):
+        raise SystemExit(
+            f"Refusing to bind HOST={host} without users.json: every request "
+            "would grade with your Claude/DeepSeek keys anonymously. Add "
+            "users.json (tiers and per-key daily budgets), or pass "
+            "--allow-anonymous-llm / ALLOW_ANONYMOUS_LLM=1 on a private network.")
     server = ThreadingHTTPServer((host, port), http.InterviewCoachHandler)
     display_host = "127.0.0.1" if host == "0.0.0.0" else host
     print(f"MLE/AIE Interview Coach running at http://{display_host}:{port}")
@@ -154,6 +177,14 @@ def main():
                 "Cascade: "
                 + ("ON - clearly-weak paid answers grade locally, no quota spent."
                    if config.PAID_CASCADE and grading.GRADER is not None else "off.")
+            )
+            capped = sum(1 for entry in users.USERS.values()
+                         if isinstance(entry, dict) and entry.get("daily_llm_calls"))
+            print(
+                "LLM budgets: "
+                + (f"server-wide {config.LLM_DAILY_CAP} calls/day; "
+                   if config.LLM_DAILY_CAP else "no server-wide cap (LLM_DAILY_CAP); ")
+                + f"{capped} key(s) carry a daily_llm_calls cap."
             )
         else:
             print("Tiers: off (no users.json) - every request grades with Claude.")

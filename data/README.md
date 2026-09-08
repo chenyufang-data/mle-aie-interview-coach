@@ -28,7 +28,8 @@ data/
 │                    and judge.jsonl (cached DeepSeek grades)
 ├── stt/             lexicon_extra.json — private terms (resume, employers,
 │                    product names) merged into grader/stt_lexicon.json when present
-└── usage.json       per-key daily Claude quota state
+└── usage.json       per-key daily Claude quota + LLM-budget counters (rows keyed by a
+                     digest of the key; the "_server" row is the instance total)
 ```
 
 Paths are overridable with `REAL_SESSIONS_PATH`, `FREE_SESSIONS_PATH`,

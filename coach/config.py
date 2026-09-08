@@ -58,6 +58,17 @@ MOCK_SESSIONS_PATH = Path(
 USERS_PATH = Path(os.environ.get("USERS_PATH", BASE_DIR / "users.json"))
 USAGE_PATH = Path(os.environ.get("USAGE_PATH", BASE_DIR / "data" / "usage.json"))
 PAID_DAILY_QUOTA = int(os.environ.get("PAID_DAILY_QUOTA", "30"))
+# Daily LLM-call budgets (2026-09-07). PAID_DAILY_QUOTA meters Claude only;
+# DeepSeek was quota-free by design - right for the owner's key, wrong for
+# a demo key on a public URL. Two caps close that: a per-key
+# "daily_llm_calls" in users.json (every engine; 0 or absent = unlimited)
+# and this server-wide cap over all keys (0 = unlimited). A refused call
+# grades locally with the reason "budget"; see coach/users.py take_call.
+LLM_DAILY_CAP = int(os.environ.get("LLM_DAILY_CAP", "0"))
+# Binding beyond localhost without users.json would grade every stranger's
+# request with the owner's keys; server.py refuses that unless this (or
+# --allow-anonymous-llm) says the network is trusted.
+ALLOW_ANONYMOUS_LLM = os.environ.get("ALLOW_ANONYMOUS_LLM", "0") == "1"
 
 # Smart cascade for paid users: answers the student grades reliably are served
 # locally without spending an LLM call (Claude quota, or a DeepSeek request
@@ -82,6 +93,18 @@ MODE = "claude"
 # --no-voice, port taken) so the mock page can explain the disabled option.
 VOICE_ENABLED = False
 VOICE_DISABLED_REASON = None
+
+
+def voice_ws_path():
+    """Voice loop behind a reverse proxy. When VOICE_WS_PATH is set (e.g.
+    "/ws/voice", the path docker/nginx.conf forwards to the loop's port),
+    GET /api/mock/voice adds it to the capabilities and the browser dials
+    wss://<page host><path> on its own origin instead of ws://<host>:8765,
+    which an https page cannot open. Read at call time, like deepseek_model,
+    so a value from .env (loaded after import) counts too. None when unset
+    or not an absolute path."""
+    path = os.environ.get("VOICE_WS_PATH", "").strip()
+    return path if path.startswith("/") else None
 # Practice-question retrieval. "auto" (default) serves the hybrid BM25 +
 # bge-small retriever (retrieval_dense.py) when fastembed and the model are
 # available and falls back to BM25 with a stated reason; "bm25" forces the

@@ -116,8 +116,23 @@ when tiers are enabled.
           "AIE": { "modules": ["..."], "chunks": 91 } },
   "user": { "name": "anonymous", "tier": "free", "tiers_enabled": true,
             "paid_quota": 30, "paid_left_today": 0,
-            "paid_grader": "deepseek-v4-flash" } }
+            "paid_grader": "deepseek-v4-flash",
+            "llm_cap": null, "llm_left_today": null,
+            "server_llm_cap": 200, "server_llm_left_today": 143 } }
 ```
+
+`llm_cap` / `llm_left_today` are the key's daily LLM-call allowance
+(`"daily_llm_calls"` in `users.json`, any engine) and `server_llm_cap` /
+`server_llm_left_today` the instance-wide `LLM_DAILY_CAP`; `null` means
+unlimited. A spent allowance grades locally with reason `budget`; the mock
+routes answer 403 with the reason spelled out.
+
+Request bodies are capped per route (1 MB by default, 16 MB for
+`/api/mock/parse_file`, 48 MB for `/api/mock/transcribe`): above the cap the
+server answers 413 without reading the body, malformed JSON gets 400, and an
+unhandled error returns 500 with the exception class only — the traceback
+stays in the server log. In Claude mode, binding beyond localhost without
+`users.json` is refused unless `--allow-anonymous-llm` / `ALLOW_ANONYMOUS_LLM=1`.
 
 `paid_grader` is the paid tier's quota-free default judge; `"claude"` means no
 DeepSeek key is configured and the quota meters every paid LLM call.

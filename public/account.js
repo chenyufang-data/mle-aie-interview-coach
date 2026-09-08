@@ -102,7 +102,11 @@ const Account = {
           label = `${user.name} · paid`;
           title = `${user.paid_left_today} of ${user.paid_quota} "Always Claude" gradings left today`
             + (user.paid_grader && user.paid_grader !== "claude"
-              ? `; everyday grading by ${user.paid_grader}` : "");
+              ? `; everyday grading by ${user.paid_grader}` : "")
+            + (user.llm_cap
+              ? `; ${user.llm_left_today} of ${user.llm_cap} LLM calls left today on this key` : "")
+            + (user.server_llm_cap
+              ? `; ${user.server_llm_left_today} of ${user.server_llm_cap} left server-wide` : "");
         } else {
           label = "key not recognized";
           title = "The server did not recognize this key. Click to re-enter or sign out.";

@@ -23,6 +23,17 @@ def pick_engine(user, force_llm=False):
         return engine
     if reason == "mock":
         return "fake"
+    if reason == "budget":
+        raise MockUnavailable(
+            "The LLM allowance for this key is used up for today (demo and "
+            "shared keys are capped per day). Try again tomorrow, or enter a "
+            "key with a larger allowance."
+        )
+    if reason == "quota":
+        raise MockUnavailable(
+            "Today's Claude quota for this key is spent and no DeepSeek key is "
+            "configured to take over. Try again tomorrow."
+        )
     raise MockUnavailable(
         "The mock interview needs a real LLM interviewer. Enter a paid access "
         "key, or run the server in --mock mode for the offline demo interviewer."

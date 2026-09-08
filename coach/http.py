@@ -1,6 +1,7 @@
 """The HTTP handler: API routes plus static serving of public/."""
 
 import mimetypes
+import traceback
 from http.server import BaseHTTPRequestHandler
 
 import anthropic
@@ -11,7 +12,16 @@ from coach.config import PAID_CASCADE, PAID_DAILY_QUOTA, PUBLIC_DIR
 from coach.llm import call_model, engine_model
 from coach.prompts import (EVALUATION_SCHEMA, QUESTION_SCHEMA,
                            build_evaluation_prompt, build_question_prompt)
-from coach.web import json_response, read_json
+from coach.web import DEFAULT_BODY_LIMIT, PayloadTooLarge, json_response, read_json
+
+# Request-body caps per route (bytes); every other route gets
+# DEFAULT_BODY_LIMIT. The two file routes carry base64 payloads that
+# coach/mock/routes.py caps again after decoding (10 MB resume, 25 MB clip).
+BODY_LIMITS = {
+    "/api/mock/parse_file": 16_000_000,
+    "/api/mock/transcribe": 48_000_000,
+    "/api/stt/record": 48_000_000,
+}
 
 
 class InterviewCoachHandler(BaseHTTPRequestHandler):
@@ -21,6 +31,7 @@ class InterviewCoachHandler(BaseHTTPRequestHandler):
             # The frontend builds the knowledge-base topic groups from this,
             # so the module lists live only in the corpora, not in app.js.
             user = users.resolve_user(self)
+            budget = users.budget_left(user)
             json_response(self, 200, {
                 "kb": {
                     role: {"modules": info["modules"], "chunks": len(info["chunks"])}
@@ -40,6 +51,13 @@ class InterviewCoachHandler(BaseHTTPRequestHandler):
                     # no DeepSeek key is configured and quota meters everything.
                     "paid_grader": (config.deepseek_model() if config.deepseek_available()
                                     else "claude"),
+                    # Daily LLM-call budgets, any engine: the key's own cap
+                    # (users.json "daily_llm_calls") and the server-wide
+                    # LLM_DAILY_CAP; null means unlimited (coach/users.py).
+                    "llm_cap": user["llm_cap"] or None,
+                    "llm_left_today": budget["key"],
+                    "server_llm_cap": config.LLM_DAILY_CAP or None,
+                    "server_llm_left_today": budget["server"],
                 },
             })
             return
@@ -74,7 +92,14 @@ class InterviewCoachHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         try:
-            data = read_json(self)
+            try:
+                data = read_json(self, BODY_LIMITS.get(self.path, DEFAULT_BODY_LIMIT))
+            except PayloadTooLarge as exc:
+                json_response(self, 413, {"error": str(exc)})
+                return
+            except ValueError as exc:
+                json_response(self, 400, {"error": f"Bad request body: {exc}"})
+                return
             if self.path == "/api/stt/record":
                 stt_dev.stt_record(self, data)
                 return
@@ -186,7 +211,11 @@ class InterviewCoachHandler(BaseHTTPRequestHandler):
         except anthropic.APIConnectionError:
             json_response(self, 500, {"error": "Could not reach the Anthropic API. Check your network connection."})
         except Exception as exc:
-            json_response(self, 500, {"error": str(exc)})
+            # Never echo internals to the client: the traceback goes to the
+            # server log; the client gets the class name to quote in a report.
+            traceback.print_exc()
+            json_response(self, 500, {
+                "error": f"Internal error ({type(exc).__name__}); see the server log."})
 
     def log_message(self, format, *args):
         print("%s - %s" % (self.address_string(), format % args))

@@ -217,6 +217,15 @@ With `users.json` present, requests are routed per user instead of per server:
   such — rather than failing. Without a DeepSeek key, the paid tier is
   all-Claude under quota, as before. Every evaluation carries a "Graded by"
   chip naming the model that scored it.
+- **Capped keys for demos and guests**: a key may carry
+  `"daily_llm_calls": 60` — every LLM call on any engine (practice grading,
+  mock roles, turns, report) counts, and a spent allowance grades locally
+  with the reason shown ("Daily LLM allowance used"); the mock refuses with
+  a clear message. `LLM_DAILY_CAP=200` in the environment caps the whole
+  server per day on top, and `GET /api/meta` reports both allowances. The
+  `PAID_DAILY_QUOTA` above meters Claude only — the DeepSeek workhorse used
+  to be uncapped, which is right for the owner's key and wrong for a key
+  handed to strangers.
 
 **Smart cascade** (paid tier, `PAID_CASCADE=0` to disable): answers the
 distilled model grades reliably are served locally *without* spending quota.
@@ -229,8 +238,12 @@ does not ship. The "Always Claude" checkbox on the answer page opts out per
 request.
 
 Delete `users.json` (or never create it) and the app behaves exactly as before:
-single-user, every request graded by Claude. In Docker, mount `users.json` into
-the backend service (a commented line in `docker-compose.yml` shows how).
+single-user, every request graded by Claude — on localhost. Binding beyond it
+(`HOST=0.0.0.0`) without `users.json` is refused in Claude mode unless
+`--allow-anonymous-llm` (or `ALLOW_ANONYMOUS_LLM=1`) says the network is
+trusted, so a public bind cannot spend your keys on strangers. In Docker,
+mount `users.json` into the backend service (a commented line in
+`docker-compose.yml` shows how).
 
 **Answer collection**: the answer page discloses that graded answers are stored
 to improve the grading model; any key can opt out with `"log": false` in

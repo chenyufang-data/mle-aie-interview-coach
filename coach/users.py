@@ -1,10 +1,20 @@
-"""Freemium tiers: access keys, and the paid tier's daily Claude quota.
+"""Freemium tiers: access keys, the paid tier's daily Claude quota, and the
+daily LLM-call budgets that make a shared or demo key safe to hand out.
 
 A request's X-Access-Key header is looked up in USERS_PATH; keys with tier
-"paid" get Claude grading, capped at PAID_DAILY_QUOTA Claude calls per day
-(question generation + evaluation combined). Everyone else gets the distilled
-local grader. When USERS_PATH does not exist, tiers are disabled and every
-request grades with Claude — the original single-user behaviour.
+"paid" get LLM grading (DeepSeek Flash by default, Claude on "Always
+Claude" under PAID_DAILY_QUOTA Claude calls per day, question generation
+and evaluation combined). Everyone else gets the distilled local grader.
+When USERS_PATH does not exist, tiers are disabled and every request
+grades with Claude - the original single-user behaviour.
+
+Budgets (2026-09-07, for the public demo): every LLM call - any engine,
+practice grading or a mock route - counts against the key's own
+"daily_llm_calls" (users.json; 0 or absent = unlimited) and against the
+server-wide config.LLM_DAILY_CAP (0 = unlimited). A refused call grades
+locally with the reason "budget"; the mock refuses with a clear message.
+State lives in USAGE_PATH keyed by a digest of the key, plus one "_server"
+row for the whole instance.
 """
 
 import hashlib
@@ -12,13 +22,15 @@ import json
 import threading
 from datetime import datetime
 
-from coach.config import PAID_DAILY_QUOTA, USAGE_PATH, USERS_PATH
+from coach import config
+from coach.config import USAGE_PATH, USERS_PATH
 
 USERS = {}
 # True whenever USERS_PATH exists — even if it fails to parse. A present-but-
 # broken users file must fail CLOSED (tiers on, no paid keys -> everyone free),
 # never open (everyone gets Claude), or a corrupt file becomes a cost leak.
 TIERS_ENABLED = False
+SERVER_ROW = "_server"
 _usage_lock = threading.Lock()
 _users_mtime = None
 
@@ -58,6 +70,14 @@ def _usage_id(key):
     return hashlib.sha256(key.encode("utf-8")).hexdigest()[:16]
 
 
+def _cap(value):
+    """A users.json budget field -> int, 0 meaning unlimited; junk is 0."""
+    try:
+        return max(0, int(value or 0))
+    except (TypeError, ValueError):
+        return 0
+
+
 def resolve_key(key):
     """User record for a bare access key (the voice WebSocket has no
     request headers; everything else goes through resolve_user)."""
@@ -71,8 +91,11 @@ def resolve_key(key):
             "tier": "paid" if entry.get("tier") == "paid" else "free",
             # Per-user answer-collection opt-out: {"log": false} in users.json.
             "log": entry.get("log", True),
+            # Per-key daily LLM-call budget, any engine (0 = unlimited).
+            "llm_cap": _cap(entry.get("daily_llm_calls")),
         }
-    return {"key": None, "name": "anonymous", "tier": "free", "log": True}
+    return {"key": None, "name": "anonymous", "tier": "free", "log": True,
+            "llm_cap": 0}
 
 
 def resolve_user(handler):
@@ -88,26 +111,76 @@ def _read_usage():
         return {}
 
 
+def _today():
+    return datetime.now().date().isoformat()
+
+
+def _row(usage, row_id, today):
+    """Today's counters for a usage row; a stale or missing row starts at 0.
+    "used" counts Claude calls (the quota), "llm" counts every LLM call."""
+    row = usage.get(row_id)
+    if not row or row.get("date") != today:
+        return {"date": today, "used": 0, "llm": 0}
+    return {"date": today, "used": int(row.get("used", 0)),
+            "llm": int(row.get("llm", 0))}
+
+
 def quota_left(user):
     if user["tier"] != "paid":
         return 0
-    today = datetime.now().date().isoformat()
     with _usage_lock:
-        row = _read_usage().get(_usage_id(user["key"]))
-    used = row["used"] if row and row.get("date") == today else 0
-    return max(0, PAID_DAILY_QUOTA - used)
+        row = _row(_read_usage(), _usage_id(user["key"]), _today())
+    return max(0, config.PAID_DAILY_QUOTA - row["used"])
+
+
+def budget_left(user):
+    """LLM calls left today as {"key": n | None, "server": n | None};
+    None means that budget is unlimited."""
+    with _usage_lock:
+        usage = _read_usage()
+        today = _today()
+        key_row = _row(usage, _usage_id(user["key"]), today) if user.get("key") else None
+        server_row = _row(usage, SERVER_ROW, today)
+    key_left = None
+    if key_row is not None and user.get("llm_cap"):
+        key_left = max(0, user["llm_cap"] - key_row["llm"])
+    server_left = None
+    if config.LLM_DAILY_CAP:
+        server_left = max(0, config.LLM_DAILY_CAP - server_row["llm"])
+    return {"key": key_left, "server": server_left}
+
+
+def take_call(user, engine):
+    """Reserve one LLM call for a paid user on `engine`.
+
+    Returns None when the call may proceed, "quota" when engine is Claude
+    and the key's daily Claude quota is spent, or "budget" when the key's
+    or the server's daily LLM budget is spent. Nothing is written on a
+    refusal, so the caller may retry with another engine (a spent Claude
+    quota degrades to DeepSeek; a spent budget never does)."""
+    today = _today()
+    with _usage_lock:
+        usage = _read_usage()
+        key_id = _usage_id(user["key"])
+        key_row = _row(usage, key_id, today)
+        server_row = _row(usage, SERVER_ROW, today)
+        if engine == "claude" and key_row["used"] >= config.PAID_DAILY_QUOTA:
+            return "quota"
+        if user.get("llm_cap") and key_row["llm"] >= user["llm_cap"]:
+            return "budget"
+        if config.LLM_DAILY_CAP and server_row["llm"] >= config.LLM_DAILY_CAP:
+            return "budget"
+        if engine == "claude":
+            key_row["used"] += 1
+        key_row["llm"] += 1
+        server_row["llm"] += 1
+        usage[key_id] = key_row
+        usage[SERVER_ROW] = server_row
+        USAGE_PATH.parent.mkdir(parents=True, exist_ok=True)
+        USAGE_PATH.write_text(json.dumps(usage), encoding="utf-8")
+    return None
 
 
 def quota_take(user):
-    """Reserve one paid Claude call; False once today's quota is spent."""
-    today = datetime.now().date().isoformat()
-    with _usage_lock:
-        usage = _read_usage()
-        row = usage.get(_usage_id(user["key"]))
-        used = row["used"] if row and row.get("date") == today else 0
-        if used >= PAID_DAILY_QUOTA:
-            return False
-        usage[_usage_id(user["key"])] = {"date": today, "used": used + 1}
-        USAGE_PATH.parent.mkdir(parents=True, exist_ok=True)
-        USAGE_PATH.write_text(json.dumps(usage), encoding="utf-8")
-    return True
+    """Reserve one paid Claude call (quota and budgets); False when refused."""
+    return take_call(user, "claude") is None

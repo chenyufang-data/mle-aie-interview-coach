@@ -31,14 +31,18 @@ def grading_route(user, force_llm=False):
 
     Returns (engine, reason). engine is "claude", "deepseek", "ollama", or
     "local"; reason says why a request routed local: "mock" (dev mode),
-    "free" (no paid key), "quota" (paid but spent today, no DeepSeek key).
+    "free" (no paid key), "quota" (Claude quota spent today, no DeepSeek
+    key), "budget" (the key's or the server's daily LLM budget is spent).
 
-    Paid routing: DeepSeek Flash is the quota-free default workhorse
-    (measured judge, see grader/judge_agreement.py); Claude serves
-    force_llm ("Always Claude") requests and takes quota; an exhausted
-    Claude quota degrades to DeepSeek, and only to the local grader when
-    no DEEPSEEK_API_KEY is configured. Without users.json (single-user
-    setup) everything grades with Claude, as before.
+    Paid routing: DeepSeek Flash is the default workhorse (measured judge,
+    see grader/judge_agreement.py); Claude serves force_llm ("Always
+    Claude") requests and takes the Claude quota; an exhausted Claude
+    quota degrades to DeepSeek, and only to the local grader when no
+    DEEPSEEK_API_KEY is configured. Every LLM call, whichever engine,
+    takes one unit of the key's and the server's daily LLM budget
+    (coach/users.py take_call) - what makes a demo key safe to hand out.
+    Without users.json (single-user setup) everything grades with Claude,
+    as before.
     """
     if config.MODE == "mock":
         return "local", "mock"
@@ -48,13 +52,14 @@ def grading_route(user, force_llm=False):
         return "claude", None  # tiers disabled: single-user setup
     if user["tier"] != "paid":
         return "local", "free"
-    if not force_llm and config.deepseek_available():
-        return "deepseek", None
-    if users.quota_take(user):
-        return "claude", None
-    if config.deepseek_available():
-        return "deepseek", None  # Claude quota spent: degrade to Flash
-    return "local", "quota"
+    engine = "deepseek" if (not force_llm and config.deepseek_available()) else "claude"
+    refusal = users.take_call(user, engine)
+    if refusal == "quota" and config.deepseek_available():
+        engine = "deepseek"  # Claude quota spent: degrade to Flash
+        refusal = users.take_call(user, engine)
+    if refusal:
+        return "local", refusal
+    return engine, None
 
 
 def clamp_score(value):
@@ -66,6 +71,11 @@ LOCAL_GRADING_LABELS = {
     "mock": ("Mock mode", "Run without --mock for real Claude grading."),
     "free": ("Free tier", "Enter a paid access key for full Claude grading."),
     "quota": ("Daily Claude quota reached", "Quota resets tomorrow; until then grading is local."),
+    "budget": (
+        "Daily LLM allowance used",
+        "This key's LLM allowance for today is spent (demo and shared keys are "
+        "capped per day); grading is local until tomorrow.",
+    ),
     "cascade": (
         "Smart cascade",
         "This answer clearly misses the rubric, so the local grader handled it "
