@@ -403,6 +403,13 @@ for `VOICE_HOLD_MS` more silence, 2.5 s, at most twice per answer; unit
 tests, not yet re-measured on the 20 real recordings), and the resume and
 JD remembered in the browser's localStorage.
 
+**Step 1 closed 2026-09-08 (evening).** The author confirmed the box
+rebuilt on 2858942, no `ANTHROPIC_API_KEY` in its `.env`, DeepSeek
+auto-recharge off, the AWS budget alert set, and reached the URL from a
+phone on a cellular network. Every "done when" criterion below is met on
+the live box. Carried to the loose ends: re-measuring the end-of-turn
+hold on the 20 real recordings, and the domain's renewal price.
+
 **Steps.**
 
 1. *Push.* Final secret scan of `origin/main..main`, then `git push origin
@@ -729,6 +736,12 @@ days.
 
 ### Not on the roadmap, still open
 
+- Re-measure the live loop's end-of-turn hold (`VOICE_HOLD_MS`, added
+  2026-09-08 from one live session) on the 20 real Phase 0 recordings
+  with `grader/loop_eval.py`, so the README's cut-off rate is measured
+  under the shipped rule rather than the silence-only one.
+- cyfang.org renews at $23.99 after the first year (bought 2026-09-08 at
+  $4.99): turn auto-renew off or transfer before then.
 - The grounding lever for the mock (grade against the probe's own expected
   points with chunks as hints, or compose a rubric from the top chunks):
   a product decision; when made, re-run R4 with author labels.
