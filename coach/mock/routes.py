@@ -193,7 +193,24 @@ def handle_post(handler, path, data):
             json_response(handler, 400, {"error": "audio too large (25 MB cap)."})
             return
         import base64
+        from coach import users
         from coach.voice import final_transcript
+        if users.TIERS_ENABLED and final_transcript.available_engine() in (
+                "scribe_batch_kt", "nova3_batch_kt"):
+            # A cloud re-transcription spends vendor credit: paid keys only,
+            # charged to the key's live-voice allowance by the clip's length
+            # (webm/opus at about 32 kbps: roughly 4,000 bytes per second).
+            user = users.resolve_user(handler)
+            if user["tier"] != "paid":
+                json_response(handler, 403,
+                              {"error": "Re-transcription needs a paid access key."})
+                return
+            seconds = min(300, max(5, len(audio_b64) * 3 // 4 // 4000))
+            if users.take_voice(user, seconds):
+                json_response(handler, 403, {"error": (
+                    "The live-voice allowance for this key is used up for "
+                    "today; the answer keeps its live transcript.")})
+                return
         try:
             audio = base64.b64decode(audio_b64)
             result = final_transcript.transcribe_final(

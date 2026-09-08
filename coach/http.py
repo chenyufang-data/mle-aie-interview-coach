@@ -32,6 +32,7 @@ class InterviewCoachHandler(BaseHTTPRequestHandler):
             # so the module lists live only in the corpora, not in app.js.
             user = users.resolve_user(self)
             budget = users.budget_left(user)
+            voice = users.voice_left(user)
             json_response(self, 200, {
                 "kb": {
                     role: {"modules": info["modules"], "chunks": len(info["chunks"])}
@@ -58,6 +59,13 @@ class InterviewCoachHandler(BaseHTTPRequestHandler):
                     "llm_left_today": budget["key"],
                     "server_llm_cap": config.LLM_DAILY_CAP or None,
                     "server_llm_left_today": budget["server"],
+                    # Daily live-voice budgets in minutes: the key's own
+                    # cap (users.json "daily_voice_minutes") and the
+                    # server-wide VOICE_DAILY_MINUTES; null means unlimited.
+                    "voice_cap": user["voice_cap"] or None,
+                    "voice_left_today": users.minutes_left(voice["key"]),
+                    "server_voice_cap": config.VOICE_DAILY_MINUTES or None,
+                    "server_voice_left_today": users.minutes_left(voice["server"]),
                 },
             })
             return

@@ -65,6 +65,17 @@ PAID_DAILY_QUOTA = int(os.environ.get("PAID_DAILY_QUOTA", "30"))
 # and this server-wide cap over all keys (0 = unlimited). A refused call
 # grades locally with the reason "budget"; see coach/users.py take_call.
 LLM_DAILY_CAP = int(os.environ.get("LLM_DAILY_CAP", "0"))
+# Daily live-voice budgets (2026-09-08, cloud voice on the public demo).
+# The voice loop streams audio to a paid vendor (Deepgram on the demo box)
+# for as long as a session runs, so it is metered in minutes, not calls: a
+# per-key "daily_voice_minutes" in users.json (0 or absent = unlimited),
+# this server-wide cap over all keys (0 = unlimited), and a hard length per
+# session. A session is charged in ticks while it runs and ends, with a
+# spoken goodbye, within one tick of an allowance running out; a
+# re-transcription clip (POST /api/mock/transcribe) is charged by its
+# length. See coach/users.py take_voice and coach/voice/loop.py meter.
+VOICE_DAILY_MINUTES = int(os.environ.get("VOICE_DAILY_MINUTES", "0"))
+VOICE_SESSION_MAX_MINUTES = int(os.environ.get("VOICE_SESSION_MAX_MINUTES", "20"))
 # Binding beyond localhost without users.json would grade every stranger's
 # request with the owner's keys; server.py refuses that unless this (or
 # --allow-anonymous-llm) says the network is trusted.

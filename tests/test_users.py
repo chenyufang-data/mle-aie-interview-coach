@@ -220,6 +220,43 @@ def test_anonymous_llm_refusal():
         config.MODE = "claude"
 
 
+def test_voice_budget():
+    """Live-voice minutes: per-key "daily_voice_minutes" and the server-wide
+    VOICE_DAILY_MINUTES, charged in seconds. The tick that reaches a cap is
+    charged whole and the next one is refused; LLM counters are untouched."""
+    setup({"demo-key": {"name": "demo", "tier": "paid", "daily_voice_minutes": 2},
+           "owner-key": {"name": "me", "tier": "paid"}})
+    config.VOICE_DAILY_MINUTES = 0
+    try:
+        demo, owner = users.resolve_key("demo-key"), users.resolve_key("owner-key")
+        assert demo["voice_cap"] == 2 and owner["voice_cap"] == 0
+        assert users.voice_left(demo) == {"key": 120, "server": None}
+        assert users.take_voice(demo, 60) is None
+        assert users.take_voice(demo, 60) is None
+        assert users.voice_left(demo)["key"] == 0
+        assert users.take_voice(demo, 60) == "voice"
+        assert usage()[users._usage_id("demo-key")]["voice"] == 120
+        assert users.minutes_left(users.voice_left(demo)["key"]) == 0
+        # the owner's key is unlimited; a server-wide cap still applies to it
+        assert users.take_voice(owner, 45.5) is None
+        assert users.voice_left(owner) == {"key": None, "server": None}
+        config.VOICE_DAILY_MINUTES = 3
+        assert users.voice_left(owner)["server"] == 14.5
+        assert users.minutes_left(14.5) == 1 and users.minutes_left(None) is None
+        assert users.take_voice(owner, 60) is None       # 165.5 s used: the tick still starts
+        assert users.take_voice(owner, 60) == "voice"    # 225.5 s used: over the 180 s cap
+        config.VOICE_DAILY_MINUTES = 0
+        # anonymous callers have no key row; the server row still counts them
+        anon = users.resolve_key("")
+        assert anon["voice_cap"] == 0
+        assert users.take_voice(anon, 30) is None
+        assert usage()[users.SERVER_ROW]["voice"] == 255.5
+        assert usage()[users._usage_id("demo-key")]["llm"] == 0
+        assert users.budget_left(demo) == {"key": None, "server": None}
+    finally:
+        config.VOICE_DAILY_MINUTES = 0
+
+
 if __name__ == "__main__":
     for name, fn in list(globals().items()):
         if name.startswith("test_") and callable(fn):

@@ -338,9 +338,12 @@ because it waits on other people. Steps 4 and 5 are gated on step 1.
 
 ### Step 1 — Make the Coach the proof: a live, self-consistent public system
 
-**Goal.** A public URL that runs the documented feature set, every number
-in the README traceable to a committed file, and a two-minute recording.
-Zero new skills, highest return: it backs every claim on the résumé.
+**Goal.** A public URL that runs the documented feature set — practice,
+the text mock and the live voice mock — with every number in the README
+traceable to a committed file. Zero new skills, highest return: it backs
+every claim on the résumé. (The two-minute recording planned at first was
+dropped on 2026-09-08 in favour of live voice on the box: a visitor can
+try it rather than watch it.)
 
 **Status 2026-09-07 (evening).** Done and pushed: the push itself (all
 prior commits on origin); the results files (`grader/train_results.json`,
@@ -353,10 +356,28 @@ voice path and `tests/test_container.sh` (green locally, its own CI job);
 `docs/deployment.md` with the recording script; the spot-check tooling
 (commands below). Found on the way: CI had been red since 2026-09-06
 because an unquoted colon in a step name made the workflow file invalid
-YAML — fixed. Spot-check done 2026-09-08 (39/40, kappa 0.95). Left for the author,
-in this order: the server's `users.json` and `.env` (the separate DeepSeek key
-never enters a chat or a commit); the t3.small, DNS and Caddy deploy per
-the runbook; the recording; the README link to both.
+YAML — fixed. Spot-check done 2026-09-08 (39/40, kappa 0.95).
+
+**Status 2026-09-08.** Live at https://coach.cyfang.org: a t3.small in
+us-east-2 behind an Elastic IP, the domain at GoDaddy with an A record for
+`coach`, Caddy's certificate issued on first start, the four public banks
+loaded (LISTS serves 319 of 331 chunks — 12 retired), hybrid retrieval up.
+Every section-4 check of the runbook passed from outside: anonymous
+grading goes to the local model, the demo key goes to DeepSeek and its
+allowance counts down (60 → 59, server 200 → 199, Claude quota untouched),
+a 40-request burst gets 34 429s, a 2 MB body and a 50 MB upload get 413,
+ports 8000/8765 do not answer from outside. Then the author chose live
+voice on the box over a recording: the image now carries the cloud voice
+subset (`requirements-voice-cloud.txt`), `AUDIO_BACKEND=deepgram` runs the
+loop on the free Deepgram credit, and voice is metered like the LLM calls
+— `daily_voice_minutes` per key, `VOICE_DAILY_MINUTES` per server,
+`VOICE_SESSION_MAX_MINUTES` per session, one LLM unit per interviewer turn,
+re-transcription paid-key only and charged by clip length; covered by
+`tests/test_users.py::test_voice_budget` and
+`tests/test_voice.py::test_voice_session_budget`. Left for the author: add
+the Deepgram key, `AUDIO_BACKEND` and `VOICE_DAILY_MINUTES` to the box's
+`.env`, `daily_voice_minutes` to the demo key, pull and rebuild, and run
+one live session from another device (runbook sections 4 and 8).
 
 **Steps.**
 
@@ -432,13 +453,19 @@ the runbook; the recording; the README link to both.
    override; a domain (a cheap registrar or a free DuckDNS name). Fix
    `public/mock.js:483` to use `wss://` under HTTPS and a proxied path
    (`/ws/voice`) instead of a bare port. Voice on the box: no GPU, so
-   either text-only (recommended for the public URL) or
-   `AUDIO_BACKEND=deepgram` behind the demo key.
-6. *Record.* Two minutes: a practice question graded (20 s), a mock from
-   resume paste to two turns and the report (60 s), the voice loop with a
-   barge-in on the local machine (20 s), the results table and the plan
-   (10 s). Windows Game Bar records the screen; install ffmpeg to trim.
-   Link it from the README; host on YouTube unlisted or as a small GIF.
+   `AUDIO_BACKEND=deepgram` behind the demo key (decided 2026-09-08; the
+   text-only alternative was the fallback).
+6. *Voice with an allowance* (replaced the recording, 2026-09-08). A
+   `requirements-voice-cloud.txt` layer in the image (loop server + Silero
+   VAD; the local stack stays out), the Deepgram backend that already
+   existed, and metering that mirrors the LLM caps: minutes per key and
+   per server, a hard session length, a spoken goodbye and the normal
+   report when an allowance runs out, one LLM unit per interviewer turn,
+   and the batch re-transcription gated to paid keys and charged by clip
+   length. The measured trade-off stands in the README: Deepgram loses on
+   technical-term accuracy and first-audio latency to the local stack and
+   ElevenLabs, but it is free credit on one vendor. The README's first
+   screen links the live URL instead of a video.
 
 **Difficulties to expect.**
 - Shell scripts and Dockerfiles with CRLF endings break inside Linux
@@ -458,17 +485,21 @@ the runbook; the recording; the README link to both.
 **Prepare.** AWS account with the credit; a domain or DuckDNS token;
 Docker Desktop running locally; the private checkout for the two
 private-input scripts; the demo `users.json` (one paid-tier demo key, one
-author key); a `.env` for the server with only `DEEPSEEK_API_KEY` (and
-`DEEPGRAM_API_KEY` if voice is enabled).
+author key); a `.env` for the server with `DEEPSEEK_API_KEY`, the demo
+`DEEPGRAM_API_KEY` (its own Deepgram project, free credit, no card),
+`AUDIO_BACKEND=deepgram` and the two daily caps.
 
 **Cost and time.** About $17/month while it runs (four months of credit);
-DeepSeek cents. Three to four working days: results files and README one
-day, Docker and gating one day, deploy and TLS one day, recording half a
-day.
+DeepSeek cents; Deepgram a few cents a day against the free credit, at
+most about $1.40 at the 120-minute server cap. Three to four working days:
+results files and README one day, Docker and gating one day, deploy and
+TLS one day, cloud voice and its metering half a day.
 
-**Done when.** A stranger opens the URL, runs a practice question and a
-short text mock without a key of their own, cannot make Claude spend, and
-every README number matches a committed file that CI checks.
+**Done when.** A stranger opens the URL, runs a practice question without
+a key of their own, runs a short text mock and a live voice mock on the
+demo key, cannot make Claude spend or run the vendors past their daily
+allowances, and every README number matches a committed file that CI
+checks.
 
 ### Step 2 — A collaboration signal that is not a project
 

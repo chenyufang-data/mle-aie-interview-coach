@@ -200,6 +200,26 @@ else
   fail "POST /api/evaluate -> $code: $(head -c 300 "$EVAL" 2>/dev/null)"
 fi
 
+# Voice capabilities: the image carries the cloud voice subset, so the loop
+# is on when the .env names a cloud backend and its key (the demo box) and
+# otherwise off with a stated reason (CI has no .env). Either way the page
+# must learn which from this endpoint.
+VOICE="$WORK/voice.json"
+code="$(curl -sS -o "$VOICE" -w '%{http_code}' "$BASE_URL/api/mock/voice")"
+if [ "$code" = "200" ] && py - "$VOICE" <<'PY'
+import json, sys
+caps = json.load(open(sys.argv[1], encoding="utf-8"))
+if caps.get("enabled") is True:
+    print(f"voice: on - {caps.get('stt_backend')} + {caps.get('tts_backend')}, ws_path={caps.get('ws_path')!r}")
+elif caps.get("enabled") is False and caps.get("reason"):
+    print(f"voice: off - {caps['reason']}")
+else:
+    print(f"unexpected voice caps: {caps}"); sys.exit(1)
+PY
+then pass "GET /api/mock/voice states whether the live loop is up"
+else fail "GET /api/mock/voice -> $code: $(head -c 300 "$VOICE" 2>/dev/null)"
+fi
+
 if [ "$FAILURES" -gt 0 ]; then
   echo "RESULT: FAIL ($FAILURES failure(s))"
   exit 1

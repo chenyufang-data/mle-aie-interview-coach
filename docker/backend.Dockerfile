@@ -4,8 +4,12 @@ FROM python:3.13-slim
 
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements.txt requirements-voice-cloud.txt ./
+# requirements-voice-cloud.txt is the light part of the voice stack (the
+# loop server + Silero VAD): with AUDIO_BACKEND=deepgram and its key in the
+# server's .env the live voice mode is on; otherwise the server states why
+# the loop is off and serves text only (docs/deployment.md section 6).
+RUN pip install --no-cache-dir -r requirements.txt -r requirements-voice-cloud.txt
 
 # Runtime files only - training scripts, datasets, and gold labels stay out.
 # Top-level modules the runtime imports: retrieval (BM25), retrieval_dense

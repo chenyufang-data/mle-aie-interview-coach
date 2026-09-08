@@ -89,9 +89,15 @@ def voice_availability(host):
     except ImportError as exc:
         return (f"missing dependency {getattr(exc, 'name', exc)!r} "
                 "(pip install -r requirements-stt.txt)")
+    from coach.voice import loop as voice_loop
+    # The configured audio stack must be able to run: the container ships
+    # the cloud subset only, so a local default (or a cloud backend with no
+    # key) is reported here rather than failing at the first session.
+    reason = voice_loop.backend_requirements()
+    if reason:
+        return reason
     import socket
 
-    from coach.voice import loop as voice_loop
     with socket.socket() as probe:
         try:
             probe.bind((host, voice_loop.VOICE_PORT))
@@ -185,6 +191,16 @@ def main():
                 + (f"server-wide {config.LLM_DAILY_CAP} calls/day; "
                    if config.LLM_DAILY_CAP else "no server-wide cap (LLM_DAILY_CAP); ")
                 + f"{capped} key(s) carry a daily_llm_calls cap."
+            )
+            voice_capped = sum(1 for entry in users.USERS.values()
+                               if isinstance(entry, dict) and entry.get("daily_voice_minutes"))
+            print(
+                "Voice budgets: "
+                + (f"server-wide {config.VOICE_DAILY_MINUTES} min/day; "
+                   if config.VOICE_DAILY_MINUTES
+                   else "no server-wide cap (VOICE_DAILY_MINUTES); ")
+                + f"{voice_capped} key(s) carry a daily_voice_minutes cap; "
+                + f"a session ends after {config.VOICE_SESSION_MAX_MINUTES} min."
             )
         else:
             print("Tiers: off (no users.json) - every request grades with Claude.")

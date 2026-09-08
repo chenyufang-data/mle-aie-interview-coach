@@ -93,9 +93,11 @@ def resolve_key(key):
             "log": entry.get("log", True),
             # Per-key daily LLM-call budget, any engine (0 = unlimited).
             "llm_cap": _cap(entry.get("daily_llm_calls")),
+            # Per-key daily live-voice budget in minutes (0 = unlimited).
+            "voice_cap": _cap(entry.get("daily_voice_minutes")),
         }
     return {"key": None, "name": "anonymous", "tier": "free", "log": True,
-            "llm_cap": 0}
+            "llm_cap": 0, "voice_cap": 0}
 
 
 def resolve_user(handler):
@@ -117,12 +119,14 @@ def _today():
 
 def _row(usage, row_id, today):
     """Today's counters for a usage row; a stale or missing row starts at 0.
-    "used" counts Claude calls (the quota), "llm" counts every LLM call."""
+    "used" counts Claude calls (the quota), "llm" counts every LLM call,
+    "voice" counts seconds of live voice (metered in ticks, so a float)."""
     row = usage.get(row_id)
     if not row or row.get("date") != today:
-        return {"date": today, "used": 0, "llm": 0}
+        return {"date": today, "used": 0, "llm": 0, "voice": 0.0}
     return {"date": today, "used": int(row.get("used", 0)),
-            "llm": int(row.get("llm", 0))}
+            "llm": int(row.get("llm", 0)),
+            "voice": float(row.get("voice", 0) or 0)}
 
 
 def quota_left(user):
@@ -148,6 +152,65 @@ def budget_left(user):
     if config.LLM_DAILY_CAP:
         server_left = max(0, config.LLM_DAILY_CAP - server_row["llm"])
     return {"key": key_left, "server": server_left}
+
+
+def voice_left(user):
+    """Live-voice seconds left today as {"key": n | None, "server": n | None};
+    None means that budget is unlimited. Caps are minutes in users.json and
+    the environment; the counters are seconds, because a session is metered
+    in ticks (coach/voice/loop.py) and a clip by its length."""
+    with _usage_lock:
+        usage = _read_usage()
+        today = _today()
+        key_row = _row(usage, _usage_id(user["key"]), today) if user.get("key") else None
+        server_row = _row(usage, SERVER_ROW, today)
+    key_left = None
+    if key_row is not None and user.get("voice_cap"):
+        key_left = max(0.0, user["voice_cap"] * 60 - key_row["voice"])
+    server_left = None
+    if config.VOICE_DAILY_MINUTES:
+        server_left = max(0.0, config.VOICE_DAILY_MINUTES * 60 - server_row["voice"])
+    return {"key": key_left, "server": server_left}
+
+
+def minutes_left(seconds):
+    """Seconds left -> whole minutes for display (None stays None). A
+    started minute counts as one, since a session gets a whole tick."""
+    if seconds is None:
+        return None
+    return int(-(-seconds // 60))
+
+
+def take_voice(user, seconds):
+    """Charge `seconds` of live voice to the key (when it has one) and to
+    the server.
+
+    Returns None when the session may go on, or "voice" when the key's or
+    the server's daily voice allowance is already spent - nothing is
+    written then. A tick is charged whole once it starts, so a session
+    ends within one tick of the allowance running out: the overrun is
+    bounded by the tick length, never by the session length."""
+    today = _today()
+    seconds = max(0.0, float(seconds))
+    with _usage_lock:
+        usage = _read_usage()
+        key_id = _usage_id(user["key"]) if user.get("key") else None
+        key_row = _row(usage, key_id, today) if key_id else None
+        server_row = _row(usage, SERVER_ROW, today)
+        if (key_row is not None and user.get("voice_cap")
+                and key_row["voice"] >= user["voice_cap"] * 60):
+            return "voice"
+        if (config.VOICE_DAILY_MINUTES
+                and server_row["voice"] >= config.VOICE_DAILY_MINUTES * 60):
+            return "voice"
+        if key_row is not None:
+            key_row["voice"] = round(key_row["voice"] + seconds, 3)
+            usage[key_id] = key_row
+        server_row["voice"] = round(server_row["voice"] + seconds, 3)
+        usage[SERVER_ROW] = server_row
+        USAGE_PATH.parent.mkdir(parents=True, exist_ok=True)
+        USAGE_PATH.write_text(json.dumps(usage), encoding="utf-8")
+    return None
 
 
 def take_call(user, engine):

@@ -326,6 +326,121 @@ def test_sidecar_protocol():
     print("sidecar protocol ok")
 
 
+def test_voice_session_budget():
+    """The live loop refuses a key whose voice allowance is spent, meters a
+    running session in ticks, and ends it when the allowance runs out:
+    spoken goodbye, done frame, socket closed. Offline: --mock's fake
+    interviewer, fake STT/TTS/VAD, no audio, tiny ticks."""
+    import asyncio
+    import json as jsonlib
+    import os
+    import tempfile
+
+    from coach import config, users
+    from coach.mock import planning
+    from coach.voice import loop as voice_loop
+
+    tmp = Path(tempfile.mkdtemp(prefix="coach_voice_"))
+    saved = (users.USERS_PATH, users.USAGE_PATH, config.MODE, users.TIERS_ENABLED,
+             voice_loop.VOICE_TICK_S, voice_loop.SileroVAD,
+             voice_loop.stt_module.make_stt, voice_loop.tts_module.make_tts,
+             os.environ.get("AUDIO_BACKEND"))
+    users.USERS_PATH, users.USAGE_PATH = tmp / "users.json", tmp / "usage.json"
+    users.USERS_PATH.write_text(jsonlib.dumps(
+        {"demo": {"name": "demo", "tier": "paid", "daily_voice_minutes": 1}}),
+        encoding="utf-8")
+    users._users_mtime = None
+    users.load_users()
+    config.MODE = "mock"
+    os.environ["AUDIO_BACKEND"] = "deepgram"   # no Whisper warm-up task
+
+    class FakeSTT:
+        label, wants_frames = "fake_stt", False
+
+        async def close(self):
+            pass
+
+    class FakeTTS:
+        sample_rate = 16000
+
+        async def synth(self, sentence):
+            return b"\x00\x00" * 160, 16000
+
+    class FakeWS:
+        def __init__(self, hello):
+            self.hello = hello
+            self.sent = []
+            self.closed = asyncio.Event()
+
+        async def recv(self):
+            return jsonlib.dumps(self.hello)
+
+        def __aiter__(self):
+            return self
+
+        async def __anext__(self):
+            await self.closed.wait()      # open until the server closes it
+            raise StopAsyncIteration
+
+        async def send(self, message):
+            self.sent.append(jsonlib.loads(message) if isinstance(message, str)
+                             else message)
+
+        async def close(self):
+            self.closed.set()
+
+    voice_loop.SileroVAD = lambda: None
+    voice_loop.stt_module.make_stt = lambda backend, keyterms: FakeSTT()
+    voice_loop.tts_module.make_tts = lambda backend, voice=None: FakeTTS()
+    voice_loop.VOICE_TICK_S = 0.02
+    try:
+        resume = (Path(__file__).resolve().parents[1] / "example_resume.txt") \
+            .read_text(encoding="utf-8")
+        role = planning.propose_roles(resume, "", "fake")["roles"][0]
+        jd_text, _ = planning.resolve_jd({"role": role})
+        plan = planning.build_plan(resume, jd_text, role, None,
+                                   {"style": "neutral", "length": "short"}, "fake")
+        hello = {"type": "hello", "access_key": "demo", "plan": plan, "role": role,
+                 "transcript": [], "keyterms": [], "settings": {"speak": True}}
+        demo = users.resolve_key("demo")
+
+        # 1. a spent allowance is refused at the hello; nothing else happens
+        users.take_voice(demo, 60)
+        ws = FakeWS(hello)
+        asyncio.run(asyncio.wait_for(voice_loop.VoiceSession(ws).run(), 10))
+        assert ws.sent == [{"type": "error", "message": voice_loop.VOICE_CAP_MESSAGE}], ws.sent
+
+        # 2. a running session, nearly spent: the meter refuses within a few
+        #    ticks and the server ends the interview cleanly
+        users.USAGE_PATH.unlink()
+        users.take_voice(demo, 59.95)
+        ws = FakeWS(hello)
+        asyncio.run(asyncio.wait_for(voice_loop.VoiceSession(ws).run(), 10))
+        frames = [f for f in ws.sent if isinstance(f, dict)]
+        kinds = [f["type"] for f in frames]
+        assert kinds[0] == "ready" and "done" in kinds, kinds
+        spoken = " ".join(f["text"] for f in frames if f["type"] == "sentence")
+        assert "live-voice time" in spoken, spoken
+        assert kinds[-1] == "state" and frames[-1]["value"] == "done", frames[-3:]
+        assert ws.closed.is_set()
+        used = jsonlib.loads(users.USAGE_PATH.read_text(encoding="utf-8"))
+        assert used[users._usage_id("demo")]["voice"] >= 60, used
+        assert used[users.SERVER_ROW]["voice"] >= 60, used
+    finally:
+        (users.USERS_PATH, users.USAGE_PATH, config.MODE, _tiers,
+         voice_loop.VOICE_TICK_S, voice_loop.SileroVAD,
+         voice_loop.stt_module.make_stt, voice_loop.tts_module.make_tts,
+         backend) = saved
+        users._users_mtime = None
+        users.USERS = {}
+        users.TIERS_ENABLED = _tiers
+        if backend is None:
+            os.environ.pop("AUDIO_BACKEND", None)
+        else:
+            os.environ["AUDIO_BACKEND"] = backend
+    print("voice session budget ok")
+
+
 if __name__ == "__main__":
     test_endpointer()
     test_chunker()
@@ -336,4 +451,5 @@ if __name__ == "__main__":
     test_final_transcript_meta()
     test_deepgram_backend()
     test_sidecar_protocol()
+    test_voice_session_budget()
     print("all voice tests passed")

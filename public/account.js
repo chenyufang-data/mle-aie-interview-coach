@@ -106,7 +106,11 @@ const Account = {
             + (user.llm_cap
               ? `; ${user.llm_left_today} of ${user.llm_cap} LLM calls left today on this key` : "")
             + (user.server_llm_cap
-              ? `; ${user.server_llm_left_today} of ${user.server_llm_cap} left server-wide` : "");
+              ? `; ${user.server_llm_left_today} of ${user.server_llm_cap} left server-wide` : "")
+            + (user.voice_cap
+              ? `; ${user.voice_left_today} of ${user.voice_cap} live-voice minutes left today on this key` : "")
+            + (user.server_voice_cap
+              ? `; ${user.server_voice_left_today} of ${user.server_voice_cap} voice minutes left server-wide` : "");
         } else {
           label = "key not recognized";
           title = "The server did not recognize this key. Click to re-enter or sign out.";

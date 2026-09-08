@@ -1,5 +1,5 @@
 {
   "change-me-to-a-long-random-key": { "name": "Chenyu", "tier": "paid" },
   "another-key-optional": { "name": "Friend", "tier": "free", "log": false },
-  "demo-key-for-strangers": { "name": "Demo", "tier": "paid", "daily_llm_calls": 60 }
+  "demo-key-for-strangers": { "name": "Demo", "tier": "paid", "daily_llm_calls": 60, "daily_voice_minutes": 30 }
 }

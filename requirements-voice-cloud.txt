@@ -1,0 +1,9 @@
+# Cloud voice for the container (docs/deployment.md section 6): the light
+# part of requirements-stt.txt, enough for the live loop to run on a cloud
+# audio stack (AUDIO_BACKEND=deepgram - Nova-3 streaming + Aura-2 TTS - or
+# elevenlabs, which also needs the elevenlabs package). The local stack
+# (faster-whisper, CUDA wheels, Kokoro) stays out of the image: far too
+# heavy for a t3.small, and there is no GPU on it.
+#   pip install -r requirements-voice-cloud.txt
+websockets>=13            # the coach/voice loop server + the Deepgram stream
+onnxruntime>=1.20         # Silero VAD (data/models/silero_vad.onnx, auto-downloaded)

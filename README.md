@@ -2,6 +2,12 @@
 
 [![tests](https://github.com/chenyufang-data/mle-aie-interview-coach/actions/workflows/tests.yml/badge.svg)](https://github.com/chenyufang-data/mle-aie-interview-coach/actions/workflows/tests.yml)
 
+**Live demo: [coach.cyfang.org](https://coach.cyfang.org)** — practice
+questions and instant local grading need no key; the AI mock interview and
+the live voice mock run on a demo key (ask me for it) under daily budgets,
+on a single small VM. How it is deployed and what a stranger can and cannot
+spend: [`docs/deployment.md`](docs/deployment.md).
+
 A local interview practice app for Machine Learning Engineer and AI Engineer interviews,
 powered by Claude and two curated, rubric-grounded question banks with real questions,
 model answers, and grading rubrics:
@@ -172,8 +178,12 @@ docker-compose.prod.yml up -d --build`); the step-by-step runbook, including
 the demo key with daily budgets and what a stranger can and cannot do, is
 [`docs/deployment.md`](docs/deployment.md). Two guards apply on any public
 host: the server refuses to bind beyond localhost in Claude mode without
-`users.json`, and with it every LLM call is metered per key and per server
-(tiers section above). The backend peaks around 300–400 MB RAM, so a
+`users.json`, and with it every LLM call and every voice minute is metered
+per key and per server (tiers section above). The image also carries the
+light half of the voice stack (`requirements-voice-cloud.txt`: the loop
+server and Silero VAD), so `AUDIO_BACKEND=deepgram` plus its key in the
+server's `.env` turns the live voice mock on with no GPU; the local
+Whisper/Kokoro stack stays out. The backend peaks around 300–400 MB RAM, so a
 t3.small with 2 GB of swap is comfortable; a t3.micro needs the images
 built off-box.
 
@@ -232,7 +242,14 @@ With `users.json` present, requests are routed per user instead of per server:
   server per day on top, and `GET /api/meta` reports both allowances. The
   `PAID_DAILY_QUOTA` above meters Claude only — the DeepSeek workhorse used
   to be uncapped, which is right for the owner's key and wrong for a key
-  handed to strangers.
+  handed to strangers. Live voice is metered the same way, in minutes:
+  `"daily_voice_minutes": 30` on the key and `VOICE_DAILY_MINUTES` for the
+  server (plus `VOICE_SESSION_MAX_MINUTES`, default 20, for any one
+  session). A session is charged in one-minute ticks while it runs, so a
+  spent allowance ends it within a minute — the interviewer says goodbye,
+  the report is still written — and each interviewer turn takes one LLM
+  unit exactly as a text turn does. `/api/meta` reports the voice
+  allowances too, and the account chip's tooltip shows all of them.
 
 **Smart cascade** (paid tier, `PAID_CASCADE=0` to disable): answers the
 distilled model grades reliably are served locally *without* spending quota.
@@ -684,7 +701,9 @@ same per-session keyterm policy + Aura-2 TTS — one vendor, ~$0.008/min
 STT; measured: term loss 14.8% lenient / WER 12%, STT finalize ~0.00 s,
 first audio p50 1.35 / p95 4.48 s — it works, but loses to both other
 stacks on text quality, so it's the cloud option for deployments without
-an ElevenLabs key), and `elevenlabs` (Scribe Realtime with the measured
+an ElevenLabs key; the public demo runs on it, behind the per-key voice
+allowance, because it is one vendor on free credit that a GPU-less
+t3.small can hold), and `elevenlabs` (Scribe Realtime with the measured
 keyterm policy + Flash v2.5 TTS — the best measured cloud row). In voice modes each answer is also
 recorded and re-transcribed (`POST /api/mock/transcribe`: Scribe batch +
 the full 339-term lexicon, the Phase 0 winner at 3.0% term loss, when an

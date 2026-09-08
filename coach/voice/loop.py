@@ -61,6 +61,22 @@ VOICE_DEBUG = bool(os.environ.get("VOICE_DEBUG"))
 END_SILENCE_MS = int(os.environ.get("VOICE_END_SILENCE_MS", "2000"))
 NUDGE_TEXT = "No rush - take your time."
 GOODBYE_TEXT = "That's all we have time for. Thank you - your report is being written."
+# Live-voice metering (coach/users.py take_voice): a running session is
+# charged VOICE_TICK_S seconds every VOICE_TICK_S seconds, so a spent daily
+# allowance (users.json "daily_voice_minutes", VOICE_DAILY_MINUTES) ends it
+# - spoken goodbye, done frame, socket closed - within one tick, and
+# config.VOICE_SESSION_MAX_MINUTES bounds any one session. Each interviewer
+# turn also takes one LLM unit, as the text mock's /api/mock/turn does.
+VOICE_TICK_S = float(os.environ.get("VOICE_TICK_S", "60"))
+VOICE_CAP_MESSAGE = ("The live-voice allowance for this key is used up for today "
+                     "(demo and shared keys are capped per day). Use the text "
+                     "mock, or try again tomorrow.")
+VOICE_CAP_TEXT = ("That's all the live-voice time this key has for today. "
+                  "Let's stop here - your report is being written.")
+SESSION_CAP_TEXT = ("We've reached this session's time limit. "
+                    "Let's stop here - your report is being written.")
+LLM_CAP_TEXT = ("The interview allowance for this key is used up for today. "
+                "Let's stop here - your report is being written.")
 
 
 def audio_backend():
@@ -77,11 +93,43 @@ def tts_backend():
     return os.environ.get("TTS_BACKEND", audio_backend())
 
 
+def backend_requirements():
+    """None when the configured STT and TTS backends can run here, else a
+    short reason. The container installs the cloud subset only
+    (requirements-voice-cloud.txt), so the local default would fail at the
+    first session's make_stt; saying so at startup puts the reason on the
+    console and the mock page instead (server.py voice_availability)."""
+    import importlib.util
+
+    for side, backend in (("STT", stt_backend()), ("TTS", tts_backend())):
+        if backend == "local":
+            module = "faster_whisper" if side == "STT" else "kokoro_onnx"
+            if importlib.util.find_spec(module) is None:
+                return (f"{side}_BACKEND=local needs {module} (pip install -r "
+                        "requirements-stt.txt) or a cloud AUDIO_BACKEND "
+                        "(deepgram, elevenlabs)")
+        elif backend == "deepgram":
+            if not os.environ.get("DEEPGRAM_API_KEY"):
+                return f"{side}_BACKEND=deepgram needs DEEPGRAM_API_KEY in .env"
+        elif backend == "elevenlabs":
+            if not os.environ.get("ELEVENLABS_API_KEY"):
+                return f"{side}_BACKEND=elevenlabs needs ELEVENLABS_API_KEY in .env"
+            if importlib.util.find_spec("elevenlabs") is None:
+                return (f"{side}_BACKEND=elevenlabs needs the elevenlabs package "
+                        "(pip install -r requirements-stt.txt)")
+        elif backend != "speaches":
+            return (f"unknown {side}_BACKEND {backend!r} (expected local, "
+                    "speaches, deepgram, or elevenlabs)")
+    return None
+
+
 class VoiceSession:
     def __init__(self, websocket):
         self.ws = websocket
         self.state = None            # {plan, role, transcript}
+        self.user = None             # users.resolve_key of the hello's key
         self.engine = None
+        self.meter_task = None       # charges voice time in ticks (meter)
         self.stt = None
         self.tts = None
         self.endpointer = None
@@ -124,6 +172,11 @@ class VoiceSession:
         except engines.MockUnavailable as exc:
             await self.send_json(type="error", message=str(exc))
             return
+        self.user = user
+        left = users.voice_left(user)
+        if 0 in (left["key"], left["server"]):
+            await self.send_json(type="error", message=VOICE_CAP_MESSAGE)
+            return
         plan = hello.get("plan") or {}
         if not plan.get("probe_targets"):
             await self.send_json(type="error",
@@ -153,8 +206,53 @@ class VoiceSession:
             rate=(self.tts.sample_rate if self.tts else None),
             stt=getattr(self.stt, "label", stt_backend()), total_turns=total,
             keyterms_used=len(keyterms))
+        self.meter_task = asyncio.create_task(self.meter())
         self.agent_task = asyncio.create_task(self.agent_turn())
         await self.receive_loop()
+
+    # ----------------------------------------------------------- metering
+
+    async def meter(self):
+        """Charge the session's voice time in ticks and end it when the
+        key's or the server's daily allowance, or the session limit, is
+        reached (users.json "daily_voice_minutes", config.VOICE_DAILY_MINUTES,
+        config.VOICE_SESSION_MAX_MINUTES)."""
+        started = time.perf_counter()
+        limit_s = config.VOICE_SESSION_MAX_MINUTES * 60
+        while not self.closed:
+            if users.take_voice(self.user, VOICE_TICK_S):
+                await self.stop_session(VOICE_CAP_TEXT)
+                return
+            await asyncio.sleep(VOICE_TICK_S)
+            if limit_s and time.perf_counter() - started >= limit_s:
+                await self.stop_session(SESSION_CAP_TEXT)
+                return
+
+    async def stop_session(self, text):
+        """End the interview from the server side: stop the interviewer if
+        it is speaking, say why, send the done frame (the page then builds
+        the report over REST, as after a normal ending) and close the
+        socket."""
+        if self.closed:
+            return
+        task = self.agent_task
+        if task is not None and task is not asyncio.current_task() and not task.done():
+            task.cancel()
+            try:
+                await task
+            except (asyncio.CancelledError, Exception):
+                pass
+        self.agent_task = None
+        self.pending_entry = None
+        self.sent_sentences = []
+        self.played_seq = -1
+        await self.set_state("speaking")
+        await self.speak_text(text)
+        await self.finish()
+        try:
+            await self.ws.close()
+        except Exception:
+            pass
 
     # ------------------------------------------------------------ receive
 
@@ -174,6 +272,8 @@ class VoiceSession:
             self.closed = True
             if self.agent_task:
                 self.agent_task.cancel()
+            if self.meter_task:
+                self.meter_task.cancel()
             if self.stt:
                 await self.stt.close()
 
@@ -330,6 +430,15 @@ class VoiceSession:
             for sentence in sentences:
                 await self.speak_sentence(sentence)
         else:
+            try:
+                # One LLM unit per interviewer turn, as the text mock's
+                # /api/mock/turn takes one (the connect took one already);
+                # a spent Claude quota degrades to DeepSeek on the way.
+                self.engine = engines.pick_engine(self.user)
+            except engines.MockUnavailable:
+                self.pending_entry = None
+                await self.stop_session(LLM_CAP_TEXT)
+                return
             await self.stream_turn(entry, phase, turn_number)
         await self.send_json(type="agent_turn", entry=entry)
         if self.turn_latency:
@@ -444,6 +553,13 @@ async def handler(websocket):
 
 async def serve(host="127.0.0.1", port=VOICE_PORT):
     import websockets
+    try:
+        # Fetch the 2.3 MB Silero VAD once at startup (a persistent volume
+        # in Docker), so a visitor's first session does not wait for it.
+        from coach.voice import vad
+        await asyncio.to_thread(vad.ensure_model)
+    except Exception as exc:
+        print(f"Voice loop: Silero VAD not ready yet ({exc}); the first session retries.")
     async with websockets.serve(handler, host, port, max_size=2 ** 23):
         print(f"Voice loop listening on ws://{host}:{port} "
               f"(stt={stt_backend()}, tts={tts_backend()})")

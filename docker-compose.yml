@@ -19,6 +19,10 @@ services:
       # re-downloads or re-embeds (retrieval_dense.py reads both).
       FASTEMBED_CACHE_DIR: /data/models/fastembed
       RETRIEVAL_INDEX_DIR: /data/index
+      # Silero VAD for the live voice loop (2.3 MB, downloaded once) - the
+      # loop runs when the .env sets a cloud AUDIO_BACKEND (deepgram) and
+      # its key; docs/deployment.md section 6.
+      SILERO_VAD_PATH: /data/models/silero_vad.onnx
     volumes:
       # Practice history and quota state survive container rebuilds
       # (same layout as the local data/ folder - see data/README.md).
@@ -28,8 +32,9 @@ services:
       - ./users.json:/app/users.json:ro
     expose:
       - "8000"
-      # Voice-loop WebSocket (nginx proxies /ws/voice here; it only listens
-      # when the optional voice stack, requirements-stt.txt, is installed).
+      # Voice-loop WebSocket (nginx proxies /ws/voice here; it listens when
+      # the .env names a cloud audio backend the image can run - see
+      # requirements-voice-cloud.txt - otherwise /ws/voice answers 502).
       - "8765"
     healthcheck:
       test:
