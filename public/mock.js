@@ -79,6 +79,7 @@ async function init() {
     () => parseUpload(els.resumeFile, els.resume, els.resumeFileStatus));
   els.jdFile.addEventListener("change",
     () => parseUpload(els.jdFile, els.jd, els.jdFileStatus));
+  restoreSetupText();
   try {
     const meta = await getJson("/api/mock/templates");
     state.templates = meta.templates;
@@ -179,12 +180,42 @@ async function postJson(url, body) {
 
 // ------------------------------------------------------------------- setup
 
+// The last analyzed resume and JD are remembered in THIS browser only
+// (localStorage, never sent anywhere but the analyze call itself), so a
+// return visit does not start from an empty box. Clearing the field and
+// analyzing again forgets it.
+const SETUP_STORAGE = { resume: "coach.mock.resume", jd: "coach.mock.jd" };
+
+function restoreSetupText() {
+  try {
+    for (const [field, key] of Object.entries(SETUP_STORAGE)) {
+      const saved = localStorage.getItem(key);
+      if (saved && !els[field].value) els[field].value = saved;
+    }
+  } catch (error) {
+    // Storage blocked (private window, policy): start empty.
+  }
+}
+
+function rememberSetupText() {
+  try {
+    for (const [field, key] of Object.entries(SETUP_STORAGE)) {
+      const text = els[field].value.trim();
+      if (text) localStorage.setItem(key, text);
+      else localStorage.removeItem(key);
+    }
+  } catch (error) {
+    // Storage blocked: nothing to remember.
+  }
+}
+
 async function detectRoles() {
   const resume = els.resume.value.trim();
   if (resume.length < 80) {
     els.setupStatus.textContent = "Paste your resume text first (at least a few lines).";
     return;
   }
+  rememberSetupText();
   els.detectBtn.disabled = true;
   els.setupStatus.textContent = "Analyzing the resume…";
   try {

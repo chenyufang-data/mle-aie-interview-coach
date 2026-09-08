@@ -14,11 +14,18 @@ timeout is long, and the live loop sets end_silence_ms to the measured
 VOICE_END_SILENCE_MS default of 2000 (1.2 s cut 50% of the real Phase 0
 answers mid-thought, 1.8 s cut 15%, 2.0 s cuts 5% - see coach/voice/loop.py
 and grader/loop_eval.py). Barge-in is not a separate mechanism: the loop
-watches for speech_start while the agent is speaking.
+watches for speech_start while the agent is speaking. Silence alone still
+cuts a thinking pause mid-sentence (the author's first live session on
+the demo box, 2026-09-08: a 2-3 s pause to think, and the interviewer
+moved on), so the loop adds a text-aware hold: when the live transcript
+at end_of_turn ends the way a sentence does not - "...and then I", a
+comma - it calls hold() and the turn stays open for VOICE_HOLD_MS more
+silence, at most twice per turn (looks_unfinished below).
 """
 
 import collections
 import os
+import re
 from pathlib import Path
 
 import numpy as np
@@ -33,6 +40,30 @@ SAMPLE_RATE = 16000
 FRAME_SAMPLES = 512            # the v5 model's required frame: 32 ms at 16 kHz
 FRAME_BYTES = FRAME_SAMPLES * 2
 FRAME_MS = 1000.0 * FRAME_SAMPLES / SAMPLE_RATE
+
+# Words a spoken sentence does not end on: conjunctions, articles,
+# prepositions, auxiliaries, fillers, and a first person left hanging.
+UNFINISHED_TAIL = frozenset("""
+and but or so because then which that with to of for in on at by from into
+about than as if when while where the a an is was are were be been being
+i we my our um uh like also just really basically actually very
+""".split())
+
+
+def looks_unfinished(text):
+    """True when a live transcript ends the way a sentence does not: on a
+    comma or a dash, or on one of UNFINISHED_TAIL. Terminal punctuation
+    (Deepgram smart_format supplies it) means finished; an empty
+    transcript means nothing to judge."""
+    text = (text or "").strip()
+    if not text:
+        return False
+    if text[-1] in ",;:-":
+        return True
+    if text[-1] in ".?!":
+        return False
+    last = re.sub(r"[^a-z']", "", text.split()[-1].lower())
+    return last in UNFINISHED_TAIL
 
 
 def ensure_model():
@@ -107,6 +138,20 @@ class Endpointer:
         self.said_anything = False
         self.timeout_fired = False
         self.utterance = bytearray()
+        self.holds = 0             # hold() calls this turn
+        self.hold_silence_ms = 0.0 # >0: the silence that ends a held turn
+
+    def hold(self, pcm, extra_ms):
+        """The caller judged the utterance unfinished at end_of_turn: keep
+        it open. `pcm` (the end_of_turn payload) becomes the utterance
+        again and the turn ends after `extra_ms` more silence; speech
+        resets that to the normal end_silence_ms, so a later pause can be
+        judged afresh."""
+        self.in_speech = True
+        self.utterance = bytearray(pcm)
+        self.silence_ms = 0.0
+        self.hold_silence_ms = float(extra_ms)
+        self.holds += 1
 
     def feed(self, frame, prob=None):
         """One frame in, zero or more events out."""
@@ -143,12 +188,14 @@ class Endpointer:
             self.utterance.extend(frame)
             if prob < self.end_prob:
                 self.silence_ms += FRAME_MS
-                if self.silence_ms >= self.end_silence_ms:
+                if self.silence_ms >= (self.hold_silence_ms or self.end_silence_ms):
                     pcm = bytes(self.utterance)
                     events.append(("end_of_turn", pcm))
                     self.in_speech = False
                     self.silence_ms = 0.0
+                    self.hold_silence_ms = 0.0
                     self.utterance = bytearray()
             else:
                 self.silence_ms = 0.0
+                self.hold_silence_ms = 0.0
         return events

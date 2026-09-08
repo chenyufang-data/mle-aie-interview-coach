@@ -208,6 +208,14 @@ run past `VOICE_SESSION_MAX_MINUTES` (20). The per-answer re-transcription
 and charged to the same allowance by clip length. `tests/test_users.py`
 and `tests/test_voice.py::test_voice_session_budget` cover the metering.
 
+Turn-taking knobs, all in the server's `.env` and read at startup
+(`up -d` after a change; no rebuild): `VOICE_END_SILENCE_MS` (default
+2000, the measured end-of-answer silence), `VOICE_HOLD_MS` (default 2500:
+how much longer the loop waits when the live transcript ends mid-sentence,
+0 to disable). The first live session on the box was cut during a 2-3 s
+thinking pause; the hold is the answer to that, and a patient interviewer
+for a demo audience may also want `VOICE_END_SILENCE_MS=2500`.
+
 To use ElevenLabs on the box instead (the better measured cloud row, but
 paid): add `elevenlabs>=2.65` to `requirements-voice-cloud.txt`, rebuild,
 and set `AUDIO_BACKEND=elevenlabs` with `ELEVENLABS_API_KEY`.

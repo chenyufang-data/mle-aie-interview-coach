@@ -17,7 +17,63 @@ from coach.voice.chunker import TurnStream, split_sentences        # noqa: E402
 from coach.voice.final_transcript import available_engine          # noqa: E402
 from coach.voice.keyterms import (final_transcript_keyterms,       # noqa: E402
                                   session_keyterms)
-from coach.voice.vad import FRAME_BYTES, Endpointer                # noqa: E402
+from coach.voice.vad import FRAME_BYTES, Endpointer, looks_unfinished  # noqa: E402
+
+
+def test_looks_unfinished():
+    """The text-aware hold: sentence-final punctuation or a content word
+    ends a turn; a conjunction, article, filler or comma keeps it open."""
+    assert looks_unfinished("So I used class weights, and then I")
+    assert looks_unfinished("We compared SMOTE with")
+    assert looks_unfinished("The precision was 0.9,")
+    assert looks_unfinished("I think that the")
+    assert looks_unfinished("it was, um")
+    assert not looks_unfinished("We chose class weights over SMOTE.")
+    assert not looks_unfinished("Recall at 90% precision was 0.62")
+    assert not looks_unfinished("Is that what you meant?")
+    assert not looks_unfinished("")
+    assert not looks_unfinished(None)
+    print("looks_unfinished ok")
+
+
+def test_endpointer_hold():
+    """hold() keeps a turn open for extra silence and hands back the whole
+    utterance (before and after the pause) in one end_of_turn; speech
+    during the hold resets to the normal rule; the hold count is per turn."""
+    frame = b"x" * FRAME_BYTES
+    ep = Endpointer(end_silence_ms=1200)
+    events = []
+    for _ in range(20):
+        events += ep.feed(frame, prob=0.9)
+    for _ in range(40):
+        events += ep.feed(frame, prob=0.1)
+    assert [e[0] for e in events] == ["speech_start", "end_of_turn"]
+    first = events[-1][1]
+    ep.hold(first, 2500)                     # "...and then I": keep listening
+    assert ep.holds == 1 and ep.in_speech
+    events = []
+    for _ in range(70):                      # 2.24 s of silence: still held
+        events += ep.feed(frame, prob=0.1)
+    assert events == [], events
+    for _ in range(15):                      # the candidate resumes
+        events += ep.feed(frame, prob=0.9)
+    assert ep.hold_silence_ms == 0.0         # back to the normal rule
+    for _ in range(40):                      # 1.28 s: normal end of turn
+        events += ep.feed(frame, prob=0.1)
+    assert [e[0] for e in events] == ["end_of_turn"], events
+    assert len(events[-1][1]) > len(first) + 15 * FRAME_BYTES   # both halves
+    # a held turn that stays silent ends after the extra silence only
+    ep.hold(events[-1][1], 640)
+    events = []
+    for _ in range(19):
+        events += ep.feed(frame, prob=0.1)
+    assert events == []
+    events += ep.feed(frame, prob=0.1)
+    assert [e[0] for e in events] == ["end_of_turn"], events
+    assert ep.holds == 2
+    ep.start_turn()
+    assert ep.holds == 0 and ep.hold_silence_ms == 0.0
+    print("endpointer hold ok")
 
 
 def test_endpointer():
@@ -442,6 +498,8 @@ def test_voice_session_budget():
 
 
 if __name__ == "__main__":
+    test_looks_unfinished()
+    test_endpointer_hold()
     test_endpointer()
     test_chunker()
     test_keyterms()

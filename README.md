@@ -633,8 +633,9 @@ final transcripts side by side.
 works: around a target role, against your own resume.
 
 1. **Setup** — paste or upload your resume (no resume at hand? use the
-   fictional `example_resume.txt` in the repo root), and optionally the
-   real JD you are interviewing for; otherwise a default JD template for
+   fictional `example_resume.txt` in the repo root; the last analyzed
+   resume and JD are remembered in your browser's localStorage, nowhere
+   else), and optionally the real JD you are interviewing for; otherwise a default JD template for
    the role family is used and labelled as such. Pick interviewer style
    (neutral / friendly / tough) and length (short ≈ 7 questions,
    standard ≈ 11).
@@ -692,8 +693,12 @@ and both the console and the mock page say why. `--voice` forces the loop
 (failing loudly if it cannot start), `--no-voice` skips it for a fast
 text-only server. With the loop up, `/mock.html` grows three modes: **text**,
 **browser voice** (Web Speech dictation + spoken questions, free), and
-**live voice** — server-side Silero VAD with patient endpointing, live STT,
-the same streamed interviewer (sentence-by-sentence to TTS, so first audio
+**live voice** — server-side Silero VAD with patient endpointing (2 s of
+silence, plus a text-aware hold: when the live transcript ends
+mid-sentence — "…and then I", a trailing comma — the turn stays open for
+`VOICE_HOLD_MS` more, 2.5 s by default, at most twice per answer; added
+after the first live session on the public demo cut a thinking pause),
+live STT, the same streamed interviewer (sentence-by-sentence to TTS, so first audio
 never waits for the full turn), and barge-in that records exactly the
 sentences you actually heard. One loop, four audio stacks via
 `AUDIO_BACKEND` (`STT_BACKEND`/`TTS_BACKEND` override each side for

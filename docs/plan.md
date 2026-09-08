@@ -393,8 +393,15 @@ call). With thinking off for the two setup calls — extraction from the
 resume, not reasoning — both take about 12 s and return the same role set
 and a fully grounded 7-probe plan; grading and the report keep thinking
 on, the setting the judge agreement was measured under. Each structured
-call now logs its seconds and token counts. Still open: a spoken session
-from a browser on another device (the microphone path).
+call now logs its seconds and token counts. The author's spoken session
+then worked (live transcript, interviewer follow-up) and found two
+things: the endpointer cut a 2-3 s thinking pause mid-answer, and the
+page forgot the pasted resume. Both addressed the same day: a text-aware
+hold in the endpointer (`looks_unfinished` on the live transcript at
+end-of-turn — a conjunction, article, filler or comma keeps the turn open
+for `VOICE_HOLD_MS` more silence, 2.5 s, at most twice per answer; unit
+tests, not yet re-measured on the 20 real recordings), and the resume and
+JD remembered in the browser's localStorage.
 
 **Steps.**
 

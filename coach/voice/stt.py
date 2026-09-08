@@ -103,6 +103,11 @@ class BufferedSTT:
     async def send(self, frame):
         pass
 
+    def live_text(self):
+        """No transcript exists before commit: the loop's end-of-turn hold
+        (coach/voice/vad.py looks_unfinished) has nothing to judge."""
+        return None
+
     async def close(self):
         pass
 
@@ -169,6 +174,11 @@ class ScribeRealtimeSTT:
         self._writer = None
         self._dropped = False        # live stream lost frames since last commit
         self._segments = []          # committed segments since the last turn
+
+    def live_text(self):
+        """The turn's committed segments so far (Scribe's partials are not
+        kept), for the loop's end-of-turn hold; never blocks."""
+        return " ".join(self._segments).strip()
 
     async def _connect(self):
         from elevenlabs import ElevenLabs
@@ -460,16 +470,22 @@ class DeepgramSTT:
         await self._ws.send(json.dumps({"type": "Finalize"}))
         while self._covered < target and time.perf_counter() < deadline:
             await asyncio.sleep(0.05)
-        parts = list(self._segments)
-        if self._interim is not None and self._interim[1] > self._flushed_to:
-            parts.append(self._interim[0])
-        text = " ".join(parts).strip()
+        text = self.live_text()
         self._segments = []
         self._interim = None
         # Anything that later arrives for audio this turn already owned
         # belongs HERE, not to the next answer - drop it at the reader.
         self._flushed_to = max(self._flushed_to, target)
         return text, time.perf_counter() - started
+
+    def live_text(self):
+        """The turn's transcript so far - finals plus the open window's
+        interim - for the loop's end-of-turn hold (coach/voice/vad.py
+        looks_unfinished) and for the commit; never blocks."""
+        parts = list(self._segments)
+        if self._interim is not None and self._interim[1] > self._flushed_to:
+            parts.append(self._interim[0])
+        return " ".join(parts).strip()
 
     async def commit(self, utterance_pcm):
         if self._dropped:

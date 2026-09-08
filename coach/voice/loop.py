@@ -49,7 +49,7 @@ from coach.mock import turns
 from coach.voice import stt as stt_module
 from coach.voice import tts as tts_module
 from coach.voice.chunker import TurnStream, split_sentences
-from coach.voice.vad import FRAME_BYTES, Endpointer, SileroVAD
+from coach.voice.vad import FRAME_BYTES, Endpointer, SileroVAD, looks_unfinished
 
 VOICE_PORT = int(os.environ.get("VOICE_PORT", "8765"))
 VOICE_DEBUG = bool(os.environ.get("VOICE_DEBUG"))
@@ -59,6 +59,12 @@ VOICE_DEBUG = bool(os.environ.get("VOICE_DEBUG"))
 # at 2.0 s - the equivalence rule's bar (grader/loop_eval.py). The
 # afterthought path in on_answer() recovers the answers it still cuts.
 END_SILENCE_MS = int(os.environ.get("VOICE_END_SILENCE_MS", "2000"))
+# Text-aware hold on top of the silence rule: when the live transcript at
+# end-of-turn ends mid-sentence (coach/voice/vad.py looks_unfinished), the
+# turn stays open for this much more silence, at most MAX_HOLDS times per
+# turn. 0 disables it. Live STT backends only (buffered ones have no text).
+VOICE_HOLD_MS = int(os.environ.get("VOICE_HOLD_MS", "2500"))
+MAX_HOLDS = 2
 NUDGE_TEXT = "No rush - take your time."
 GOODBYE_TEXT = "That's all we have time for. Thank you - your report is being written."
 # Live-voice metering (coach/users.py take_voice): a running session is
@@ -305,6 +311,17 @@ class VoiceSession:
             if agent_busy:
                 await self.barge_in()
         elif kind == "end_of_turn":
+            live = self.stt.live_text() if hasattr(self.stt, "live_text") else None
+            if (VOICE_HOLD_MS > 0 and not agent_busy and live
+                    and self.endpointer.holds < MAX_HOLDS and looks_unfinished(live)):
+                # "...and then I" / a trailing comma: the candidate is
+                # thinking mid-sentence. Keep the turn open a while longer
+                # instead of committing and moving on.
+                self.endpointer.hold(event[1], VOICE_HOLD_MS)
+                if VOICE_DEBUG:
+                    print(f"voice[{id(self) % 10000}]: hold {self.endpointer.holds} "
+                          f"({live[-40:]!r})", flush=True)
+                return
             await self.send_json(type="speech", value="end")
             if agent_busy:
                 return              # backchannel while the agent still talks
