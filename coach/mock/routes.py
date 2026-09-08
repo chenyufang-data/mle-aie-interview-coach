@@ -28,7 +28,7 @@ def handle_get(handler, path):
         from coach import config
         from coach.voice import loop as voice_loop
         from coach.voice.final_transcript import available_engine
-        json_response(handler, 200, {
+        caps = {
             "enabled": config.VOICE_ENABLED,
             "reason": config.VOICE_DISABLED_REASON,
             "ws_port": voice_loop.VOICE_PORT if config.VOICE_ENABLED else None,
@@ -42,7 +42,13 @@ def handle_get(handler, path):
             "level1": bool(config.VOICE_ENABLED
                            and os.environ.get("ELEVENLABS_API_KEY")
                            and os.environ.get("SPEECH_ENGINE_ID")),
-        })
+        }
+        ws_path = config.voice_ws_path()
+        if ws_path:
+            # Behind a reverse proxy (docker/nginx.conf + Caddy): the page
+            # dials this path on its own origin, ws:// or wss:// to match.
+            caps["ws_path"] = ws_path
+        json_response(handler, 200, caps)
         return
     if path == "/api/mock/level1/transcript":
         # The mock page mirrors the hosted session's transcript from here

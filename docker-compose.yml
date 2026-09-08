@@ -14,6 +14,11 @@ services:
       REAL_SESSIONS_PATH: /data/sessions/real_sessions.jsonl
       FREE_SESSIONS_PATH: /data/sessions/free_sessions.jsonl
       USAGE_PATH: /data/usage.json
+      # The bge-small embedding model (~127 MB, downloaded once) and the
+      # document-vector cache live on the volume, so an image rebuild never
+      # re-downloads or re-embeds (retrieval_dense.py reads both).
+      FASTEMBED_CACHE_DIR: /data/models/fastembed
+      RETRIEVAL_INDEX_DIR: /data/index
     volumes:
       # Practice history and quota state survive container rebuilds
       # (same layout as the local data/ folder - see data/README.md).
@@ -23,6 +28,9 @@ services:
       - ./users.json:/app/users.json:ro
     expose:
       - "8000"
+      # Voice-loop WebSocket (nginx proxies /ws/voice here; it only listens
+      # when the optional voice stack, requirements-stt.txt, is installed).
+      - "8765"
     healthcheck:
       test:
         [

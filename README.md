@@ -163,12 +163,19 @@ the free offline ML grader instead, uncomment the `--mock` command line in
 the `coach-data` volume. `--ollama` mode is not wired for Docker (it expects
 Ollama on localhost).
 
-This fits comfortably on a small host such as an EC2 `t3.micro` (the backend
-peaks around 300-400 MB RAM). Two tips there: build the images off-box or add
-swap (1 GB RAM is tight for `docker build`), and either restrict the security
-group to your own IP or run `--mock` if the instance is publicly reachable —
-the app has no authentication, and in Claude mode every evaluation spends your
-API credits.
+`bash tests/test_container.sh` is the packaging test CI runs: it builds both
+images, boots the stack in `--mock` mode and checks the banks, the hybrid
+retriever and one graded answer through nginx. For a public host,
+`docker-compose.prod.yml` adds Caddy with automatic Let's Encrypt in front
+of nginx (`DOMAIN=... docker compose -f docker-compose.yml -f
+docker-compose.prod.yml up -d --build`); the step-by-step runbook, including
+the demo key with daily budgets and what a stranger can and cannot do, is
+[`docs/deployment.md`](docs/deployment.md). Two guards apply on any public
+host: the server refuses to bind beyond localhost in Claude mode without
+`users.json`, and with it every LLM call is metered per key and per server
+(tiers section above). The backend peaks around 300–400 MB RAM, so a
+t3.small with 2 GB of swap is comfortable; a t3.micro needs the images
+built off-box.
 
 ## Free testing modes (no API cost)
 

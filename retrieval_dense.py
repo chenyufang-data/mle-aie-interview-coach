@@ -33,8 +33,12 @@ MODEL_NAME = "BAAI/bge-small-en-v1.5"
 # Fixed before the experiment ran (plan §1): bge v1.5 recommends this prefix
 # on the query side for short query -> passage retrieval; documents get none.
 QUERY_PREFIX = "Represent this sentence for searching relevant passages: "
-MODEL_CACHE = BASE_DIR / "data" / "models" / "fastembed"
-INDEX_DIR = BASE_DIR / "data" / "index"
+# Both overridable so Docker can point them at the persistent volume
+# (docker-compose.yml): the one-time ~127 MB model download and the document
+# vectors then survive image rebuilds. Defaults are the local data/ layout.
+MODEL_CACHE = Path(os.environ.get("FASTEMBED_CACHE_DIR")
+                   or BASE_DIR / "data" / "models" / "fastembed")
+INDEX_DIR = Path(os.environ.get("RETRIEVAL_INDEX_DIR") or BASE_DIR / "data" / "index")
 RRF_K = 60
 
 
@@ -44,6 +48,15 @@ def normalize_rows(matrix):
     matrix = np.asarray(matrix, dtype=np.float32)
     norms = np.linalg.norm(matrix, axis=-1, keepdims=True)
     return matrix / np.maximum(norms, 1e-12)
+
+
+def _display_path(path):
+    """Repo-relative when possible; the cache may live outside the repo
+    (FASTEMBED_CACHE_DIR), where relative_to would raise."""
+    try:
+        return str(path.relative_to(BASE_DIR))
+    except ValueError:
+        return str(path)
 
 
 def local_model_dir():
@@ -112,7 +125,7 @@ class Embedder:
         self.name = model_name
         self.query_prefix = query_prefix
         self.model_dir = Path(local) if local else None
-        self.source = str(local.relative_to(BASE_DIR)) if local else "fastembed download"
+        self.source = _display_path(local) if local else "fastembed download"
 
     def info(self):
         onnx = (self.model_dir / "model_optimized.onnx") if self.model_dir else None

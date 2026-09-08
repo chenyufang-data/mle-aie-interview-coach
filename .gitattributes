@@ -1,0 +1,11 @@
+# Normalize line endings in the repository. Everything that ends up inside
+# a Linux image or is run by a shell is forced to LF on checkout too, so a
+# Windows clone (core.autocrlf=true) never copies CRLF scripts or configs
+# into containers.
+* text=auto
+*.sh text eol=lf
+Dockerfile text eol=lf
+*.Dockerfile text eol=lf
+docker/* text eol=lf
+*.conf text eol=lf
+Caddyfile text eol=lf

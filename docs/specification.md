@@ -54,8 +54,10 @@ mle-aie-interview-coach/
 ├── users.sample.json                     access-key template for freemium tiers
 ├── .env.sample                           documented environment variables
 ├── docker-compose.yml                    two-service deployment
-├── docker/                 (3 files)     backend.Dockerfile, frontend.Dockerfile, nginx.conf
-├── docs/                   (11 files)    contracts, this spec, the merged plan, evaluation reports, screenshots
+├── docker-compose.prod.yml               Caddy TLS override for a public host (docs/deployment.md)
+├── .gitattributes                        LF for scripts and Docker files on every checkout
+├── docker/                 (4 files)     backend.Dockerfile, frontend.Dockerfile, nginx.conf, Caddyfile
+├── docs/                   (12 files)    contracts, this spec, the merged plan, deployment runbook, evaluation reports, screenshots
 ├── data/                   (gitignored)  personal + runtime data; only data/README.md tracked
 ├── public/                 (10 files)    dependency-free frontend
 ├── grader/                 (47 files)    distillation subsystem + experiment harnesses (§5)
@@ -361,6 +363,9 @@ CI (`.github/workflows/tests.yml`) runs these suites on every push, plus
   the license gate on stored excerpts, ids and the sources table.
 - `tests/test_voice.py` — deterministic voice parts: endpointer state
   machine, sentence chunker, keyterm policy, two-transcript report block.
+- `tests/test_container.sh` (its own CI job) — builds both images, boots the
+  stack in `--mock` mode and checks `/api/meta` through nginx (public banks,
+  no `rag_exp`, hybrid retrieval) plus one graded answer, then tears down.
 
 Local-only: `tests/e2e_smoke.py` drives a real Chromium via Playwright
 (installed in `.venv`, deliberately not in requirements) through

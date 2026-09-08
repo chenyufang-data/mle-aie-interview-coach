@@ -25,6 +25,7 @@ users.USERS_PATH = TMP / "users.json"
 users.USAGE_PATH = TMP / "usage.json"
 config.MODE = "claude"
 os.environ["DEEPSEEK_API_KEY"] = "dummy-routing-only-never-called"
+os.environ["ANTHROPIC_API_KEY"] = "dummy-routing-only-never-called"
 
 KEYS = {
     "demo-key": {"name": "demo", "tier": "paid", "daily_llm_calls": 2},
@@ -103,6 +104,20 @@ def test_quota_without_deepseek():
         assert grading.grading_route(owner) == ("local", "quota")
     finally:
         os.environ["DEEPSEEK_API_KEY"] = saved
+
+
+def test_force_llm_without_claude_key():
+    setup()
+    saved = os.environ.pop("ANTHROPIC_API_KEY")
+    try:
+        demo = users.resolve_key("demo-key")
+        # The demo box has no Claude key: "Always Claude" routes to DeepSeek
+        # and takes no Claude quota, only a budget unit.
+        assert grading.grading_route(demo, force_llm=True) == ("deepseek", None)
+        assert users.quota_left(demo) == config.PAID_DAILY_QUOTA
+        assert users.budget_left(demo)["key"] == 1
+    finally:
+        os.environ["ANTHROPIC_API_KEY"] = saved
 
 
 def test_free_and_anonymous():

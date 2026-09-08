@@ -4,7 +4,7 @@ import random
 
 from retrieval import tokenize
 
-from coach import config, users
+from coach import config, llm, users
 from coach.config import CASCADE_FRAC_HIT_MAX, CASCADE_PRED_MAX, GRADER_PATH
 
 # Trained distilled grader for mock mode (grader/train.py artifact); None
@@ -52,6 +52,10 @@ def grading_route(user, force_llm=False):
         return "claude", None  # tiers disabled: single-user setup
     if user["tier"] != "paid":
         return "local", "free"
+    if force_llm and not llm.get_api_key():
+        # No Claude key on this box (the public demo runs DeepSeek only):
+        # "Always Claude" degrades to the workhorse instead of failing.
+        force_llm = False
     engine = "deepseek" if (not force_llm and config.deepseek_available()) else "claude"
     refusal = users.take_call(user, engine)
     if refusal == "quota" and config.deepseek_available():

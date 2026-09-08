@@ -1,0 +1,43 @@
+# Production override: Caddy terminates TLS (automatic Let's Encrypt) in
+# front of the nginx frontend, which stays private to the compose network.
+#
+#   DOMAIN=coach.example.com \
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+# Required environment (shell, or a line in the .env beside this file -
+# compose reads it for ${...} substitution):
+#   DOMAIN   public hostname of this host. Its DNS A/AAAA record must point
+#            here and ports 80 + 443 must be reachable, or the ACME
+#            challenge fails and Caddy serves nothing.
+# Certificates and ACME state persist in the caddy-data volume; a rebuild
+# never re-issues them. Tear down with the same two -f flags.
+services:
+  backend:
+    environment:
+      # The page dials the voice loop on its own origin
+      # (wss://$DOMAIN/ws/voice); nginx forwards it to backend:8765.
+      VOICE_WS_PATH: /ws/voice
+
+  frontend:
+    # Only Caddy is published; nginx is reached through it.
+    ports: !reset []
+
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp" # HTTP/3
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN to the public hostname of this host}
+    volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - frontend
+    restart: unless-stopped
+
+volumes:
+  caddy-data:
+  caddy-config:

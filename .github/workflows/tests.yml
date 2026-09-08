@@ -48,3 +48,19 @@ jobs:
       # Voice loop, deterministic parts: endpointer state machine, sentence
       # chunker, keyterm policy, SSE parsing, two-transcript report block.
       - run: python tests/test_voice.py
+      # Tier budgets, quota degradation, the mock engine gate, the request
+      # body cap and the anonymous-LLM refusal (offline, no key).
+      - run: python tests/test_users.py
+      # README result tables must match the committed results files
+      # (tools/render_readme.py renders them; --check fails on drift).
+      - run: python tools/render_readme.py --check
+
+  # Docker packaging: builds both images, boots the stack in --mock mode
+  # (no API key), checks /api/meta through nginx (public banks present,
+  # rag_exp absent, hybrid retrieval live after the model download) and
+  # one graded answer, then tears everything down.
+  container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash tests/test_container.sh

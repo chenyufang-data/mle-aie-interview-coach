@@ -1,0 +1,11 @@
+# TLS front door for docker-compose.prod.yml. DOMAIN comes from the
+# environment; Caddy obtains and renews the Let's Encrypt certificate itself
+# (ports 80 and 443 of the host must be reachable from the internet and the
+# DNS record must point here). Everything - pages, /api/, and the /ws/voice
+# WebSocket upgrade - is forwarded to the nginx frontend service, which
+# proxies /api/ and /ws/voice on to the backend (docker/nginx.conf). Caddy
+# adds X-Forwarded-For / X-Forwarded-Proto for it.
+{$DOMAIN} {
+	encode gzip
+	reverse_proxy frontend:80
+}

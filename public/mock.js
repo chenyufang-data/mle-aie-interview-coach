@@ -480,7 +480,14 @@ async function startLiveVoice() {
   }
   els.interviewStatus.textContent = "Connecting the voice loop…";
   await ensureMic();
-  const url = `ws://${location.hostname}:${voice.caps.ws_port}`;
+  // An https page can only open wss://. When the server publishes ws_path
+  // (VOICE_WS_PATH, set behind the nginx/Caddy proxy) the socket rides the
+  // page's own origin; otherwise it dials the loop's port directly.
+  const proto = location.protocol === "https:" ? "wss:" : "ws:";
+  const wsPath = voice.caps.ws_path;
+  const url = typeof wsPath === "string" && wsPath.startsWith("/")
+    ? `${proto}//${location.host}${wsPath}`
+    : `${proto}//${location.hostname}:${voice.caps.ws_port}`;
   voice.ws = new WebSocket(url);
   voice.ws.binaryType = "arraybuffer";
   voice.ws.onopen = () => {
