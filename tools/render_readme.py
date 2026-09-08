@@ -210,7 +210,8 @@ def main():
     parser.add_argument("--readme", default=str(README))
     args = parser.parse_args()
     path = Path(args.readme)
-    raw = path.read_text(encoding="utf-8", newline="")
+    with path.open(encoding="utf-8", newline="") as handle:  # 3.12-safe; keeps CRLF
+        raw = handle.read()
     eol = "\r\n" if "\r\n" in raw else "\n"
     text = raw.replace("\r\n", "\n")
     rendered, seen = render(text)
@@ -223,7 +224,9 @@ def main():
         print(f"{path.name} is stale: {', '.join(stale) or 'unknown block'} "
               f"- run tools/render_readme.py and commit the result")
         return 1
-    path.write_text(rendered.replace("\n", eol), encoding="utf-8", newline="")
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        handle.write(rendered.replace("
+", eol))
     print(f"{path.name}: rewrote {len(seen)} result blocks")
     return 0
 
