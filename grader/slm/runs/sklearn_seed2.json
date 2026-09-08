@@ -1,0 +1,565 @@
+{
+ "arm": "sklearn",
+ "seed": 2,
+ "generated": "2026-09-08T18:02:00",
+ "environment": {
+  "python": "3.13.7",
+  "sklearn": "1.9.0"
+ },
+ "n_train": 3091,
+ "n_test": 775,
+ "n_gold": 106,
+ "train_seconds": 0.8,
+ "config": {
+  "model": "HistGradientBoostingRegressor",
+  "max_iter": 300,
+  "learning_rate": 0.06,
+  "max_leaf_nodes": 31,
+  "l2_regularization": 1.0,
+  "training_rows": "all train-side rows: construction labels, teacher labels overriding at 3x weight (grader/train.py)"
+ },
+ "gold": {
+  "mae": 1.0786721590813009,
+  "within1": 0.7547169811320755,
+  "spearman": 0.768307783804201,
+  "qwk": 0.7822775436802483
+ },
+ "keyword_baseline": {
+  "mae": 1.9811320754716981,
+  "within1": 0.4811320754716981,
+  "spearman": 0.7440780469998645,
+  "qwk": 0.6036457116148632
+ },
+ "predictions": [
+  {
+   "row_id": "03_categorical_value_analysis__06_cardinality_assessment::content_extract::4",
+   "y": 3.0,
+   "pred": 5.895480544411769
+  },
+  {
+   "row_id": "03_categorical_value_analysis__06_cardinality_assessment::fragment::7",
+   "y": 2.0,
+   "pred": 3.5100488134306906
+  },
+  {
+   "row_id": "05_simplest_regression_models__08_baseline_comparison_and_eval_viz::content_extract::4",
+   "y": 3.0,
+   "pred": 4.338478741901811
+  },
+  {
+   "row_id": "06_linear_regression_model__08_coefficients_intercept_interpretation::fragment::7",
+   "y": 2.0,
+   "pred": 2.6946104156529516
+  },
+  {
+   "row_id": "07_regularization__03_end_to_end_pipeline::keypoint_recall::2",
+   "y": 7.0,
+   "pred": 7.364043715286659
+  },
+  {
+   "row_id": "07_regularization__03_end_to_end_pipeline::question_echo::10",
+   "y": 1.0,
+   "pred": 1.2041822669423274
+  },
+  {
+   "row_id": "07_regularization__07_lasso_l1_sparsity::content_extract::4",
+   "y": 2.0,
+   "pred": 5.649822605704167
+  },
+  {
+   "row_id": "07_regularization__07_lasso_l1_sparsity::partial::6",
+   "y": 3.0,
+   "pred": 5.571333802145003
+  },
+  {
+   "row_id": "07_regularization__11_tuning_alpha_bias_variance::fragment::7",
+   "y": 3.0,
+   "pred": 3.854179679021092
+  },
+  {
+   "row_id": "07_regularization__11_tuning_alpha_bias_variance::vague_short::9",
+   "y": 1.0,
+   "pred": 1.8735578297859998
+  },
+  {
+   "row_id": "08_cross_validation__05_kfold_cv::vague::8",
+   "y": 1.0,
+   "pred": 2.486965437458662
+  },
+  {
+   "row_id": "09_collinearity__08_drop_collinear_features_refit::paraphrase_lite::1",
+   "y": 7.0,
+   "pred": 7.281602126721941
+  },
+  {
+   "row_id": "09_collinearity__08_drop_collinear_features_refit::keypoint_recall::2",
+   "y": 6.0,
+   "pred": 7.004651976103016
+  },
+  {
+   "row_id": "12_time_series__09_historical_features_leakage::model_answer::0",
+   "y": 8.0,
+   "pred": 8.102004315626475
+  },
+  {
+   "row_id": "12_time_series__09_historical_features_leakage::paraphrase_lite::1",
+   "y": 6.0,
+   "pred": 6.756470912589216
+  },
+  {
+   "row_id": "12_time_series__09_historical_features_leakage::keypoint_recall::2",
+   "y": 7.0,
+   "pred": 6.865192090531166
+  },
+  {
+   "row_id": "12_time_series__09_historical_features_leakage::question_echo::10",
+   "y": 1.0,
+   "pred": 1.2102755736363608
+  },
+  {
+   "row_id": "14_ensemble__01_what_is_ensemble::fragment::7",
+   "y": 3.0,
+   "pred": 3.398080913493875
+  },
+  {
+   "row_id": "14_ensemble__02_pipeline_custom_transformer::keypoint_recall::2",
+   "y": 7.0,
+   "pred": 6.837620516395869
+  },
+  {
+   "row_id": "14_ensemble__02_pipeline_custom_transformer::paraphrase_heavy::3",
+   "y": 5.0,
+   "pred": 7.042762130030355
+  },
+  {
+   "row_id": "14_ensemble__07_gradient_boosting_build_mechanism::fragment::7",
+   "y": 2.0,
+   "pred": 3.429674813018831
+  },
+  {
+   "row_id": "15_categorical_values_II__04_multihot_multilabel::content_extract::4",
+   "y": 4.0,
+   "pred": 6.123838520947583
+  },
+  {
+   "row_id": "15_categorical_values_II__07_ordinality_label_vs_onehot::vague_short::9",
+   "y": 1.0,
+   "pred": 2.0270610928611914
+  },
+  {
+   "row_id": "17_simplest_classification_models__02_class_imbalance_base_rate::content_extract::4",
+   "y": 6.0,
+   "pred": 6.270994399168262
+  },
+  {
+   "row_id": "17_simplest_classification_models__02_class_imbalance_base_rate::partial::6",
+   "y": 4.0,
+   "pred": 4.569224533913449
+  },
+  {
+   "row_id": "17_simplest_classification_models__02_class_imbalance_base_rate::off_topic::11",
+   "y": 1.0,
+   "pred": 1.1438955630533754
+  },
+  {
+   "row_id": "17_simplest_classification_models__04_accuracy_score::paraphrase_heavy::3",
+   "y": 4.0,
+   "pred": 6.722060237456243
+  },
+  {
+   "row_id": "17_simplest_classification_models__09_confusion_matrix::vague_short::9",
+   "y": 1.0,
+   "pred": 1.9288000426729304
+  },
+  {
+   "row_id": "18_logistic_regression_predict__04_what_is_logistic_regression::off_topic::11",
+   "y": 1.0,
+   "pred": 1.1833321211416654
+  },
+  {
+   "row_id": "19_logistic_regression_proba__02_binary_target_and_leakage::content_extract::4",
+   "y": 7.0,
+   "pred": 5.028753287603979
+  },
+  {
+   "row_id": "19_logistic_regression_proba__03_pipeline_transformer_class_weight::vague::8",
+   "y": 1.0,
+   "pred": 1.959352516048234
+  },
+  {
+   "row_id": "20_svm__05_C_hyperparameter_soft_vs_hard_margin::paraphrase_heavy::3",
+   "y": 3.0,
+   "pred": 7.3254649481283565
+  },
+  {
+   "row_id": "20_svm__05_C_hyperparameter_soft_vs_hard_margin::content_extract::4",
+   "y": 6.0,
+   "pred": 6.042575549204524
+  },
+  {
+   "row_id": "20_svm__05_C_hyperparameter_soft_vs_hard_margin::fragment::7",
+   "y": 3.0,
+   "pred": 3.2453303568982617
+  },
+  {
+   "row_id": "20_svm__05_C_hyperparameter_soft_vs_hard_margin::vague::8",
+   "y": 1.0,
+   "pred": 4.368196179562063
+  },
+  {
+   "row_id": "20_svm__07_class_weight_and_base_rate::content_extract::4",
+   "y": 7.0,
+   "pred": 7.25293509421731
+  },
+  {
+   "row_id": "20_svm__09_kernel_trick_rbf_poly::paraphrase_heavy::3",
+   "y": 5.0,
+   "pred": 7.713239621597133
+  },
+  {
+   "row_id": "20_svm__09_kernel_trick_rbf_poly::content_extract::4",
+   "y": 4.0,
+   "pred": 6.361502085566581
+  },
+  {
+   "row_id": "01_llm_foundations_and_prompting__04_self_attention::paraphrase_lite::1",
+   "y": 7.0,
+   "pred": 6.930529760760696
+  },
+  {
+   "row_id": "01_llm_foundations_and_prompting__04_self_attention::keypoint_recall::2",
+   "y": 7.0,
+   "pred": 6.846238619433345
+  },
+  {
+   "row_id": "01_llm_foundations_and_prompting__04_self_attention::off_topic::11",
+   "y": 1.0,
+   "pred": 0.9610963184018847
+  },
+  {
+   "row_id": "01_llm_foundations_and_prompting__05_transformer_architecture::paraphrase_lite::1",
+   "y": 7.0,
+   "pred": 8.180127996370084
+  },
+  {
+   "row_id": "01_llm_foundations_and_prompting__05_transformer_architecture::content_extract::4",
+   "y": 4.0,
+   "pred": 4.050500496061439
+  },
+  {
+   "row_id": "01_llm_foundations_and_prompting__08_rlhf::fragment::7",
+   "y": 2.0,
+   "pred": 1.690695742257493
+  },
+  {
+   "row_id": "01_llm_foundations_and_prompting__14_in_context_learning_paradigm_shift::keypoint_recall::2",
+   "y": 6.0,
+   "pred": 7.677571930531563
+  },
+  {
+   "row_id": "01_llm_foundations_and_prompting__14_in_context_learning_paradigm_shift::paraphrase_heavy::3",
+   "y": 3.0,
+   "pred": 6.718538888790441
+  },
+  {
+   "row_id": "01_llm_foundations_and_prompting__14_in_context_learning_paradigm_shift::vague::8",
+   "y": 1.0,
+   "pred": 2.322669462162061
+  },
+  {
+   "row_id": "02_llm_apis_and_prompting_in_code__05_token_generation_and_temperature::keypoint_recall::2",
+   "y": 6.0,
+   "pred": 6.685083864473641
+  },
+  {
+   "row_id": "02_llm_apis_and_prompting_in_code__05_token_generation_and_temperature::paraphrase_heavy::3",
+   "y": 5.0,
+   "pred": 6.40433147153604
+  },
+  {
+   "row_id": "02_llm_apis_and_prompting_in_code__05_token_generation_and_temperature::vague::8",
+   "y": 1.0,
+   "pred": 1.299162414887072
+  },
+  {
+   "row_id": "02_llm_apis_and_prompting_in_code__05_token_generation_and_temperature::off_topic_short::12",
+   "y": 1.0,
+   "pred": 1.241416153530701
+  },
+  {
+   "row_id": "03_rag_and_retrieval__06_keyword_retrieval_bm25::paraphrase_heavy::3",
+   "y": 5.0,
+   "pred": 6.490204898903998
+  },
+  {
+   "row_id": "03_rag_and_retrieval__07_semantic_vs_keyword_hybrid::model_answer::0",
+   "y": 8.0,
+   "pred": 8.484292654104218
+  },
+  {
+   "row_id": "03_rag_and_retrieval__07_semantic_vs_keyword_hybrid::paraphrase_lite::1",
+   "y": 5.0,
+   "pred": 7.620383122969953
+  },
+  {
+   "row_id": "03_rag_and_retrieval__15_small_to_big_and_hyde::paraphrase_heavy::3",
+   "y": 4.0,
+   "pred": 7.076337875150469
+  },
+  {
+   "row_id": "03_rag_and_retrieval__15_small_to_big_and_hyde::vague::8",
+   "y": 1.0,
+   "pred": 2.370104422060443
+  },
+  {
+   "row_id": "04_ai_workflows_and_agents__02_rag_is_a_workflow::fragment::7",
+   "y": 3.0,
+   "pred": 3.6792257921034146
+  },
+  {
+   "row_id": "04_ai_workflows_and_agents__09_cot_to_reasoning_models::paraphrase_heavy::3",
+   "y": 5.0,
+   "pred": 6.3923234298034695
+  },
+  {
+   "row_id": "04_ai_workflows_and_agents__09_cot_to_reasoning_models::content_extract::4",
+   "y": 5.0,
+   "pred": 5.87255435347456
+  },
+  {
+   "row_id": "04_ai_workflows_and_agents__09_cot_to_reasoning_models::vague::8",
+   "y": 1.0,
+   "pred": 3.7283744725981123
+  },
+  {
+   "row_id": "04_ai_workflows_and_agents__09_cot_to_reasoning_models::off_topic::11",
+   "y": 1.0,
+   "pred": 1.3707430315799165
+  },
+  {
+   "row_id": "04_ai_workflows_and_agents__10_types_of_reasoning::paraphrase_lite::1",
+   "y": 7.0,
+   "pred": 8.547226662952337
+  },
+  {
+   "row_id": "04_ai_workflows_and_agents__10_types_of_reasoning::keypoint_recall::2",
+   "y": 7.0,
+   "pred": 6.119889266747097
+  },
+  {
+   "row_id": "05_agent_loop_and_context_engineering__01_agent_loop::vague_short::9",
+   "y": 1.0,
+   "pred": 1.5737643736423914
+  },
+  {
+   "row_id": "05_agent_loop_and_context_engineering__01_agent_loop::off_topic::11",
+   "y": 1.0,
+   "pred": 1.0603433126214048
+  },
+  {
+   "row_id": "05_agent_loop_and_context_engineering__08_rag_for_context_engineering::fragment::7",
+   "y": 4.0,
+   "pred": 3.0524577944923843
+  },
+  {
+   "row_id": "06_harness_engineering_and_evaluation__11_what_to_evaluate::partial::6",
+   "y": 5.0,
+   "pred": 6.00928783394833
+  },
+  {
+   "row_id": "06_harness_engineering_and_evaluation__11_what_to_evaluate::off_topic::11",
+   "y": 1.0,
+   "pred": 1.2262267383378107
+  },
+  {
+   "row_id": "06_harness_engineering_and_evaluation__13_evaluation_graders::keypoint_recall::2",
+   "y": 6.0,
+   "pred": 6.6856039215065755
+  },
+  {
+   "row_id": "06_harness_engineering_and_evaluation__13_evaluation_graders::paraphrase_heavy::3",
+   "y": 3.0,
+   "pred": 6.4415678381152475
+  },
+  {
+   "row_id": "06_harness_engineering_and_evaluation__13_evaluation_graders::content_extract::4",
+   "y": 3.0,
+   "pred": 3.846046467386968
+  },
+  {
+   "row_id": "06_harness_engineering_and_evaluation__13_evaluation_graders::fragment::7",
+   "y": 3.0,
+   "pred": 3.1503272573061536
+  },
+  {
+   "row_id": "17_simplest_classification_models__09_confusion_matrix::paraphrase_good::0",
+   "y": 8.0,
+   "pred": 7.297716001644329
+  },
+  {
+   "row_id": "17_simplest_classification_models__09_confusion_matrix::mistake::0",
+   "y": 5.0,
+   "pred": 6.441429800318341
+  },
+  {
+   "row_id": "11_categorical_features__08_pipeline_scores_leakage_overfit::paraphrase_good::0",
+   "y": 6.0,
+   "pred": 6.384431582260229
+  },
+  {
+   "row_id": "11_categorical_features__08_pipeline_scores_leakage_overfit::mistake::0",
+   "y": 3.0,
+   "pred": 2.368185549012695
+  },
+  {
+   "row_id": "07_regularization__07_lasso_l1_sparsity::paraphrase_good::0",
+   "y": 6.0,
+   "pred": 5.81729240570217
+  },
+  {
+   "row_id": "07_regularization__07_lasso_l1_sparsity::mistake::0",
+   "y": 4.0,
+   "pred": 3.8308300228122794
+  },
+  {
+   "row_id": "01_llm_foundations_and_prompting__04_self_attention::paraphrase_good::0",
+   "y": 6.0,
+   "pred": 6.340558827060624
+  },
+  {
+   "row_id": "01_llm_foundations_and_prompting__04_self_attention::mistake::0",
+   "y": 6.0,
+   "pred": 4.618960968473896
+  },
+  {
+   "row_id": "07_regularization__03_end_to_end_pipeline::paraphrase_good::0",
+   "y": 6.0,
+   "pred": 7.034428762735027
+  },
+  {
+   "row_id": "07_regularization__03_end_to_end_pipeline::mistake::0",
+   "y": 6.0,
+   "pred": 3.6956734575770764
+  },
+  {
+   "row_id": "08_cross_validation__01_holdout_temporal_split::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 7.954176329342336
+  },
+  {
+   "row_id": "08_cross_validation__01_holdout_temporal_split::mistake::0",
+   "y": 6.0,
+   "pred": 4.115732955560576
+  },
+  {
+   "row_id": "04_ai_workflows_and_agents__10_types_of_reasoning::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 3.5861754981026808
+  },
+  {
+   "row_id": "04_ai_workflows_and_agents__10_types_of_reasoning::mistake::0",
+   "y": 4.0,
+   "pred": 4.080414891678372
+  },
+  {
+   "row_id": "03_rag_and_retrieval__07_semantic_vs_keyword_hybrid::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 5.348017781940569
+  },
+  {
+   "row_id": "03_rag_and_retrieval__07_semantic_vs_keyword_hybrid::mistake::0",
+   "y": 4.0,
+   "pred": 3.3261768393639213
+  },
+  {
+   "row_id": "06_linear_regression_model__08_coefficients_intercept_interpretation::paraphrase_good::0",
+   "y": 6.0,
+   "pred": 6.585194665640994
+  },
+  {
+   "row_id": "06_linear_regression_model__08_coefficients_intercept_interpretation::mistake::0",
+   "y": 4.0,
+   "pred": 5.897949647341618
+  },
+  {
+   "row_id": "08_cross_validation__05_kfold_cv::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 7.592245074768509
+  },
+  {
+   "row_id": "08_cross_validation__05_kfold_cv::mistake::0",
+   "y": 5.0,
+   "pred": 5.4051892944394675
+  },
+  {
+   "row_id": "01_pandas_kickoff__07_boolean_filtering::paraphrase_good::0",
+   "y": 6.0,
+   "pred": 7.618269974908883
+  },
+  {
+   "row_id": "01_pandas_kickoff__07_boolean_filtering::mistake::0",
+   "y": 6.0,
+   "pred": 5.310435440680781
+  },
+  {
+   "row_id": "04_ai_workflows_and_agents__02_rag_is_a_workflow::paraphrase_good::0",
+   "y": 8.0,
+   "pred": 6.611364997840737
+  },
+  {
+   "row_id": "04_ai_workflows_and_agents__02_rag_is_a_workflow::mistake::0",
+   "y": 6.0,
+   "pred": 5.487813508356455
+  },
+  {
+   "row_id": "20_svm__05_C_hyperparameter_soft_vs_hard_margin::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 7.140345467626779
+  },
+  {
+   "row_id": "20_svm__05_C_hyperparameter_soft_vs_hard_margin::mistake::0",
+   "y": 5.0,
+   "pred": 5.116992868415341
+  },
+  {
+   "row_id": "03_rag_and_retrieval__06_keyword_retrieval_bm25::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 6.573272417636586
+  },
+  {
+   "row_id": "03_rag_and_retrieval__06_keyword_retrieval_bm25::mistake::0",
+   "y": 4.0,
+   "pred": 5.6998399267270035
+  },
+  {
+   "row_id": "01_llm_foundations_and_prompting__14_in_context_learning_paradigm_shift::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 6.326629308169697
+  },
+  {
+   "row_id": "01_llm_foundations_and_prompting__14_in_context_learning_paradigm_shift::mistake::0",
+   "y": 6.0,
+   "pred": 5.443327142390978
+  },
+  {
+   "row_id": "06_harness_engineering_and_evaluation__13_evaluation_graders::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 6.924526075414794
+  },
+  {
+   "row_id": "06_harness_engineering_and_evaluation__13_evaluation_graders::mistake::0",
+   "y": 4.0,
+   "pred": 4.024095461841973
+  },
+  {
+   "row_id": "02_llm_apis_and_prompting_in_code__06_top_p_nucleus_sampling::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 6.018003339392745
+  },
+  {
+   "row_id": "02_llm_apis_and_prompting_in_code__06_top_p_nucleus_sampling::mistake::0",
+   "y": 6.0,
+   "pred": 5.054077218097897
+  }
+ ]
+}

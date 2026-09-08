@@ -1,0 +1,640 @@
+{
+ "arm": "sklearn",
+ "seed": 42,
+ "generated": "2026-09-08T18:01:59",
+ "environment": {
+  "python": "3.13.7",
+  "sklearn": "1.9.0"
+ },
+ "n_train": 3083,
+ "n_test": 783,
+ "n_gold": 121,
+ "train_seconds": 2.1,
+ "config": {
+  "model": "HistGradientBoostingRegressor",
+  "max_iter": 300,
+  "learning_rate": 0.06,
+  "max_leaf_nodes": 31,
+  "l2_regularization": 1.0,
+  "training_rows": "all train-side rows: construction labels, teacher labels overriding at 3x weight (grader/train.py)"
+ },
+ "gold": {
+  "mae": 1.142665950998081,
+  "within1": 0.6942148760330579,
+  "spearman": 0.736569390075567,
+  "qwk": 0.7729862577451625
+ },
+ "keyword_baseline": {
+  "mae": 2.0082644628099175,
+  "within1": 0.4380165289256198,
+  "spearman": 0.7109381847392255,
+  "qwk": 0.5975751292484552
+ },
+ "predictions": [
+  {
+   "row_id": "01_pandas_kickoff__08_missing_values::partial::6",
+   "y": 6.0,
+   "pred": 7.640565269204758
+  },
+  {
+   "row_id": "01_pandas_kickoff__08_missing_values::question_echo::10",
+   "y": 1.0,
+   "pred": 1.7872403408039315
+  },
+  {
+   "row_id": "02_numerical_data_analysis__03_count_vs_len_valuecounts::fragment::7",
+   "y": 2.0,
+   "pred": 2.9163023408047257
+  },
+  {
+   "row_id": "02_numerical_data_analysis__06_histograms::model_answer::0",
+   "y": 8.0,
+   "pred": 6.845476387065705
+  },
+  {
+   "row_id": "02_numerical_data_analysis__06_histograms::paraphrase_lite::1",
+   "y": 5.0,
+   "pred": 6.133091946976448
+  },
+  {
+   "row_id": "02_numerical_data_analysis__06_histograms::content_extract::4",
+   "y": 6.0,
+   "pred": 4.9208477122681105
+  },
+  {
+   "row_id": "02_numerical_data_analysis__06_histograms::partial::5",
+   "y": 5.0,
+   "pred": 3.2581773599253103
+  },
+  {
+   "row_id": "02_numerical_data_analysis__07_log_transform_lognormal::keypoint_recall::2",
+   "y": 7.0,
+   "pred": 7.201752420133873
+  },
+  {
+   "row_id": "03_categorical_value_analysis__08_multivalue_method2_split_stack::paraphrase_lite::1",
+   "y": 6.0,
+   "pred": 6.083439347637373
+  },
+  {
+   "row_id": "04_timestamp_analysis__02_datetime_extremes::paraphrase_lite::1",
+   "y": 6.0,
+   "pred": 5.3865205484278365
+  },
+  {
+   "row_id": "04_timestamp_analysis__02_datetime_extremes::keypoint_recall::2",
+   "y": 8.0,
+   "pred": 6.574087253802111
+  },
+  {
+   "row_id": "04_timestamp_analysis__04_datetime_index_time_series::keypoint_recall::2",
+   "y": 6.0,
+   "pred": 6.910568545353003
+  },
+  {
+   "row_id": "04_timestamp_analysis__05_resample_fundamentals::content_extract::4",
+   "y": 4.0,
+   "pred": 4.107938991970399
+  },
+  {
+   "row_id": "04_timestamp_analysis__05_resample_fundamentals::off_topic::11",
+   "y": 1.0,
+   "pred": 1.1167809697985174
+  },
+  {
+   "row_id": "06_linear_regression_model__10_polynomial_features::paraphrase_lite::1",
+   "y": 6.0,
+   "pred": 8.046869905721524
+  },
+  {
+   "row_id": "06_linear_regression_model__11_feature_scaling::partial::5",
+   "y": 5.0,
+   "pred": 4.869068968525599
+  },
+  {
+   "row_id": "06_linear_regression_model__12_overfitting_bias_variance::model_answer::0",
+   "y": 9.0,
+   "pred": 8.558833947635092
+  },
+  {
+   "row_id": "06_linear_regression_model__12_overfitting_bias_variance::paraphrase_lite::1",
+   "y": 7.0,
+   "pred": 8.58923364886804
+  },
+  {
+   "row_id": "06_linear_regression_model__12_overfitting_bias_variance::vague_short::9",
+   "y": 1.0,
+   "pred": 1.5916518216110522
+  },
+  {
+   "row_id": "06_linear_regression_model__12_overfitting_bias_variance::off_topic_short::12",
+   "y": 1.0,
+   "pred": 1.5313841028753652
+  },
+  {
+   "row_id": "07_regularization__10_hyperparameter_vs_parameter::paraphrase_lite::1",
+   "y": 6.0,
+   "pred": 7.994067745214013
+  },
+  {
+   "row_id": "07_regularization__10_hyperparameter_vs_parameter::partial::5",
+   "y": 4.0,
+   "pred": 5.389966939029797
+  },
+  {
+   "row_id": "08_cross_validation__05_kfold_cv::vague::8",
+   "y": 1.0,
+   "pred": 2.7130882073970812
+  },
+  {
+   "row_id": "08_cross_validation__06_kfold_vs_holdout::content_extract::4",
+   "y": 6.0,
+   "pred": 5.674039426537001
+  },
+  {
+   "row_id": "08_cross_validation__06_kfold_vs_holdout::partial::5",
+   "y": 5.0,
+   "pred": 5.867552236698653
+  },
+  {
+   "row_id": "08_cross_validation__06_kfold_vs_holdout::off_topic::11",
+   "y": 1.0,
+   "pred": 0.9655127969429793
+  },
+  {
+   "row_id": "10_pca__03_standardize_before_pca::paraphrase_lite::1",
+   "y": 7.0,
+   "pred": 6.355413316753658
+  },
+  {
+   "row_id": "12_time_series__04_lag_features_shift::question_echo::10",
+   "y": 1.0,
+   "pred": 0.6613239155492673
+  },
+  {
+   "row_id": "13_decision_tree__04_regression_metrics_overfitting::content_extract::4",
+   "y": 6.0,
+   "pred": 6.667607767724029
+  },
+  {
+   "row_id": "13_decision_tree__07_pruning_regularization::model_answer::0",
+   "y": 9.0,
+   "pred": 9.166766629581783
+  },
+  {
+   "row_id": "13_decision_tree__07_pruning_regularization::paraphrase_lite::1",
+   "y": 7.0,
+   "pred": 8.193666764660435
+  },
+  {
+   "row_id": "13_decision_tree__07_pruning_regularization::content_extract::4",
+   "y": 4.0,
+   "pred": 6.38470356735411
+  },
+  {
+   "row_id": "13_decision_tree__10_hyperparameter_tuning_gridsearch::content_extract::4",
+   "y": 4.0,
+   "pred": 5.485104784094811
+  },
+  {
+   "row_id": "14_ensemble__03_random_forest_build_eval::model_answer::0",
+   "y": 9.0,
+   "pred": 7.712316426135977
+  },
+  {
+   "row_id": "14_ensemble__03_random_forest_build_eval::paraphrase_lite::1",
+   "y": 7.0,
+   "pred": 6.0246781322127605
+  },
+  {
+   "row_id": "14_ensemble__03_random_forest_build_eval::keypoint_recall::2",
+   "y": 6.0,
+   "pred": 7.200760984958676
+  },
+  {
+   "row_id": "14_ensemble__03_random_forest_build_eval::paraphrase_heavy::3",
+   "y": 4.0,
+   "pred": 6.89592055196158
+  },
+  {
+   "row_id": "14_ensemble__03_random_forest_build_eval::vague::8",
+   "y": 1.0,
+   "pred": 2.267395121297121
+  },
+  {
+   "row_id": "14_ensemble__07_gradient_boosting_build_mechanism::fragment::7",
+   "y": 2.0,
+   "pred": 3.7108867815060185
+  },
+  {
+   "row_id": "14_ensemble__08_gbt_hyperparameters::keypoint_recall::2",
+   "y": 7.0,
+   "pred": 7.133929719252397
+  },
+  {
+   "row_id": "15_categorical_values_II__03_onehot_dummy_encoding::paraphrase_lite::1",
+   "y": 8.0,
+   "pred": 7.320982247636322
+  },
+  {
+   "row_id": "15_categorical_values_II__03_onehot_dummy_encoding::keypoint_recall::2",
+   "y": 8.0,
+   "pred": 6.589381064291919
+  },
+  {
+   "row_id": "15_categorical_values_II__03_onehot_dummy_encoding::paraphrase_heavy::3",
+   "y": 6.0,
+   "pred": 6.5852022454535515
+  },
+  {
+   "row_id": "15_categorical_values_II__03_onehot_dummy_encoding::partial::6",
+   "y": 3.0,
+   "pred": 3.7977277079786735
+  },
+  {
+   "row_id": "15_categorical_values_II__04_multihot_multilabel::content_extract::4",
+   "y": 4.0,
+   "pred": 6.192422199502357
+  },
+  {
+   "row_id": "17_simplest_classification_models__03_baseline_dummyclassifier::model_answer::0",
+   "y": 9.0,
+   "pred": 7.213377137668832
+  },
+  {
+   "row_id": "17_simplest_classification_models__03_baseline_dummyclassifier::paraphrase_lite::1",
+   "y": 6.0,
+   "pred": 6.560557803650443
+  },
+  {
+   "row_id": "17_simplest_classification_models__08_classification_report_averaging::off_topic_short::12",
+   "y": 1.0,
+   "pred": 1.2408483715966692
+  },
+  {
+   "row_id": "18_logistic_regression_predict__04_what_is_logistic_regression::off_topic::11",
+   "y": 1.0,
+   "pred": 1.1395651103863698
+  },
+  {
+   "row_id": "18_logistic_regression_predict__07_predict_output_shape_meaning::paraphrase_heavy::3",
+   "y": 5.0,
+   "pred": 6.719340333807021
+  },
+  {
+   "row_id": "18_logistic_regression_predict__07_predict_output_shape_meaning::content_extract::4",
+   "y": 4.0,
+   "pred": 6.041142188235699
+  },
+  {
+   "row_id": "18_logistic_regression_predict__11_other_imbalance_methods::keypoint_recall::2",
+   "y": 8.0,
+   "pred": 7.253114238410333
+  },
+  {
+   "row_id": "18_logistic_regression_predict__11_other_imbalance_methods::vague::8",
+   "y": 1.0,
+   "pred": 1.8668828617397044
+  },
+  {
+   "row_id": "19_logistic_regression_proba__10_feature_target_distribution_analysis::paraphrase_heavy::3",
+   "y": 4.0,
+   "pred": 5.981124462324476
+  },
+  {
+   "row_id": "19_logistic_regression_proba__10_feature_target_distribution_analysis::fragment::7",
+   "y": 3.0,
+   "pred": 2.676024899755492
+  },
+  {
+   "row_id": "19_logistic_regression_proba__10_feature_target_distribution_analysis::question_echo::10",
+   "y": 1.0,
+   "pred": 0.9024457616993369
+  },
+  {
+   "row_id": "20_svm__09_kernel_trick_rbf_poly::paraphrase_heavy::3",
+   "y": 5.0,
+   "pred": 7.51444316448594
+  },
+  {
+   "row_id": "20_svm__09_kernel_trick_rbf_poly::content_extract::4",
+   "y": 4.0,
+   "pred": 5.653357280122752
+  },
+  {
+   "row_id": "21_clustering__08_dendrogram::paraphrase_heavy::3",
+   "y": 4.0,
+   "pred": 7.083631465846302
+  },
+  {
+   "row_id": "21_clustering__08_dendrogram::content_extract::4",
+   "y": 2.0,
+   "pred": 2.839365520304012
+  },
+  {
+   "row_id": "01_llm_foundations_and_prompting__07_supervised_fine_tuning::content_extract::4",
+   "y": 6.0,
+   "pred": 4.480142161129182
+  },
+  {
+   "row_id": "02_llm_apis_and_prompting_in_code__01_llm_api_landscape::paraphrase_lite::1",
+   "y": 6.0,
+   "pred": 6.423126682833534
+  },
+  {
+   "row_id": "02_llm_apis_and_prompting_in_code__01_llm_api_landscape::keypoint_recall::2",
+   "y": 5.0,
+   "pred": 6.537603514730155
+  },
+  {
+   "row_id": "02_llm_apis_and_prompting_in_code__09_prompt_roles_system_user_assistant::model_answer::0",
+   "y": 9.0,
+   "pred": 8.59217405072755
+  },
+  {
+   "row_id": "02_llm_apis_and_prompting_in_code__09_prompt_roles_system_user_assistant::paraphrase_lite::1",
+   "y": 5.0,
+   "pred": 7.900519603380248
+  },
+  {
+   "row_id": "02_llm_apis_and_prompting_in_code__09_prompt_roles_system_user_assistant::keypoint_recall::2",
+   "y": 7.0,
+   "pred": 6.80944349490748
+  },
+  {
+   "row_id": "03_rag_and_retrieval__07_semantic_vs_keyword_hybrid::model_answer::0",
+   "y": 8.0,
+   "pred": 8.71893707402532
+  },
+  {
+   "row_id": "03_rag_and_retrieval__07_semantic_vs_keyword_hybrid::paraphrase_lite::1",
+   "y": 5.0,
+   "pred": 7.971705458878615
+  },
+  {
+   "row_id": "04_ai_workflows_and_agents__02_rag_is_a_workflow::fragment::7",
+   "y": 3.0,
+   "pred": 4.082245365834872
+  },
+  {
+   "row_id": "04_ai_workflows_and_agents__04_workflow_patterns::paraphrase_heavy::3",
+   "y": 3.0,
+   "pred": 6.367460451625314
+  },
+  {
+   "row_id": "04_ai_workflows_and_agents__04_workflow_patterns::content_extract::4",
+   "y": 2.0,
+   "pred": 5.250937822642965
+  },
+  {
+   "row_id": "05_agent_loop_and_context_engineering__10_context_compaction::paraphrase_lite::1",
+   "y": 7.0,
+   "pred": 8.594772693207153
+  },
+  {
+   "row_id": "05_agent_loop_and_context_engineering__10_context_compaction::keypoint_recall::2",
+   "y": 5.0,
+   "pred": 6.78134685558951
+  },
+  {
+   "row_id": "05_agent_loop_and_context_engineering__10_context_compaction::off_topic_short::12",
+   "y": 1.0,
+   "pred": 2.2726060033535385
+  },
+  {
+   "row_id": "06_harness_engineering_and_evaluation__04_cli_as_environment_and_composition::partial::5",
+   "y": 1.0,
+   "pred": 1.5438085433134519
+  },
+  {
+   "row_id": "06_harness_engineering_and_evaluation__04_cli_as_environment_and_composition::fragment::7",
+   "y": 1.0,
+   "pred": 1.4622507572098726
+  },
+  {
+   "row_id": "06_harness_engineering_and_evaluation__04_cli_as_environment_and_composition::question_echo::10",
+   "y": 1.0,
+   "pred": 0.7189437843234402
+  },
+  {
+   "row_id": "06_harness_engineering_and_evaluation__06_help_and_error_messages_runtime_primitives::paraphrase_heavy::3",
+   "y": 4.0,
+   "pred": 7.528367871345184
+  },
+  {
+   "row_id": "06_harness_engineering_and_evaluation__06_help_and_error_messages_runtime_primitives::content_extract::4",
+   "y": 3.0,
+   "pred": 4.6881147801828025
+  },
+  {
+   "row_id": "02_llm_apis_and_prompting_in_code__01_llm_api_landscape::paraphrase_good::0",
+   "y": 6.0,
+   "pred": 6.803560219960176
+  },
+  {
+   "row_id": "02_llm_apis_and_prompting_in_code__01_llm_api_landscape::mistake::0",
+   "y": 5.0,
+   "pred": 2.166288618304488
+  },
+  {
+   "row_id": "03_rag_and_retrieval__14_rag_failure_modes::paraphrase_good::0",
+   "y": 6.0,
+   "pred": 6.0401297495580115
+  },
+  {
+   "row_id": "03_rag_and_retrieval__14_rag_failure_modes::mistake::0",
+   "y": 5.0,
+   "pred": 3.4656070194346014
+  },
+  {
+   "row_id": "10_pca__03_standardize_before_pca::paraphrase_good::0",
+   "y": 8.0,
+   "pred": 5.787063949604101
+  },
+  {
+   "row_id": "10_pca__03_standardize_before_pca::mistake::0",
+   "y": 2.0,
+   "pred": 3.010628234680302
+  },
+  {
+   "row_id": "14_ensemble__10_xgboost::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 6.310649846392413
+  },
+  {
+   "row_id": "14_ensemble__10_xgboost::mistake::0",
+   "y": 3.0,
+   "pred": 4.05552681636825
+  },
+  {
+   "row_id": "03_rag_and_retrieval__07_semantic_vs_keyword_hybrid::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 5.932157682464036
+  },
+  {
+   "row_id": "03_rag_and_retrieval__07_semantic_vs_keyword_hybrid::mistake::0",
+   "y": 4.0,
+   "pred": 3.498963813415458
+  },
+  {
+   "row_id": "03_rag_and_retrieval__01_why_rag_motivation::paraphrase_good::0",
+   "y": 6.0,
+   "pred": 5.606338726136769
+  },
+  {
+   "row_id": "03_rag_and_retrieval__01_why_rag_motivation::mistake::0",
+   "y": 2.0,
+   "pred": 4.980144988363139
+  },
+  {
+   "row_id": "08_cross_validation__05_kfold_cv::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 7.312236582179439
+  },
+  {
+   "row_id": "08_cross_validation__05_kfold_cv::mistake::0",
+   "y": 5.0,
+   "pred": 5.660512256856471
+  },
+  {
+   "row_id": "02_llm_apis_and_prompting_in_code__09_prompt_roles_system_user_assistant::paraphrase_good::0",
+   "y": 8.0,
+   "pred": 6.843963941710109
+  },
+  {
+   "row_id": "02_llm_apis_and_prompting_in_code__09_prompt_roles_system_user_assistant::mistake::0",
+   "y": 3.0,
+   "pred": 4.724265590880157
+  },
+  {
+   "row_id": "06_linear_regression_model__10_polynomial_features::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 7.216294852107545
+  },
+  {
+   "row_id": "06_linear_regression_model__10_polynomial_features::mistake::0",
+   "y": 6.0,
+   "pred": 3.9646023540565243
+  },
+  {
+   "row_id": "04_ai_workflows_and_agents__02_rag_is_a_workflow::paraphrase_good::0",
+   "y": 8.0,
+   "pred": 6.188444286451829
+  },
+  {
+   "row_id": "04_ai_workflows_and_agents__02_rag_is_a_workflow::mistake::0",
+   "y": 6.0,
+   "pred": 4.447636906583971
+  },
+  {
+   "row_id": "06_harness_engineering_and_evaluation__04_cli_as_environment_and_composition::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 6.181257412459946
+  },
+  {
+   "row_id": "06_harness_engineering_and_evaluation__04_cli_as_environment_and_composition::mistake::0",
+   "y": 6.0,
+   "pred": 2.313322902764821
+  },
+  {
+   "row_id": "13_decision_tree__10_hyperparameter_tuning_gridsearch::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 7.201761228863668
+  },
+  {
+   "row_id": "13_decision_tree__10_hyperparameter_tuning_gridsearch::mistake::0",
+   "y": 4.0,
+   "pred": 5.391149611919422
+  },
+  {
+   "row_id": "13_decision_tree__07_pruning_regularization::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 6.724885664971994
+  },
+  {
+   "row_id": "13_decision_tree__07_pruning_regularization::mistake::0",
+   "y": 3.0,
+   "pred": 4.445721272687503
+  },
+  {
+   "row_id": "17_simplest_classification_models__03_baseline_dummyclassifier::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 6.124552649663393
+  },
+  {
+   "row_id": "17_simplest_classification_models__03_baseline_dummyclassifier::mistake::0",
+   "y": 6.0,
+   "pred": 4.554530243631295
+  },
+  {
+   "row_id": "12_time_series__04_lag_features_shift::paraphrase_good::0",
+   "y": 6.0,
+   "pred": 6.386558692940464
+  },
+  {
+   "row_id": "12_time_series__04_lag_features_shift::mistake::0",
+   "y": 5.0,
+   "pred": 4.069802370209311
+  },
+  {
+   "row_id": "21_clustering__08_dendrogram::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 6.144226368429314
+  },
+  {
+   "row_id": "21_clustering__08_dendrogram::mistake::0",
+   "y": 4.0,
+   "pred": 5.5485652111683015
+  },
+  {
+   "row_id": "04_ai_workflows_and_agents__04_workflow_patterns::paraphrase_good::0",
+   "y": 6.0,
+   "pred": 6.904732064537803
+  },
+  {
+   "row_id": "04_ai_workflows_and_agents__04_workflow_patterns::mistake::0",
+   "y": 5.0,
+   "pred": 4.215177002768686
+  },
+  {
+   "row_id": "02_numerical_data_analysis__07_log_transform_lognormal::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 6.247816474059071
+  },
+  {
+   "row_id": "02_numerical_data_analysis__07_log_transform_lognormal::mistake::0",
+   "y": 6.0,
+   "pred": 5.240296168870505
+  },
+  {
+   "row_id": "17_simplest_classification_models__08_classification_report_averaging::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 7.188540384871835
+  },
+  {
+   "row_id": "17_simplest_classification_models__08_classification_report_averaging::mistake::0",
+   "y": 6.0,
+   "pred": 6.277726703019117
+  },
+  {
+   "row_id": "02_llm_apis_and_prompting_in_code__06_top_p_nucleus_sampling::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 6.2472403618639
+  },
+  {
+   "row_id": "02_llm_apis_and_prompting_in_code__06_top_p_nucleus_sampling::mistake::0",
+   "y": 6.0,
+   "pred": 5.160909219707808
+  },
+  {
+   "row_id": "15_categorical_values_II__03_onehot_dummy_encoding::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 7.187758455151147
+  },
+  {
+   "row_id": "15_categorical_values_II__03_onehot_dummy_encoding::mistake::0",
+   "y": 6.0,
+   "pred": 5.342825475135316
+  }
+ ]
+}

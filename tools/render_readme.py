@@ -20,6 +20,7 @@ and NAME picks one of the renderers below. Sources:
     stt_synth   grader/stt_eval_results.json         (Phase 0, TTS-read set)
     stt_human   grader/stt_eval_results.json         (Phase 0, author-read set - the deciding one)
     loop        grader/loop_eval_results.json        (live voice loop, 20 real answers per backend)
+    slm         grader/slm_results.json              (step 3: fine-tuned small graders vs sklearn, 5 seeds)
 
 Only the text between the markers is touched; everything else in the README
 is prose and stays yours.
@@ -172,8 +173,39 @@ def render_loop():
     return out
 
 
+def render_slm():
+    """Step 3: fine-tuned small graders vs the sklearn incumbent, five
+    chunk-grouped seeds, mean ± sd on the held-out gold rows."""
+    r = load("slm_results.json")
+    arms = r["arms"]
+    order = ["sklearn", "deberta", "qwen1.7b", "qwen4b", "qwen1.7b-silver"]
+    out = ["| Grader (5 seeds, gold rows) | QWK | MAE | within ±1 | train / seed | p95 per answer |",
+           "| --- | --- | --- | --- | --- | --- |"]
+    best = r.get("best_arm")
+    serving = r.get("serving") or {}
+    for name in order:
+        if name not in arms:
+            continue
+        a = arms[name]
+        label = a["label"]
+        qwk = f"{a['mean']['qwk']:.3f} ± {a['sd']['qwk']:.3f}"
+        mae = f"{a['mean']['mae']:.2f} ± {a['sd']['mae']:.2f}"
+        if name == best:
+            qwk, mae = bold(qwk), bold(mae)
+        if name == "sklearn":
+            latency = "≈ 0 ms (CPU)"
+        elif name == best and serving:
+            latency = f"{serving['sequential_ms']['p95']:.0f} ms (vLLM)"
+        else:
+            latency = f"{a.get('transformers_latency_ms_p95', 0):.0f} ms (transformers)"
+        out.append(f"| {label} | {qwk} | {mae} | {pct(a['mean']['within1'])} | "
+                   f"{a['train_seconds_mean']:.0f} s | {latency} |")
+    return out
+
+
 RENDERERS = {
     "retrieval": render_retrieval,
+    "slm": render_slm,
     "grader": render_grader,
     "keypoints": render_keypoints,
     "cascade": render_cascade,

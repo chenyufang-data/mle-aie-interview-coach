@@ -56,6 +56,10 @@ jobs:
       # Tier budgets, quota degradation, the mock engine gate, the request
       # body cap and the anonymous-LLM refusal (offline, no key).
       - run: python tests/test_users.py
+      # Step 3 SLM grader experiment, shared pieces: chunk-grouped split and
+      # dev fold, prompt, digit-token grade decode, metrics vs train.py's,
+      # the pre-registered rule (synthetic rows; private-data check skips).
+      - run: python tests/test_slm.py
       # README result tables must match the committed results files
       # (tools/render_readme.py renders them; --check fails on drift).
       - run: python tools/render_readme.py --check
