@@ -384,6 +384,18 @@ Zero new skills, highest return: it backs every claim on the résumé.
    turn, grade and report to DeepSeek Flash (cents per session), the mock
    works, and the worst case of abuse is DeepSeek cents. Add nginx
    `limit_req` on `/api/`.
+   *Demo spend cap (added 2026-09-07).* Today's daily quota counts Claude
+   calls only; DeepSeek is quota-free by design. Add a per-key daily LLM
+   budget in `users.json` (`"daily_llm_calls": 60`, counted for every
+   engine, checked before any LLM call in practice grading and every
+   mock route) and a server-wide daily cap from an environment variable
+   (`LLM_DAILY_CAP`), both surfaced in `/api/meta`; a refused call
+   returns a clear "demo allowance used up for today" message. At Flash
+   list prices 60 calls a day is about four mock sessions and under $2
+   in the worst month. The platform side is the hard stop: a separate
+   DeepSeek key for the demo (revocable on its own, attributed on its
+   own), a small prepaid balance, auto-recharge off. The key goes into
+   the demo box's `.env`, never into a chat or a commit.
 5. *Stand it up.* One t3.small (2 vCPU, 2 GB; backend RSS is about 230 MB
    with the model) on Ubuntu 24.04 with Docker; security group 80/443
    only; 2 GB swap; billing alarm at $20. TLS with Caddy in front of the
