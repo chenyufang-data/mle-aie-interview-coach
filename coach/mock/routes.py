@@ -193,8 +193,11 @@ def handle_post(handler, path, data):
             json_response(handler, 400, {"error": "audio too large (25 MB cap)."})
             return
         import base64
-        from coach import users
         from coach.voice import final_transcript
+        # `users` is the module-level import: an import here would make it
+        # a local for the whole function and break every route above
+        # (UnboundLocalError - shipped once, 948ce8f; tests/test_mock.py
+        # test_mock_routes now guards it).
         if users.TIERS_ENABLED and final_transcript.available_engine() in (
                 "scribe_batch_kt", "nova3_batch_kt"):
             # A cloud re-transcription spends vendor credit: paid keys only,

@@ -287,6 +287,55 @@ def test_mock_session_log():
         sessions.MOCK_SESSIONS_PATH = old
 
 
+def test_mock_routes():
+    """The POST routes themselves (coach/mock/routes.py handle_post), not
+    just the functions behind them: roles -> start -> turn on the fake
+    engine, and the transcribe route's validation. Guards the 948ce8f
+    regression, where an import inside handle_post shadowed the
+    module-level `users` and every mock POST answered 500."""
+    import io
+    import json
+
+    from coach.mock import routes
+
+    class FakeHandler:
+        def __init__(self, body):
+            self.headers = {"Content-Length": str(len(body))}
+            self.client_address = ("127.0.0.1", 0)
+            self.rfile = io.BytesIO(body)
+            self.wfile = io.BytesIO()
+            self.status = None
+
+        def send_response(self, status):
+            self.status = status
+
+        def send_header(self, *_):
+            pass
+
+        def end_headers(self):
+            pass
+
+    def post(path, body):
+        handler = FakeHandler(b"")
+        routes.handle_post(handler, path, body)
+        return handler.status, json.loads(handler.wfile.getvalue().decode("utf-8"))
+
+    status, roles = post("/api/mock/roles", {"resume": RESUME})
+    assert status == 200 and roles["roles"] and roles["engine"] == "fake", (status, roles)
+    status, start = post("/api/mock/start", {"resume": RESUME, "role": ROLE,
+                                             "settings": {"length": "short"}})
+    assert status == 200 and start["plan"]["probe_targets"], (status, start)
+    assert start["turn"]["question"] == start["plan"]["opening"]
+    state = {"plan": start["plan"], "role": ROLE,
+             "transcript": [dict(start["turn"], answer="I build fraud models.")]}
+    status, turn = post("/api/mock/turn", state)
+    assert status == 200 and turn["question"] and turn["turn"] == 2, (status, turn)
+    status, err = post("/api/mock/turn", {"plan": {}, "role": ROLE, "transcript": []})
+    assert status == 400 and "plan" in err["error"], (status, err)
+    status, err = post("/api/mock/transcribe", {})
+    assert status == 400 and "audio_base64" in err["error"], (status, err)
+
+
 if __name__ == "__main__":
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):
