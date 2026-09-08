@@ -189,6 +189,47 @@ def test_apply_idempotent():
     assert second.split("--spotcheck-apply")[1] == first.split("--spotcheck-apply")[1]
 
 
+def test_prefill_review_mode():
+    tmp = Path(tempfile.mkdtemp())
+    rows, labels, pool, lab = synthetic(tmp)
+    page, sample_path = tmp / "spot.html", tmp / "spot.sample.json"
+    selected, _ = r4.spotcheck("t", n=10, seed=7, pool_path=pool, labels_path=lab,
+                               page_path=page, sample_path=sample_path, prefill=True)
+    html = page.read_text(encoding="utf-8")
+    # The assistant's label and reason ride along for every sampled pair; bank and policy stay hidden.
+    assert "mode:\"prefill\"" in html and "pre-selected" in html and "review of the assistant" in html
+    for p in selected:
+        assert f'"assistant_label": "{p["label"]}"' in html
+        assert p["assistant_note"] in html
+    for leak in ("attached by", "attached_by", '"bank"', "Unlabeled?"):
+        assert leak not in html, leak
+    assert json.loads(sample_path.read_text(encoding="utf-8"))["mode"] == "prefill"
+    # Author confirms 7, changes 1, never touches 2 (they export as 'prefill').
+    decisions = []
+    for i, p in enumerate(selected):
+        label = p["label"]
+        source = "author"
+        if i == 0:
+            label = "no" if label == "yes" else "yes"
+        if i >= 8:
+            source = "prefill"
+        decisions.append({"probe_id": p["probe_id"], "chunk_id": p["chunk_id"], "label": label,
+                          "note": "changed" if i == 0 else "", "source": source})
+    dec_path = tmp / "decisions.json"
+    dec_path.write_text(json.dumps({"experiment": "grounding_r4_spotcheck", "run": "t", "seed": 7,
+                                    "labeler": "author", "mode": "prefill", "decisions": decisions}),
+                        encoding="utf-8")
+    report, result = tmp / "report.md", tmp / "spotcheck.json"
+    report.write_text("# Grounding R4\n", encoding="utf-8")
+    out = r4.spotcheck_apply(dec_path, "t", pool_path=pool, labels_path=lab, sample_path=sample_path,
+                             result_path=result, report_path=report)
+    assert out["mode"] == "prefill" and len(out["unconfirmed"]) == 2 and out["agree"] == 9
+    text = report.read_text(encoding="utf-8")
+    assert "a review, not a blind check" in text and "8 of 10 decided pairs" in text
+    assert "2 left at the prefilled label" in text
+    assert "assistant note" not in result.read_text(encoding="utf-8")
+
+
 if __name__ == "__main__":
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):

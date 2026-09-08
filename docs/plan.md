@@ -384,7 +384,10 @@ the runbook; the recording; the README link to both.
      Commands: `grader/grounding_r4.py --spotcheck --run grown` draws the
      blind sample page (`data/review/grounding_r4_spotcheck_grown.html`),
      and `grader/grounding_r4.py --spotcheck-apply PATH --run grown`
-     scores the exported decisions and writes the section.
+     scores the exported decisions and writes the section. The author
+     chose `--prefill` (2026-09-08): the page shows the assistant's label
+     and reason on every pair for confirmation or change, so the report
+     will say "review, not blind" and count untouched pairs.
 3. *Complete the Docker image.* `docker/backend.Dockerfile` adds
    `retrieval_dense.py`, `resume_parser.py`, `grader/stt_text.py` and
    `grader/stt_lexicon.json`, the public `rag_lists` and `rag_docs`

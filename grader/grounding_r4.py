@@ -38,13 +38,17 @@ rubric / probes; precision = fair / attached.
 
 Author spot-check of the assistant's labels (docs/plan.md Part 2 step 1):
 
-  .venv\\Scripts\\python grader\\grounding_r4.py --spotcheck --run grown [--n 40] [--seed 7]
+  .venv\\Scripts\\python grader\\grounding_r4.py --spotcheck --run grown [--n 40] [--seed 7] [--prefill]
       Draws N pairs from the run's pool, half per assistant label, spread
       over banks and attaching policies, and writes a BLIND labeling page
       data/review/grounding_r4_spotcheck_grown.html (no assistant label,
       bank or policy shown) plus the sampled ids in
       data/review/grounding_r4_spotcheck_grown.sample.json. Export downloads
-      grounding_r4_spotcheck_grown.decisions.json.
+      grounding_r4_spotcheck_grown.decisions.json. With --prefill the page
+      instead shows and pre-selects the assistant's label and reason on
+      every pair for the author to confirm or change (y / n); untouched
+      pairs export as 'prefill' and the report counts them - a review of
+      the labels, recorded as not blind.
 
   .venv\\Scripts\\python grader\\grounding_r4.py --spotcheck-apply PATH --run grown
       Scores the exported decisions against the assistant labels (percent
@@ -190,13 +194,15 @@ main{max-width:1000px;margin:0 auto;padding:16px 20px 80px}
 .cand{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--line);border-radius:8px;padding:10px 16px;margin:8px 0 8px 24px}
 .cand[data-label=yes]{border-left-color:var(--yes)}.cand[data-label=no]{border-left-color:var(--no)}
 .cand .q{font-weight:600;margin:0 0 4px}.cand .by{color:var(--mute);font-size:13px}.cand ul{margin:4px 0 6px 18px;padding:0}
+.cand .asst{font-size:13px;color:var(--mute);margin:0 0 6px}.cand .asst b{color:var(--ink)}.cand .asst i{display:none}
+.cand[data-source=prefill] .asst i{display:inline}.cand[data-source=prefill] .decide{outline:1px dashed var(--line);outline-offset:4px;border-radius:8px}
 .decide{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.decide label{padding:3px 10px;border:1px solid var(--line);border-radius:999px;cursor:pointer;font-size:13px}
 .decide input[type=text]{flex:1;min-width:180px;font:inherit;padding:4px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
 .hidden{display:none}kbd{font:12px ui-monospace,monospace;border:1px solid var(--line);border-radius:4px;padding:0 4px}
 p.guide{color:var(--mute);font-size:13px;max-width:70ch}
 </style></head><body>
 <header><h1>__TITLE__</h1><span class="stat" id="stat"></span>
-<select id="show"><option value="">all</option><option value="undecided">undecided only</option></select>
+<select id="show"><option value="">all</option><option value="undecided">undecided only</option><option value="prefill">not yet confirmed</option></select>
 <select id="tpl"><option value="">all templates</option></select>
 <button id="save" class="primary">__SAVE__</button><button id="copy">Copy JSON</button><button id="reset">Clear all</button></header>
 <main>
@@ -210,22 +216,23 @@ const load=(p,c)=>{try{return JSON.parse(localStorage.getItem(key(p,c))||'null')
 const store=(p,c,d)=>{try{d?localStorage.setItem(key(p,c),JSON.stringify(d)):localStorage.removeItem(key(p,c))}catch(e){}};
 const esc=s=>String(s??'').replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
 const tpl=document.getElementById('tpl');[...new Set(rows.map(r=>r.template))].forEach(t=>{const o=document.createElement('option');o.textContent=t;tpl.appendChild(o)});
-function cand(r,c){const d=load(r.probe_id,c.chunk_id)||{};return `<div class="cand" data-probe="${esc(r.probe_id)}" data-chunk="${esc(c.chunk_id)}" data-label="${esc(d.label||'')}">
+function cand(r,c){const d=load(r.probe_id,c.chunk_id)||{};return `<div class="cand" data-probe="${esc(r.probe_id)}" data-chunk="${esc(c.chunk_id)}" data-label="${esc(d.label||'')}" data-source="${esc(d.source||'')}">
  <p class="q">${esc(c.question)}</p><div class="by">__BY__</div>
  <ul>${c.key_points.map(k=>`<li>${esc(k)}</li>`).join('')}</ul>
+ ${c.assistant_label?`<div class="asst">assistant: <b>${c.assistant_label==='yes'?'fair':'unfair'}</b> — ${esc(c.assistant_note||'no reason recorded')} <i>· prefilled, not yet confirmed: press y or n</i></div>`:''}
  <div class="decide"><label><input type="radio" name="l-${esc(r.probe_id)}-${esc(c.chunk_id)}" value="yes" ${d.label==='yes'?'checked':''}> fair</label>
  <label><input type="radio" name="l-${esc(r.probe_id)}-${esc(c.chunk_id)}" value="no" ${d.label==='no'?'checked':''}> unfair</label>
  <input type="text" placeholder="note (optional)" value="${esc(d.note||'')}"></div></div>`}
 function probe(r){return `<section data-tpl="${esc(r.template)}"><div class="probe"><div class="meta">${esc(r.probe_id)} · ${esc(r.level)} · ${esc(r.topic)}</div>
  <p class="hint">${esc(r.question_hint)}</p><ul>${r.expected_points.map(e=>`<li>${esc(e)}</li>`).join('')}</ul>
  ${r.candidates.length?'':'<div class="meta">no policy attached a chunk</div>'}</div>${r.candidates.map(c=>cand(r,c)).join('')}</section>`}
-function render(){document.getElementById('main').innerHTML=rows.map(probe).join('');filter();stat()}
-function labels(){const out=[];rows.forEach(r=>r.candidates.forEach(c=>{const d=load(r.probe_id,c.chunk_id);if(d&&d.label)out.push({probe_id:r.probe_id,chunk_id:c.chunk_id,label:d.label,note:d.note||''})}));return out}
-function stat(){const total=rows.reduce((n,r)=>n+r.candidates.length,0);const l=labels();document.getElementById('stat').textContent=`${l.length}/${total} labeled · fair ${l.filter(x=>x.label==='yes').length} · unfair ${l.filter(x=>x.label==='no').length}`}
-function filter(){const show=document.getElementById('show').value,t=tpl.value;document.querySelectorAll('.cand').forEach(el=>{let ok=!t||el.closest('section').dataset.tpl===t;if(show==='undecided')ok=ok&&!el.dataset.label;el.classList.toggle('hidden',!ok)});
- document.querySelectorAll('section').forEach(s=>{const any=[...s.querySelectorAll('.cand')].some(c=>!c.classList.contains('hidden'));s.classList.toggle('hidden',(!!t&&s.dataset.tpl!==t)||(show==='undecided'&&!any))})}
-document.getElementById('main').addEventListener('change',e=>{const el=e.target.closest('.cand');if(!el)return;const label=(el.querySelector('input[type=radio]:checked')||{}).value||'';const note=el.querySelector('input[type=text]').value.trim();store(el.dataset.probe,el.dataset.chunk,label?{label,note}:null);el.dataset.label=label;stat();if(document.getElementById('show').value)filter()});
-document.getElementById('main').addEventListener('input',e=>{if(e.target.type!=='text')return;const el=e.target.closest('.cand');const d=load(el.dataset.probe,el.dataset.chunk);if(d){d.note=e.target.value.trim();store(el.dataset.probe,el.dataset.chunk,d)}});
+function render(){rows.forEach(r=>r.candidates.forEach(c=>{if(c.assistant_label&&!load(r.probe_id,c.chunk_id))store(r.probe_id,c.chunk_id,{label:c.assistant_label,note:'',source:'prefill'})}));document.getElementById('main').innerHTML=rows.map(probe).join('');filter();stat()}
+function labels(){const out=[];rows.forEach(r=>r.candidates.forEach(c=>{const d=load(r.probe_id,c.chunk_id);if(d&&d.label)out.push({probe_id:r.probe_id,chunk_id:c.chunk_id,label:d.label,note:d.note||'',source:d.source||'author'})}));return out}
+function stat(){const total=rows.reduce((n,r)=>n+r.candidates.length,0);const l=labels();const pre=l.filter(x=>x.source==='prefill').length;document.getElementById('stat').textContent=`${l.length}/${total} labeled · fair ${l.filter(x=>x.label==='yes').length} · unfair ${l.filter(x=>x.label==='no').length}`+(pre?` · ${l.length-pre} confirmed, ${pre} still prefilled`:'')}
+function filter(){const show=document.getElementById('show').value,t=tpl.value;document.querySelectorAll('.cand').forEach(el=>{let ok=!t||el.closest('section').dataset.tpl===t;if(show==='undecided')ok=ok&&!el.dataset.label;if(show==='prefill')ok=ok&&el.dataset.source==='prefill';el.classList.toggle('hidden',!ok)});
+ document.querySelectorAll('section').forEach(s=>{const any=[...s.querySelectorAll('.cand')].some(c=>!c.classList.contains('hidden'));s.classList.toggle('hidden',(!!t&&s.dataset.tpl!==t)||(!!show&&!any))})}
+document.getElementById('main').addEventListener('change',e=>{const el=e.target.closest('.cand');if(!el)return;const label=(el.querySelector('input[type=radio]:checked')||{}).value||'';const note=el.querySelector('input[type=text]').value.trim();store(el.dataset.probe,el.dataset.chunk,label?{label,note,source:'author'}:null);el.dataset.label=label;el.dataset.source=label?'author':'';stat();if(document.getElementById('show').value)filter()});
+document.getElementById('main').addEventListener('input',e=>{if(e.target.type!=='text')return;const el=e.target.closest('.cand');const d=load(el.dataset.probe,el.dataset.chunk);if(d){d.note=e.target.value.trim();d.source='author';store(el.dataset.probe,el.dataset.chunk,d);el.dataset.source='author';stat()}});
 ['show','tpl'].forEach(id=>document.getElementById(id).addEventListener('change',filter));
 const payload=()=>JSON.stringify({__META__,exported:new Date().toISOString(),__LISTKEY__:labels()},null,1);
 document.getElementById('save').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([payload()],{type:'application/json'}));a.download='__FILENAME__';a.click()};
@@ -407,14 +414,16 @@ def policies_of(candidate):
 def pool_pairs(rows, labels):
     """One record per labeled (probe, chunk) pair of the pool: ids, bank, the
     attaching policies and the assistant's label ('yes' / 'no')."""
-    lab = {(x["probe_id"], x["chunk_id"]): x["label"] for x in labels if x.get("label")}
+    lab = {(x["probe_id"], x["chunk_id"]): (x["label"], (x.get("note") or "").strip())
+           for x in labels if x.get("label")}
     pairs = []
     for r in rows:
         for c in r["candidates"]:
             key = (r["probe_id"], c["chunk_id"])
             if key in lab:
                 pairs.append({"probe_id": r["probe_id"], "chunk_id": c["chunk_id"], "bank": c["bank"],
-                              "policies": policies_of(c), "label": lab[key]})
+                              "policies": policies_of(c), "label": lab[key][0],
+                              "assistant_note": lab[key][1]})
     return pairs
 
 
@@ -462,11 +471,13 @@ def composition(pairs):
             "policies": {q: sum(1 for p in pairs if q in p["policies"]) for q in POLICIES}}
 
 
-def spotcheck_rows(rows, selected, seed):
-    """Rows for the blind page: the sampled pairs under their probes, probe
-    order shuffled under the seed; no bank, chunk id, policy or label is
-    displayed (the chunk id rides along only so the export can name the pair)."""
-    picked = {(p["probe_id"], p["chunk_id"]) for p in selected}
+def spotcheck_rows(rows, selected, seed, prefill=False):
+    """Rows for the page: the sampled pairs under their probes, probe order
+    shuffled under the seed; no bank, chunk id or policy is displayed (the
+    chunk id rides along only so the export can name the pair). Blind by
+    default; with `prefill` each candidate also carries the assistant's
+    label and reason, which the page shows and pre-selects for review."""
+    picked = {(p["probe_id"], p["chunk_id"]): p for p in selected}
     by_probe = {r["probe_id"]: r for r in rows}
     order = sorted({p["probe_id"] for p in selected})
     random.Random(seed).shuffle(order)
@@ -477,16 +488,24 @@ def spotcheck_rows(rows, selected, seed):
         for c in r["candidates"]:
             if (pid, c["chunk_id"]) in picked:
                 ordinal += 1
-                cands.append({"chunk_id": c["chunk_id"], "question": c["question"],
-                              "key_points": c["key_points"], "ord": ordinal})
+                cand = {"chunk_id": c["chunk_id"], "question": c["question"],
+                        "key_points": c["key_points"], "ord": ordinal}
+                if prefill:
+                    p = picked[(pid, c["chunk_id"])]
+                    cand["assistant_label"] = p["label"]
+                    cand["assistant_note"] = p.get("assistant_note", "")
+                cands.append(cand)
         out.append({"probe_id": pid, "template": r["template"], "level": r["level"], "topic": r["topic"],
                     "question_hint": r["question_hint"], "expected_points": r.get("expected_points", []),
                     "candidates": cands})
     return out
 
 
-def spotcheck(run, n=40, seed=7, pool_path=None, labels_path=None, page_path=None, sample_path=None):
-    """Draw the blind spot-check sample; write the page and the sample ids."""
+def spotcheck(run, n=40, seed=7, pool_path=None, labels_path=None, page_path=None, sample_path=None,
+              prefill=False):
+    """Draw the spot-check sample; write the page and the sample ids. Blind
+    by default; `prefill` shows and pre-selects the assistant's label and
+    reason on every pair (a review, not a blind check - recorded as such)."""
     paths = spotcheck_paths(run)
     pool_path = pool_path or POOL_PATH
     labels_path = labels_path or paths["labels"]
@@ -500,26 +519,39 @@ def spotcheck(run, n=40, seed=7, pool_path=None, labels_path=None, page_path=Non
     selected = stratified_sample(pairs, n, seed)
     comp = composition(selected)
     total = sum(len(r["candidates"]) for r in rows)
+    mode = "prefill" if prefill else "blind"
+    if prefill:
+        guide = (f" This page reviews {len(selected)} of the {total} pool pairs with the assistant's label "
+                 "and reason shown and pre-selected on every pair; press y or n on each to confirm or "
+                 "change it (a note is welcome where you disagree). Pairs you never touch export as "
+                 "'prefilled' and the report says so. Bank, chunk id and attaching policy stay hidden.")
+    else:
+        guide = (f" This is a blind spot-check of {len(selected)} of the {total} pool pairs: "
+                 "the bank, chunk id, attaching policy and the earlier label are hidden on purpose.")
     page = render_page(
-        spotcheck_rows(rows, selected, seed),
-        __TITLE__=f"Grounding R4 spot-check{' (' + run + ')' if run else ''}",
+        spotcheck_rows(rows, selected, seed, prefill=prefill),
+        __TITLE__=f"Grounding R4 spot-check{' (' + run + ')' if run else ''}"
+                  + (" — review of the assistant's labels" if prefill else ""),
         __SAVE__="Export decisions",
-        __GUIDE_EXTRA__=(f" This is a blind spot-check of {len(selected)} of the {total} pool pairs: "
-                         "the bank, chunk id, attaching policy and the earlier label are hidden on purpose."),
-        __KEY__=f"r4sc:{run}:",
+        __GUIDE_EXTRA__=guide,
+        __KEY__=f"r4sc:{run}:{mode}:",
         __BY__="pair ${c.ord} of ${rows.reduce((n,r)=>n+r.candidates.length,0)}",
-        __META__=f"experiment:'grounding_r4_spotcheck',run:{json.dumps(run)},seed:{seed},labeler:'author'",
+        __META__=(f"experiment:'grounding_r4_spotcheck',run:{json.dumps(run)},seed:{seed},"
+                  f"labeler:'author',mode:{json.dumps(mode)}"),
         __LISTKEY__="decisions",
         __FILENAME__=f"grounding_r4_spotcheck{'_' + run if run else ''}.decisions.json")
     Path(page_path).parent.mkdir(parents=True, exist_ok=True)
     Path(page_path).write_text(page, encoding="utf-8")
     Path(sample_path).write_text(json.dumps(
         {"experiment": "grounding_r4_spotcheck", "run": run, "seed": seed, "n": len(selected),
-         "generated": datetime.now().isoformat(timespec="seconds"),
+         "mode": mode, "generated": datetime.now().isoformat(timespec="seconds"),
          "pool_pairs": len(pairs), "composition": comp,
          "pairs": [{"probe_id": p["probe_id"], "chunk_id": p["chunk_id"]} for p in selected]},
         indent=1, ensure_ascii=False), encoding="utf-8")
-    print(f"sampled {comp['n']} of {len(pairs)} labeled pairs (seed {seed}) over {comp['probes']} probes")
+    if prefill:
+        with_reason = sum(1 for p in selected if p.get("assistant_note"))
+        print(f"prefilled: {with_reason}/{len(selected)} sampled pairs carry an assistant reason")
+    print(f"sampled {comp['n']} of {len(pairs)} labeled pairs (seed {seed}, {mode}) over {comp['probes']} probes")
     print(f"  by assistant label: {comp['labels']}")
     print(f"  by policy (a pair may count for several): {comp['policies']}")
     print(f"  by bank: {comp['banks']}")
@@ -589,12 +621,20 @@ def spotcheck_section(out, run):
     comp = out.get("composition") or {}
     strata = ", ".join(f"{v} {k}" for k, v in comp.get("labels", {}).items()) or "balanced"
     conf = out["confusion"]
+    if out.get("mode") == "prefill":
+        untouched = len(out.get("unconfirmed", []))
+        how = (f"reviewed by {out['labeler']} on `data/review/grounding_r4_spotcheck{suffix}.html` with "
+               f"the assistant's label and reason shown and pre-selected on every pair (a review, not a "
+               f"blind check; bank and policy hidden): {out['n'] - untouched} of {out['n']} decided pairs "
+               f"were explicitly confirmed or changed, {untouched} left at the prefilled label")
+    else:
+        how = (f"labeled blind by {out['labeler']} on `data/review/grounding_r4_spotcheck{suffix}.html` "
+               f"(no assistant label, bank or policy shown)")
     lines = [SPOTCHECK_HEADING, "",
              f"Generated {out['generated']} by `grader/grounding_r4.py --spotcheck-apply`"
              f"{' --run ' + run if run else ''}. Sample: {out['sampled']} of {out['pool_pairs']} labeled "
              f"pairs (seed {out['seed']}), stratified by the assistant's label ({strata}) and spread over "
-             f"banks and policies; labeled blind by {out['labeler']} on "
-             f"`data/review/grounding_r4_spotcheck{suffix}.html` (no assistant label, bank or policy shown). "
+             f"banks and policies; {how}. "
              f"Decided: {out['n']}/{out['sampled']}.", "",
              "| Measure | Value |", "|---|---|",
              f"| Agreement | {out['agree']}/{out['n']} ({out['agreement']:.1%}) |" if out["n"] else "| Agreement | - |",
@@ -635,7 +675,7 @@ def spotcheck_apply(decisions_path, run, pool_path=None, labels_path=None, sampl
     assistant = {k: p["label"] for k, p in meta.items()}
     dec = json.loads(Path(decisions_path).read_text(encoding="utf-8"))
     entries = dec.get("decisions") or dec.get("labels") or []
-    author = {}
+    author, unconfirmed = {}, []
     for x in entries:
         label = normalize_label(x.get("label"))
         if label:
@@ -643,6 +683,8 @@ def spotcheck_apply(decisions_path, run, pool_path=None, labels_path=None, sampl
             author[key] = label
             if key in meta:
                 meta[key]["note"] = (x.get("note") or "").strip()
+            if x.get("source") == "prefill":
+                unconfirmed.append(key)
     unknown = [k for k in author if k not in assistant]
     if unknown:
         sys.exit(f"{len(unknown)} decided pair(s) are not in the labeled pool, e.g. {unknown[:3]}")
@@ -653,9 +695,14 @@ def spotcheck_apply(decisions_path, run, pool_path=None, labels_path=None, sampl
     undecided = [k for k in sampled if k not in author]
     outside = [k for k in author if k not in set(sampled)]
     seed = dec.get("seed", sample["seed"] if sample else None)
+    mode = dec.get("mode") or (sample or {}).get("mode") or "blind"
     out = {"experiment": "grounding_r4_spotcheck", "run": run,
            "generated": datetime.now().isoformat(timespec="seconds"),
            "labeler": dec.get("labeler") or "author", "exported": dec.get("exported"),
+           "mode": mode,
+           # prefill mode: pairs the author never touched export as 'prefill'
+           # and count as agreement, so the report states how many those are.
+           "unconfirmed": [{"probe_id": k[0], "chunk_id": k[1]} for k in unconfirmed],
            "assistant_labels": str(Path(labels_path).name), "seed": seed,
            "pool_pairs": len(pairs), "sampled": len(sampled),
            "composition": sample["composition"] if sample else composition([meta[k] for k in author]),
@@ -666,8 +713,9 @@ def spotcheck_apply(decisions_path, run, pool_path=None, labels_path=None, sampl
     existing = report_path.read_text(encoding="utf-8") if report_path.exists() else ""
     report_path.write_text(replace_section(existing, SPOTCHECK_HEADING, spotcheck_section(out, run)),
                            encoding="utf-8")
-    print(f"decided {out['n']}/{out['sampled']} sampled pairs"
+    print(f"decided {out['n']}/{out['sampled']} sampled pairs ({mode})"
           + (f" ({len(undecided)} undecided)" if undecided else "")
+          + (f"; {len(unconfirmed)} left at the prefilled label" if unconfirmed else "")
           + (f"; {len(outside)} decided pair(s) outside the sample were scored too" if outside else ""))
     def brief(splits):
         return {k: f"{v['agree']}/{v['n']}" for k, v in splits.items()}
@@ -701,6 +749,9 @@ def main():
     parser.add_argument("--seed", type=int, default=7, help="spot-check sampling seed (default 7)")
     parser.add_argument("--labels", metavar="LABELS_JSON",
                         help="assistant labels for the spot-check (default grader/grounding_r4_labels[_RUN].json)")
+    parser.add_argument("--prefill", action="store_true",
+                        help="spot-check page shows and pre-selects the assistant's label and reason "
+                             "on every pair (a review rather than a blind check; recorded as such)")
     args = parser.parse_args()
     RUN = args.run
     if args.pool:
@@ -708,7 +759,7 @@ def main():
     elif args.score:
         score(args.score, args.labeler)
     elif args.spotcheck:
-        spotcheck(args.run, n=args.n, seed=args.seed, labels_path=args.labels)
+        spotcheck(args.run, n=args.n, seed=args.seed, labels_path=args.labels, prefill=args.prefill)
     elif args.spotcheck_apply:
         spotcheck_apply(args.spotcheck_apply, args.run, labels_path=args.labels)
     else:
