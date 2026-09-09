@@ -662,10 +662,35 @@ was blocked on the Windows side, so no mirror is needed); 955 GB free;
 `.wslconfig` caps WSL2 at 16 GB and 8 threads so the desktop stays
 usable during runs. vLLM 0.28.0 ships a Linux wheel for 3.12 and will get
 its own venv at the serving step. Private inputs confirmed in the sibling
-checkout (3,866 rows, 598 teacher labels, 623 key-point labels). Still
-to do before the first run: Docker Desktop's WSL integration for the
-Ubuntu distro (only the vLLM step needs it) and the author's read of the
-pre-registered rule above.
+checkout (3,866 rows, 598 teacher labels, 623 key-point labels). Docker
+Desktop's WSL integration and a GPU container check followed the same
+evening; the author read the rule as written and told the assistant to run
+the step through without check-ins.
+
+**Result 2026-09-08 (evening), rule PASSED.** `grader/slm/` (protocol in
+its README; results in `grader/slm_results.json`, one run file per arm and
+seed under `grader/slm/runs/`). Five chunk-grouped seeds, gold rows, mean ±
+sd: sklearn incumbent retrained per seed QWK 0.794 ± 0.022, MAE 1.08;
+DeBERTa-v3-base full fine-tune 0.792 ± 0.049, MAE 1.07 (level, noisier);
+Qwen3-1.7B-Base + LoRA 0.927 ± 0.010, MAE 0.58; Qwen3-4B-Base + LoRA
+0.941 ± 0.007, MAE 0.52, 95% within ±1. The 4B arm clears the bar on every
+seed (+0.10 to +0.17 QWK, lower MAE each time). Served by vLLM 0.28 on the
+RTX 5080 the merged 4B model answers at p50 20 ms / p95 30 ms, 81 answers/s
+at eight clients, and reproduces its training-time grades (served QWK
+0.932). Exploratory: adding the construction-labelled rows to the 1.7B arm
+hurt (0.896 vs 0.914 on seed 42). Per tier the gain sits where lexical
+features fail (heavy paraphrase, extracted text, vague answers); the top
+tier is under-graded by about a point. Shipped: `coach/slm.py` and the
+`SLM_URL` route (the local tier's overall grade from the SLM; verdicts,
+subscores and the cascade stay with sklearn; silent server degrades),
+`tests/test_slm.py`, the README section and its rendered table. Not
+shipped: the weights (private, lesson-derived training answers). Found on
+the way, all in the code: transformers 5 loads a checkpoint's own dtype
+(fp16 DeBERTa diverged on step one until loaded fp32); vLLM 0.28 on WSL2
+needs `VLLM_WSL2_ENABLE_PIN_MEMORY=1`, a C compiler, and the FlashInfer
+sampler off (it JIT-compiles with nvcc). Open, carried to the loose ends:
+the transfer to real spoken answers (the free-tier log), the L4 hour for a
+measured cost line, and the résumé line, which is the author's.
 
 ### Step 4 — Postgres for state, then pgvector as a measured retrieval arm
 
@@ -760,6 +785,13 @@ days.
 
 ### Not on the roadmap, still open
 
+- The SLM grader's transfer to real answers: every step 3 arm was trained
+  and measured on the synthetic answer constructions; grade a sample of
+  the free-tier log (`data/sessions/free_sessions.jsonl`) with the teacher
+  and compare the sklearn and SLM grades on it before trusting the gain
+  outside the constructions.
+- One cloud L4 hour for a measured serving-cost line (the README's cost
+  figure is an estimate from the RTX 5080 throughput).
 - Re-measure the live loop's end-of-turn hold (`VOICE_HOLD_MS`, added
   2026-09-08 from one live session) on the 20 real Phase 0 recordings
   with `grader/loop_eval.py`, so the README's cut-off rate is measured

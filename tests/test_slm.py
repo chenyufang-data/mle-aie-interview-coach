@@ -127,7 +127,70 @@ def test_shipped_split_when_private_data_present():
     print("shipped split ok (3083 / 783 / 121)")
 
 
+def test_runtime_client():
+    """coach/slm.py against a fake vLLM: the grade is 1 + E[d] from the
+    digit logprobs, a bad or silent server degrades to None with a back-off,
+    and the runtime prompt is the training prompt."""
+    import json
+    import threading
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+
+    from coach import config, slm
+
+    chunk = {"id": "c1", "interview": {"question": "What is precision?",
+                                       "key_points": ["TP over TP+FP", "recall trade-off"]}}
+    assert slm.build_prompt(chunk, "x") == common.build_prompt(chunk, "x")
+    assert abs(slm.expected_grade([-30.0] * 6 + [0.0] + [-30.0] * 3) - 7.0) < 1e-6
+    assert abs(slm.expected_grade([0.0] * 10) - 5.5) < 1e-9
+
+    class Fake(BaseHTTPRequestHandler):
+        mode = "good"
+
+        def do_POST(self):
+            body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+            assert body["max_tokens"] == 1 and body["prompt"].endswith("Score:")
+            if Fake.mode == "bad":
+                payload = {"choices": [{"logprobs": {"top_logprobs": [{"a": -0.1}]}}]}
+            else:
+                payload = {"choices": [{"logprobs": {"top_logprobs": [
+                    {"7": -0.05, "6": -3.0, " 8": -4.0, "the": -9.0}]}}]}
+            raw = json.dumps(payload).encode()
+            self.send_response(200)
+            self.send_header("Content-Length", str(len(raw)))
+            self.end_headers()
+            self.wfile.write(raw)
+
+        def log_message(self, *_):
+            pass
+
+    server = HTTPServer(("127.0.0.1", 0), Fake)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    saved = (config.SLM_URL, config.SLM_BACKOFF_S)
+    try:
+        config.SLM_URL = ""
+        assert not slm.available() and slm.grade(chunk, "x") is None
+        config.SLM_URL = f"http://127.0.0.1:{server.server_port}"
+        config.SLM_BACKOFF_S = 60
+        slm._unavailable_until = 0.0
+        grade = slm.grade(chunk, "Precision is TP over TP plus FP.")
+        # digit 7 dominates (p ~0.95) with a little mass on 6 and 8 -> ~8.0
+        assert grade is not None and 7.8 < grade < 8.1, grade
+        Fake.mode = "bad"
+        assert slm.grade(chunk, "x") is None          # no digit -> skipped
+        assert not slm.available()                    # and backed off
+        Fake.mode = "good"
+        assert slm.grade(chunk, "x") is None          # still backed off
+        slm._unavailable_until = 0.0
+        assert slm.grade(chunk, "x") is not None      # back-off over
+    finally:
+        config.SLM_URL, config.SLM_BACKOFF_S = saved
+        slm._unavailable_until = 0.0
+        server.shutdown()
+    print("runtime client ok")
+
+
 if __name__ == "__main__":
+    test_runtime_client()
     test_split_is_grouped_and_stable()
     test_prompt_and_records()
     test_expected_grade_and_metrics()

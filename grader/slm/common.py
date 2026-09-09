@@ -115,19 +115,9 @@ def dev_split(rows, idx, seed, dev_size=DEV_SIZE):
 
 # ---------------------------------------------------------------- prompt
 
-INSTRUCTION = ("You grade one interview answer against its rubric. Give a single "
-               "digit from 0 (missing, wrong or off-topic) to 9 (complete, "
-               "precise and well judged).")
-
-
-def build_prompt(chunk, answer):
-    interview = chunk["interview"]
-    points = "\n".join(f"- {p}" for p in interview.get("key_points", []))
-    return (f"{INSTRUCTION}\n\n"
-            f"Question: {interview['question'].strip()}\n\n"
-            f"Rubric (what a strong answer covers):\n{points}\n\n"
-            f"Candidate answer:\n{answer.strip()}\n\n"
-            f"Score:")
+# The prompt is owned by the runtime (coach/slm.py) so the served model
+# grades exactly what it was trained on; coach.config imports nothing heavy.
+from coach.slm import INSTRUCTION, build_prompt  # noqa: E402,F401
 
 
 def encoder_text(chunk, answer):

@@ -1,0 +1,645 @@
+{
+ "arm": "qwen1.7b",
+ "variant": "teacher",
+ "smoke": false,
+ "seed": 2,
+ "generated": "2026-09-08T18:21:29",
+ "environment": {
+  "python": "3.12.14",
+  "torch": "2.11.0+cu128",
+  "cuda": "12.8",
+  "gpu": "NVIDIA GeForce RTX 5080",
+  "transformers": "5.16.1",
+  "peft": "0.20.0"
+ },
+ "config": {
+  "kind": "causal",
+  "model": "Qwen/Qwen3-1.7B-Base",
+  "lr": 0.0001,
+  "batch": 8,
+  "accum": 1,
+  "epochs": 4,
+  "max_len": 640,
+  "warmup": 0.06,
+  "weight_decay": 0.01,
+  "lora_r": 16,
+  "lora_alpha": 32,
+  "lora_dropout": 0.05,
+  "batch_used": 8,
+  "accum_used": 1,
+  "lora_targets": [
+   "q_proj",
+   "k_proj",
+   "v_proj",
+   "o_proj",
+   "gate_proj",
+   "up_proj",
+   "down_proj"
+  ],
+  "training_rows": "teacher-labeled train-side rows outside the dev chunks"
+ },
+ "n_fit": 419,
+ "n_dev": 73,
+ "n_gold": 106,
+ "best_epoch": 3,
+ "curve": [
+  {
+   "epoch": 1,
+   "train_loss": 1.5762,
+   "dev": {
+    "mae": 0.729,
+    "within1": 0.8493,
+    "spearman": 0.8761,
+    "qwk": 0.8499
+   },
+   "seconds": 28.3
+  },
+  {
+   "epoch": 2,
+   "train_loss": 1.0391,
+   "dev": {
+    "mae": 0.697,
+    "within1": 0.8493,
+    "spearman": 0.8835,
+    "qwk": 0.8648
+   },
+   "seconds": 27.8
+  },
+  {
+   "epoch": 3,
+   "train_loss": 0.885,
+   "dev": {
+    "mae": 0.6181,
+    "within1": 0.9726,
+    "spearman": 0.9008,
+    "qwk": 0.9196
+   },
+   "seconds": 28.0
+  },
+  {
+   "epoch": 4,
+   "train_loss": 0.5427,
+   "dev": {
+    "mae": 0.5435,
+    "within1": 0.9726,
+    "spearman": 0.9093,
+    "qwk": 0.9106
+   },
+   "seconds": 27.4
+  }
+ ],
+ "dev": {
+  "mae": 0.6180884124786179,
+  "within1": 0.9726027397260274,
+  "spearman": 0.9007899353551803,
+  "qwk": 0.9196224931183642
+ },
+ "gold": {
+  "mae": 0.5432228999532681,
+  "within1": 0.9528301886792453,
+  "spearman": 0.93442231795968,
+  "qwk": 0.9299102498545307
+ },
+ "train_seconds": 115.3,
+ "peak_vram_mib": 4612,
+ "nan_predictions": 0,
+ "transformers_latency_ms": {
+  "p50": 31.6,
+  "p95": 35.3,
+  "n": 106,
+  "note": "one row at a time, bf16, no server"
+ },
+ "weights": "/home/cfang/slm_runs/qwen1.7b_seed2",
+ "predictions": [
+  {
+   "row_id": "03_categorical_value_analysis__06_cardinality_assessment::content_extract::4",
+   "y": 3.0,
+   "pred": 2.9423
+  },
+  {
+   "row_id": "03_categorical_value_analysis__06_cardinality_assessment::fragment::7",
+   "y": 2.0,
+   "pred": 2.5918
+  },
+  {
+   "row_id": "05_simplest_regression_models__08_baseline_comparison_and_eval_viz::content_extract::4",
+   "y": 3.0,
+   "pred": 3.7767
+  },
+  {
+   "row_id": "06_linear_regression_model__08_coefficients_intercept_interpretation::fragment::7",
+   "y": 2.0,
+   "pred": 2.035
+  },
+  {
+   "row_id": "07_regularization__03_end_to_end_pipeline::keypoint_recall::2",
+   "y": 7.0,
+   "pred": 7.0605
+  },
+  {
+   "row_id": "07_regularization__03_end_to_end_pipeline::question_echo::10",
+   "y": 1.0,
+   "pred": 1.0183
+  },
+  {
+   "row_id": "07_regularization__07_lasso_l1_sparsity::content_extract::4",
+   "y": 2.0,
+   "pred": 2.8253
+  },
+  {
+   "row_id": "07_regularization__07_lasso_l1_sparsity::partial::6",
+   "y": 3.0,
+   "pred": 3.2191
+  },
+  {
+   "row_id": "07_regularization__11_tuning_alpha_bias_variance::fragment::7",
+   "y": 3.0,
+   "pred": 4.056
+  },
+  {
+   "row_id": "07_regularization__11_tuning_alpha_bias_variance::vague_short::9",
+   "y": 1.0,
+   "pred": 1.0241
+  },
+  {
+   "row_id": "08_cross_validation__05_kfold_cv::vague::8",
+   "y": 1.0,
+   "pred": 1.0054
+  },
+  {
+   "row_id": "09_collinearity__08_drop_collinear_features_refit::paraphrase_lite::1",
+   "y": 7.0,
+   "pred": 7.4651
+  },
+  {
+   "row_id": "09_collinearity__08_drop_collinear_features_refit::keypoint_recall::2",
+   "y": 6.0,
+   "pred": 7.0495
+  },
+  {
+   "row_id": "12_time_series__09_historical_features_leakage::model_answer::0",
+   "y": 8.0,
+   "pred": 8.5402
+  },
+  {
+   "row_id": "12_time_series__09_historical_features_leakage::paraphrase_lite::1",
+   "y": 6.0,
+   "pred": 6.416
+  },
+  {
+   "row_id": "12_time_series__09_historical_features_leakage::keypoint_recall::2",
+   "y": 7.0,
+   "pred": 6.6534
+  },
+  {
+   "row_id": "12_time_series__09_historical_features_leakage::question_echo::10",
+   "y": 1.0,
+   "pred": 1.0086
+  },
+  {
+   "row_id": "14_ensemble__01_what_is_ensemble::fragment::7",
+   "y": 3.0,
+   "pred": 3.6764
+  },
+  {
+   "row_id": "14_ensemble__02_pipeline_custom_transformer::keypoint_recall::2",
+   "y": 7.0,
+   "pred": 7.055
+  },
+  {
+   "row_id": "14_ensemble__02_pipeline_custom_transformer::paraphrase_heavy::3",
+   "y": 5.0,
+   "pred": 5.6285
+  },
+  {
+   "row_id": "14_ensemble__07_gradient_boosting_build_mechanism::fragment::7",
+   "y": 2.0,
+   "pred": 2.0618
+  },
+  {
+   "row_id": "15_categorical_values_II__04_multihot_multilabel::content_extract::4",
+   "y": 4.0,
+   "pred": 3.7419
+  },
+  {
+   "row_id": "15_categorical_values_II__07_ordinality_label_vs_onehot::vague_short::9",
+   "y": 1.0,
+   "pred": 1.0149
+  },
+  {
+   "row_id": "17_simplest_classification_models__02_class_imbalance_base_rate::content_extract::4",
+   "y": 6.0,
+   "pred": 5.1674
+  },
+  {
+   "row_id": "17_simplest_classification_models__02_class_imbalance_base_rate::partial::6",
+   "y": 4.0,
+   "pred": 3.019
+  },
+  {
+   "row_id": "17_simplest_classification_models__02_class_imbalance_base_rate::off_topic::11",
+   "y": 1.0,
+   "pred": 1.0057
+  },
+  {
+   "row_id": "17_simplest_classification_models__04_accuracy_score::paraphrase_heavy::3",
+   "y": 4.0,
+   "pred": 4.4401
+  },
+  {
+   "row_id": "17_simplest_classification_models__09_confusion_matrix::vague_short::9",
+   "y": 1.0,
+   "pred": 1.0095
+  },
+  {
+   "row_id": "18_logistic_regression_predict__04_what_is_logistic_regression::off_topic::11",
+   "y": 1.0,
+   "pred": 1.0014
+  },
+  {
+   "row_id": "19_logistic_regression_proba__02_binary_target_and_leakage::content_extract::4",
+   "y": 7.0,
+   "pred": 6.6019
+  },
+  {
+   "row_id": "19_logistic_regression_proba__03_pipeline_transformer_class_weight::vague::8",
+   "y": 1.0,
+   "pred": 1.0679
+  },
+  {
+   "row_id": "20_svm__05_C_hyperparameter_soft_vs_hard_margin::paraphrase_heavy::3",
+   "y": 3.0,
+   "pred": 5.3085
+  },
+  {
+   "row_id": "20_svm__05_C_hyperparameter_soft_vs_hard_margin::content_extract::4",
+   "y": 6.0,
+   "pred": 5.8021
+  },
+  {
+   "row_id": "20_svm__05_C_hyperparameter_soft_vs_hard_margin::fragment::7",
+   "y": 3.0,
+   "pred": 2.3794
+  },
+  {
+   "row_id": "20_svm__05_C_hyperparameter_soft_vs_hard_margin::vague::8",
+   "y": 1.0,
+   "pred": 1.0111
+  },
+  {
+   "row_id": "20_svm__07_class_weight_and_base_rate::content_extract::4",
+   "y": 7.0,
+   "pred": 6.3293
+  },
+  {
+   "row_id": "20_svm__09_kernel_trick_rbf_poly::paraphrase_heavy::3",
+   "y": 5.0,
+   "pred": 5.4761
+  },
+  {
+   "row_id": "20_svm__09_kernel_trick_rbf_poly::content_extract::4",
+   "y": 4.0,
+   "pred": 3.9726
+  },
+  {
+   "row_id": "01_llm_foundations_and_prompting__04_self_attention::paraphrase_lite::1",
+   "y": 7.0,
+   "pred": 6.9044
+  },
+  {
+   "row_id": "01_llm_foundations_and_prompting__04_self_attention::keypoint_recall::2",
+   "y": 7.0,
+   "pred": 6.7085
+  },
+  {
+   "row_id": "01_llm_foundations_and_prompting__04_self_attention::off_topic::11",
+   "y": 1.0,
+   "pred": 1.0046
+  },
+  {
+   "row_id": "01_llm_foundations_and_prompting__05_transformer_architecture::paraphrase_lite::1",
+   "y": 7.0,
+   "pred": 6.6752
+  },
+  {
+   "row_id": "01_llm_foundations_and_prompting__05_transformer_architecture::content_extract::4",
+   "y": 4.0,
+   "pred": 4.1444
+  },
+  {
+   "row_id": "01_llm_foundations_and_prompting__08_rlhf::fragment::7",
+   "y": 2.0,
+   "pred": 1.4503
+  },
+  {
+   "row_id": "01_llm_foundations_and_prompting__14_in_context_learning_paradigm_shift::keypoint_recall::2",
+   "y": 6.0,
+   "pred": 7.0422
+  },
+  {
+   "row_id": "01_llm_foundations_and_prompting__14_in_context_learning_paradigm_shift::paraphrase_heavy::3",
+   "y": 3.0,
+   "pred": 4.562
+  },
+  {
+   "row_id": "01_llm_foundations_and_prompting__14_in_context_learning_paradigm_shift::vague::8",
+   "y": 1.0,
+   "pred": 1.1045
+  },
+  {
+   "row_id": "02_llm_apis_and_prompting_in_code__05_token_generation_and_temperature::keypoint_recall::2",
+   "y": 6.0,
+   "pred": 6.7737
+  },
+  {
+   "row_id": "02_llm_apis_and_prompting_in_code__05_token_generation_and_temperature::paraphrase_heavy::3",
+   "y": 5.0,
+   "pred": 5.4795
+  },
+  {
+   "row_id": "02_llm_apis_and_prompting_in_code__05_token_generation_and_temperature::vague::8",
+   "y": 1.0,
+   "pred": 1.0113
+  },
+  {
+   "row_id": "02_llm_apis_and_prompting_in_code__05_token_generation_and_temperature::off_topic_short::12",
+   "y": 1.0,
+   "pred": 1.0026
+  },
+  {
+   "row_id": "03_rag_and_retrieval__06_keyword_retrieval_bm25::paraphrase_heavy::3",
+   "y": 5.0,
+   "pred": 4.8846
+  },
+  {
+   "row_id": "03_rag_and_retrieval__07_semantic_vs_keyword_hybrid::model_answer::0",
+   "y": 8.0,
+   "pred": 8.8796
+  },
+  {
+   "row_id": "03_rag_and_retrieval__07_semantic_vs_keyword_hybrid::paraphrase_lite::1",
+   "y": 5.0,
+   "pred": 6.4386
+  },
+  {
+   "row_id": "03_rag_and_retrieval__15_small_to_big_and_hyde::paraphrase_heavy::3",
+   "y": 4.0,
+   "pred": 5.1147
+  },
+  {
+   "row_id": "03_rag_and_retrieval__15_small_to_big_and_hyde::vague::8",
+   "y": 1.0,
+   "pred": 1.0577
+  },
+  {
+   "row_id": "04_ai_workflows_and_agents__02_rag_is_a_workflow::fragment::7",
+   "y": 3.0,
+   "pred": 4.1092
+  },
+  {
+   "row_id": "04_ai_workflows_and_agents__09_cot_to_reasoning_models::paraphrase_heavy::3",
+   "y": 5.0,
+   "pred": 5.7477
+  },
+  {
+   "row_id": "04_ai_workflows_and_agents__09_cot_to_reasoning_models::content_extract::4",
+   "y": 5.0,
+   "pred": 5.1253
+  },
+  {
+   "row_id": "04_ai_workflows_and_agents__09_cot_to_reasoning_models::vague::8",
+   "y": 1.0,
+   "pred": 1.054
+  },
+  {
+   "row_id": "04_ai_workflows_and_agents__09_cot_to_reasoning_models::off_topic::11",
+   "y": 1.0,
+   "pred": 1.0051
+  },
+  {
+   "row_id": "04_ai_workflows_and_agents__10_types_of_reasoning::paraphrase_lite::1",
+   "y": 7.0,
+   "pred": 6.4493
+  },
+  {
+   "row_id": "04_ai_workflows_and_agents__10_types_of_reasoning::keypoint_recall::2",
+   "y": 7.0,
+   "pred": 6.7736
+  },
+  {
+   "row_id": "05_agent_loop_and_context_engineering__01_agent_loop::vague_short::9",
+   "y": 1.0,
+   "pred": 1.0046
+  },
+  {
+   "row_id": "05_agent_loop_and_context_engineering__01_agent_loop::off_topic::11",
+   "y": 1.0,
+   "pred": 1.0067
+  },
+  {
+   "row_id": "05_agent_loop_and_context_engineering__08_rag_for_context_engineering::fragment::7",
+   "y": 4.0,
+   "pred": 4.1878
+  },
+  {
+   "row_id": "06_harness_engineering_and_evaluation__11_what_to_evaluate::partial::6",
+   "y": 5.0,
+   "pred": 5.7451
+  },
+  {
+   "row_id": "06_harness_engineering_and_evaluation__11_what_to_evaluate::off_topic::11",
+   "y": 1.0,
+   "pred": 5.3217
+  },
+  {
+   "row_id": "06_harness_engineering_and_evaluation__13_evaluation_graders::keypoint_recall::2",
+   "y": 6.0,
+   "pred": 6.5674
+  },
+  {
+   "row_id": "06_harness_engineering_and_evaluation__13_evaluation_graders::paraphrase_heavy::3",
+   "y": 3.0,
+   "pred": 5.2477
+  },
+  {
+   "row_id": "06_harness_engineering_and_evaluation__13_evaluation_graders::content_extract::4",
+   "y": 3.0,
+   "pred": 4.0006
+  },
+  {
+   "row_id": "06_harness_engineering_and_evaluation__13_evaluation_graders::fragment::7",
+   "y": 3.0,
+   "pred": 3.6878
+  },
+  {
+   "row_id": "17_simplest_classification_models__09_confusion_matrix::paraphrase_good::0",
+   "y": 8.0,
+   "pred": 7.081
+  },
+  {
+   "row_id": "17_simplest_classification_models__09_confusion_matrix::mistake::0",
+   "y": 5.0,
+   "pred": 4.428
+  },
+  {
+   "row_id": "11_categorical_features__08_pipeline_scores_leakage_overfit::paraphrase_good::0",
+   "y": 6.0,
+   "pred": 7.0604
+  },
+  {
+   "row_id": "11_categorical_features__08_pipeline_scores_leakage_overfit::mistake::0",
+   "y": 3.0,
+   "pred": 2.0415
+  },
+  {
+   "row_id": "07_regularization__07_lasso_l1_sparsity::paraphrase_good::0",
+   "y": 6.0,
+   "pred": 6.6611
+  },
+  {
+   "row_id": "07_regularization__07_lasso_l1_sparsity::mistake::0",
+   "y": 4.0,
+   "pred": 4.6373
+  },
+  {
+   "row_id": "01_llm_foundations_and_prompting__04_self_attention::paraphrase_good::0",
+   "y": 6.0,
+   "pred": 6.1089
+  },
+  {
+   "row_id": "01_llm_foundations_and_prompting__04_self_attention::mistake::0",
+   "y": 6.0,
+   "pred": 6.3106
+  },
+  {
+   "row_id": "07_regularization__03_end_to_end_pipeline::paraphrase_good::0",
+   "y": 6.0,
+   "pred": 6.6781
+  },
+  {
+   "row_id": "07_regularization__03_end_to_end_pipeline::mistake::0",
+   "y": 6.0,
+   "pred": 6.3353
+  },
+  {
+   "row_id": "08_cross_validation__01_holdout_temporal_split::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 8.1997
+  },
+  {
+   "row_id": "08_cross_validation__01_holdout_temporal_split::mistake::0",
+   "y": 6.0,
+   "pred": 6.3742
+  },
+  {
+   "row_id": "04_ai_workflows_and_agents__10_types_of_reasoning::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 6.1208
+  },
+  {
+   "row_id": "04_ai_workflows_and_agents__10_types_of_reasoning::mistake::0",
+   "y": 4.0,
+   "pred": 4.7766
+  },
+  {
+   "row_id": "03_rag_and_retrieval__07_semantic_vs_keyword_hybrid::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 6.7052
+  },
+  {
+   "row_id": "03_rag_and_retrieval__07_semantic_vs_keyword_hybrid::mistake::0",
+   "y": 4.0,
+   "pred": 4.8049
+  },
+  {
+   "row_id": "06_linear_regression_model__08_coefficients_intercept_interpretation::paraphrase_good::0",
+   "y": 6.0,
+   "pred": 6.2963
+  },
+  {
+   "row_id": "06_linear_regression_model__08_coefficients_intercept_interpretation::mistake::0",
+   "y": 4.0,
+   "pred": 5.1262
+  },
+  {
+   "row_id": "08_cross_validation__05_kfold_cv::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 7.0654
+  },
+  {
+   "row_id": "08_cross_validation__05_kfold_cv::mistake::0",
+   "y": 5.0,
+   "pred": 5.9021
+  },
+  {
+   "row_id": "01_pandas_kickoff__07_boolean_filtering::paraphrase_good::0",
+   "y": 6.0,
+   "pred": 6.8524
+  },
+  {
+   "row_id": "01_pandas_kickoff__07_boolean_filtering::mistake::0",
+   "y": 6.0,
+   "pred": 6.2231
+  },
+  {
+   "row_id": "04_ai_workflows_and_agents__02_rag_is_a_workflow::paraphrase_good::0",
+   "y": 8.0,
+   "pred": 6.3573
+  },
+  {
+   "row_id": "04_ai_workflows_and_agents__02_rag_is_a_workflow::mistake::0",
+   "y": 6.0,
+   "pred": 5.177
+  },
+  {
+   "row_id": "20_svm__05_C_hyperparameter_soft_vs_hard_margin::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 7.1845
+  },
+  {
+   "row_id": "20_svm__05_C_hyperparameter_soft_vs_hard_margin::mistake::0",
+   "y": 5.0,
+   "pred": 5.3841
+  },
+  {
+   "row_id": "03_rag_and_retrieval__06_keyword_retrieval_bm25::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 6.4553
+  },
+  {
+   "row_id": "03_rag_and_retrieval__06_keyword_retrieval_bm25::mistake::0",
+   "y": 4.0,
+   "pred": 5.3567
+  },
+  {
+   "row_id": "01_llm_foundations_and_prompting__14_in_context_learning_paradigm_shift::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 6.6416
+  },
+  {
+   "row_id": "01_llm_foundations_and_prompting__14_in_context_learning_paradigm_shift::mistake::0",
+   "y": 6.0,
+   "pred": 5.6611
+  },
+  {
+   "row_id": "06_harness_engineering_and_evaluation__13_evaluation_graders::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 7.1917
+  },
+  {
+   "row_id": "06_harness_engineering_and_evaluation__13_evaluation_graders::mistake::0",
+   "y": 4.0,
+   "pred": 4.6529
+  },
+  {
+   "row_id": "02_llm_apis_and_prompting_in_code__06_top_p_nucleus_sampling::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 6.7581
+  },
+  {
+   "row_id": "02_llm_apis_and_prompting_in_code__06_top_p_nucleus_sampling::mistake::0",
+   "y": 6.0,
+   "pred": 5.993
+  }
+ ]
+}

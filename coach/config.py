@@ -91,6 +91,15 @@ ALLOW_ANONYMOUS_LLM = os.environ.get("ALLOW_ANONYMOUS_LLM", "0") == "1"
 # lexical features get fooled — so only the low side ships. A request can
 # force the full Claude evaluation with "force_llm": true.
 PAID_CASCADE = os.environ.get("PAID_CASCADE", "1") != "0"
+
+# Optional SLM grader for the local tier (roadmap step 3, coach/slm.py): a
+# vLLM server holding the fine-tuned Qwen3 model measured in grader/slm/.
+# Off unless SLM_URL is set; a silent or slow server degrades to the sklearn
+# grade. The public demo box has no GPU and leaves this unset.
+SLM_URL = os.environ.get("SLM_URL", "").strip()
+SLM_MODEL = os.environ.get("SLM_MODEL", "slm")
+SLM_TIMEOUT_S = float(os.environ.get("SLM_TIMEOUT_S", "2"))
+SLM_BACKOFF_S = float(os.environ.get("SLM_BACKOFF_S", "30"))
 CASCADE_PRED_MAX = 2.5
 CASCADE_FRAC_HIT_MAX = 0.25
 

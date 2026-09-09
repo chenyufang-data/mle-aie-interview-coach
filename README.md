@@ -500,6 +500,68 @@ workhorse judge (see the tiers section above), but Claude stays the
 distillation teacher — gold labels need the reproducibility — and serves
 "Always Claude" requests under the daily quota.
 
+### A fine-tuned small model against the sklearn grader (step 3, measured)
+
+The distilled grader above is 16 lexical features and a gradient-boosting
+regressor. Roadmap step 3 asked whether a small language model fine-tuned on
+the same 598 gold labels grades closer to the Claude teacher, and whether it
+can be served fast enough to matter. `grader/slm/` is the experiment; the
+rule was fixed before the first run: an SLM replaces the sklearn grader as
+the local tier only if, on all five chunk-grouped splits, its QWK beats the
+sklearn arm's by at least 0.05 with a lower MAE, and vLLM serves it at
+p95 ≤ 300 ms per answer on the RTX 5080.
+
+Protocol: the same rows and the same chunk-grouped split as `grader/train.py`
+(seed 42 is the shipped split with its 121 gold rows) plus four more seeds,
+every arm retrained per seed; the SLM arms see only the ~400 teacher-labelled
+training rows, early-stopped on a dev fold of whole chunks; the grade is one
+digit token, read back as 1 + E[digit] over ten logits, so nothing is parsed.
+Results (`grader/slm_results.json`; mean ± sd over five seeds on the held-out
+gold rows, 106 to 125 per seed):
+
+<!-- results:slm -->
+| Grader (5 seeds, gold rows) | QWK | MAE | within ±1 | train / seed | p95 per answer |
+| --- | --- | --- | --- | --- | --- |
+| sklearn distilled grader (incumbent) | 0.794 ± 0.022 | 1.08 ± 0.07 | 74% | 1 s | ≈ 0 ms (CPU) |
+| DeBERTa-v3-base, regression head | 0.792 ± 0.049 | 1.07 ± 0.13 | 77% | 59 s | 12 ms (transformers) |
+| Qwen3-1.7B-Base + LoRA | 0.927 ± 0.010 | 0.58 ± 0.04 | 93% | 114 s | 36 ms (transformers) |
+| Qwen3-4B-Base + LoRA | **0.941 ± 0.007** | **0.52 ± 0.04** | 95% | 239 s | 30 ms (vLLM) |
+| Qwen3-1.7B-Base + LoRA, + silver rows (exploratory) | 0.896 ± 0.000 | 0.72 ± 0.00 | 88% | 456 s | 39 ms (transformers) |
+<!-- /results:slm -->
+
+What it says. A DeBERTa-v3-base full fine-tune lands where the sklearn
+grader is, with more variance. Both Qwen3 LoRA arms clear the bar on every
+seed; the 4B model by +0.10 to +0.17 QWK, with MAE halved (0.52 vs 1.08)
+and 95% of grades within ±1 — the DeepSeek judge's level in the table
+above, at zero marginal cost. Per answer tier the gain is exactly where
+lexical features were known to fail: heavy paraphrases (MAE 0.68 vs 2.46 on
+seed 42), extracted lesson text passed off as an answer (0.67 vs 1.48),
+vague answers (0.00 vs 1.28); the one tier where it is worse is the top
+one, model answers under-graded by about a point. Two side results: adding
+the 2,600 construction-labelled rows to the 1.7B arm made it worse (QWK
+0.896 vs 0.914 on seed 42) — the 400 clean labels beat noisy volume — and
+seed 42's 121 rows are the hardest split of the five for every arm.
+Serving: the 4B LoRA merged into its base and served by vLLM 0.28 on the
+RTX 5080 answers in 20 ms (p50) and 30 ms (p95) one request at a time, 81
+answers/s at eight clients, and reproduces the training-time grades (served
+QWK 0.932); under a cent per thousand answers at L4 list prices even if an
+L4 were three times slower (an estimate from the 5080 throughput, not an L4
+measurement). Training cost: 4 minutes per seed for the 4B model at 9 GB of
+VRAM, 2 for the 1.7B.
+
+The rule passed, so the route ships behind an environment variable:
+`SLM_URL=http://127.0.0.1:8011` (a vLLM server holding the merged model)
+makes the local tier take its overall grade from the SLM (`coach/slm.py`),
+while the rubric hit/miss verdicts, the subscores and the cascade stay with
+the sklearn artifact they were measured against; a silent or slow server
+degrades to the sklearn grade. The sklearn grader remains the CPU fallback
+everywhere, and the public demo box, which has no GPU, runs it. The weights
+stay private (trained on lesson-derived answers); the results file and the
+per-row predictions are committed. Caveat: every arm was trained and
+measured on the synthetic answer constructions the grader has always used —
+how the gain transfers to real spoken answers is the next measurement, and
+the free-tier answer log is where it comes from.
+
 ## STT on technical vocabulary (mock-interview Phase 0, measured)
 
 A voice mock interview is only as fair as its transcript. Speech-to-text

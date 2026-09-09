@@ -1,0 +1,688 @@
+{
+ "arm": "deberta",
+ "variant": "teacher",
+ "smoke": false,
+ "seed": 1,
+ "generated": "2026-09-08T18:12:08",
+ "environment": {
+  "python": "3.12.14",
+  "torch": "2.11.0+cu128",
+  "cuda": "12.8",
+  "gpu": "NVIDIA GeForce RTX 5080",
+  "transformers": "5.16.1",
+  "peft": null
+ },
+ "config": {
+  "kind": "encoder",
+  "model": "microsoft/deberta-v3-base",
+  "lr": 2e-05,
+  "batch": 16,
+  "accum": 1,
+  "epochs": 8,
+  "max_len": 512,
+  "warmup": 0.06,
+  "weight_decay": 0.01,
+  "batch_used": 16,
+  "accum_used": 1,
+  "lora_targets": null,
+  "training_rows": "teacher-labeled train-side rows outside the dev chunks"
+ },
+ "n_fit": 422,
+ "n_dev": 68,
+ "n_gold": 108,
+ "best_epoch": 8,
+ "curve": [
+  {
+   "epoch": 1,
+   "train_loss": 21.0648,
+   "dev": {
+    "mae": 2.7566,
+    "within1": 0.1029,
+    "spearman": 0.27,
+    "qwk": 0.0
+   },
+   "seconds": 7.5
+  },
+  {
+   "epoch": 2,
+   "train_loss": 5.5942,
+   "dev": {
+    "mae": 2.0664,
+    "within1": 0.3088,
+    "spearman": 0.5283,
+    "qwk": 0.2501
+   },
+   "seconds": 6.8
+  },
+  {
+   "epoch": 3,
+   "train_loss": 4.9246,
+   "dev": {
+    "mae": 1.649,
+    "within1": 0.4853,
+    "spearman": 0.5448,
+    "qwk": 0.4886
+   },
+   "seconds": 6.8
+  },
+  {
+   "epoch": 4,
+   "train_loss": 2.8981,
+   "dev": {
+    "mae": 1.1493,
+    "within1": 0.6912,
+    "spearman": 0.6589,
+    "qwk": 0.763
+   },
+   "seconds": 6.9
+  },
+  {
+   "epoch": 5,
+   "train_loss": 1.8694,
+   "dev": {
+    "mae": 1.0592,
+    "within1": 0.7647,
+    "spearman": 0.7171,
+    "qwk": 0.8078
+   },
+   "seconds": 6.6
+  },
+  {
+   "epoch": 6,
+   "train_loss": 1.6511,
+   "dev": {
+    "mae": 1.071,
+    "within1": 0.7059,
+    "spearman": 0.6675,
+    "qwk": 0.8005
+   },
+   "seconds": 6.5
+  },
+  {
+   "epoch": 7,
+   "train_loss": 1.1795,
+   "dev": {
+    "mae": 0.9933,
+    "within1": 0.7794,
+    "spearman": 0.7441,
+    "qwk": 0.8289
+   },
+   "seconds": 6.8
+  },
+  {
+   "epoch": 8,
+   "train_loss": 1.0462,
+   "dev": {
+    "mae": 0.986,
+    "within1": 0.7647,
+    "spearman": 0.737,
+    "qwk": 0.8392
+   },
+   "seconds": 6.6
+  }
+ ],
+ "dev": {
+  "mae": 0.9860434707473306,
+  "within1": 0.7647058823529411,
+  "spearman": 0.7370043222083996,
+  "qwk": 0.8391576377231802
+ },
+ "gold": {
+  "mae": 1.0275616303638175,
+  "within1": 0.7407407407407407,
+  "spearman": 0.8208763085170152,
+  "qwk": 0.7826667794030608
+ },
+ "train_seconds": 62.3,
+ "peak_vram_mib": 3570,
+ "nan_predictions": 0,
+ "transformers_latency_ms": {
+  "p50": 8.6,
+  "p95": 13.3,
+  "n": 108,
+  "note": "one row at a time, bf16, no server"
+ },
+ "weights": "/home/cfang/slm_runs/deberta_seed1",
+ "predictions": [
+  {
+   "row_id": "01_pandas_kickoff__02_load_read_csv::paraphrase_lite::1",
+   "y": 7.0,
+   "pred": 4.1659
+  },
+  {
+   "row_id": "01_pandas_kickoff__02_load_read_csv::keypoint_recall::2",
+   "y": 6.0,
+   "pred": 6.0596
+  },
+  {
+   "row_id": "02_numerical_data_analysis__03_count_vs_len_valuecounts::fragment::7",
+   "y": 2.0,
+   "pred": 3.4259
+  },
+  {
+   "row_id": "04_timestamp_analysis__02_datetime_extremes::paraphrase_lite::1",
+   "y": 6.0,
+   "pred": 6.8181
+  },
+  {
+   "row_id": "04_timestamp_analysis__02_datetime_extremes::keypoint_recall::2",
+   "y": 8.0,
+   "pred": 7.0529
+  },
+  {
+   "row_id": "05_simplest_regression_models__07_data_leakage_fit_on_train_only::model_answer::0",
+   "y": 9.0,
+   "pred": 7.2397
+  },
+  {
+   "row_id": "05_simplest_regression_models__07_data_leakage_fit_on_train_only::paraphrase_lite::1",
+   "y": 6.0,
+   "pred": 7.2086
+  },
+  {
+   "row_id": "06_linear_regression_model__02_time_based_train_test_split::model_answer::0",
+   "y": 8.0,
+   "pred": 6.9211
+  },
+  {
+   "row_id": "06_linear_regression_model__02_time_based_train_test_split::paraphrase_lite::1",
+   "y": 6.0,
+   "pred": 5.2535
+  },
+  {
+   "row_id": "06_linear_regression_model__02_time_based_train_test_split::keypoint_recall::2",
+   "y": 6.0,
+   "pred": 7.1089
+  },
+  {
+   "row_id": "06_linear_regression_model__02_time_based_train_test_split::question_echo::10",
+   "y": 1.0,
+   "pred": 2.1253
+  },
+  {
+   "row_id": "07_regularization__10_hyperparameter_vs_parameter::paraphrase_lite::1",
+   "y": 6.0,
+   "pred": 7.0943
+  },
+  {
+   "row_id": "07_regularization__10_hyperparameter_vs_parameter::partial::5",
+   "y": 4.0,
+   "pred": 4.9617
+  },
+  {
+   "row_id": "07_regularization__11_tuning_alpha_bias_variance::fragment::7",
+   "y": 3.0,
+   "pred": 2.8091
+  },
+  {
+   "row_id": "07_regularization__11_tuning_alpha_bias_variance::vague_short::9",
+   "y": 1.0,
+   "pred": 1.5606
+  },
+  {
+   "row_id": "09_collinearity__04_visualize_correlation::keypoint_recall::2",
+   "y": 5.0,
+   "pred": 7.1105
+  },
+  {
+   "row_id": "09_collinearity__04_visualize_correlation::vague::8",
+   "y": 1.0,
+   "pred": 1.8225
+  },
+  {
+   "row_id": "10_pca__03_standardize_before_pca::paraphrase_lite::1",
+   "y": 7.0,
+   "pred": 7.0968
+  },
+  {
+   "row_id": "11_categorical_features__01_temporal_split_fit_on_train::vague_short::9",
+   "y": 1.0,
+   "pred": 1.3198
+  },
+  {
+   "row_id": "11_categorical_features__02_onehot_dummy_encoding::content_extract::4",
+   "y": 2.0,
+   "pred": 2.7244
+  },
+  {
+   "row_id": "11_categorical_features__02_onehot_dummy_encoding::question_echo::10",
+   "y": 1.0,
+   "pred": 1.8486
+  },
+  {
+   "row_id": "11_categorical_features__04_frequency_encoding::paraphrase_heavy::3",
+   "y": 5.0,
+   "pred": 6.5981
+  },
+  {
+   "row_id": "11_categorical_features__04_frequency_encoding::content_extract::4",
+   "y": 3.0,
+   "pred": 1.7238
+  },
+  {
+   "row_id": "11_categorical_features__04_frequency_encoding::vague_short::9",
+   "y": 1.0,
+   "pred": 1.2027
+  },
+  {
+   "row_id": "11_categorical_features__07_countvectorizer_sparse::model_answer::0",
+   "y": 9.0,
+   "pred": 7.2055
+  },
+  {
+   "row_id": "11_categorical_features__07_countvectorizer_sparse::paraphrase_lite::1",
+   "y": 6.0,
+   "pred": 7.2266
+  },
+  {
+   "row_id": "11_categorical_features__07_countvectorizer_sparse::keypoint_recall::2",
+   "y": 7.0,
+   "pred": 7.1505
+  },
+  {
+   "row_id": "11_categorical_features__07_countvectorizer_sparse::paraphrase_heavy::3",
+   "y": 3.0,
+   "pred": 6.0736
+  },
+  {
+   "row_id": "12_time_series__01_time_based_split::keypoint_recall::2",
+   "y": 6.0,
+   "pred": 6.7719
+  },
+  {
+   "row_id": "13_decision_tree__09_nondeterminism_random_state::partial::6",
+   "y": 6.0,
+   "pred": 3.3795
+  },
+  {
+   "row_id": "14_ensemble__01_what_is_ensemble::fragment::7",
+   "y": 3.0,
+   "pred": 4.0332
+  },
+  {
+   "row_id": "14_ensemble__04_how_random_forest_works::off_topic::11",
+   "y": 1.0,
+   "pred": 6.3522
+  },
+  {
+   "row_id": "14_ensemble__08_gbt_hyperparameters::keypoint_recall::2",
+   "y": 7.0,
+   "pred": 7.1775
+  },
+  {
+   "row_id": "15_categorical_values_II__04_multihot_multilabel::content_extract::4",
+   "y": 4.0,
+   "pred": 4.7522
+  },
+  {
+   "row_id": "18_logistic_regression_predict__11_other_imbalance_methods::keypoint_recall::2",
+   "y": 8.0,
+   "pred": 7.1623
+  },
+  {
+   "row_id": "18_logistic_regression_predict__11_other_imbalance_methods::vague::8",
+   "y": 1.0,
+   "pred": 1.5989
+  },
+  {
+   "row_id": "21_clustering__03_feature_scaling::partial::5",
+   "y": 7.0,
+   "pred": 5.3968
+  },
+  {
+   "row_id": "21_clustering__08_dendrogram::paraphrase_heavy::3",
+   "y": 4.0,
+   "pred": 5.8084
+  },
+  {
+   "row_id": "21_clustering__08_dendrogram::content_extract::4",
+   "y": 2.0,
+   "pred": 1.6206
+  },
+  {
+   "row_id": "01_llm_foundations_and_prompting__05_transformer_architecture::paraphrase_lite::1",
+   "y": 7.0,
+   "pred": 7.2488
+  },
+  {
+   "row_id": "01_llm_foundations_and_prompting__05_transformer_architecture::content_extract::4",
+   "y": 4.0,
+   "pred": 4.7757
+  },
+  {
+   "row_id": "01_llm_foundations_and_prompting__06_pretraining::keypoint_recall::2",
+   "y": 7.0,
+   "pred": 7.0647
+  },
+  {
+   "row_id": "01_llm_foundations_and_prompting__06_pretraining::paraphrase_heavy::3",
+   "y": 4.0,
+   "pred": 6.5976
+  },
+  {
+   "row_id": "01_llm_foundations_and_prompting__06_pretraining::content_extract::4",
+   "y": 5.0,
+   "pred": 6.7829
+  },
+  {
+   "row_id": "02_llm_apis_and_prompting_in_code__03_openai_sdk_and_key_management::content_extract::4",
+   "y": 4.0,
+   "pred": 2.7124
+  },
+  {
+   "row_id": "02_llm_apis_and_prompting_in_code__15_other_apis_and_anthropic::off_topic::11",
+   "y": 1.0,
+   "pred": 3.2146
+  },
+  {
+   "row_id": "03_rag_and_retrieval__03_context_assembly_grounding::vague::8",
+   "y": 1.0,
+   "pred": 1.366
+  },
+  {
+   "row_id": "03_rag_and_retrieval__11_ann_tradeoffs::keypoint_recall::2",
+   "y": 7.0,
+   "pred": 7.0604
+  },
+  {
+   "row_id": "03_rag_and_retrieval__11_ann_tradeoffs::paraphrase_heavy::3",
+   "y": 6.0,
+   "pred": 6.2599
+  },
+  {
+   "row_id": "03_rag_and_retrieval__11_ann_tradeoffs::content_extract::4",
+   "y": 5.0,
+   "pred": 6.88
+  },
+  {
+   "row_id": "04_ai_workflows_and_agents__04_workflow_patterns::paraphrase_heavy::3",
+   "y": 3.0,
+   "pred": 5.9276
+  },
+  {
+   "row_id": "04_ai_workflows_and_agents__04_workflow_patterns::content_extract::4",
+   "y": 2.0,
+   "pred": 1.9443
+  },
+  {
+   "row_id": "04_ai_workflows_and_agents__10_types_of_reasoning::paraphrase_lite::1",
+   "y": 7.0,
+   "pred": 7.0497
+  },
+  {
+   "row_id": "04_ai_workflows_and_agents__10_types_of_reasoning::keypoint_recall::2",
+   "y": 7.0,
+   "pred": 6.9589
+  },
+  {
+   "row_id": "04_ai_workflows_and_agents__13_agents_in_practice::off_topic_short::12",
+   "y": 1.0,
+   "pred": 1.2511
+  },
+  {
+   "row_id": "05_agent_loop_and_context_engineering__01_agent_loop::vague_short::9",
+   "y": 1.0,
+   "pred": 1.3737
+  },
+  {
+   "row_id": "05_agent_loop_and_context_engineering__01_agent_loop::off_topic::11",
+   "y": 1.0,
+   "pred": 1.9262
+  },
+  {
+   "row_id": "05_agent_loop_and_context_engineering__07_mcp::model_answer::0",
+   "y": 9.0,
+   "pred": 7.2288
+  },
+  {
+   "row_id": "05_agent_loop_and_context_engineering__07_mcp::paraphrase_lite::1",
+   "y": 6.0,
+   "pred": 7.0139
+  },
+  {
+   "row_id": "05_agent_loop_and_context_engineering__07_mcp::vague_short::9",
+   "y": 1.0,
+   "pred": 1.2986
+  },
+  {
+   "row_id": "05_agent_loop_and_context_engineering__09_rag_grows_context_fast::content_extract::4",
+   "y": 2.0,
+   "pred": 3.15
+  },
+  {
+   "row_id": "06_harness_engineering_and_evaluation__02_harness_structure_and_reference_impls::paraphrase_lite::1",
+   "y": 6.0,
+   "pred": 5.3146
+  },
+  {
+   "row_id": "06_harness_engineering_and_evaluation__02_harness_structure_and_reference_impls::paraphrase_heavy::3",
+   "y": 4.0,
+   "pred": 4.7517
+  },
+  {
+   "row_id": "06_harness_engineering_and_evaluation__02_harness_structure_and_reference_impls::content_extract::4",
+   "y": 5.0,
+   "pred": 2.1559
+  },
+  {
+   "row_id": "06_harness_engineering_and_evaluation__12_instrumentation::question_echo::10",
+   "y": 1.0,
+   "pred": 1.3964
+  },
+  {
+   "row_id": "06_harness_engineering_and_evaluation__14_reading_transcripts::keypoint_recall::2",
+   "y": 7.0,
+   "pred": 7.0363
+  },
+  {
+   "row_id": "06_harness_engineering_and_evaluation__14_reading_transcripts::partial::5",
+   "y": 7.0,
+   "pred": 6.7616
+  },
+  {
+   "row_id": "06_harness_engineering_and_evaluation__14_reading_transcripts::fragment::7",
+   "y": 1.0,
+   "pred": 1.3415
+  },
+  {
+   "row_id": "01_llm_foundations_and_prompting__13_prompt_clarity_context_role::paraphrase_good::0",
+   "y": 5.0,
+   "pred": 6.9648
+  },
+  {
+   "row_id": "01_llm_foundations_and_prompting__13_prompt_clarity_context_role::mistake::0",
+   "y": 4.0,
+   "pred": 4.41
+  },
+  {
+   "row_id": "21_clustering__10_algorithm_comparison::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 7.1636
+  },
+  {
+   "row_id": "21_clustering__10_algorithm_comparison::mistake::0",
+   "y": 4.0,
+   "pred": 3.3431
+  },
+  {
+   "row_id": "04_ai_workflows_and_agents__10_types_of_reasoning::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 6.2342
+  },
+  {
+   "row_id": "04_ai_workflows_and_agents__10_types_of_reasoning::mistake::0",
+   "y": 4.0,
+   "pred": 5.5716
+  },
+  {
+   "row_id": "18_logistic_regression_predict__08_accuracy_and_imbalance_trap::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 7.0859
+  },
+  {
+   "row_id": "18_logistic_regression_predict__08_accuracy_and_imbalance_trap::mistake::0",
+   "y": 1.0,
+   "pred": 4.8721
+  },
+  {
+   "row_id": "03_rag_and_retrieval__14_rag_failure_modes::paraphrase_good::0",
+   "y": 6.0,
+   "pred": 7.0897
+  },
+  {
+   "row_id": "03_rag_and_retrieval__14_rag_failure_modes::mistake::0",
+   "y": 5.0,
+   "pred": 3.3219
+  },
+  {
+   "row_id": "03_categorical_value_analysis__11_multivalue_method4_get_dummies::paraphrase_good::0",
+   "y": 8.0,
+   "pred": 7.1897
+  },
+  {
+   "row_id": "03_categorical_value_analysis__11_multivalue_method4_get_dummies::mistake::0",
+   "y": 3.0,
+   "pred": 7.1173
+  },
+  {
+   "row_id": "05_agent_loop_and_context_engineering__07_mcp::paraphrase_good::0",
+   "y": 6.0,
+   "pred": 6.861
+  },
+  {
+   "row_id": "05_agent_loop_and_context_engineering__07_mcp::mistake::0",
+   "y": 5.0,
+   "pred": 3.9995
+  },
+  {
+   "row_id": "10_pca__03_standardize_before_pca::paraphrase_good::0",
+   "y": 8.0,
+   "pred": 7.0548
+  },
+  {
+   "row_id": "10_pca__03_standardize_before_pca::mistake::0",
+   "y": 2.0,
+   "pred": 3.5467
+  },
+  {
+   "row_id": "02_llm_apis_and_prompting_in_code__15_other_apis_and_anthropic::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 7.2156
+  },
+  {
+   "row_id": "02_llm_apis_and_prompting_in_code__15_other_apis_and_anthropic::mistake::0",
+   "y": 4.0,
+   "pred": 3.6877
+  },
+  {
+   "row_id": "11_categorical_features__02_onehot_dummy_encoding::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 7.1875
+  },
+  {
+   "row_id": "11_categorical_features__02_onehot_dummy_encoding::mistake::0",
+   "y": 5.0,
+   "pred": 6.6057
+  },
+  {
+   "row_id": "13_decision_tree__09_nondeterminism_random_state::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 6.9851
+  },
+  {
+   "row_id": "13_decision_tree__09_nondeterminism_random_state::mistake::0",
+   "y": 3.0,
+   "pred": 2.2807
+  },
+  {
+   "row_id": "01_pandas_kickoff__02_load_read_csv::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 6.1616
+  },
+  {
+   "row_id": "01_pandas_kickoff__02_load_read_csv::mistake::0",
+   "y": 2.0,
+   "pred": 2.0355
+  },
+  {
+   "row_id": "05_simplest_regression_models__07_data_leakage_fit_on_train_only::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 7.2134
+  },
+  {
+   "row_id": "05_simplest_regression_models__07_data_leakage_fit_on_train_only::mistake::0",
+   "y": 3.0,
+   "pred": 5.5
+  },
+  {
+   "row_id": "04_ai_workflows_and_agents__13_agents_in_practice::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 6.8594
+  },
+  {
+   "row_id": "04_ai_workflows_and_agents__13_agents_in_practice::mistake::0",
+   "y": 5.0,
+   "pred": 3.1679
+  },
+  {
+   "row_id": "13_decision_tree__05_how_trees_split_impurity::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 6.9999
+  },
+  {
+   "row_id": "13_decision_tree__05_how_trees_split_impurity::mistake::0",
+   "y": 5.0,
+   "pred": 5.8775
+  },
+  {
+   "row_id": "11_categorical_features__04_frequency_encoding::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 7.0886
+  },
+  {
+   "row_id": "11_categorical_features__04_frequency_encoding::mistake::0",
+   "y": 5.0,
+   "pred": 3.3815
+  },
+  {
+   "row_id": "12_time_series__01_time_based_split::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 7.1328
+  },
+  {
+   "row_id": "12_time_series__01_time_based_split::mistake::0",
+   "y": 2.0,
+   "pred": 5.1156
+  },
+  {
+   "row_id": "21_clustering__08_dendrogram::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 6.8366
+  },
+  {
+   "row_id": "21_clustering__08_dendrogram::mistake::0",
+   "y": 4.0,
+   "pred": 5.2103
+  },
+  {
+   "row_id": "04_ai_workflows_and_agents__04_workflow_patterns::paraphrase_good::0",
+   "y": 6.0,
+   "pred": 6.7052
+  },
+  {
+   "row_id": "04_ai_workflows_and_agents__04_workflow_patterns::mistake::0",
+   "y": 5.0,
+   "pred": 5.2465
+  },
+  {
+   "row_id": "21_clustering__03_feature_scaling::paraphrase_good::0",
+   "y": 7.0,
+   "pred": 7.0543
+  },
+  {
+   "row_id": "21_clustering__03_feature_scaling::mistake::0",
+   "y": 6.0,
+   "pred": 5.1822
+  }
+ ]
+}

@@ -1,0 +1,27 @@
+{
+ "arm": "qwen4b",
+ "seed": 42,
+ "generated": "2026-09-08T19:02:51",
+ "vllm": "0.28.0",
+ "model": "/home/cfang/slm_runs/qwen4b_seed42_merged",
+ "n": 121,
+ "startup_seconds": 48.0,
+ "sequential_ms": {
+  "p50": 20.3,
+  "p95": 29.5,
+  "mean": 20.7
+ },
+ "concurrent": {
+  "clients": 8,
+  "answers_per_second": 80.98,
+  "wall_seconds": 1.49
+ },
+ "served_gold": {
+  "mae": 0.5689934582332946,
+  "within1": 0.9504132231404959,
+  "spearman": 0.9296024882101679,
+  "qwk": 0.9323054790638873
+ },
+ "rule_p95_ms_max": 300.0,
+ "latency_pass": true
+}

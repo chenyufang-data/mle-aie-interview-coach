@@ -58,7 +58,7 @@ def summarize(by_seed):
             by_seed[s]["transformers_latency_ms"]["p95"] for s in seeds), 1)
         out["config"] = {k: v for k, v in first["config"].items() if k != "training_rows"}
         out["training_rows"] = first["config"]["training_rows"]
-        out["n_fit"] = first["n_fit"]
+        out["n_fit"] = {str(s): by_seed[s]["n_fit"] for s in seeds}
     else:
         out["config"] = first["config"]
     return out
@@ -81,6 +81,20 @@ def main():
         serve_path = Path(args.runs_dir) / f"serve_{best}_seed42.json"
         if serve_path.exists():
             serving = json.loads(serve_path.read_text(encoding="utf-8"))
+    cost = None
+    if serving:
+        # Dollars per thousand answers from the measured throughput. The L4
+        # price is an assumption (GCP g2-standard-4 list price, about $0.70/h,
+        # 2026-09), and an L4 is slower than the RTX 5080 by a factor that was
+        # not measured - the plan's optional L4 hour - so a 3x slowdown is
+        # assumed and both ends are reported.
+        per_1k_s = 1000.0 / serving["concurrent"]["answers_per_second"]
+        usd_h = 0.70
+        cost = {"rtx5080_seconds_per_1k_answers": round(per_1k_s, 1),
+                "l4_usd_per_hour_assumed": usd_h, "l4_slowdown_assumed": 3,
+                "usd_per_1k_answers_at_5080_throughput": round(per_1k_s / 3600 * usd_h, 4),
+                "usd_per_1k_answers_assuming_3x_slower_l4": round(per_1k_s * 3 / 3600 * usd_h, 4),
+                "note": "estimate from the measured RTX 5080 throughput at 8 clients; not measured on an L4"}
     verdict = None
     if best:
         verdict = common.rule_verdict(
@@ -89,8 +103,10 @@ def main():
             p95_ms=serving["sequential_ms"]["p95"] if serving else None)
         verdict["best_arm"] = best
 
-    env = next((r["environment"] for by_seed in runs.values() for r in by_seed.values()
-                if "gpu" in r.get("environment", {})), None)
+    gpu_runs = [r for by_seed in runs.values() for r in by_seed.values()
+                if "gpu" in r.get("environment", {})]
+    env = next((r["environment"] for r in gpu_runs if r["environment"].get("peft")),
+               gpu_runs[0]["environment"] if gpu_runs else None)
     doc = {
         "generated": datetime.now().isoformat(timespec="seconds"),
         "script": "grader/slm/report.py",
@@ -109,6 +125,7 @@ def main():
         "arms": {name: {"label": LABELS.get(name, name), **summary} for name, summary in arms.items()},
         "best_arm": best,
         "serving": serving,
+        "cost_estimate": cost,
         "verdict": verdict,
     }
     common.write_json(args.results, doc)

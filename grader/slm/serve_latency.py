@@ -104,12 +104,19 @@ def main():
     prompts = [(records[i]["prompt"], g) for i, g in gold]
 
     log_path = weights / f"vllm_{args.arm}_seed{args.seed}.log"
-    env = dict(os.environ, VLLM_LOGGING_LEVEL="WARNING")
+    # vLLM 0.28's GPU worker allocates UVA (pinned, device-mapped) buffers and
+    # refuses to start on WSL2 unless told the kernel supports them
+    # (VLLM_WSL2_ENABLE_PIN_MEMORY; kernel >= 4.19.121, this one is 6.18).
+    # The FlashInfer sampler JIT-compiles with nvcc at warm-up (no CUDA toolkit
+    # in this distro); the torch sampler is irrelevant here anyway - one
+    # greedy token, the grade is read from the logprobs.
+    env = dict(os.environ, VLLM_LOGGING_LEVEL="WARNING", VLLM_WSL2_ENABLE_PIN_MEMORY="1",
+               VLLM_USE_FLASHINFER_SAMPLER="0")
     cmd = [args.vllm_python, "-m", "vllm.entrypoints.openai.api_server",
            "--model", str(merged), "--served-model-name", "slm", "--dtype", "bfloat16",
            "--max-model-len", "1024", "--max-logprobs", "20", "--port", str(args.port),
-           "--gpu-memory-utilization", str(args.gpu_memory_utilization),
-           "--disable-log-requests"]
+           "--gpu-memory-utilization", str(args.gpu_memory_utilization)]
+    # (request logging is off by default; vLLM 0.28 dropped --disable-log-requests)
     print("starting:", " ".join(cmd), flush=True)
     with log_path.open("w") as log:
         proc = subprocess.Popen(cmd, stdout=log, stderr=subprocess.STDOUT, env=env)

@@ -4,7 +4,7 @@ import random
 
 from retrieval import tokenize
 
-from coach import config, llm, users
+from coach import config, llm, slm, users
 from coach.config import CASCADE_FRAC_HIT_MAX, CASCADE_PRED_MAX, GRADER_PATH
 
 # Trained distilled grader for mock mode (grader/train.py artifact); None
@@ -148,6 +148,14 @@ def mock_evaluation(data, chunk, reason="mock"):
                 predicted = stacked.predict([feats[0] + agg])[0]
             else:
                 predicted = GRADER["model"].predict(feats)[0]
+            grader_name = f"local ML grader ({GRADER['model_name']})"
+            slm_grade = slm.grade(chunk, answer) if slm.available() else None
+            if slm_grade is not None:
+                # Step 3's measured winner (grader/slm/) supplies the overall
+                # grade; rubric verdicts, subscores and the cascade stay with
+                # the sklearn artifact they were measured against.
+                predicted = slm_grade
+                grader_name = slm.label()
             overall = clamp_score(round(predicted))
             # Subscores from the dedicated multi-output models when the
             # artifact has them (each beats overall-as-proxy on gold rows).
@@ -158,12 +166,13 @@ def mock_evaluation(data, chunk, reason="mock"):
                 if sub_models else None
             )
             summary = (
-                f"[{label} - local ML grader ({GRADER['model_name']})] "
+                f"[{label} - {grader_name}] "
                 f"Predicted {overall}/10; matched {len(hits)} of "
                 f"{len(interview['key_points'])} rubric key points. {hint}"
             )
         else:
             predicted_scores = None
+            grader_name = "local keyword matching"
             hits, misses, partials = [], [], []
             for point in interview["key_points"]:
                 point_tokens = set(tokenize(point))
@@ -176,8 +185,7 @@ def mock_evaluation(data, chunk, reason="mock"):
                 f"{len(interview['key_points'])} rubric key points in your answer. {hint}"
             )
         return {
-            "graded_by": (f"local ML grader ({GRADER['model_name']})"
-                          if GRADER is not None else "local keyword matching"),
+            "graded_by": grader_name,
             "overall_score": overall,
             "scores": predicted_scores or {
                 "technical_depth": overall,

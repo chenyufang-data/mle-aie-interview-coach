@@ -184,6 +184,10 @@ def main():
                 + ("ON - clearly-weak paid answers grade locally, no quota spent."
                    if config.PAID_CASCADE and grading.GRADER is not None else "off.")
             )
+            if config.SLM_URL:
+                print(f"SLM grader: {config.SLM_MODEL} at {config.SLM_URL} supplies the "
+                      "local tier's overall grade (coach/slm.py; sklearn keeps the "
+                      "rubric verdicts and the cascade).")
             capped = sum(1 for entry in users.USERS.values()
                          if isinstance(entry, dict) and entry.get("daily_llm_calls"))
             print(

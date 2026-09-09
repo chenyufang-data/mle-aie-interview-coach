@@ -1,0 +1,563 @@
+{
+ "generated": "2026-09-08T19:04:22",
+ "script": "grader/slm/report.py",
+ "environment": {
+  "python": "3.12.14",
+  "torch": "2.11.0+cu128",
+  "cuda": "12.8",
+  "gpu": "NVIDIA GeForce RTX 5080",
+  "transformers": "5.16.1",
+  "peft": "0.20.0"
+ },
+ "protocol": {
+  "split": "GroupShuffleSplit by chunk_id, test_size 0.2, seeds 42, 1, 2, 3, 4 (42 = grader/train.py's shipped split)",
+  "gold": "held-out rows with a Claude teacher grade (grader/labels_teacher.jsonl)",
+  "early_stopping": "dev fold of 15% of the training side's labeled rows, grouped by chunk, best epoch by QWK",
+  "grade_decode": "encoder: regression output; causal LMs: 1 + E[d] over the ten digit logits at the prompt's last position",
+  "metrics": "as grader/train.py: MAE on the raw prediction; within-1 and QWK on the rounded grade"
+ },
+ "rule": {
+  "qwk_margin": 0.05,
+  "mae_must_be_lower": true,
+  "p95_ms_max": 300.0
+ },
+ "arms": {
+  "deberta": {
+   "label": "DeBERTa-v3-base, regression head",
+   "seeds": [
+    1,
+    2,
+    3,
+    4,
+    42
+   ],
+   "n_gold": {
+    "1": 108,
+    "2": 106,
+    "3": 125,
+    "4": 122,
+    "42": 121
+   },
+   "per_seed": {
+    "1": {
+     "mae": 1.0276,
+     "within1": 0.7407,
+     "spearman": 0.8209,
+     "qwk": 0.7827
+    },
+    "2": {
+     "mae": 0.8815,
+     "within1": 0.8962,
+     "spearman": 0.853,
+     "qwk": 0.8683
+    },
+    "3": {
+     "mae": 1.2256,
+     "within1": 0.704,
+     "spearman": 0.7938,
+     "qwk": 0.7421
+    },
+    "4": {
+     "mae": 1.0069,
+     "within1": 0.7951,
+     "spearman": 0.799,
+     "qwk": 0.8238
+    },
+    "42": {
+     "mae": 1.1844,
+     "within1": 0.7025,
+     "spearman": 0.7808,
+     "qwk": 0.7414
+    }
+   },
+   "mean": {
+    "mae": 1.0652,
+    "within1": 0.7677,
+    "spearman": 0.8095,
+    "qwk": 0.7916
+   },
+   "sd": {
+    "mae": 0.1253,
+    "within1": 0.0725,
+    "spearman": 0.0253,
+    "qwk": 0.0489
+   },
+   "train_seconds_mean": 59.4,
+   "peak_vram_mib": 3570,
+   "best_epochs": {
+    "1": 8,
+    "2": 7,
+    "3": 8,
+    "4": 5,
+    "42": 8
+   },
+   "transformers_latency_ms_p95": 12.5,
+   "config": {
+    "kind": "encoder",
+    "model": "microsoft/deberta-v3-base",
+    "lr": 2e-05,
+    "batch": 16,
+    "accum": 1,
+    "epochs": 8,
+    "max_len": 512,
+    "warmup": 0.06,
+    "weight_decay": 0.01,
+    "batch_used": 16,
+    "accum_used": 1,
+    "lora_targets": null
+   },
+   "training_rows": "teacher-labeled train-side rows outside the dev chunks",
+   "n_fit": {
+    "1": 422,
+    "2": 419,
+    "3": 399,
+    "4": 403,
+    "42": 397
+   }
+  },
+  "qwen1.7b-silver": {
+   "label": "Qwen3-1.7B-Base + LoRA, + silver rows (exploratory)",
+   "seeds": [
+    42
+   ],
+   "n_gold": {
+    "42": 121
+   },
+   "per_seed": {
+    "42": {
+     "mae": 0.7245,
+     "within1": 0.876,
+     "spearman": 0.893,
+     "qwk": 0.8959
+    }
+   },
+   "mean": {
+    "mae": 0.7245,
+    "within1": 0.876,
+    "spearman": 0.893,
+    "qwk": 0.8959
+   },
+   "sd": {
+    "mae": 0.0,
+    "within1": 0.0,
+    "spearman": 0.0,
+    "qwk": 0.0
+   },
+   "train_seconds_mean": 456.0,
+   "peak_vram_mib": 4746,
+   "best_epochs": {
+    "42": 1
+   },
+   "transformers_latency_ms_p95": 38.8,
+   "config": {
+    "kind": "causal",
+    "model": "Qwen/Qwen3-1.7B-Base",
+    "lr": 0.0001,
+    "batch": 8,
+    "accum": 1,
+    "epochs": 2,
+    "max_len": 640,
+    "warmup": 0.06,
+    "weight_decay": 0.01,
+    "lora_r": 16,
+    "lora_alpha": 32,
+    "lora_dropout": 0.05,
+    "batch_used": 8,
+    "accum_used": 1,
+    "lora_targets": [
+     "q_proj",
+     "k_proj",
+     "v_proj",
+     "o_proj",
+     "gate_proj",
+     "up_proj",
+     "down_proj"
+    ]
+   },
+   "training_rows": "all train-side rows outside the dev chunks, construction labels, teacher rows x3",
+   "n_fit": {
+    "42": 3485
+   }
+  },
+  "qwen1.7b": {
+   "label": "Qwen3-1.7B-Base + LoRA",
+   "seeds": [
+    1,
+    2,
+    3,
+    4,
+    42
+   ],
+   "n_gold": {
+    "1": 108,
+    "2": 106,
+    "3": 125,
+    "4": 122,
+    "42": 121
+   },
+   "per_seed": {
+    "1": {
+     "mae": 0.6326,
+     "within1": 0.9074,
+     "spearman": 0.9001,
+     "qwk": 0.9186
+    },
+    "2": {
+     "mae": 0.5432,
+     "within1": 0.9528,
+     "spearman": 0.9344,
+     "qwk": 0.9299
+    },
+    "3": {
+     "mae": 0.5569,
+     "within1": 0.936,
+     "spearman": 0.9004,
+     "qwk": 0.9306
+    },
+    "4": {
+     "mae": 0.5376,
+     "within1": 0.9508,
+     "spearman": 0.9227,
+     "qwk": 0.9434
+    },
+    "42": {
+     "mae": 0.6165,
+     "within1": 0.9008,
+     "spearman": 0.9251,
+     "qwk": 0.914
+    }
+   },
+   "mean": {
+    "mae": 0.5774,
+    "within1": 0.9296,
+    "spearman": 0.9166,
+    "qwk": 0.9273
+   },
+   "sd": {
+    "mae": 0.0394,
+    "within1": 0.0217,
+    "spearman": 0.0139,
+    "qwk": 0.0103
+   },
+   "train_seconds_mean": 113.6,
+   "peak_vram_mib": 4617,
+   "best_epochs": {
+    "1": 3,
+    "2": 3,
+    "3": 4,
+    "4": 4,
+    "42": 4
+   },
+   "transformers_latency_ms_p95": 35.8,
+   "config": {
+    "kind": "causal",
+    "model": "Qwen/Qwen3-1.7B-Base",
+    "lr": 0.0001,
+    "batch": 8,
+    "accum": 1,
+    "epochs": 4,
+    "max_len": 640,
+    "warmup": 0.06,
+    "weight_decay": 0.01,
+    "lora_r": 16,
+    "lora_alpha": 32,
+    "lora_dropout": 0.05,
+    "batch_used": 8,
+    "accum_used": 1,
+    "lora_targets": [
+     "q_proj",
+     "k_proj",
+     "v_proj",
+     "o_proj",
+     "gate_proj",
+     "up_proj",
+     "down_proj"
+    ]
+   },
+   "training_rows": "teacher-labeled train-side rows outside the dev chunks",
+   "n_fit": {
+    "1": 422,
+    "2": 419,
+    "3": 399,
+    "4": 403,
+    "42": 397
+   }
+  },
+  "qwen4b": {
+   "label": "Qwen3-4B-Base + LoRA",
+   "seeds": [
+    1,
+    2,
+    3,
+    4,
+    42
+   ],
+   "n_gold": {
+    "1": 108,
+    "2": 106,
+    "3": 125,
+    "4": 122,
+    "42": 121
+   },
+   "per_seed": {
+    "1": {
+     "mae": 0.4693,
+     "within1": 0.9722,
+     "spearman": 0.9422,
+     "qwk": 0.9492
+    },
+    "2": {
+     "mae": 0.5107,
+     "within1": 0.9434,
+     "spearman": 0.9404,
+     "qwk": 0.9426
+    },
+    "3": {
+     "mae": 0.5558,
+     "within1": 0.944,
+     "spearman": 0.8899,
+     "qwk": 0.9318
+    },
+    "4": {
+     "mae": 0.4855,
+     "within1": 0.9508,
+     "spearman": 0.9531,
+     "qwk": 0.9468
+    },
+    "42": {
+     "mae": 0.566,
+     "within1": 0.9587,
+     "spearman": 0.932,
+     "qwk": 0.9337
+    }
+   },
+   "mean": {
+    "mae": 0.5175,
+    "within1": 0.9538,
+    "spearman": 0.9315,
+    "qwk": 0.9408
+   },
+   "sd": {
+    "mae": 0.038,
+    "within1": 0.0107,
+    "spearman": 0.0218,
+    "qwk": 0.0069
+   },
+   "train_seconds_mean": 239.1,
+   "peak_vram_mib": 9101,
+   "best_epochs": {
+    "1": 3,
+    "2": 3,
+    "3": 3,
+    "4": 3,
+    "42": 4
+   },
+   "transformers_latency_ms_p95": 67.8,
+   "config": {
+    "kind": "causal",
+    "model": "Qwen/Qwen3-4B-Base",
+    "lr": 8e-05,
+    "batch": 4,
+    "accum": 2,
+    "epochs": 4,
+    "max_len": 640,
+    "warmup": 0.06,
+    "weight_decay": 0.01,
+    "lora_r": 16,
+    "lora_alpha": 32,
+    "lora_dropout": 0.05,
+    "batch_used": 4,
+    "accum_used": 2,
+    "lora_targets": [
+     "q_proj",
+     "k_proj",
+     "v_proj",
+     "o_proj",
+     "gate_proj",
+     "up_proj",
+     "down_proj"
+    ]
+   },
+   "training_rows": "teacher-labeled train-side rows outside the dev chunks",
+   "n_fit": {
+    "1": 422,
+    "2": 419,
+    "3": 399,
+    "4": 403,
+    "42": 397
+   }
+  },
+  "sklearn": {
+   "label": "sklearn distilled grader (incumbent)",
+   "seeds": [
+    1,
+    2,
+    3,
+    4,
+    42
+   ],
+   "n_gold": {
+    "1": 108,
+    "2": 106,
+    "3": 125,
+    "4": 122,
+    "42": 121
+   },
+   "per_seed": {
+    "1": {
+     "mae": 1.1489,
+     "within1": 0.7315,
+     "spearman": 0.785,
+     "qwk": 0.7798
+    },
+    "2": {
+     "mae": 1.0787,
+     "within1": 0.7547,
+     "spearman": 0.7683,
+     "qwk": 0.7823
+    },
+    "3": {
+     "mae": 1.0598,
+     "within1": 0.728,
+     "spearman": 0.7347,
+     "qwk": 0.8011
+    },
+    "4": {
+     "mae": 0.9656,
+     "within1": 0.7869,
+     "spearman": 0.8082,
+     "qwk": 0.8352
+    },
+    "42": {
+     "mae": 1.1427,
+     "within1": 0.6942,
+     "spearman": 0.7366,
+     "qwk": 0.773
+    }
+   },
+   "mean": {
+    "mae": 1.0791,
+    "within1": 0.7391,
+    "spearman": 0.7666,
+    "qwk": 0.7943
+   },
+   "sd": {
+    "mae": 0.0666,
+    "within1": 0.0307,
+    "spearman": 0.0283,
+    "qwk": 0.0225
+   },
+   "train_seconds_mean": 1.1,
+   "config": {
+    "model": "HistGradientBoostingRegressor",
+    "max_iter": 300,
+    "learning_rate": 0.06,
+    "max_leaf_nodes": 31,
+    "l2_regularization": 1.0,
+    "training_rows": "all train-side rows: construction labels, teacher labels overriding at 3x weight (grader/train.py)"
+   }
+  }
+ },
+ "best_arm": "qwen4b",
+ "serving": {
+  "arm": "qwen4b",
+  "seed": 42,
+  "generated": "2026-09-08T19:02:51",
+  "vllm": "0.28.0",
+  "model": "/home/cfang/slm_runs/qwen4b_seed42_merged",
+  "n": 121,
+  "startup_seconds": 48.0,
+  "sequential_ms": {
+   "p50": 20.3,
+   "p95": 29.5,
+   "mean": 20.7
+  },
+  "concurrent": {
+   "clients": 8,
+   "answers_per_second": 80.98,
+   "wall_seconds": 1.49
+  },
+  "served_gold": {
+   "mae": 0.5689934582332946,
+   "within1": 0.9504132231404959,
+   "spearman": 0.9296024882101679,
+   "qwk": 0.9323054790638873
+  },
+  "rule_p95_ms_max": 300.0,
+  "latency_pass": true
+ },
+ "cost_estimate": {
+  "rtx5080_seconds_per_1k_answers": 12.3,
+  "l4_usd_per_hour_assumed": 0.7,
+  "l4_slowdown_assumed": 3,
+  "usd_per_1k_answers_at_5080_throughput": 0.0024,
+  "usd_per_1k_answers_assuming_3x_slower_l4": 0.0072,
+  "note": "estimate from the measured RTX 5080 throughput at 8 clients; not measured on an L4"
+ },
+ "verdict": {
+  "seeds": [
+   1,
+   2,
+   3,
+   4,
+   42
+  ],
+  "checks": [
+   {
+    "seed": 1,
+    "qwk_slm": 0.9491698719509226,
+    "qwk_sklearn": 0.7798174374119068,
+    "mae_slm": 0.469310861160066,
+    "mae_sklearn": 1.1489336756725093,
+    "qwk_ok": true,
+    "mae_ok": true
+   },
+   {
+    "seed": 2,
+    "qwk_slm": 0.9426386900813463,
+    "qwk_sklearn": 0.7822775436802483,
+    "mae_slm": 0.5106658222220205,
+    "mae_sklearn": 1.0786721590813009,
+    "qwk_ok": true,
+    "mae_ok": true
+   },
+   {
+    "seed": 3,
+    "qwk_slm": 0.9318351656489628,
+    "qwk_sklearn": 0.8011342834510441,
+    "mae_slm": 0.5557891479068107,
+    "mae_sklearn": 1.0597569136811968,
+    "qwk_ok": true,
+    "mae_ok": true
+   },
+   {
+    "seed": 4,
+    "qwk_slm": 0.9468245044407666,
+    "qwk_sklearn": 0.8352233633189776,
+    "mae_slm": 0.4854908700737966,
+    "mae_sklearn": 0.9656310921119277,
+    "qwk_ok": true,
+    "mae_ok": true
+   },
+   {
+    "seed": 42,
+    "qwk_slm": 0.9337296168366938,
+    "qwk_sklearn": 0.7729862577451625,
+    "mae_slm": 0.5660408339723384,
+    "mae_sklearn": 1.142665950998081,
+    "qwk_ok": true,
+    "mae_ok": true
+   }
+  ],
+  "quality_pass": true,
+  "p95_ms": 29.5,
+  "latency_pass": true,
+  "pass": true,
+  "rule": {
+   "qwk_margin": 0.05,
+   "mae_must_be_lower": true,
+   "p95_ms_max": 300.0
+  },
+  "best_arm": "qwen4b"
+ }
+}
