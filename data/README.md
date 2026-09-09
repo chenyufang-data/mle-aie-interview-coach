@@ -28,6 +28,9 @@ data/
 │                    and judge.jsonl (cached DeepSeek grades)
 ├── stt/             lexicon_extra.json — private terms (resume, employers,
 │                    product names) merged into grader/stt_lexicon.json when present
+├── notes/           upstream/: the drafted pull requests of roadmap step 2
+├── project_report.md  the author's own audit of the repository (personal; the
+│                    plan and the README are the public record)
 └── usage.json       per-key daily Claude quota + LLM-budget counters (rows keyed by a
                      digest of the key; the "_server" row is the instance total)
 ```

@@ -269,15 +269,21 @@ both times: the t3.micro was closed, about $80 of AWS credit remains, and
 the voice page still builds a plain `ws://` URL (`public/mock.js:483`).
 Roadmap step 1 replaces both plans.
 
-### 1.11 Project report (2026-09-06)
+### 1.11 Project report (2026-09-06; kept locally since 2026-09-09)
 
-`docs/project_report.md` audits the repository at this stage. Scores out
-of 10: technical depth 8, correctness 7, code quality 6, testing 6,
-documentation 7, reproducibility 6, deployment readiness 4, portfolio
-strength 8. Two critical risks: the backend Docker image omits four
-runtime modules and three banks, and grading endpoints are unauthenticated
-in the single-user configuration. Nine documentation-versus-code
-mismatches are listed there and are fixed in roadmap step 1.
+The project report is the author's own audit of the repository. Since
+2026-09-09 it lives outside the public tree at `data/project_report.md`
+(gitignored): this plan and the README are the public record, the report
+is personal; the 2026-09-06 edition is in history at 2469704. Scores out
+of 10 on 2026-09-06: technical depth 8, correctness 7, code quality 6,
+testing 6, documentation 7, reproducibility 6, deployment readiness 4,
+portfolio strength 8. Its two critical risks (the backend Docker image
+omitted four runtime modules and three banks; grading endpoints were
+unauthenticated in the single-user configuration) and its nine
+documentation-versus-code mismatches were fixed in roadmap step 1. The
+2026-09-09 update re-scores after steps 1 and 3 (deployment readiness 7,
+portfolio strength 9, testing, documentation and reproducibility 7–8)
+and records the step 3 trade-offs and the live box's security posture.
 
 ### 1.12 Decisions that stand
 
@@ -691,6 +697,48 @@ needs `VLLM_WSL2_ENABLE_PIN_MEMORY=1`, a C compiler, and the FlashInfer
 sampler off (it JIT-compiles with nvcc). Open, carried to the loose ends:
 the transfer to real spoken answers (the free-tier log), the L4 hour for a
 measured cost line, and the résumé line, which is the author's.
+
+**What differs between the arms (recorded 2026-09-09).** The four graders
+differ in kind, not only in size. The table is what each one is and how
+the experiment used it; the measured columns are from
+`grader/slm_results.json` (five seeds, mean ± sd on the gold rows).
+
+| | sklearn HGB | DeBERTa-v3-base | Qwen3-1.7B-Base | Qwen3-4B-Base |
+| --- | --- | --- | --- | --- |
+| Kind | gradient-boosted trees on 16 hand-made lexical features | encoder-only Transformer, reads both directions | decoder-only language model, reads left to right | same as 1.7B, deeper and wider |
+| Parameters | thousands | 0.18 B | 1.7 B | 4 B |
+| Pretraining | none | replaced-token detection ("spot the swapped word") on ~160 GB of general English, 2021 | next-token prediction on ~36 T tokens incl. code, math and STEM text, 2025 | same |
+| Input | feature vector | chunk + answer, up to 512 tokens | instruction + chunk + answer + "Grade:", up to 640 tokens | same |
+| Output | a number | a new regression head, trained from zero | probabilities of the ten digit tokens, read as 1 + E[digit] | same |
+| What was trained | everything | all 184 M weights, fp32, eager attention | LoRA adapters (r 16, α 32, every projection), base frozen in bf16 | same |
+| Training rows per seed | ≈ 3,100 (all training-side rows, teacher rows ×3) | 397–422 teacher-labelled rows | 397–422 | 397–422 |
+| Best epoch (of the cap) | — | 8, 7, 8, 5, 8 of 8 | 3–4 of 4 | 3–4 of 4 |
+| Train time, peak VRAM | 1 s, CPU | 59 s, 3.6 GB | 114 s, 4.6 GB | 239 s, 9.1 GB |
+| p95 per answer, plain transformers | sub-ms | 12.5 ms | 35.8 ms | 67.8 ms (30 ms under vLLM) |
+| QWK | 0.794 ± 0.022 | 0.792 ± 0.049 | 0.927 ± 0.010 | 0.941 ± 0.007 |
+
+Reading. With about 400 labelled rows no model can learn the subject from
+the labels; it must bring it. DeBERTa read general English and learned to
+spot corrupted words; Qwen3 read textbooks and code, so it already treats
+"gradients shrink through the layers" and "vanishing gradient" as the same
+claim. DeBERTa lands on the sklearn grader for the reason sklearn stops
+there: without subject knowledge both fall back to surface overlap. Size
+mattered less than knowledge — 0.18 B to 1.7 B added 0.135 QWK, 1.7 B to
+4 B added 0.014. Qwen's output head was not built from scratch (the digit
+tokens after "Grade:" mean something before training starts), which is
+why 400 rows suffice; the encoder's fresh regression head had to learn
+what a grade is from those same rows. LoRA left the base frozen, so it
+could not forget its pretraining; DeBERTa's full fine-tune moved every
+weight on a tiny dataset and shows it in a seed spread twice any other
+arm's. DeBERTa ran in fp32 with eager attention for practical reasons
+(transformers 5 loaded its fp16 checkpoint and produced NaNs; DebertaV2
+has no SDPA kernel), Qwen in bf16 with SDPA; neither choice affects the
+ranking. DeBERTa's best epoch was the last one on four of five seeds, so
+it was still improving at the cap; more epochs or the large variant might
+add a little, and nothing in its curve suggests closing 0.14. The
+trade-off the table states: the arm that could have served from a CPU box
+— fastest, smallest — is the one that did not gain; the arms that gained
+need a GPU.
 
 ### Step 4 — Postgres for state, then pgvector as a measured retrieval arm
 
