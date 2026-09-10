@@ -254,7 +254,13 @@ tables and `docs/plan.md`, which record the negative results too.
 The file store serves the demo fine; this switch is for the state
 guarantees (a row-locked budget, history, revocation by `UPDATE`) and to
 run what step 4 measured. About 100 MB of RAM on the t3.small, no extra
-instance.
+instance. Every command below runs on the box, in its bash shell (open
+`ssh -i $key ubuntu@<ip>` first and paste the lines there); PowerShell
+cannot run them directly. A single line can be sent from PowerShell as
+`ssh -i $key ubuntu@<ip> "cd mle-aie-interview-coach && <the line>"`.
+Done on the demo box 2026-09-10; step 5 verified from outside the same
+day (postgres store, pgvector vectors, one DeepSeek-graded answer moving
+the demo key's allowance 60 → 59).
 
 1. On the box, add a line to `.env`: `POSTGRES_PASSWORD=<a long random string>`.
    Nothing else changes in `.env`; the compose override builds

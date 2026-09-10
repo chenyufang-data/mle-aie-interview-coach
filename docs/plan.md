@@ -820,9 +820,18 @@ half reads the table (`RETRIEVAL_VECTORS=auto|numpy|pgvector`,
 `/api/meta` `retrieval.vectors`; the numpy matrix stays the default for
 every clone without a database); the README's retrieval table carries
 the row, `docs/retrieval_evaluation.md` the rule section. R1 unchanged in
-the re-run (hybrid passes; Chroma +0.7 ms, 5.5× the disk). Remaining, the
-author's: switching the box (`docs/deployment.md` section 9: password in
-`.env`, dry run, import, start with the override, verify).
+the re-run (hybrid passes; Chroma +0.7 ms, 5.5× the disk).
+
+**Step 4 closed 2026-09-10 (evening).** The author switched the demo box
+the same day (`docs/deployment.md` section 9, steps 1–4: password in
+`.env`, build with the override, dry run, import, start) and step 5 was
+verified from outside: `/api/meta` reports `store.backend: "postgres"`
+and `retrieval.vectors: "pgvector"`; an off-topic answer with the demo
+key was kept local by the cascade at no cost (the measured rule), and an
+on-topic "Always LLM" answer was graded by DeepSeek and moved
+`llm_left_today` 60 → 59 (server 200 → 199); voice stayed up. One
+finding for the runbook: its commands are bash lines for the box's
+shell, which PowerShell cannot run directly — a note now says so.
 
 ### Step 5 — Kubernetes and Terraform for the two services, then tear it down
 
