@@ -40,8 +40,41 @@ def _hybrid_embedder():
     return outcome
 
 
+def _dense_retriever(role, chunks, embedder, vectors):
+    """The dense half of the hybrid: the in-process numpy matrix, or the
+    same vectors served by Postgres + pgvector when the Postgres state
+    store is on (RETRIEVAL_VECTORS=auto, the measured default) or forced."""
+    from retrieval_dense import DenseRetriever
+
+    mode = config.RETRIEVAL_VECTORS
+    pool = None
+    if mode in ("auto", "pgvector"):
+        from coach import store
+
+        st = store.current()
+        if st.backend == "postgres":
+            pool = st.pool
+        elif mode == "pgvector":
+            raise SystemExit("RETRIEVAL_VECTORS=pgvector needs the Postgres state store "
+                             "(set DATABASE_URL).")
+    if pool is None:
+        return DenseRetriever(chunks, embedder, vectors)
+    from retrieval_dense import PgVectorRetriever
+
+    try:
+        retriever = PgVectorRetriever(chunks, embedder, vectors, name=role, pool=pool)
+    except Exception as exc:
+        if mode == "pgvector":
+            raise SystemExit(f"RETRIEVAL_VECTORS=pgvector: cannot start - {exc}")
+        print(f"Warning: pgvector unavailable ({exc}); {role} vectors stay in memory.")
+        return DenseRetriever(chunks, embedder, vectors)
+    config.RETRIEVAL_VECTORS_ACTIVE = "pgvector"
+    return retriever
+
+
 def load_chunks():
     embedder = _hybrid_embedder()
+    config.RETRIEVAL_VECTORS_ACTIVE = "numpy"
     for role, path in CORPUS_PATHS.items():
         if not path.exists():
             print(f"Warning: {path} not found; {role} course knowledge base disabled.")
@@ -58,10 +91,10 @@ def load_chunks():
         bm25 = Retriever(chunks)
         retriever = bm25
         if embedder is not None:
-            from retrieval_dense import DenseRetriever, HybridRetriever, load_or_build
+            from retrieval_dense import HybridRetriever, load_or_build
 
             vectors, _, _ = load_or_build(role, chunks, embedder)
-            retriever = HybridRetriever(bm25, DenseRetriever(chunks, embedder, vectors))
+            retriever = HybridRetriever(bm25, _dense_retriever(role, chunks, embedder, vectors))
         KB[role] = {
             "chunks": chunks,
             "retriever": retriever,

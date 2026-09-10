@@ -65,6 +65,7 @@ coach/               backend package (one module per concern)
   http.py            routes and static serving      kb.py       bank loading/selection
   llm.py             Claude / DeepSeek / Ollama     grading.py  distilled grader + cascade
   users.py           freemium access keys           mock/       mock interview (plan, turns, report)
+  store.py           state store: the files under data/ (default) or Postgres via DATABASE_URL
   voice/             live voice loop: VAD, STT, TTS, barge-in, Level 1 sidecar
 public/              dependency-free vanilla-JS frontend (no build step)
 retrieval.py         BM25 over the banks (the CI gate and the fallback)
@@ -76,7 +77,7 @@ rag_docs/            rubrics from primary documentation on MLOps gaps - generate
 grader/              training + every measurement script with its committed results
 tests/               offline suite (CI) + a browser e2e smoke (local, Playwright)
 docs/                specs, measured reports, and the design/lab notebook
-docker/              two-service compose deploy (nginx frontend + Python backend)
+docker/              compose deploy: nginx frontend + Python backend; overrides add Caddy TLS and Postgres
 data/                personal and runtime data - never committed (see data/README.md)
 ```
 
@@ -168,6 +169,20 @@ the free offline ML grader instead, uncomment the `--mock` command line in
 `docker-compose.yml` (no `.env` needed at all). Practice history persists in
 the `coach-data` volume. `--ollama` mode is not wired for Docker (it expects
 Ollama on localhost).
+
+`docker-compose.db.yml` adds a Postgres service (`pgvector/pgvector:pg16`)
+and points the backend at it (`docker compose -f docker-compose.yml -f
+docker-compose.db.yml up -d --build`, with `POSTGRES_PASSWORD` in `.env`):
+access keys, daily counters, session logs and the plan cache then live in
+the `coach-db` volume instead of files, and the hybrid retriever's vectors
+are served by pgvector (state store section below; measured in the
+retrieval section). An existing volume is imported first with the
+migration tool inside the container:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.db.yml run --rm backend \
+  python tools/migrate_to_postgres.py --data /data --users /app/users.json --dry-run
+```
 
 `bash tests/test_container.sh` is the packaging test CI runs: it builds both
 images, boots the stack in `--mock` mode and checks the banks, the hybrid
@@ -277,6 +292,22 @@ trusted, so a public bind cannot spend your keys on strangers. In Docker,
 mount `users.json` into the backend service (a commented line in
 `docker-compose.yml` shows how).
 
+**State store** (`coach/store.py`, roadmap step 4): everything above is
+file-backed by default — `users.json`, `data/usage.json`, the session logs,
+the plan cache — and a clone runs with zero services. Set `DATABASE_URL`
+(`pip install -r requirements-db.txt`; `docker-compose.db.yml` in Docker)
+and the same state lives in four Postgres tables instead. What changes: a
+call reservation becomes one row-locked transaction, so two processes or
+hosts can share a key's budget (a 20-thread race for a 5-call cap ends
+with exactly 5 winners on both backends, `tests/test_store.py`); the daily
+counters keep their history instead of resetting; revoking a key is an
+`UPDATE` that takes effect within `USERS_REFRESH_S` seconds (5) rather
+than a file edit; and the whole tier/budget suite runs against a Postgres
+service in CI. `tools/migrate_to_postgres.py` imports an existing `data/`
+folder and `users.json` (dry run first; a second run changes nothing).
+Tiers are always on with a database — the keys live in its `access_keys`
+table.
+
 **Answer collection**: the answer page discloses that graded answers are stored
 to improve the grading model; any key can opt out with `"log": false` in
 `users.json`. Claude-graded answers land in `data/sessions/real_sessions.jsonl` as
@@ -350,8 +381,9 @@ frozen before the first run; results in
 | Arm | Curated (23) | Paraphrased, tag words removed (61) | p95 latency |
 | --- | --- | --- | --- |
 | BM25 | 23/23, MRR 0.91 | 44/61 (72%), MRR 0.54 | 0.5 ms |
-| dense (bge-small, cosine) | 23/23, MRR 0.95 | 48/61 (79%), MRR 0.67 | 2.3 ms |
-| **hybrid (RRF of both)** | 23/23, MRR 0.93 | **51/61 (84%)**, MRR 0.67 | 2.9 ms |
+| dense (bge-small, cosine) | 23/23, MRR 0.95 | 48/61 (79%), MRR 0.67 | 2.1 ms |
+| **hybrid (RRF of both)** | 23/23, MRR 0.93 | **51/61 (84%)**, MRR 0.67 | 2.5 ms |
+| pgvector (the dense vectors in Postgres, step 4) | 23/23, MRR 0.95 | 48/61 (79%), MRR 0.67 | 3.6 ms |
 <!-- /results:retrieval -->
 
 The 61 paraphrases were written the way a candidate would type them, with
@@ -361,10 +393,22 @@ cleared every clause of the shipping rule (+11.5 points there, no regression
 on the curated set, p95 under 50 ms, model under 200 MB) and now serves
 the practice track; dense alone missed the +10-point bar by 0.2 points.
 Two more findings from the same run: a vector database (Chroma) adds
-+0.6 ms p95 and 6× the disk for an identical top-5 at this corpus size, so
-none ships; and the mock interview's rubric grounding stays on BM25 — it
-already grounds 77/77 planner probes, and the hand-labeled precision of
-what it attaches (56%, vs 65% for dense) is the open problem, not coverage.
++0.7 ms p95 and 5.5× the disk for an identical top-5 at this corpus size,
+so it did not ship; and the mock interview's rubric grounding stays on
+BM25 — it already grounds 77/77 planner probes, and the hand-labeled
+precision of what it attaches (56%, vs 65% for dense) is the open problem,
+not coverage.
+
+The `pgvector` row is roadmap step 4 (2026-09-10): the same vectors in a
+Postgres table, served by an exact cosine scan, under a rule fixed before
+the run — identical top-5 to the numpy arm on every query of both sets and
+p95 under 50 ms. It returned the exact top-5 on all 84 queries at 3.6 ms
+p95 (+1.5 ms for the round trip; 0.9 MB on disk), so when the Postgres
+state store is on the hybrid's dense half reads the table
+(`RETRIEVAL_VECTORS=auto|numpy|pgvector`, reported by `/api/meta`); every
+clone without a database keeps the numpy matrix. A vector store still
+earns nothing on quality at this size — what the database earns is the
+state, and the vector column comes along for a day's work.
 
 Install shape: `requirements.txt` carries `fastembed` (ONNX on CPU, no
 torch); the ~127 MB model downloads once into `data/models/` and document

@@ -35,3 +35,6 @@ README.md
 .gitignore
 .dockerignore
 docker-compose.yml
+
+# The migration tool ships in the backend image (docker-compose.db.yml).
+!tools/migrate_to_postgres.py

@@ -6,7 +6,7 @@ from http.server import BaseHTTPRequestHandler
 
 import anthropic
 
-from coach import config, grading, kb, sessions, stt_dev, users
+from coach import config, grading, kb, sessions, store, stt_dev, users
 from coach.mock import routes as mock_routes
 from coach.config import PAID_CASCADE, PAID_DAILY_QUOTA, PUBLIC_DIR
 from coach.llm import call_model, engine_model
@@ -41,7 +41,13 @@ class InterviewCoachHandler(BaseHTTPRequestHandler):
                 # "hybrid" (BM25 + bge-small, docs/retrieval_evaluation.md)
                 # or "bm25" with the reason the hybrid stack is not serving.
                 "retrieval": {"backend": config.RETRIEVAL_ACTIVE,
-                              "reason": config.RETRIEVAL_DISABLED_REASON},
+                              "reason": config.RETRIEVAL_DISABLED_REASON,
+                              # where the dense vectors are served from:
+                              # "numpy" or "pgvector" (step 4)
+                              "vectors": config.RETRIEVAL_VECTORS_ACTIVE},
+                # "file" (users.json + data/) or "postgres" (DATABASE_URL);
+                # coach/store.py. The container test reads it.
+                "store": store.current().info(),
                 "user": {
                     "name": user["name"],
                     "tier": user["tier"],

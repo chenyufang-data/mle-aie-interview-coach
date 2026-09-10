@@ -1,0 +1,10 @@
+# Optional Postgres backend for the state store (roadmap step 4): access
+# keys and tiers, quota and budget counters, session logs, the plan cache.
+# Selected at runtime by DATABASE_URL (coach/store.py); without it the
+# file backend under data/ serves as before and this file is not needed.
+# psycopg 3 with the bundled libpq ("binary") and the connection pool; the
+# stdlib server is threaded, so the pool is what makes concurrent requests
+# safe. Postgres itself comes from the pgvector/pgvector:pg16 image
+# (docker-compose.yml "db" service) - the same image carries the pgvector
+# extension for the measured retrieval arm.
+psycopg[binary,pool]>=3.2

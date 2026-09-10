@@ -1,0 +1,40 @@
+# Postgres state store for docker-compose.yml (roadmap step 4, coach/store.py):
+#
+#   docker compose -f docker-compose.yml -f docker-compose.db.yml up -d --build
+#
+# (add -f docker-compose.prod.yml on the public box, docs/deployment.md
+# section 9). POSTGRES_PASSWORD comes from the .env beside the compose
+# files; the backend's DATABASE_URL is built from it here, so the keys,
+# counters, session logs and the plan cache live in the coach-db volume
+# instead of the coach-data files. Import an existing data/ folder first:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.db.yml run --rm backend \
+#     python tools/migrate_to_postgres.py --data /data --users /app/users.json --dry-run
+#
+# The same image (pgvector/pgvector:pg16) carries the pgvector extension
+# for the measured retrieval arm.
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: coach
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: coach
+    volumes:
+      - coach-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U coach -d coach"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  backend:
+    environment:
+      DATABASE_URL: postgresql://coach:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/coach
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  coach-db:

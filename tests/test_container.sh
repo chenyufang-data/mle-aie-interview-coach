@@ -12,12 +12,16 @@
 #     CONTAINER_TEST_RETRIEVAL_BACKEND=bm25 forces the fallback, to check
 #     the downgrade path on a machine where the download works
 #   - POST /api/question then POST /api/evaluate answer 200 with a score
+#   - store.backend is "file", or "postgres" when CONTAINER_TEST_DB=1 adds
+#     the docker-compose.db.yml override (a db service; the password is
+#     CONTAINER_TEST_DB_PASSWORD, default containertest)
 # then tears the stack down, volumes included. Prints PASS/FAIL/WARN lines
 # and exits non-zero on any FAIL. Uses its own compose project name, so it
 # never touches a real deployment's containers or its coach-data volume.
 #
 #   bash tests/test_container.sh
 #   CONTAINER_TEST_ALLOW_BM25=1 bash tests/test_container.sh
+#   CONTAINER_TEST_DB=1 bash tests/test_container.sh
 set -u
 set -o pipefail
 
@@ -29,6 +33,15 @@ TIMEOUT_S="${CONTAINER_TEST_TIMEOUT:-180}"
 ALLOW_BM25="${CONTAINER_TEST_ALLOW_BM25:-0}"
 MODEL_DIR="${CONTAINER_TEST_MODEL_DIR:-}"
 RETRIEVAL_BACKEND="${CONTAINER_TEST_RETRIEVAL_BACKEND:-}"
+WITH_DB="${CONTAINER_TEST_DB:-0}"
+EXPECT_STORE="file"
+DB_FILES=()
+if [ "$WITH_DB" = "1" ]; then
+  EXPECT_STORE="postgres"
+  DB_FILES=(-f docker-compose.db.yml)
+  export POSTGRES_PASSWORD="${CONTAINER_TEST_DB_PASSWORD:-containertest}"
+  PROJECT="${COMPOSE_PROJECT_NAME:-coach-container-test-db}"
+fi
 
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/coach-container.XXXXXX")"
 OVERRIDE="$WORK/override.yml"
@@ -47,7 +60,7 @@ py() {
   fi
 }
 
-compose() { docker compose -p "$PROJECT" -f docker-compose.yml -f "$OVERRIDE" "$@"; }
+compose() { docker compose -p "$PROJECT" -f docker-compose.yml "${DB_FILES[@]}" -f "$OVERRIDE" "$@"; }
 
 cleanup() {
   status=$?
@@ -115,15 +128,21 @@ for pair in "LISTS:rag_lists" "DOCS:rag_docs"; do
   fi
 done
 
-py - "$META" "$EXPECT" "$ALLOW_BM25" <<'PY' || FAILURES=$((FAILURES + 1))
+py - "$META" "$EXPECT" "$ALLOW_BM25" "$EXPECT_STORE" <<'PY' || FAILURES=$((FAILURES + 1))
 import json, sys
 meta = json.load(open(sys.argv[1], encoding="utf-8"))
 expected = sys.argv[2].split()
 allow_bm25 = sys.argv[3] == "1"
+expect_store = sys.argv[4]
+store = (meta.get("store") or {}).get("backend")
+if store == expect_store:
+    print(f"PASS: state store is {store}")
+else:
+    print(f"FAIL: state store is {store!r}, expected {expect_store!r}")
 kb = meta.get("kb", {})
 banks = sorted(kb)
 print(f"banks listed: {banks}")
-failures = 0
+failures = 0 if store == expect_store else 1
 missing = [b for b in expected if b not in banks]
 if missing:
     print(f"FAIL: banks missing from /api/meta: {missing}"); failures += 1
@@ -138,8 +157,16 @@ if empty:
     print(f"FAIL: banks with no chunks: {empty}"); failures += 1
 retrieval = meta.get("retrieval", {})
 backend, reason = retrieval.get("backend"), retrieval.get("reason")
+# With the Postgres store the hybrid's vectors come from pgvector (step 4);
+# without it they stay in memory.
+expect_vectors = "pgvector" if expect_store == "postgres" else "numpy"
 if backend == "hybrid":
     print("PASS: retrieval backend is hybrid")
+    if retrieval.get("vectors") == expect_vectors:
+        print(f"PASS: dense vectors served from {expect_vectors}")
+    else:
+        print(f"FAIL: dense vectors served from {retrieval.get('vectors')!r}, expected {expect_vectors!r}")
+        failures += 1
 elif allow_bm25:
     print(f"WARN: retrieval backend is {backend!r} ({reason}); accepted because CONTAINER_TEST_ALLOW_BM25=1")
 else:

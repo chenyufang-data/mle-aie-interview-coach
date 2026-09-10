@@ -13,6 +13,11 @@ services:
       HOST: 0.0.0.0
       REAL_SESSIONS_PATH: /data/sessions/real_sessions.jsonl
       FREE_SESSIONS_PATH: /data/sessions/free_sessions.jsonl
+      # The opt-in mock log and the resume-analysis cache belong on the
+      # volume too (before 2026-09-10 they lived inside the container and
+      # vanished on every rebuild).
+      MOCK_SESSIONS_PATH: /data/sessions/mock_sessions.jsonl
+      MOCK_CACHE_DIR: /data/mock_cache
       USAGE_PATH: /data/usage.json
       # The bge-small embedding model (~127 MB, downloaded once) and the
       # document-vector cache live on the volume, so an image rebuild never

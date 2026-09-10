@@ -21,10 +21,26 @@ grading. It knows nothing about presentation.
   - **`--mock`**: nothing — fully offline. Uses `grader/model.joblib` (the trained
     local grader) if present, keyword rubric matching otherwise.
 - Environment overrides: `PORT` (default `8000`), `HOST` (default `127.0.0.1`;
-  set to `0.0.0.0` inside a container), `REAL_SESSIONS_PATH` (default
-  `data/sessions/real_sessions.jsonl`; point it at a mounted volume in Docker so
-  practice history survives rebuilds), `USERS_PATH` / `USAGE_PATH` /
+  set to `0.0.0.0` inside a container), `REAL_SESSIONS_PATH` /
+  `FREE_SESSIONS_PATH` / `MOCK_SESSIONS_PATH` (defaults under
+  `data/sessions/`; point them at a mounted volume in Docker so practice
+  history survives rebuilds), `MOCK_CACHE_DIR` (the resume-analysis cache,
+  default `data/mock_cache/`), `USERS_PATH` / `USAGE_PATH` /
   `PAID_DAILY_QUOTA` (freemium tiers, below).
+- State store (`coach/store.py`): the paths above are the file backend, the
+  default. `DATABASE_URL=postgresql://user:password@host:5432/db` selects
+  the Postgres backend (`pip install -r requirements-db.txt`): access keys
+  (`access_keys`), daily counters (`usage_counters`, one row per key digest
+  and day), session logs (`session_log`) and the plan cache (`plan_cache`)
+  in tables, the call reservation a row-locked transaction, tiers always
+  on, `users.json` not read (import it with `tools/migrate_to_postgres.py`).
+  `USERS_REFRESH_S` (5) is how often the keys table is re-read, so a
+  revoked key stops within that. A configured database that cannot serve
+  stops the start; there is no silent fallback to files.
+  `RETRIEVAL_VECTORS` (`auto` | `numpy` | `pgvector`) picks where the hybrid
+  retriever's dense vectors are served from: `auto` uses pgvector whenever
+  the Postgres store is on (measured identical top-5, `docs/retrieval_evaluation.md`
+  step 4) and the in-process matrix otherwise.
 - Freemium tiers (Claude mode only): if `users.json` exists (copy
   `users.sample.json`; gitignored — it holds real access keys), requests are
   routed per user. A request whose `X-Access-Key` header matches a `"paid"`
@@ -54,7 +70,9 @@ grading. It knows nothing about presentation.
   retrieval, grader artifact, and both banks. Training scripts, datasets, gold
   labels, and `.env` never enter the image; the key is injected at runtime via
   compose `env_file`. (`--ollama` is not wired for Docker: it expects Ollama on
-  localhost.)
+  localhost.) `docker-compose.db.yml` adds the Postgres service and sets
+  `DATABASE_URL` for the backend; the image carries the driver and the
+  migration tool either way.
 
 ## Code layout
 
@@ -119,6 +137,8 @@ when tiers are enabled.
           "AIE": { "modules": ["..."], "chunks": 222 },
           "LISTS": { "modules": ["..."], "chunks": 319 },
           "DOCS": { "modules": ["..."], "chunks": 72 } },
+  "retrieval": { "backend": "hybrid", "reason": null, "vectors": "numpy" },
+  "store": { "backend": "file" },
   "user": { "name": "anonymous", "tier": "free", "tiers_enabled": true,
             "paid_quota": 30, "paid_left_today": 0,
             "paid_grader": "deepseek-v4-flash",
@@ -141,6 +161,11 @@ stays in the server log. In Claude mode, binding beyond localhost without
 
 `paid_grader` is the paid tier's quota-free default judge; `"claude"` means no
 DeepSeek key is configured and the quota meters every paid LLM call.
+
+`retrieval.backend` is `"hybrid"` or `"bm25"` (with `reason` when the hybrid
+stack is not serving) and `retrieval.vectors` says where the dense vectors
+come from, `"numpy"` or `"pgvector"`; `store.backend` is `"file"` or
+`"postgres"`. The container test reads both.
 
 `tiers_enabled` is false when `users.json` is absent or the server is not in
 Claude mode; the frontend hides its tier badge then.

@@ -16,13 +16,18 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from coach import config, grading, users, web  # noqa: E402
+from coach import config, grading, store, users, web  # noqa: E402
 from coach.mock import engine as engines  # noqa: E402
 import server  # noqa: E402
 
+# The store under test: the file backend in a temp folder by default -
+# pinned here so a DATABASE_URL in the developer's environment or .env can
+# never point these tests at a real database; tests/test_store.py swaps in
+# the Postgres backend it was given and re-runs these tests.
+store.use(store.FileStore())
 TMP = Path(tempfile.mkdtemp(prefix="coach_users_"))
-users.USERS_PATH = TMP / "users.json"
-users.USAGE_PATH = TMP / "usage.json"
+config.USERS_PATH = TMP / "users.json"
+config.USAGE_PATH = TMP / "usage.json"
 config.MODE = "claude"
 os.environ["DEEPSEEK_API_KEY"] = "dummy-routing-only-never-called"
 os.environ["ANTHROPIC_API_KEY"] = "dummy-routing-only-never-called"
@@ -35,17 +40,17 @@ KEYS = {
 
 
 def setup(keys=KEYS, server_cap=0, quota=30):
-    users.USERS_PATH.write_text(json.dumps(keys), encoding="utf-8")
-    users._users_mtime = None
+    st = store.current()
+    st.replace_users(keys)
+    users._users_stamp = None
     users.load_users()
-    if users.USAGE_PATH.exists():
-        users.USAGE_PATH.unlink()
+    st.reset_usage()
     config.LLM_DAILY_CAP = server_cap
     config.PAID_DAILY_QUOTA = quota
 
 
 def usage():
-    return json.loads(users.USAGE_PATH.read_text(encoding="utf-8"))
+    return store.current().usage_dump()
 
 
 def test_per_key_budget():
@@ -127,7 +132,7 @@ def test_free_and_anonymous():
     assert guest["tier"] == "free" and anon["tier"] == "free" and anon["key"] is None
     assert grading.grading_route(guest) == ("local", "free")
     assert grading.grading_route(anon) == ("local", "free")
-    assert not users.USAGE_PATH.exists()  # free routing never touches usage
+    assert usage() == {}  # free routing never touches usage
     assert users.budget_left(anon) == {"key": None, "server": 1}
     assert users.quota_left(anon) == 0
 

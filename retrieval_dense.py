@@ -174,6 +174,114 @@ class DenseRetriever:
         return [c for _, _, c in self.rank(query, candidates)[:limit]]
 
 
+# ---------------------------------------------------------------- pgvector
+
+def vector_literal(vector):
+    """A vector in pgvector's text form, "[x,y,...]", at float32 precision."""
+    return "[" + ",".join(repr(float(x)) for x in np.asarray(vector, dtype=np.float32)) + "]"
+
+
+def pgvector_pool(url, max_size=4, timeout=10.0):
+    """A small psycopg pool for PgVectorRetriever when no state-store pool
+    exists (the experiment harness). Raises RuntimeError with the reason."""
+    try:
+        from psycopg_pool import ConnectionPool
+    except ImportError as exc:
+        raise RuntimeError("psycopg is not installed (pip install -r requirements-db.txt)") from exc
+    try:
+        pool = ConnectionPool(url, min_size=1, max_size=max_size, open=True, timeout=timeout,
+                              kwargs={"autocommit": True})
+        pool.wait(timeout=timeout)
+    except Exception as exc:
+        raise RuntimeError(f"cannot connect: {exc}") from exc
+    return pool
+
+
+class PgVectorRetriever:
+    """DenseRetriever's vectors served by Postgres + pgvector (roadmap step
+    4): the same bge-small document vectors in a chunk_vectors table, keyed
+    by corpus and the corpus fingerprint, so a changed bank re-embeds and a
+    rebuilt container reuses. Every query is an exact cosine scan (`<=>`
+    over a few hundred rows, no ANN index, so nothing approximates) and the
+    candidate filters apply in Python to the returned order - the contract
+    DenseRetriever keeps. The step 4 rule (grader/retrieval_eval.py) is what
+    lets it serve: identical top-5 to the numpy arm on sets A and B and a
+    p95 under 50 ms."""
+
+    def __init__(self, chunks, embedder, doc_vectors, name, pool, table="chunk_vectors"):
+        self.chunks = list(chunks)
+        self.embedder = embedder
+        self.name = name
+        self.pool = pool
+        self.table = table
+        self.vectors = normalize_rows(doc_vectors)
+        assert len(self.vectors) == len(self.chunks)
+        self.fingerprint = corpus_fingerprint(self.chunks, embedder.name)
+        self.dim = int(self.vectors.shape[1])
+        self.build_seconds = None
+        self._ensure()
+
+    def _ensure(self):
+        """Create the extension and table when missing; (re)load this
+        corpus's rows unless the stored fingerprint and count already match."""
+        with self.pool.connection() as conn:
+            conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
+            conn.execute(
+                f"CREATE TABLE IF NOT EXISTS {self.table} (corpus text NOT NULL, "
+                f"fingerprint text NOT NULL, idx integer NOT NULL, chunk_id text NOT NULL, "
+                f"embedding vector({self.dim}) NOT NULL, PRIMARY KEY (corpus, idx))")
+            stored = conn.execute(
+                f"SELECT fingerprint, count(*) FROM {self.table} WHERE corpus = %s "
+                "GROUP BY fingerprint", (self.name,)).fetchall()
+            if stored == [(self.fingerprint, len(self.chunks))]:
+                return
+            t0 = time.perf_counter()
+            with conn.transaction():
+                conn.execute(f"DELETE FROM {self.table} WHERE corpus = %s", (self.name,))
+                with conn.cursor() as cur:
+                    cur.executemany(
+                        f"INSERT INTO {self.table} (corpus, fingerprint, idx, chunk_id, embedding) "
+                        "VALUES (%s, %s, %s, %s, %s::vector)",
+                        [(self.name, self.fingerprint, i, c["id"], vector_literal(v))
+                         for i, (c, v) in enumerate(zip(self.chunks, self.vectors))])
+            self.build_seconds = time.perf_counter() - t0
+
+    def size_mb(self):
+        """Table plus index bytes on disk, every corpus included."""
+        with self.pool.connection() as conn:
+            size = conn.execute("SELECT pg_total_relation_size(%s::regclass)",
+                                (self.table,)).fetchone()[0]
+        return size / 1048576
+
+    def scores_ranked(self, query):
+        """[(index, cosine)] best first over the whole corpus, ties by index."""
+        literal = vector_literal(self.embedder.embed_query(query))
+        with self.pool.connection() as conn:
+            rows = conn.execute(
+                f"SELECT idx, 1 - (embedding <=> %s::vector) FROM {self.table} "
+                "WHERE corpus = %s ORDER BY embedding <=> %s::vector, idx",
+                (literal, self.name, literal)).fetchall()
+        return [(int(i), float(s)) for i, s in rows]
+
+    def rank(self, query, candidates):
+        """Candidate (index, chunk) pairs best first; ties broken by index."""
+        scores = dict(self.scores_ranked(query))
+        return sorted(((scores.get(i, -1.0), i, c) for i, c in candidates),
+                      key=lambda item: (-item[0], item[1]))
+
+    def top_scored(self, query, level=None, limit=3):
+        if not self.chunks or not (query or "").strip():
+            return []
+        ranked = self.rank(query, level_candidates(self.chunks, level))
+        return [(score, chunk) for score, _, chunk in ranked[:limit]]
+
+    def search(self, query="", module=None, level=None, exclude_ids=(), limit=5):
+        candidates = filter_candidates(self.chunks, module, level, exclude_ids)
+        if not (query or "").strip():
+            return [c for _, c in candidates]
+        return [c for _, _, c in self.rank(query, candidates)[:limit]]
+
+
 # ------------------------------------------------------------------ hybrid
 
 def rrf_fuse(rank_lists, k=RRF_K):

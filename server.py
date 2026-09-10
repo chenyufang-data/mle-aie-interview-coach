@@ -17,7 +17,7 @@ import os
 from http.server import ThreadingHTTPServer
 
 from coach import (config, grading, http, kb, llm, prompts, sessions,  # noqa: F401
-                   stt_dev, users, web)
+                   store, stt_dev, users, web)
 
 _FACADE = (config, kb, users, llm, prompts, grading, sessions, web, stt_dev, http)
 
@@ -125,6 +125,14 @@ def main():
         config.OLLAMA_MODEL = args.ollama
 
     config.load_env_file()
+    # The state store: the files under data/ by default, Postgres when the
+    # environment (or the .env just loaded) sets DATABASE_URL. A configured
+    # database that cannot serve stops the start - never a silent fallback
+    # to files that would fork the state.
+    try:
+        store.init()
+    except store.StoreError as exc:
+        raise SystemExit(f"State store: {exc}")
     kb.load_chunks()
     users.load_users()
     # Claude mode needs the local grader too when tiers are on: it serves
@@ -151,9 +159,12 @@ def main():
         )
     if config.RETRIEVAL_ACTIVE == "hybrid":
         print("Retrieval: hybrid BM25 + bge-small (measured +13 pts Recall@5 on "
-              "paraphrased queries, docs/retrieval_evaluation.md).")
+              "paraphrased queries, docs/retrieval_evaluation.md)"
+              + (", vectors served by Postgres + pgvector."
+                 if config.RETRIEVAL_VECTORS_ACTIVE == "pgvector" else "."))
     else:
         print(f"Retrieval: BM25 only - {config.RETRIEVAL_DISABLED_REASON}.")
+    print(f"State store: {store.current().describe()}.")
     if config.MODE == "mock":
         brain = (
             f"trained ML grader ({grading.GRADER['model_name']})"

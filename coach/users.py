@@ -1,77 +1,76 @@
 """Freemium tiers: access keys, the paid tier's daily Claude quota, and the
-daily LLM-call budgets that make a shared or demo key safe to hand out.
+daily LLM-call and live-voice budgets that make a shared or demo key safe
+to hand out.
 
-A request's X-Access-Key header is looked up in USERS_PATH; keys with tier
-"paid" get LLM grading (DeepSeek Flash by default, Claude on "Always
-Claude" under PAID_DAILY_QUOTA Claude calls per day, question generation
-and evaluation combined). Everyone else gets the distilled local grader.
-When USERS_PATH does not exist, tiers are disabled and every request
-grades with Claude - the original single-user behaviour.
+A request's X-Access-Key header is looked up in the access keys (users.json,
+or the access_keys table when DATABASE_URL selects the Postgres store -
+coach/store.py); keys with tier "paid" get LLM grading (DeepSeek Flash by
+default, Claude on "Always Claude" under PAID_DAILY_QUOTA Claude calls per
+day, question generation and evaluation combined). Everyone else gets the
+distilled local grader. When there are no keys at all (no users.json, no
+database), tiers are disabled and every request grades with Claude - the
+original single-user behaviour.
 
 Budgets (2026-09-07, for the public demo): every LLM call - any engine,
 practice grading or a mock route - counts against the key's own
-"daily_llm_calls" (users.json; 0 or absent = unlimited) and against the
-server-wide config.LLM_DAILY_CAP (0 = unlimited). A refused call grades
-locally with the reason "budget"; the mock refuses with a clear message.
-State lives in USAGE_PATH keyed by a digest of the key, plus one "_server"
-row for the whole instance.
+"daily_llm_calls" (0 or absent = unlimited) and against the server-wide
+config.LLM_DAILY_CAP (0 = unlimited). A refused call grades locally with the
+reason "budget"; the mock refuses with a clear message. Live voice is
+metered the same way in seconds against "daily_voice_minutes" and
+VOICE_DAILY_MINUTES. The counters live in the store keyed by a digest of
+the key, plus one "_server" row for the whole instance; a reservation is
+one locked read-modify-write there (a file rewrite under a process lock,
+or a row-locked transaction in Postgres).
 """
 
 import hashlib
-import json
-import threading
 from datetime import datetime
 
-from coach import config
-from coach.config import USAGE_PATH, USERS_PATH
+from coach import config, store
 
 USERS = {}
-# True whenever USERS_PATH exists — even if it fails to parse. A present-but-
-# broken users file must fail CLOSED (tiers on, no paid keys -> everyone free),
-# never open (everyone gets Claude), or a corrupt file becomes a cost leak.
+# True whenever access keys exist (users.json present - even if it fails to
+# parse - or the Postgres store is on). A present-but-broken users file
+# must fail CLOSED (tiers on, no paid keys -> everyone free), never open
+# (everyone gets Claude), or a corrupt file becomes a cost leak.
 TIERS_ENABLED = False
 SERVER_ROW = "_server"
-_usage_lock = threading.Lock()
-_users_mtime = None
+_users_stamp = None
 
 
 def load_users():
-    global USERS, TIERS_ENABLED, _users_mtime
-    if not USERS_PATH.exists():
+    global USERS, TIERS_ENABLED, _users_stamp
+    st = store.current()
+    if not st.users_present():
         return
     TIERS_ENABLED = True
     try:
-        _users_mtime = USERS_PATH.stat().st_mtime
-        # utf-8-sig: tolerate the BOM that Windows editors and PowerShell
-        # (Set-Content -Encoding utf8) prepend.
-        USERS = json.loads(USERS_PATH.read_text(encoding="utf-8-sig"))
+        _users_stamp = st.users_stamp()
+        USERS = st.load_users()
     except Exception as exc:
         print(
-            f"Warning: could not read {USERS_PATH.name} ({exc}); "
+            f"Warning: could not read the access keys ({exc}); "
             "tiers stay ON with no paid keys - every request is free tier."
         )
 
 
 def _maybe_reload():
-    """Pick up users.json edits without a restart, so revoking a leaked
-    key (delete its line) takes effect on the next request."""
-    try:
-        mtime = USERS_PATH.stat().st_mtime
-    except OSError:
-        return
-    if mtime != _users_mtime:
+    """Pick up key changes without a restart - a users.json edit (revoking a
+    leaked key: delete its line) on the next request, a table change within
+    USERS_REFRESH_S seconds on the Postgres store."""
+    if store.current().users_stamp() != _users_stamp:
         load_users()
 
 
 def _usage_id(key):
-    """usage.json rows are keyed by a digest of the access key, never the
-    raw key: a shared or backed-up usage file must not leak every paid
-    key. The raw keys rest only in users.json (gitignored)."""
+    """Usage rows are keyed by a digest of the access key, never the raw
+    key: a shared or backed-up usage file must not leak every paid key. The
+    raw keys rest only in users.json (gitignored) or the access_keys table."""
     return hashlib.sha256(key.encode("utf-8")).hexdigest()[:16]
 
 
 def _cap(value):
-    """A users.json budget field -> int, 0 meaning unlimited; junk is 0."""
+    """A budget field -> int, 0 meaning unlimited; junk is 0."""
     try:
         return max(0, int(value or 0))
     except (TypeError, ValueError):
@@ -104,15 +103,6 @@ def resolve_user(handler):
     return resolve_key(handler.headers.get("X-Access-Key") or "")
 
 
-def _read_usage():
-    if not USAGE_PATH.exists():
-        return {}
-    try:
-        return json.loads(USAGE_PATH.read_text(encoding="utf-8-sig"))
-    except Exception:
-        return {}
-
-
 def _today():
     return datetime.now().date().isoformat()
 
@@ -129,22 +119,32 @@ def _row(usage, row_id, today):
             "voice": float(row.get("voice", 0) or 0)}
 
 
+def _ids(user):
+    """The usage rows a user touches: the server row, and the key's own row
+    when it has a key (anonymous callers only count against the server)."""
+    key_id = _usage_id(user["key"]) if user.get("key") else None
+    return key_id, ([SERVER_ROW, key_id] if key_id else [SERVER_ROW])
+
+
+def _read_rows(user):
+    today = _today()
+    key_id, ids = _ids(user)
+    raw = store.current().usage_read(ids, today)
+    key_row = _row(raw, key_id, today) if key_id else None
+    return key_row, _row(raw, SERVER_ROW, today)
+
+
 def quota_left(user):
     if user["tier"] != "paid":
         return 0
-    with _usage_lock:
-        row = _row(_read_usage(), _usage_id(user["key"]), _today())
-    return max(0, config.PAID_DAILY_QUOTA - row["used"])
+    key_row, _ = _read_rows(user)
+    return max(0, config.PAID_DAILY_QUOTA - key_row["used"])
 
 
 def budget_left(user):
     """LLM calls left today as {"key": n | None, "server": n | None};
     None means that budget is unlimited."""
-    with _usage_lock:
-        usage = _read_usage()
-        today = _today()
-        key_row = _row(usage, _usage_id(user["key"]), today) if user.get("key") else None
-        server_row = _row(usage, SERVER_ROW, today)
+    key_row, server_row = _read_rows(user)
     key_left = None
     if key_row is not None and user.get("llm_cap"):
         key_left = max(0, user["llm_cap"] - key_row["llm"])
@@ -159,11 +159,7 @@ def voice_left(user):
     None means that budget is unlimited. Caps are minutes in users.json and
     the environment; the counters are seconds, because a session is metered
     in ticks (coach/voice/loop.py) and a clip by its length."""
-    with _usage_lock:
-        usage = _read_usage()
-        today = _today()
-        key_row = _row(usage, _usage_id(user["key"]), today) if user.get("key") else None
-        server_row = _row(usage, SERVER_ROW, today)
+    key_row, server_row = _read_rows(user)
     key_left = None
     if key_row is not None and user.get("voice_cap"):
         key_left = max(0.0, user["voice_cap"] * 60 - key_row["voice"])
@@ -192,11 +188,10 @@ def take_voice(user, seconds):
     bounded by the tick length, never by the session length."""
     today = _today()
     seconds = max(0.0, float(seconds))
-    with _usage_lock:
-        usage = _read_usage()
-        key_id = _usage_id(user["key"]) if user.get("key") else None
-        key_row = _row(usage, key_id, today) if key_id else None
-        server_row = _row(usage, SERVER_ROW, today)
+    key_id, ids = _ids(user)
+    with store.current().usage_transaction(ids, today) as txn:
+        key_row = _row(txn.rows, key_id, today) if key_id else None
+        server_row = _row(txn.rows, SERVER_ROW, today)
         if (key_row is not None and user.get("voice_cap")
                 and key_row["voice"] >= user["voice_cap"] * 60):
             return "voice"
@@ -205,11 +200,9 @@ def take_voice(user, seconds):
             return "voice"
         if key_row is not None:
             key_row["voice"] = round(key_row["voice"] + seconds, 3)
-            usage[key_id] = key_row
+            txn.write(key_id, key_row)
         server_row["voice"] = round(server_row["voice"] + seconds, 3)
-        usage[SERVER_ROW] = server_row
-        USAGE_PATH.parent.mkdir(parents=True, exist_ok=True)
-        USAGE_PATH.write_text(json.dumps(usage), encoding="utf-8")
+        txn.write(SERVER_ROW, server_row)
     return None
 
 
@@ -222,11 +215,10 @@ def take_call(user, engine):
     refusal, so the caller may retry with another engine (a spent Claude
     quota degrades to DeepSeek; a spent budget never does)."""
     today = _today()
-    with _usage_lock:
-        usage = _read_usage()
-        key_id = _usage_id(user["key"])
-        key_row = _row(usage, key_id, today)
-        server_row = _row(usage, SERVER_ROW, today)
+    key_id = _usage_id(user["key"])
+    with store.current().usage_transaction([SERVER_ROW, key_id], today) as txn:
+        key_row = _row(txn.rows, key_id, today)
+        server_row = _row(txn.rows, SERVER_ROW, today)
         if engine == "claude" and key_row["used"] >= config.PAID_DAILY_QUOTA:
             return "quota"
         if user.get("llm_cap") and key_row["llm"] >= user["llm_cap"]:
@@ -237,10 +229,8 @@ def take_call(user, engine):
             key_row["used"] += 1
         key_row["llm"] += 1
         server_row["llm"] += 1
-        usage[key_id] = key_row
-        usage[SERVER_ROW] = server_row
-        USAGE_PATH.parent.mkdir(parents=True, exist_ok=True)
-        USAGE_PATH.write_text(json.dumps(usage), encoding="utf-8")
+        txn.write(key_id, key_row)
+        txn.write(SERVER_ROW, server_row)
     return None
 
 

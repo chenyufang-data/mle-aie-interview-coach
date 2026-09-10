@@ -7,6 +7,9 @@ re-exports them for the harness and adds what the runtime does not need:
     ChromaRetriever  the same vectors served from a persistent Chroma
                      collection - the "does a vector store earn its place at
                      339 chunks?" arm (Q3); needs chromadb
+    PgVectorRetriever  re-exported from retrieval_dense.py: the same vectors
+                     in Postgres + pgvector (roadmap step 4; it ships, so it
+                     lives with the runtime)
     rss_mb / hardware / dir_size_mb   measurement helpers for the report
 """
 
@@ -24,8 +27,9 @@ sys.path.insert(0, str(BASE_DIR))
 from retrieval import LEVEL_DIFFICULTY, retrieval_text  # noqa: E402
 from retrieval_dense import (INDEX_DIR, MODEL_CACHE, MODEL_NAME, QUERY_PREFIX,  # noqa: E402,F401
                              RRF_K, DenseRetriever, Embedder, HybridRetriever,
-                             corpus_fingerprint, filter_candidates, level_candidates,
-                             load_or_build, local_model_dir, normalize_rows, rrf_fuse)
+                             PgVectorRetriever, corpus_fingerprint, filter_candidates,
+                             level_candidates, load_or_build, local_model_dir,
+                             normalize_rows, pgvector_pool, rrf_fuse, vector_literal)
 
 
 # ------------------------------------------------------------ measurement

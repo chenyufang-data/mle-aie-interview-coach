@@ -1,16 +1,15 @@
-"""Practice-session logging: gold pairs (LLM-graded) and unlabeled free tier."""
+"""Practice-session logging: gold pairs (LLM-graded), the unlabeled free
+tier, and the opt-in mock log - appended through the state store
+(coach/store.py: data/sessions/*.jsonl, or the session_log table)."""
 
-import json
 from datetime import datetime
 
-from coach import config
-from coach.config import (FREE_SESSIONS_PATH, MOCK_SESSIONS_PATH,
-                          REAL_SESSIONS_PATH)
+from coach import config, store
 from coach.llm import engine_model
 
 
 def log_real_session(data, result, user=None, engine=None):
-    """Persist a real graded exchange. Local file only; never breaks a response.
+    """Persist a real graded exchange. Never breaks a response.
 
     graded_by matters downstream: grader/evaluate_on_real.py keeps only
     "claude" rows as gold pairs, so DeepSeek-graded sessions never leak into
@@ -35,9 +34,7 @@ def log_real_session(data, result, user=None, engine=None):
             "timeUsed": data.get("timeUsed"),
             "evaluation": result,
         }
-        REAL_SESSIONS_PATH.parent.mkdir(parents=True, exist_ok=True)
-        with REAL_SESSIONS_PATH.open("a", encoding="utf-8") as handle:
-            handle.write(json.dumps(record, ensure_ascii=False) + "\n")
+        store.current().append_session("real", record)
     except Exception as exc:
         print(f"Warning: could not log session ({exc})")
 
@@ -63,9 +60,7 @@ def log_mock_session(data, result, user=None, engine=None):
             "transcript": data.get("transcript"),
             "report": result,
         }
-        MOCK_SESSIONS_PATH.parent.mkdir(parents=True, exist_ok=True)
-        with MOCK_SESSIONS_PATH.open("a", encoding="utf-8") as handle:
-            handle.write(json.dumps(record, ensure_ascii=False) + "\n")
+        store.current().append_session("mock", record)
         return True
     except Exception as exc:
         print(f"Warning: could not log mock session ({exc})")
@@ -94,8 +89,6 @@ def log_free_session(data, result, user, reason):
             "local_score": result.get("overall_score"),
             "teacher_score": None,
         }
-        FREE_SESSIONS_PATH.parent.mkdir(parents=True, exist_ok=True)
-        with FREE_SESSIONS_PATH.open("a", encoding="utf-8") as handle:
-            handle.write(json.dumps(record, ensure_ascii=False) + "\n")
+        store.current().append_session("free", record)
     except Exception as exc:
         print(f"Warning: could not log free session ({exc})")

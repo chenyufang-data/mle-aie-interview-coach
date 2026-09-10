@@ -7,21 +7,20 @@ list instantly; a role already played re-enters with zero wait and zero
 LLM spend; `fresh: true` on the request bypasses the read (a replay with
 NEW questions) while still refreshing the stored copy.
 
-data/mock_cache/ is gitignored - resumes are personal data - and trimmed
-to the newest MAX_FILES entries. The fake engine is never cached: it is
-already instant and deterministic, and caching it would leave files
-behind every CI/harness run.
+The entries live in the state store (coach/store.py): data/mock_cache/
+(gitignored - resumes are personal data) or the plan_cache table, trimmed
+to the newest MAX_FILES entries either way. The fake engine is never
+cached: it is already instant and deterministic, and caching it would
+leave entries behind every CI/harness run.
 """
 
 import hashlib
 import json
-import os
-from pathlib import Path
 
-from coach.config import BASE_DIR
+from coach import config, store
 
-CACHE_DIR = Path(os.environ.get("MOCK_CACHE_DIR",
-                                str(BASE_DIR / "data" / "mock_cache")))
+# The file backend's folder (config.mock_cache_dir(), MOCK_CACHE_DIR).
+CACHE_DIR = config.mock_cache_dir()
 MAX_FILES = 200
 # Bump when a prompt or schema behind a cached call changes, so entries
 # built by the old prompt are never served. 2: resume-only probes with
@@ -29,44 +28,39 @@ MAX_FILES = 200
 CACHE_VERSION = 2
 
 
-def _path(kind, engine, parts):
+def _digest(kind, engine, parts):
     digest = hashlib.sha256()
     digest.update(f"{kind}\x00{engine}\x00v{CACHE_VERSION}".encode("utf-8"))
     for part in parts:
         digest.update(b"\x00")
         digest.update(json.dumps(part, sort_keys=True,
                                  ensure_ascii=False).encode("utf-8"))
-    return CACHE_DIR / f"{digest.hexdigest()}.json"
+    return digest.hexdigest()
 
 
 def get(kind, engine, *parts):
     """The cached result, or None (missing, unreadable, or fake engine)."""
     if engine == "fake":
         return None
-    path = _path(kind, engine, parts)
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
+        return store.current().cache_get(_digest(kind, engine, parts))
+    except Exception:
         return None
 
 
 def put(kind, engine, result, *parts):
     if engine == "fake":
         return
-    CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    path = _path(kind, engine, parts)
-    path.write_text(json.dumps(result, ensure_ascii=False), encoding="utf-8")
-    trim()
+    try:
+        st = store.current()
+        st.cache_put(_digest(kind, engine, parts), result)
+        st.cache_trim(MAX_FILES)
+    except Exception as exc:
+        print(f"Warning: could not write the plan cache ({exc})")
 
 
 def trim(limit=MAX_FILES):
     try:
-        files = sorted(CACHE_DIR.glob("*.json"),
-                       key=lambda p: p.stat().st_mtime)
-    except OSError:
-        return
-    for path in files[:-limit] if limit else files:
-        try:
-            path.unlink()
-        except OSError:
-            pass
+        store.current().cache_trim(limit)
+    except Exception:
+        pass

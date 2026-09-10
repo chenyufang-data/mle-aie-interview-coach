@@ -13,7 +13,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from coach import config, grading, kb  # noqa: E402
+from coach import config, grading, kb, store  # noqa: E402
+
+# The plan-cache and session-log tests write state: keep them on the file
+# backend whatever DATABASE_URL the developer's environment carries.
+store.use(store.FileStore())
 
 config.MODE = "mock"
 kb.load_chunks()
@@ -262,10 +266,10 @@ def test_mock_session_log():
     import json
     import tempfile
 
-    from coach import sessions
+    from coach import config, sessions
     tmp = Path(tempfile.mkdtemp()) / "mock_sessions.jsonl"
-    old = sessions.MOCK_SESSIONS_PATH
-    sessions.MOCK_SESSIONS_PATH = tmp
+    old = config.MOCK_SESSIONS_PATH
+    config.MOCK_SESSIONS_PATH = tmp
     try:
         data = {"role": ROLE, "plan": {"settings": {"length": "short"}},
                 "transcript": [{"turn": 1, "question": "q", "answer": "a"}]}
@@ -284,7 +288,7 @@ def test_mock_session_log():
             data, {}, user={"name": "u", "log": False}) is False
         assert len(tmp.read_text(encoding="utf-8").splitlines()) == 1
     finally:
-        sessions.MOCK_SESSIONS_PATH = old
+        config.MOCK_SESSIONS_PATH = old
 
 
 def test_mock_routes():

@@ -1,17 +1,23 @@
 """Retrieval experiment harness (docs/plan.md): BM25 vs dense
-vs Chroma vs hybrid on the same evaluation sets, plus latency, build cost,
-store overhead, threshold calibration and the pre-registered R1 check.
+vs Chroma vs hybrid vs pgvector on the same evaluation sets, plus latency,
+build cost, store overhead, threshold calibration, the pre-registered R1
+check and the step 4 pgvector rule.
 
     .venv\\Scripts\\python grader\\retrieval_eval.py            # run everything, then render
     .venv\\Scripts\\python grader\\retrieval_eval.py --report   # re-render from saved results
+    .venv\\Scripts\\python grader\\retrieval_eval.py --database-url postgresql://...  # + the pgvector arm
 
 Writes grader/retrieval_eval_results.json and renders
 docs/retrieval_evaluation.md, merging grader/grounding_eval_results.json
-(set C, grounding_eval.py) when it exists.
+(set C, grounding_eval.py) when it exists. The pgvector arm runs when a
+database is named (--database-url, else DATABASE_URL or TEST_DATABASE_URL
+in the environment) and needs pgvector/pgvector:pg16 or any Postgres with
+the extension.
 """
 
 import argparse
 import json
+import os
 import sys
 import time
 from datetime import datetime
@@ -25,8 +31,9 @@ sys.path.insert(0, str(BASE_DIR))
 from coach import config  # noqa: E402
 from coach.mock.planning import RUBRIC_MIN_SCORE  # noqa: E402
 from grader.dense_retrieval import (INDEX_DIR, ChromaRetriever, DenseRetriever,  # noqa: E402
-                                    Embedder, HybridRetriever, dir_size_mb, hardware,
-                                    load_or_build, rss_mb)
+                                    Embedder, HybridRetriever, PgVectorRetriever,
+                                    dir_size_mb, hardware, load_or_build, pgvector_pool,
+                                    rss_mb)
 from retrieval import Retriever  # noqa: E402
 
 CORPUS_ROLE = {"ml": "MLE", "ai": "AIE", "exp": "EXP", "lists": "LISTS", "docs": "DOCS"}
@@ -35,10 +42,14 @@ SET_PATHS = {"A": BASE_DIR / "tests" / "retrieval_cases.json",
 RESULTS_PATH = BASE_DIR / "grader" / "retrieval_eval_results.json"
 GROUNDING_PATH = BASE_DIR / "grader" / "grounding_eval_results.json"
 REPORT_PATH = BASE_DIR / "docs" / "retrieval_evaluation.md"
-ARMS = ["bm25", "dense", "chroma", "hybrid"]
+ARMS = ["bm25", "dense", "chroma", "hybrid", "pgvector"]
 LIMIT = 5
 # Pre-registered R1 (plan §2), copied here so the check is mechanical.
 R1 = {"b_gain_points": 10, "mrr_drop_max": 0.05, "p95_ms_max": 50, "model_mb_max": 200}
+# Step 4's rule for the pgvector arm (docs/plan.md, step 4): it may serve
+# the vectors only if its top-5 is identical to the numpy arm's on every
+# query of sets A and B and its p95 stays under 50 ms.
+R_PGVECTOR = {"identical_top5_on": ["A", "B"], "p95_ms_max": 50}
 
 
 def is_relevant(chunk, case):
@@ -157,20 +168,49 @@ def measure_latency(cases, arms, repeats):
     return out
 
 
-def chroma_agreement(cases, arms):
+def store_agreement(cases, arms, arm):
+    """How often a store arm returns the numpy arm's exact top-5 (same ids,
+    same order) - the "store overhead only" claim, measured."""
     same, jaccard = 0, []
     total = 0
+    differing = []
     for case in cases:
         corpus = case.get("corpus", "ml")
-        if "chroma" not in arms[corpus]:
+        if arm not in arms[corpus]:
             return None
         a = [c["id"] for c in arms[corpus]["dense"].search(query=case["query"], limit=LIMIT)]
-        b = [c["id"] for c in arms[corpus]["chroma"].search(query=case["query"], limit=LIMIT)]
+        b = [c["id"] for c in arms[corpus][arm].search(query=case["query"], limit=LIMIT)]
         total += 1
         same += a == b
+        if a != b:
+            differing.append({"query": case["query"], "dense": a, arm: b})
         jaccard.append(len(set(a) & set(b)) / max(1, len(set(a) | set(b))))
     return {"queries": total, "identical_top5": same,
-            "mean_jaccard": round(float(np.mean(jaccard)), 4) if jaccard else None}
+            "mean_jaccard": round(float(np.mean(jaccard)), 4) if jaccard else None,
+            "differing": differing}
+
+
+def chroma_agreement(cases, arms):
+    return store_agreement(cases, arms, "chroma")
+
+
+def check_pgvector(results):
+    """Step 4's rule, mechanical: identical top-5 on every query of the named
+    sets, and p95 under the cap."""
+    agree = results.get("pgvector_agreement") or {}
+    latency = results["latency"].get("pgvector") or {}
+    checks = {}
+    for name in R_PGVECTOR["identical_top5_on"]:
+        a = agree.get(name)
+        checks[f"identical_top5_{name}"] = {
+            "pass": bool(a) and a["identical_top5"] == a["queries"],
+            "detail": (f"set {name}: {a['identical_top5']}/{a['queries']} identical top-5"
+                       if a else f"set {name} not measured")}
+    p95 = latency.get("p95_ms")
+    checks["p95"] = {"pass": p95 is not None and p95 <= R_PGVECTOR["p95_ms_max"],
+                     "detail": f"p95 {p95} ms (max {R_PGVECTOR['p95_ms_max']})"}
+    return {"pass": all(c["pass"] for c in checks.values()), "checks": checks,
+            "rule": R_PGVECTOR}
 
 
 def calibrate(cases, arms):
@@ -266,6 +306,23 @@ def run(args):
             arms[corpus]["chroma"] = chroma
             build_stats[corpus]["chroma_build_s"] = round(chroma.build_seconds, 3) if chroma.build_seconds else None
     rss1 = rss_mb()
+    pool, pg_size_mb, pg_error = None, None, None
+    if args.database_url and not args.no_pgvector:
+        try:
+            pool = pgvector_pool(args.database_url)
+            for corpus in corpora:
+                pg = PgVectorRetriever(arms[corpus]["dense"].chunks, embedder,
+                                       arms[corpus]["dense"].vectors,
+                                       name=f"{corpus}_bge_small", pool=pool)
+                arms[corpus]["pgvector"] = pg
+                build_stats[corpus]["pgvector_build_s"] = (round(pg.build_seconds, 3)
+                                                           if pg.build_seconds else None)
+                pg_size_mb = round(pg.size_mb(), 3)
+        except Exception as exc:
+            pg_error = f"{type(exc).__name__}: {str(exc)[:160]}"
+            print(f"pgvector arm not run: {pg_error}")
+            for corpus in corpora:
+                arms[corpus].pop("pgvector", None)
 
     def delta(a, b):
         return round(b - a, 1) if a and b else None
@@ -279,9 +336,12 @@ def run(args):
                           "chroma_extra_mb": delta(rss_runtime, rss1)},
                "build": build_stats,
                "index_mb": {"npz": round(sum(p.stat().st_size for p in INDEX_DIR.glob("*.npz")) / 1048576, 3),
-                            "chroma": round(dir_size_mb(INDEX_DIR / "chroma"), 2)},
+                            "chroma": round(dir_size_mb(INDEX_DIR / "chroma"), 2),
+                            "pgvector": pg_size_mb},
                "sets": {}, "params": {"limit": LIMIT, "repeats": args.repeats,
-                                      "bm25_rubric_threshold": RUBRIC_MIN_SCORE, "r1": R1}}
+                                      "bm25_rubric_threshold": RUBRIC_MIN_SCORE, "r1": R1,
+                                      "pgvector": R_PGVECTOR if pool else None},
+               "pgvector_error": pg_error}
     for name, cases in sets.items():
         metrics, rows = evaluate_set(cases, arms)
         results["sets"][name] = {"n": len(cases), "metrics": metrics, "rows": rows}
@@ -291,6 +351,19 @@ def run(args):
     results["latency"] = measure_latency(all_cases, arms, args.repeats)
     print("latency p95 ms: " + "  ".join(f"{arm} {v['p95_ms']}" for arm, v in results["latency"].items() if v))
     results["chroma_agreement"] = chroma_agreement(all_cases, arms)
+    if pool:
+        results["pgvector_agreement"] = {name: store_agreement(cases, arms, "pgvector")
+                                         for name, cases in sets.items()}
+        results["pgvector_agreement"]["all"] = store_agreement(all_cases, arms, "pgvector")
+        results["pgvector_rule"] = check_pgvector(results)
+        v = results["pgvector_rule"]
+        print(f"step 4 pgvector: {'PASS' if v['pass'] else 'FAIL'} - "
+              + "; ".join(f"{k} {'ok' if c['pass'] else 'NO'} ({c['detail']})"
+                          for k, c in v["checks"].items()))
+        pool.close()
+    else:
+        results["pgvector_agreement"] = None
+        results["pgvector_rule"] = None
     results["calibration"] = calibrate(all_cases, arms)
     results["r1"] = check_r1(results)
     for arm, verdict in results["r1"].items():
@@ -326,7 +399,10 @@ def render(results, grounding):
              "| `bm25` | the incumbent `retrieval.Retriever` (k1 = 1.5, b = 0.75) |",
              "| `dense` | bge-small cosine over a numpy matrix |",
              "| `chroma` | the same vectors in a persistent Chroma collection (cosine, ef_search 512) |",
-             "| `hybrid` | reciprocal-rank fusion (k = 60) of `bm25` and `dense` |", ""]
+             "| `hybrid` | reciprocal-rank fusion (k = 60) of `bm25` and `dense` |"]
+    if results.get("pgvector_rule"):
+        lines.append("| `pgvector` | the same vectors in a Postgres table, exact cosine scan by pgvector `<=>` (step 4) |")
+    lines.append("")
     lines += ["## Sets", "",
               "| Set | n | What |", "| --- | ---: | --- |"]
     if "A" in results["sets"]:
@@ -451,6 +527,34 @@ def render(results, grounding):
     else:
         lines.append("Chroma arm not run.")
     lines.append("")
+    pg = results.get("pgvector_rule")
+    lines += ["### Step 4 - pgvector as the vector store", ""]
+    if pg:
+        agree = results.get("pgvector_agreement") or {}
+        lines += ["The same vectors in a Postgres table (`pgvector/pgvector:pg16`), served by an "
+                  "exact cosine scan; the rule, fixed in docs/plan.md step 4: identical top-5 to "
+                  f"the numpy arm on every query of sets {' and '.join(pg['rule']['identical_top5_on'])} "
+                  f"and p95 <= {pg['rule']['p95_ms_max']} ms. It serves the hybrid's dense half only "
+                  "when the Postgres state store is on (DATABASE_URL) and this rule passed.", "",
+                  "| Check | Result |", "| --- | --- |"]
+        for key, c in pg["checks"].items():
+            lines.append(f"| {key} | {'yes' if c['pass'] else 'NO'} - {c['detail']} |")
+        lines.append(f"| **verdict** | **{'PASS' if pg['pass'] else 'FAIL'}** |")
+        lines.append("")
+        if lat.get("pgvector") and lat.get("dense"):
+            lines.append(f"pgvector p95 {lat['pgvector']['p95_ms']} ms vs numpy p95 {lat['dense']['p95_ms']} ms "
+                         f"(one round trip to the database per query); table with its primary key "
+                         f"{results['index_mb'].get('pgvector')} MB on disk vs {results['index_mb']['npz']} MB of numpy.")
+        diffs = (agree.get("all") or {}).get("differing") or []
+        if diffs:
+            lines += ["", f"Queries whose top-5 differed ({len(diffs)}):", ""]
+            for d in diffs[:10]:
+                lines.append(f"- {d['query']}: numpy {d['dense']} vs pgvector {d['pgvector']}")
+    elif results.get("pgvector_error"):
+        lines.append(f"pgvector arm not run: {results['pgvector_error']}")
+    else:
+        lines.append("pgvector arm not run (no database named).")
+    lines.append("")
     for name, data in results["sets"].items():
         lines += [f"## Per-query ranks - set {name}", "",
                   "Rank of the first relevant chunk in each arm's top 5 (`-` = miss).", "",
@@ -469,8 +573,15 @@ def main():
     parser.add_argument("--report", action="store_true", help="render from saved results only")
     parser.add_argument("--repeats", type=int, default=5)
     parser.add_argument("--no-chroma", action="store_true")
+    parser.add_argument("--no-pgvector", action="store_true")
+    parser.add_argument("--database-url", default=None,
+                        help="Postgres with pgvector for the step 4 arm (default: DATABASE_URL "
+                             "or TEST_DATABASE_URL from the environment / .env)")
     args = parser.parse_args()
     config.load_env_file()
+    if not args.database_url:
+        args.database_url = (os.environ.get("DATABASE_URL", "").strip()
+                             or os.environ.get("TEST_DATABASE_URL", "").strip() or None)
     if args.report:
         results = json.loads(RESULTS_PATH.read_text(encoding="utf-8"))
     else:

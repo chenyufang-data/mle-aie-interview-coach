@@ -36,5 +36,11 @@ data/
 ```
 
 Paths are overridable with `REAL_SESSIONS_PATH`, `FREE_SESSIONS_PATH`,
-`USAGE_PATH` (see `docs/backend.md`). Secrets stay at the repo root, not
-here: `.env` (API keys) and `users.json` (access keys) — both gitignored.
+`MOCK_SESSIONS_PATH`, `MOCK_CACHE_DIR`, `USAGE_PATH` (see `docs/backend.md`).
+Secrets stay at the repo root, not here: `.env` (API keys) and `users.json`
+(access keys) — both gitignored.
+
+With `DATABASE_URL` set (`coach/store.py`), `usage.json`, `sessions/` and
+`mock_cache/` are not written: that state lives in Postgres, and
+`tools/migrate_to_postgres.py` imports what is here (dry run first). The
+models and the vector cache stay in this folder either way.

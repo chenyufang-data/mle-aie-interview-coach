@@ -4,18 +4,24 @@ FROM python:3.13-slim
 
 WORKDIR /app
 
-COPY requirements.txt requirements-voice-cloud.txt ./
+COPY requirements.txt requirements-voice-cloud.txt requirements-db.txt ./
 # requirements-voice-cloud.txt is the light part of the voice stack (the
 # loop server + Silero VAD): with AUDIO_BACKEND=deepgram and its key in the
 # server's .env the live voice mode is on; otherwise the server states why
 # the loop is off and serves text only (docs/deployment.md section 6).
-RUN pip install --no-cache-dir -r requirements.txt -r requirements-voice-cloud.txt
+# requirements-db.txt is the Postgres driver for the state store: used when
+# docker-compose.db.yml sets DATABASE_URL, idle otherwise (coach/store.py).
+RUN pip install --no-cache-dir -r requirements.txt -r requirements-voice-cloud.txt \
+    -r requirements-db.txt
 
 # Runtime files only - training scripts, datasets, and gold labels stay out.
 # Top-level modules the runtime imports: retrieval (BM25), retrieval_dense
 # (hybrid BM25 + bge-small, coach/kb.py), resume_parser (/api/mock/parse_file).
 COPY server.py retrieval.py retrieval_dense.py resume_parser.py ./
 COPY coach/ coach/
+# The migration tool, so an existing data/ volume can be imported into the
+# Postgres store from inside the container (docker-compose.db.yml).
+COPY tools/migrate_to_postgres.py tools/
 # grader/: the distilled grader artifact plus the two modules the runtime
 # imports (features.py so the artifact unpickles; stt_text.py for the voice
 # keyterm policy) and the two inputs that policy reads (coach/voice/keyterms.py).

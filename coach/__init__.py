@@ -7,6 +7,8 @@ scripts and tests do `import server` and use its names).
     config    env loading, paths, constants, runtime mode flags
     kb        question-bank corpora, chunk selection (BM25 via retrieval.py)
     users     freemium tiers, access keys, daily Claude quota (fail-closed)
+    store     the state store behind users/sessions/plan cache: file backend
+              (default, data/) or Postgres when DATABASE_URL is set
     llm       the three grading engines: Claude, DeepSeek, Ollama
     prompts   system prompt, question/evaluation prompts, output schemas
     grading   engine routing, smart cascade, the local distilled grader

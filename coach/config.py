@@ -54,9 +54,29 @@ MOCK_SESSIONS_PATH = Path(
     os.environ.get("MOCK_SESSIONS_PATH", BASE_DIR / "data" / "sessions" / "mock_sessions.jsonl")
 )
 
+
+def mock_cache_dir():
+    """Folder of the mock's resume-analysis cache (coach/mock/plan_cache.py):
+    personal data, gitignored, trimmed to the newest entries. Read at call
+    time so a MOCK_CACHE_DIR set after import (tests, compose) is honoured."""
+    return Path(os.environ.get("MOCK_CACHE_DIR", BASE_DIR / "data" / "mock_cache"))
+
 # Freemium tiers (Claude mode only): see coach/users.py.
 USERS_PATH = Path(os.environ.get("USERS_PATH", BASE_DIR / "users.json"))
 USAGE_PATH = Path(os.environ.get("USAGE_PATH", BASE_DIR / "data" / "usage.json"))
+# State store (roadmap step 4, coach/store.py). The paths above and the
+# session logs / plan cache are the FILE backend - the default, so a clone
+# runs with zero services. DATABASE_URL (postgresql://user:password@host:5432/db)
+# selects the Postgres backend instead: keys, counters, session logs and
+# the plan cache in tables, the quota reservation a row-locked transaction,
+# and the state shareable by a second process or host. With it set, tiers
+# are always on (the keys live in the access_keys table; users.json is not
+# read - tools/migrate_to_postgres.py imports it and a data/ folder). Read
+# again by store.init() after the .env is loaded.
+DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
+# How often the Postgres backend re-reads the keys table, so a revoked key
+# stops working within this many seconds (the file backend watches mtime).
+USERS_REFRESH_S = float(os.environ.get("USERS_REFRESH_S", "5"))
 PAID_DAILY_QUOTA = int(os.environ.get("PAID_DAILY_QUOTA", "30"))
 # Daily LLM-call budgets (2026-09-07). PAID_DAILY_QUOTA meters Claude only;
 # DeepSeek was quota-free by design - right for the owner's key, wrong for
@@ -134,6 +154,15 @@ def voice_ws_path():
 RETRIEVAL_BACKEND = os.environ.get("RETRIEVAL_BACKEND", "auto").lower()
 RETRIEVAL_ACTIVE = "bm25"
 RETRIEVAL_DISABLED_REASON = None
+# Where the hybrid's dense vectors are served from (roadmap step 4). "auto"
+# (default) uses Postgres + pgvector whenever the Postgres state store is
+# on (DATABASE_URL) - the rule in docs/plan.md step 4 passed: identical
+# top-5 to the in-process matrix on sets A and B, p95 under 50 ms - and the
+# numpy matrix otherwise; "numpy" forces the matrix; "pgvector" forces the
+# table and fails loudly without a database. RETRIEVAL_VECTORS_ACTIVE
+# reports what is serving ("numpy" | "pgvector").
+RETRIEVAL_VECTORS = os.environ.get("RETRIEVAL_VECTORS", "auto").lower()
+RETRIEVAL_VECTORS_ACTIVE = "numpy"
 
 # Mock-interview probes come from the RESUME only; the job description
 # decides which resume claims get probed and how deep (jd_emphasis), never

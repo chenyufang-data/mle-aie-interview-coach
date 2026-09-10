@@ -150,7 +150,11 @@ report is written, and a new session is refused with a message.
 - **Update**: `git pull` then the same `up -d --build` line. Data, keys and
   certificates live in volumes and bind mounts, not in the image.
 - **Revoke or change the demo key**: edit `users.json` on the box; the
-  server reloads it on the next request, no restart. Revoke the DeepSeek key
+  server reloads it on the next request, no restart. With the Postgres
+  store on (section 9) the keys live in the database instead: revoke with
+  `docker compose ... exec db psql -U coach -d coach -c "UPDATE access_keys SET revoked_at = now() WHERE name = 'Demo'"`
+  (effective within 5 s), add or change one by editing `users.json` and
+  re-running the migration tool (it upserts). Revoke the DeepSeek key
   itself on the DeepSeek platform if it ever leaks.
 - **Watch spend**: the DeepSeek usage page and the Deepgram project's usage
   page (both demo keys are separate, so their traffic is attributable), and
@@ -243,3 +247,54 @@ tables and `docs/plan.md`, which record the negative results too.
 - [ ] Budget alert set; instance type t3.small; only 22/80/443 open
 - [ ] One live voice session run end to end from a phone or another machine
 - [ ] The README links the live URL
+- [ ] If the Postgres store is on (section 9): `/api/meta` shows `store.backend: "postgres"` and `retrieval.vectors: "pgvector"`, and the demo key's allowance counts down there
+
+## 9. Postgres on the box (optional, roadmap step 4)
+
+The file store serves the demo fine; this switch is for the state
+guarantees (a row-locked budget, history, revocation by `UPDATE`) and to
+run what step 4 measured. About 100 MB of RAM on the t3.small, no extra
+instance.
+
+1. On the box, add a line to `.env`: `POSTGRES_PASSWORD=<a long random string>`.
+   Nothing else changes in `.env`; the compose override builds
+   `DATABASE_URL` from it.
+2. Pull and rebuild with the override, which starts the database and a
+   backend that still reads the files (the override is what sets
+   `DATABASE_URL`, so build first, import next, then start):
+
+   ```bash
+   git pull
+   docker compose -f docker-compose.yml -f docker-compose.db.yml -f docker-compose.prod.yml build
+   docker compose -f docker-compose.yml -f docker-compose.db.yml -f docker-compose.prod.yml up -d db
+   ```
+
+3. Dry-run the import of the existing volume and the keys, then import:
+
+   ```bash
+   docker compose -f docker-compose.yml -f docker-compose.db.yml -f docker-compose.prod.yml run --rm backend \
+     python tools/migrate_to_postgres.py --data /data --users /app/users.json --dry-run
+   docker compose -f docker-compose.yml -f docker-compose.db.yml -f docker-compose.prod.yml run --rm backend \
+     python tools/migrate_to_postgres.py --data /data --users /app/users.json
+   ```
+
+   The dry run prints what the folder holds and what the tables hold; the
+   import prints before and after counts. Running it again changes nothing.
+4. Start everything on the store: the same `up -d --build` line as section
+   3 with `-f docker-compose.db.yml` added. The backend log's `State store:`
+   line names the database and its counts, and the retrieval line ends
+   with `vectors served by Postgres + pgvector`.
+5. Verify from outside as in section 4: `/api/meta` shows
+   `store.backend: "postgres"` and `retrieval.vectors: "pgvector"`; one
+   graded answer with the demo key moves `llm_left_today` down by one.
+   The counters are now read with
+   `docker compose ... exec db psql -U coach -d coach -c "SELECT * FROM usage_counters ORDER BY day DESC, row_id"`.
+6. Keep the `coach-data` volume: the embedding model, the vector cache and
+   the Silero model still live there, and the files are the fallback if you
+   ever drop the override (the store never writes to them once Postgres is
+   on, so counters would restart from the last file state).
+
+From then on `users.json` on the box is only the import source: add or
+change a key there and re-run step 3's second command; revoke as in
+section 5. Back up the database with
+`docker compose ... exec db pg_dump -U coach coach > coach-$(date +%F).sql`.

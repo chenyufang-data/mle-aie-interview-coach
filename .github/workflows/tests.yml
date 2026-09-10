@@ -8,12 +8,29 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    # Postgres for the state store's second backend (tests/test_store.py):
+    # the same image the compose override runs, so the pgvector extension
+    # is there too.
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: coach
+          POSTGRES_PASSWORD: coach
+          POSTGRES_DB: coach
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U coach -d coach"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install -r requirements.txt
+      - run: pip install -r requirements.txt -r requirements-db.txt
       # The bge-small embedding model (~127 MB) downloads once per cache key.
       - uses: actions/cache@v4
         with:
@@ -60,6 +77,12 @@ jobs:
       # dev fold, prompt, digit-token grade decode, metrics vs train.py's,
       # the pre-registered rule (synthetic rows; private-data check skips).
       - run: python tests/test_slm.py
+      # State store (step 4): the file backend's contract and race, then
+      # the same contract, the whole tier/budget suite and the migration
+      # tool against the Postgres service above.
+      - run: python tests/test_store.py
+        env:
+          TEST_DATABASE_URL: postgresql://coach:coach@localhost:5432/coach
       # README result tables must match the committed results files
       # (tools/render_readme.py renders them; --check fails on drift).
       - run: python tools/render_readme.py --check
@@ -73,3 +96,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: bash tests/test_container.sh
+      # The same stack with the Postgres override (docker-compose.db.yml):
+      # /api/meta must report the postgres store and grading still works.
+      - run: CONTAINER_TEST_DB=1 bash tests/test_container.sh

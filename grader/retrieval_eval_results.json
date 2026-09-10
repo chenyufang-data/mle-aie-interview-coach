@@ -1,5 +1,5 @@
 {
- "generated": "2026-09-06T02:55:18",
+ "generated": "2026-09-10T01:18:29",
  "hardware": {
   "cpu": "AMD Ryzen 7 9800X3D 8-Core Processor",
   "threads": 16,
@@ -13,31 +13,34 @@
   "query_prefix": "Represent this sentence for searching relevant passages: "
  },
  "memory": {
-  "rss_before_mb": 31.9,
-  "rss_runtime_mb": 232.9,
-  "rss_after_mb": 285.8,
-  "growth_mb": 201.1,
-  "chroma_extra_mb": 52.9
+  "rss_before_mb": 71.1,
+  "rss_runtime_mb": 256.5,
+  "rss_after_mb": 303.5,
+  "growth_mb": 185.4,
+  "chroma_extra_mb": 47.0
  },
  "build": {
   "ai": {
    "chunks": 222,
-   "bm25_build_s": 0.0061,
+   "bm25_build_s": 0.0038,
    "embed_s": 0.001,
    "embed_from_cache": true,
-   "chroma_build_s": 0.176
+   "chroma_build_s": 0.167,
+   "pgvector_build_s": 0.043
   },
   "ml": {
    "chunks": 191,
    "bm25_build_s": 0.0028,
    "embed_s": 0.0,
    "embed_from_cache": true,
-   "chroma_build_s": 0.111
+   "chroma_build_s": 0.134,
+   "pgvector_build_s": 0.044
   }
  },
  "index_mb": {
-  "npz": 1.157,
-  "chroma": 5.62
+  "npz": 1.263,
+  "chroma": 6.97,
+  "pgvector": 0.875
  },
  "sets": {
   "A": {
@@ -70,6 +73,13 @@
      "recall5": 1.0,
      "recall1": 0.8696,
      "mrr": 0.9348
+    },
+    "pgvector": {
+     "n": 23,
+     "hits": 23,
+     "recall5": 1.0,
+     "recall1": 0.913,
+     "mrr": 0.9457
     }
    },
    "rows": [
@@ -80,7 +90,8 @@
       "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": null
     },
@@ -91,7 +102,8 @@
       "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": null
     },
@@ -102,7 +114,8 @@
       "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": null
     },
@@ -113,7 +126,8 @@
       "bm25": 2,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": null
     },
@@ -124,7 +138,8 @@
       "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": null
     },
@@ -135,7 +150,8 @@
       "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": null
     },
@@ -146,7 +162,8 @@
       "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": null
     },
@@ -157,7 +174,8 @@
       "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": null
     },
@@ -168,7 +186,8 @@
       "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": null
     },
@@ -179,7 +198,8 @@
       "bm25": 5,
       "dense": 2,
       "chroma": 2,
-      "hybrid": 2
+      "hybrid": 2,
+      "pgvector": 2
      },
      "parent": null
     },
@@ -190,7 +210,8 @@
       "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": null
     },
@@ -201,7 +222,8 @@
       "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": null
     },
@@ -212,7 +234,8 @@
       "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": null
     },
@@ -223,7 +246,8 @@
       "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": null
     },
@@ -234,7 +258,8 @@
       "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": null
     },
@@ -245,7 +270,8 @@
       "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": null
     },
@@ -256,7 +282,8 @@
       "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": null
     },
@@ -267,7 +294,8 @@
       "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": null
     },
@@ -278,7 +306,8 @@
       "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": null
     },
@@ -289,7 +318,8 @@
       "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": null
     },
@@ -300,7 +330,8 @@
       "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": null
     },
@@ -311,7 +342,8 @@
       "bm25": 3,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 2
+      "hybrid": 2,
+      "pgvector": 1
      },
      "parent": null
     },
@@ -322,7 +354,8 @@
       "bm25": 1,
       "dense": 4,
       "chroma": 4,
-      "hybrid": 2
+      "hybrid": 2,
+      "pgvector": 4
      },
      "parent": null
     }
@@ -358,6 +391,13 @@
      "recall5": 0.8361,
      "recall1": 0.5738,
      "mrr": 0.6746
+    },
+    "pgvector": {
+     "n": 61,
+     "hits": 48,
+     "recall5": 0.7869,
+     "recall1": 0.6066,
+     "mrr": 0.6749
     }
    },
    "rows": [
@@ -368,7 +408,8 @@
       "bm25": 4,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": "test set information leaking into training during preprocessing"
     },
@@ -379,7 +420,8 @@
       "bm25": 2,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": "test set information leaking into training during preprocessing"
     },
@@ -390,7 +432,8 @@
       "bm25": 2,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": "test set information leaking into training during preprocessing"
     },
@@ -401,7 +444,8 @@
       "bm25": null,
       "dense": 1,
       "chroma": 1,
-      "hybrid": null
+      "hybrid": null,
+      "pgvector": 1
      },
      "parent": "handle class imbalance when training a fraud classifier"
     },
@@ -412,7 +456,8 @@
       "bm25": 2,
       "dense": null,
       "chroma": null,
-      "hybrid": 2
+      "hybrid": 2,
+      "pgvector": null
      },
      "parent": "handle class imbalance when training a fraud classifier"
     },
@@ -423,7 +468,8 @@
       "bm25": null,
       "dense": 3,
       "chroma": 3,
-      "hybrid": 2
+      "hybrid": 2,
+      "pgvector": 3
      },
      "parent": "handle class imbalance when training a fraud classifier"
     },
@@ -434,7 +480,8 @@
       "bm25": 2,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": "difference between lasso and ridge regularization"
     },
@@ -445,7 +492,8 @@
       "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": "difference between lasso and ridge regularization"
     },
@@ -456,7 +504,8 @@
       "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": "difference between lasso and ridge regularization"
     },
@@ -467,7 +516,8 @@
       "bm25": null,
       "dense": null,
       "chroma": null,
-      "hybrid": null
+      "hybrid": null,
+      "pgvector": null
      },
      "parent": "reduce dimensions with principal component analysis before modeling"
     },
@@ -478,7 +528,8 @@
       "bm25": null,
       "dense": null,
       "chroma": null,
-      "hybrid": null
+      "hybrid": null,
+      "pgvector": null
      },
      "parent": "reduce dimensions with principal component analysis before modeling"
     },
@@ -489,7 +540,8 @@
       "bm25": null,
       "dense": null,
       "chroma": null,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": null
      },
      "parent": "reduce dimensions with principal component analysis before modeling"
     },
@@ -500,7 +552,8 @@
       "bm25": 4,
       "dense": null,
       "chroma": null,
-      "hybrid": 4
+      "hybrid": 4,
+      "pgvector": null
      },
      "parent": "encode high cardinality categorical features"
     },
@@ -511,7 +564,8 @@
       "bm25": 3,
       "dense": 3,
       "chroma": 3,
-      "hybrid": 4
+      "hybrid": 4,
+      "pgvector": 3
      },
      "parent": "encode high cardinality categorical features"
     },
@@ -522,7 +576,8 @@
       "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": "encode high cardinality categorical features"
     },
@@ -533,7 +588,8 @@
       "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": "impute missing values without contaminating the test data"
     },
@@ -544,7 +600,8 @@
       "bm25": null,
       "dense": 2,
       "chroma": 2,
-      "hybrid": null
+      "hybrid": null,
+      "pgvector": 2
      },
      "parent": "impute missing values without contaminating the test data"
     },
@@ -555,7 +612,8 @@
       "bm25": 2,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": "impute missing values without contaminating the test data"
     },
@@ -566,7 +624,8 @@
       "bm25": 1,
       "dense": null,
       "chroma": null,
-      "hybrid": 2
+      "hybrid": 2,
+      "pgvector": null
      },
      "parent": "random forest versus gradient boosting tradeoffs"
     },
@@ -577,7 +636,8 @@
       "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": "random forest versus gradient boosting tradeoffs"
     },
@@ -588,7 +648,8 @@
       "bm25": null,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 5
+      "hybrid": 5,
+      "pgvector": 1
      },
      "parent": "random forest versus gradient boosting tradeoffs"
     },
@@ -599,7 +660,8 @@
       "bm25": 1,
       "dense": 2,
       "chroma": 2,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 2
      },
      "parent": "train test split for time series forecasting"
     },
@@ -610,7 +672,8 @@
       "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": "how k-means works and how to pick the number of clusters"
     },
@@ -621,7 +684,8 @@
       "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": "how k-means works and how to pick the number of clusters"
     },
@@ -632,7 +696,8 @@
       "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": "how k-means works and how to pick the number of clusters"
     },
@@ -643,7 +708,8 @@
       "bm25": 4,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": "interpret r squared and when it is misleading"
     },
@@ -654,7 +720,8 @@
       "bm25": 4,
       "dense": 4,
       "chroma": 4,
-      "hybrid": null
+      "hybrid": null,
+      "pgvector": 4
      },
      "parent": "interpret r squared and when it is misleading"
     },
@@ -665,7 +732,8 @@
       "bm25": null,
       "dense": 1,
       "chroma": 1,
-      "hybrid": null
+      "hybrid": null,
+      "pgvector": 1
      },
      "parent": "interpret r squared and when it is misleading"
     },
@@ -676,7 +744,8 @@
       "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": "svm kernel choice and margin intuition"
     },
@@ -687,7 +756,8 @@
       "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": "svm kernel choice and margin intuition"
     },
@@ -698,7 +768,8 @@
       "bm25": 2,
       "dense": 3,
       "chroma": 3,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 3
      },
      "parent": "svm kernel choice and margin intuition"
     },
@@ -709,7 +780,8 @@
       "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": "overfitting and the bias variance tradeoff"
     },
@@ -720,7 +792,8 @@
       "bm25": null,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 2
+      "hybrid": 2,
+      "pgvector": 1
      },
      "parent": "overfitting and the bias variance tradeoff"
     },
@@ -731,7 +804,8 @@
       "bm25": null,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 2
+      "hybrid": 2,
+      "pgvector": 1
      },
      "parent": "overfitting and the bias variance tradeoff"
     },
@@ -742,7 +816,8 @@
       "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": "why wrap preprocessing in a sklearn pipeline"
     },
@@ -753,7 +828,8 @@
       "bm25": null,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 2
+      "hybrid": 2,
+      "pgvector": 1
      },
      "parent": "why wrap preprocessing in a sklearn pipeline"
     },
@@ -764,7 +840,8 @@
       "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": "why wrap preprocessing in a sklearn pipeline"
     },
@@ -775,7 +852,8 @@
       "bm25": 1,
       "dense": null,
       "chroma": null,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": null
      },
      "parent": "precision recall tradeoff when choosing a classification threshold"
     },
@@ -786,7 +864,8 @@
       "bm25": 2,
       "dense": null,
       "chroma": null,
-      "hybrid": 3
+      "hybrid": 3,
+      "pgvector": null
      },
      "parent": "precision recall tradeoff when choosing a classification threshold"
     },
@@ -797,7 +876,8 @@
       "bm25": 2,
       "dense": null,
       "chroma": null,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": null
      },
      "parent": "precision recall tradeoff when choosing a classification threshold"
     },
@@ -808,7 +888,8 @@
       "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": "why llms use sub-word tokens and how token counts drive api cost"
     },
@@ -819,7 +900,8 @@
       "bm25": 3,
       "dense": null,
       "chroma": null,
-      "hybrid": 3
+      "hybrid": 3,
+      "pgvector": null
      },
      "parent": "why llms use sub-word tokens and how token counts drive api cost"
     },
@@ -830,7 +912,8 @@
       "bm25": 2,
       "dense": null,
       "chroma": null,
-      "hybrid": 2
+      "hybrid": 2,
+      "pgvector": null
      },
      "parent": "why llms use sub-word tokens and how token counts drive api cost"
     },
@@ -841,7 +924,8 @@
       "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": "temperature versus top p nucleus sampling to control randomness"
     },
@@ -852,7 +936,8 @@
       "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": "temperature versus top p nucleus sampling to control randomness"
     },
@@ -863,7 +948,8 @@
       "bm25": 2,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": "keyword bm25 versus semantic embedding search and when to combine them"
     },
@@ -874,7 +960,8 @@
       "bm25": null,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": "let the model call external tools with function calling"
     },
@@ -885,7 +972,8 @@
       "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": "let the model call external tools with function calling"
     },
@@ -896,7 +984,8 @@
       "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": "when to build a fixed workflow versus an autonomous agent"
     },
@@ -907,7 +996,8 @@
       "bm25": null,
       "dense": 4,
       "chroma": 4,
-      "hybrid": null
+      "hybrid": null,
+      "pgvector": 4
      },
      "parent": "when to build a fixed workflow versus an autonomous agent"
     },
@@ -918,7 +1008,8 @@
       "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": "when to build a fixed workflow versus an autonomous agent"
     },
@@ -929,7 +1020,8 @@
       "bm25": null,
       "dense": 2,
       "chroma": 2,
-      "hybrid": null
+      "hybrid": null,
+      "pgvector": 2
      },
      "parent": "prompt caching to cut cost and latency"
     },
@@ -940,7 +1032,8 @@
       "bm25": 1,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": "prompt caching to cut cost and latency"
     },
@@ -951,7 +1044,8 @@
       "bm25": null,
       "dense": null,
       "chroma": null,
-      "hybrid": null
+      "hybrid": null,
+      "pgvector": null
      },
      "parent": "llm as judge graders for evaluating agent outputs"
     },
@@ -962,7 +1056,8 @@
       "bm25": null,
       "dense": null,
       "chroma": null,
-      "hybrid": null
+      "hybrid": null,
+      "pgvector": null
      },
      "parent": "llm as judge graders for evaluating agent outputs"
     },
@@ -973,7 +1068,8 @@
       "bm25": 4,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 3
+      "hybrid": 3,
+      "pgvector": 1
      },
      "parent": "compact the context window when a long agent session grows"
     },
@@ -984,7 +1080,8 @@
       "bm25": 1,
       "dense": 3,
       "chroma": 3,
-      "hybrid": 4
+      "hybrid": 4,
+      "pgvector": 3
      },
      "parent": "compact the context window when a long agent session grows"
     },
@@ -995,7 +1092,8 @@
       "bm25": 1,
       "dense": 3,
       "chroma": 3,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 3
      },
      "parent": "compact the context window when a long agent session grows"
     },
@@ -1006,7 +1104,8 @@
       "bm25": 4,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 5
+      "hybrid": 5,
+      "pgvector": 1
      },
      "parent": "reduce hallucinations by grounding answers in retrieved documents"
     },
@@ -1017,7 +1116,8 @@
       "bm25": null,
       "dense": 2,
       "chroma": 2,
-      "hybrid": 2
+      "hybrid": 2,
+      "pgvector": 2
      },
      "parent": "reduce hallucinations by grounding answers in retrieved documents"
     },
@@ -1028,7 +1128,8 @@
       "bm25": 2,
       "dense": 1,
       "chroma": 1,
-      "hybrid": 1
+      "hybrid": 1,
+      "pgvector": 1
      },
      "parent": "reduce hallucinations by grounding answers in retrieved documents"
     }
@@ -1044,44 +1145,103 @@
    "mrr_drop_max": 0.05,
    "p95_ms_max": 50,
    "model_mb_max": 200
+  },
+  "pgvector": {
+   "identical_top5_on": [
+    "A",
+    "B"
+   ],
+   "p95_ms_max": 50
   }
  },
+ "pgvector_error": null,
  "latency": {
   "bm25": {
    "n": 420,
-   "p50_ms": 0.282,
-   "p95_ms": 0.515,
-   "mean_ms": 0.3
+   "p50_ms": 0.276,
+   "p95_ms": 0.465,
+   "mean_ms": 0.286
   },
   "dense": {
    "n": 420,
-   "p50_ms": 1.882,
-   "p95_ms": 2.329,
-   "mean_ms": 1.897
+   "p50_ms": 1.72,
+   "p95_ms": 2.1,
+   "mean_ms": 1.742
   },
   "chroma": {
    "n": 420,
-   "p50_ms": 2.545,
-   "p95_ms": 3.079,
-   "mean_ms": 2.562
+   "p50_ms": 2.327,
+   "p95_ms": 2.795,
+   "mean_ms": 2.346
   },
   "hybrid": {
    "n": 420,
-   "p50_ms": 2.354,
-   "p95_ms": 2.858,
-   "mean_ms": 2.341
+   "p50_ms": 2.143,
+   "p95_ms": 2.549,
+   "mean_ms": 2.143
+  },
+  "pgvector": {
+   "n": 420,
+   "p50_ms": 3.125,
+   "p95_ms": 3.641,
+   "mean_ms": 3.155
   },
   "embed_only": {
    "n": 420,
-   "p50_ms": 1.757,
-   "p95_ms": 2.181,
-   "mean_ms": 1.783
+   "p50_ms": 1.645,
+   "p95_ms": 1.97,
+   "mean_ms": 1.66
   }
  },
  "chroma_agreement": {
   "queries": 84,
   "identical_top5": 84,
-  "mean_jaccard": 1.0
+  "mean_jaccard": 1.0,
+  "differing": []
+ },
+ "pgvector_agreement": {
+  "A": {
+   "queries": 23,
+   "identical_top5": 23,
+   "mean_jaccard": 1.0,
+   "differing": []
+  },
+  "B": {
+   "queries": 61,
+   "identical_top5": 61,
+   "mean_jaccard": 1.0,
+   "differing": []
+  },
+  "all": {
+   "queries": 84,
+   "identical_top5": 84,
+   "mean_jaccard": 1.0,
+   "differing": []
+  }
+ },
+ "pgvector_rule": {
+  "pass": true,
+  "checks": {
+   "identical_top5_A": {
+    "pass": true,
+    "detail": "set A: 23/23 identical top-5"
+   },
+   "identical_top5_B": {
+    "pass": true,
+    "detail": "set B: 61/61 identical top-5"
+   },
+   "p95": {
+    "pass": true,
+    "detail": "p95 3.641 ms (max 50)"
+   }
+  },
+  "rule": {
+   "identical_top5_on": [
+    "A",
+    "B"
+   ],
+   "p95_ms_max": 50
+  }
  },
  "calibration": {
   "n": 84,
@@ -1241,11 +1401,11 @@
     },
     "3_latency": {
      "pass": true,
-     "detail": "p95 2.329 ms (max 50)"
+     "detail": "p95 2.1 ms (max 50)"
     },
     "4_model_size": {
      "pass": true,
-     "detail": "model 126.7 MB (max 200); RSS growth 201.1 MB (reported)"
+     "detail": "model 126.7 MB (max 200); RSS growth 185.4 MB (reported)"
     }
    }
   },
@@ -1262,11 +1422,11 @@
     },
     "3_latency": {
      "pass": true,
-     "detail": "p95 2.858 ms (max 50)"
+     "detail": "p95 2.549 ms (max 50)"
     },
     "4_model_size": {
      "pass": true,
-     "detail": "model 126.7 MB (max 200); RSS growth 201.1 MB (reported)"
+     "detail": "model 126.7 MB (max 200); RSS growth 185.4 MB (reported)"
     }
    }
   },
@@ -1283,11 +1443,11 @@
     },
     "3_latency": {
      "pass": true,
-     "detail": "p95 3.079 ms (max 50)"
+     "detail": "p95 2.795 ms (max 50)"
     },
     "4_model_size": {
      "pass": true,
-     "detail": "model 126.7 MB (max 200); RSS growth 201.1 MB (reported)"
+     "detail": "model 126.7 MB (max 200); RSS growth 185.4 MB (reported)"
     }
    }
   }

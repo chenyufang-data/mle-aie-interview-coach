@@ -10,6 +10,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BASE_DIR))
 
+from coach import store                                            # noqa: E402
 from coach.llm import _sse_events                                  # noqa: E402
 from coach.mock import transcription                               # noqa: E402
 from coach.mock.turns import turn_prompt                           # noqa: E402
@@ -18,6 +19,10 @@ from coach.voice.final_transcript import available_engine          # noqa: E402
 from coach.voice.keyterms import (final_transcript_keyterms,       # noqa: E402
                                   session_keyterms)
 from coach.voice.vad import FRAME_BYTES, Endpointer, looks_unfinished  # noqa: E402
+
+# The budget test writes usage state: keep it on the file backend in a temp
+# folder whatever DATABASE_URL the developer's environment carries.
+store.use(store.FileStore())
 
 
 def test_looks_unfinished():
@@ -397,15 +402,15 @@ def test_voice_session_budget():
     from coach.voice import loop as voice_loop
 
     tmp = Path(tempfile.mkdtemp(prefix="coach_voice_"))
-    saved = (users.USERS_PATH, users.USAGE_PATH, config.MODE, users.TIERS_ENABLED,
+    saved = (config.USERS_PATH, config.USAGE_PATH, config.MODE, users.TIERS_ENABLED,
              voice_loop.VOICE_TICK_S, voice_loop.SileroVAD,
              voice_loop.stt_module.make_stt, voice_loop.tts_module.make_tts,
              os.environ.get("AUDIO_BACKEND"))
-    users.USERS_PATH, users.USAGE_PATH = tmp / "users.json", tmp / "usage.json"
-    users.USERS_PATH.write_text(jsonlib.dumps(
+    config.USERS_PATH, config.USAGE_PATH = tmp / "users.json", tmp / "usage.json"
+    config.USERS_PATH.write_text(jsonlib.dumps(
         {"demo": {"name": "demo", "tier": "paid", "daily_voice_minutes": 1}}),
         encoding="utf-8")
-    users._users_mtime = None
+    users._users_stamp = None
     users.load_users()
     config.MODE = "mock"
     os.environ["AUDIO_BACKEND"] = "deepgram"   # no Whisper warm-up task
@@ -468,7 +473,7 @@ def test_voice_session_budget():
 
         # 2. a running session, nearly spent: the meter refuses within a few
         #    ticks and the server ends the interview cleanly
-        users.USAGE_PATH.unlink()
+        config.USAGE_PATH.unlink()
         users.take_voice(demo, 59.95)
         ws = FakeWS(hello)
         asyncio.run(asyncio.wait_for(voice_loop.VoiceSession(ws).run(), 10))
@@ -479,15 +484,15 @@ def test_voice_session_budget():
         assert "live-voice time" in spoken, spoken
         assert kinds[-1] == "state" and frames[-1]["value"] == "done", frames[-3:]
         assert ws.closed.is_set()
-        used = jsonlib.loads(users.USAGE_PATH.read_text(encoding="utf-8"))
+        used = jsonlib.loads(config.USAGE_PATH.read_text(encoding="utf-8"))
         assert used[users._usage_id("demo")]["voice"] >= 60, used
         assert used[users.SERVER_ROW]["voice"] >= 60, used
     finally:
-        (users.USERS_PATH, users.USAGE_PATH, config.MODE, _tiers,
+        (config.USERS_PATH, config.USAGE_PATH, config.MODE, _tiers,
          voice_loop.VOICE_TICK_S, voice_loop.SileroVAD,
          voice_loop.stt_module.make_stt, voice_loop.tts_module.make_tts,
          backend) = saved
-        users._users_mtime = None
+        users._users_stamp = None
         users.USERS = {}
         users.TIERS_ENABLED = _tiers
         if backend is None:

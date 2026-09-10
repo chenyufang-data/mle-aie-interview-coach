@@ -784,6 +784,46 @@ migration; the retrieval harness from 1.7.
 **Cost and time.** $0 locally; on the demo box no extra instance. Two to
 three days; the pgvector arm is one of them.
 
+**Status 2026-09-10 (built and measured in one day; the box switch is
+the author's).** Preparation: Docker Desktop, `requirements-db.txt`
+(psycopg 3.3 with the pool), `pgvector/pgvector:pg16` pulled and run
+locally, and a copy of the demo box's data volume pulled by the author
+(the usage counters with the voice field, two free-tier rows — the live
+volume; it also showed the compose file had never routed
+`MOCK_SESSIONS_PATH` and `MOCK_CACHE_DIR` to the volume, so the opt-in mock
+log and the plan cache lived inside the container and vanished on every
+rebuild — fixed). Delivered: `coach/store.py` with the file backend
+(same files, same behaviour; `users.py`, `sessions.py` and
+`plan_cache.py` now call it) and the Postgres backend — `access_keys`,
+`usage_counters` one row per key digest and day (history kept, the file
+kept only today), `session_log` with a fingerprint so an import is
+idempotent, `plan_cache` — selected by `DATABASE_URL` after the `.env` is
+loaded, failing the start loudly when the database cannot serve. A
+reservation is one transaction: make today's rows exist, `SELECT ... FOR
+UPDATE`, the same policy code as before, write, commit. Measured: a
+20-thread race for a 5-call cap ends with exactly 5 winners on both
+backends; the whole tier/budget suite (`tests/test_users.py`, 11 tests)
+passes unchanged against Postgres; `tools/migrate_to_postgres.py` (dry
+run, upserts, dedupe) imported the box copy — 2 keys, 2 usage rows, 2
+sessions — and a second run changed nothing; a local server on the
+imported state answered `/api/meta` with the demo key's allowance. CI:
+the test job gets a `pgvector/pgvector:pg16` service and
+`tests/test_store.py` runs there; `docker-compose.db.yml` adds the `db`
+service (the base compose stays zero-service) and the container job runs
+the stack twice, files and Postgres. The pgvector arm
+(`PgVectorRetriever` in `retrieval_dense.py`, the `pgvector` arm and
+`R_PGVECTOR` in `grader/retrieval_eval.py`, harness re-run 2026-09-10):
+identical top-5 to the numpy arm on 23/23 A and 61/61 B queries, p95
+3.6 ms vs 2.1 ms (one round trip per query), 0.9 MB of table vs 1.3 MB
+of numpy — rule PASSED, so with the Postgres store on the hybrid's dense
+half reads the table (`RETRIEVAL_VECTORS=auto|numpy|pgvector`,
+`/api/meta` `retrieval.vectors`; the numpy matrix stays the default for
+every clone without a database); the README's retrieval table carries
+the row, `docs/retrieval_evaluation.md` the rule section. R1 unchanged in
+the re-run (hybrid passes; Chroma +0.7 ms, 5.5× the disk). Remaining, the
+author's: switching the box (`docs/deployment.md` section 9: password in
+`.env`, dry run, import, start with the override, verify).
+
 ### Step 5 — Kubernetes and Terraform for the two services, then tear it down
 
 **Goal.** The same two-service compose running on a managed cluster
@@ -855,3 +895,13 @@ days.
 - Confidence intervals on the small-n tables (bootstrap over queries,
   probes and answers) so the reports state uncertainty instead of prose
   caveats.
+- `.env` timing on a bare `python server.py` (found 2026-09-10): the file
+  is read in `server.main()`, after `coach/config.py` has computed its
+  constants, so values written only there for import-time settings
+  (`PAID_DAILY_QUOTA`, `LLM_DAILY_CAP`, `VOICE_DAILY_MINUTES`, `SLM_URL`,
+  `RETRIEVAL_BACKEND`, ...) come from the shell environment, not the
+  file. Keys and `DATABASE_URL` are unaffected (read at call time or at
+  store init), and Docker injects the file before Python starts, so the
+  box is unaffected. Fix: read the file at the top of `config.py`; left
+  for a change of its own because the local test runs would then see
+  the developer's `.env` too.

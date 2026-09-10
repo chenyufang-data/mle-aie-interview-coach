@@ -56,6 +56,8 @@ def render_retrieval():
     a, b, lat = r["sets"]["A"]["metrics"], r["sets"]["B"]["metrics"], r["latency"]
     rows = [("BM25", "bm25", False), ("dense (bge-small, cosine)", "dense", False),
             ("hybrid (RRF of both)", "hybrid", True)]
+    if "pgvector" in a and "pgvector" in lat:
+        rows.append(("pgvector (the dense vectors in Postgres, step 4)", "pgvector", False))
     out = [f"| Arm | Curated ({r['sets']['A']['n']}) | Paraphrased, tag words removed "
            f"({r['sets']['B']['n']}) | p95 latency |", "| --- | --- | --- | --- |"]
     for label, arm, ship in rows:

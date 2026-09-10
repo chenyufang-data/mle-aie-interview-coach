@@ -386,7 +386,10 @@ the deeper evaluation layer.
   injected at runtime via compose `env_file`). Named volume `coach-data`
   persists session logs and quota state; `users.json` is bind-mounted
   read-only.
-- **EC2**: ran on a t3.micro (backend peaks ~300–400 MB); currently parked.
+- **EC2**: live since 2026-09-08 on a t3.small behind Caddy TLS
+  (`docs/deployment.md`; `docker-compose.db.yml` optionally adds the
+  Postgres state store). The earlier t3.micro run (backend peaks
+  ~300–400 MB) was parked.
   Operational notes learned the hard way: add swap before `docker build` on
   1 GB RAM; AL2023 needs compose/buildx plugins installed manually; a silent
   security-group drop looks like a 21-second client timeout.
