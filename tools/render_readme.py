@@ -12,15 +12,15 @@ Each table sits between marker comments in README.md:
 
 and NAME picks one of the renderers below. Sources:
 
-    retrieval   grader/retrieval_eval_results.json   (sets A and B, p95 latency)
-    grader      grader/train_results.json            ("artifact": the shipped model on the gold rows)
-    keypoints   grader/train_results.json            (per-key-point classifier vs lexical threshold)
-    cascade     grader/cascade_results.json          (shipped rule vs the rejected high-side rule)
-    judge       grader/judge_agreement_summary.json  (DeepSeek judges vs the Claude teacher)
-    stt_synth   grader/stt_eval_results.json         (Phase 0, TTS-read set)
-    stt_human   grader/stt_eval_results.json         (Phase 0, author-read set - the deciding one)
-    loop        grader/loop_eval_results.json        (live voice loop, 20 real answers per backend)
-    slm         grader/slm_results.json              (step 3: fine-tuned small graders vs sklearn, 5 seeds)
+    retrieval   experiments/retrieval/retrieval_eval_results.json   (sets A and B, p95 latency)
+    grader      experiments/distill/train_results.json            ("artifact": the shipped model on the gold rows)
+    keypoints   experiments/distill/train_results.json            (per-key-point classifier vs lexical threshold)
+    cascade     experiments/distill/cascade_results.json          (shipped rule vs the rejected high-side rule)
+    judge       experiments/distill/judge_agreement_summary.json  (DeepSeek judges vs the Claude teacher)
+    stt_synth   experiments/speech/stt_eval_results.json         (Phase 0, TTS-read set)
+    stt_human   experiments/speech/stt_eval_results.json         (Phase 0, author-read set - the deciding one)
+    loop        experiments/speech/loop_eval_results.json        (live voice loop, 20 real answers per backend)
+    slm         experiments/slm/slm_results.json              (step 3: fine-tuned small graders vs sklearn, 5 seeds)
 
 Only the text between the markers is touched; everything else in the README
 is prose and stays yours.
@@ -34,11 +34,12 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 README = BASE_DIR / "README.md"
-G = BASE_DIR / "grader"
+EXPERIMENTS = BASE_DIR / "experiments"
 
 
-def load(name):
-    return json.loads((G / name).read_text(encoding="utf-8"))
+def load(path):
+    """A results file, by its path under experiments/."""
+    return json.loads((EXPERIMENTS / path).read_text(encoding="utf-8"))
 
 
 def pct(x, digits=0):
@@ -52,7 +53,7 @@ def bold(s):
 # --------------------------------------------------------------- renderers
 
 def render_retrieval():
-    r = load("retrieval_eval_results.json")
+    r = load("retrieval/retrieval_eval_results.json")
     a, b, lat = r["sets"]["A"]["metrics"], r["sets"]["B"]["metrics"], r["latency"]
     rows = [("BM25", "bm25", False), ("dense (bge-small, cosine)", "dense", False),
             ("hybrid (RRF of both)", "hybrid", True)]
@@ -70,7 +71,7 @@ def render_retrieval():
 
 
 def render_grader():
-    t = load("train_results.json")["artifact"]
+    t = load("distill/train_results.json")["artifact"]
     gold, name = t["gold"], t["model_name"]
     out = ["| Model | MAE | within ±1 | Spearman | QWK |", "| --- | --- | --- | --- | --- |"]
     kb = gold["keyword_baseline"]
@@ -82,7 +83,7 @@ def render_grader():
 
 
 def render_keypoints():
-    kp = load("train_results.json")["artifact"]["keypoints"]
+    kp = load("distill/train_results.json")["artifact"]["keypoints"]
     lex, clf = kp["lexical_threshold"], kp["classifier"]
     return ["| Hit/miss judge | 3-class acc | macro-F1 | hit-F1 |", "| --- | --- | --- | --- |",
             f"| Lexical threshold (0.35/0.6) | {pct(lex['acc3'])} | {lex['macro_f1']:.2f} | {lex['hit_f1']:.2f} |",
@@ -91,7 +92,7 @@ def render_keypoints():
 
 
 def render_cascade():
-    c = load("cascade_results.json")
+    c = load("distill/cascade_results.json")
     by = {r["rule"]: r for r in c["rules"]}
     shipped = next(r for r in c["rules"] if r["section"] == "shipped")
     high = by["pred>=7.5 & frac_hit>=0.6"]
@@ -108,7 +109,7 @@ def render_cascade():
 
 
 def render_judge():
-    j = load("judge_agreement_summary.json")
+    j = load("distill/judge_agreement_summary.json")
     out = ["| Judge | MAE | within ±1 | QWK | regrade consistency (exact) |",
            "| --- | --- | --- | --- | --- |"]
     s = j["judges"]["distilled student"]
@@ -136,7 +137,7 @@ STT_LABELS = {
 
 
 def render_stt(set_name, best):
-    s = load("stt_eval_results.json")[set_name]
+    s = load("speech/stt_eval_results.json")[set_name]
     minutes = round(s["audio_minutes"])
     out = [f"| Condition | WER | TER strict | TER lenient | grade moved ≥1 | word errors only | cost / {minutes} min |",
            "| --- | --- | --- | --- | --- | --- | --- |"]
@@ -159,7 +160,7 @@ def render_stt(set_name, best):
 
 
 def render_loop():
-    l = load("loop_eval_results.json")
+    l = load("speech/loop_eval_results.json")
     rows = [("local (faster-whisper + Kokoro) — **ships**", "local"),
             ("ElevenLabs (Scribe Realtime + Flash TTS)", "elevenlabs"),
             ("Deepgram (Nova-3 + Aura-2) — rejected", "deepgram"),
@@ -178,7 +179,7 @@ def render_loop():
 def render_slm():
     """Step 3: fine-tuned small graders vs the sklearn incumbent, five
     chunk-grouped seeds, mean ± sd on the held-out gold rows."""
-    r = load("slm_results.json")
+    r = load("slm/slm_results.json")
     arms = r["arms"]
     order = ["sklearn", "deberta", "qwen1.7b", "qwen4b", "qwen1.7b-silver"]
     out = ["| Grader (5 seeds, gold rows) | QWK | MAE | within ±1 | train / seed | p95 per answer |",

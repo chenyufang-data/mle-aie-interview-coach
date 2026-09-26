@@ -103,7 +103,7 @@ docker compose version
 git clone https://github.com/chenyufang-data/mle-aie-interview-coach.git
 cd mle-aie-interview-coach
 # from your machine: scp users.json .env ubuntu@<host>:mle-aie-interview-coach/
-# optional: scp rag_lists/all_chunks.jsonl rag_docs/all_chunks.jsonl into the same folders
+# optional: scp banks/rag_lists/all_chunks.jsonl banks/rag_docs/all_chunks.jsonl into the same folders
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 docker compose -f docker-compose.yml -f docker-compose.prod.yml logs -f backend
 ```

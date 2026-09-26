@@ -15,7 +15,7 @@ from coach import grading
 
 
 def _norm_tokens(text):
-    from grader.stt_text import normalize
+    from coach.stt_text import normalize
     return normalize(text or "")
 
 
@@ -33,7 +33,7 @@ def grading_answer_text(entry):
 
 def compare(transcript):
     """Live-vs-final differences; None when no entry carries both."""
-    from grader.stt_text import edit_distance
+    from coach.stt_text import edit_distance
 
     from coach.voice.keyterms import lexicon
     lex = lexicon()

@@ -12,28 +12,28 @@ A local interview practice app for Machine Learning Engineer and AI Engineer int
 powered by Claude and two curated, rubric-grounded question banks with real questions,
 model answers, and grading rubrics:
 
-- `rag_ml/` (191 chunks over 15 modules of classical ML and data analysis) -
+- `banks/rag_ml/` (191 chunks over 15 modules of classical ML and data analysis) -
   serves the **MLE** track.
-- `rag_ai/` (222 chunks over 6 modules of LLM and agent engineering, 131 of
+- `banks/rag_ai/` (222 chunks over 6 modules of LLM and agent engineering, 131 of
   them finer sub-questions expanded from the lesson text) - serves
   the **AIE** track.
-- `rag_exp/` (optional, private) - questions actually asked in recent MLE/AIE
+- `banks/rag_exp/` (optional, private) - questions actually asked in recent MLE/AIE
   interviews, hand-collected and rebuilt with Claude-generated rubrics by
-  `grader/ingest_questions.py`. When the bank file is present it appears as a
+  `ingest/ingest_questions.py`. When the bank file is present it appears as a
   third **Real Qs** track and the mock interviewer's probes can ground against
   it; without the file the app runs as a two-track install (see
-  `rag_exp/README.md`).
-- `rag_lists/` (optional, generated) - technical questions from licensed public
+  `banks/rag_exp/README.md`).
+- `banks/rag_lists/` (optional, generated) - technical questions from licensed public
   GitHub interview lists (MIT / Apache-2.0; attribution and license copies in
-  `rag_lists/`), rewritten into rubrics by `grader/ingest_lists.py`. Kept apart
+  `banks/rag_lists/`), rewritten into rubrics by `ingest/ingest_lists.py`. Kept apart
   from the course banks on purpose: its own **Lists** track, switchable, and
   measurable with and without in the grounding experiment. These are prep-list
   questions, not real interview reports.
-- `rag_docs/` (optional, generated) - rubrics written from sections of primary
+- `banks/rag_docs/` (optional, generated) - rubrics written from sections of primary
   documentation (scikit-learn, Google ML guides, NannyML, Feast, MLflow,
-  promptfoo, Kubernetes; licenses and attribution in `rag_docs/`) on the MLOps
-  decisions the course banks never covered, built by `grader/ingest_docs.py`.
-  Its own **Docs** track, same treatment as `rag_lists/`.
+  promptfoo, Kubernetes; licenses and attribution in `banks/rag_docs/`) on the MLOps
+  decisions the course banks never covered, built by `ingest/ingest_docs.py`.
+  Its own **Docs** track, same treatment as `banks/rag_lists/`.
 
 The two course banks are derived from course material I studied; the public repository
 ships the interview questions, model answers, and rubrics only. The complete
@@ -61,20 +61,31 @@ number for every component (see
 
 ```text
 server.py            entrypoint: HTTP server + the voice loop when available
-coach/               backend package (one module per concern)
-  http.py            routes and static serving      kb.py       bank loading/selection
-  llm.py             Claude / DeepSeek / Ollama     grading.py  distilled grader + cascade
-  users.py           freemium access keys           mock/       mock interview (plan, turns, report)
-  store.py           state store: the files under data/ (default) or Postgres via DATABASE_URL
+coach/               the runtime: everything the server imports (one module per concern)
+  http.py            routes and static serving      kb.py        bank loading/selection
+  llm.py             Claude / DeepSeek / Ollama     grading.py   distilled grader + cascade
+  users.py           freemium access keys           store.py     files under data/ or Postgres (DATABASE_URL)
+  retrieval.py       BM25 (CI gate + fallback)      retrieval_dense.py  bge-small + BM25 hybrid, pgvector
+  features.py        the grader's lexical features  slm.py       optional fine-tuned SLM grade (SLM_URL)
+  resume_parser.py   PDF/.docx/.txt to text         stt_text.py  WER, term error rate, keyterm policy
+  mock/              mock interview (plan, turns, report)
   voice/             live voice loop: VAD, STT, TTS, barge-in, Level 1 sidecar
+  assets/            runtime inputs: the distilled grader model, the STT lexicon and failure rates
+banks/               the five question banks (schema and provenance in each README)
+  rag_ml/  rag_ai/   course banks, public stripped edition
+  rag_exp/           real gathered interview questions - private bank
+  rag_lists/         licensed GitHub question lists rewritten into rubrics - generated locally
+  rag_docs/          rubrics from primary documentation on MLOps gaps - generated locally
+ingest/              the scripts that build and grow the banks (lists, docs, real questions, expansion)
+experiments/         every measurement, one folder per study, each with its data and results files
+  distill/           the distilled grader: answers, teacher labels, training, cascade, judge study
+  slm/               step 3: fine-tuned small models vs the sklearn grader
+  retrieval/         BM25 vs dense vs hybrid vs Chroma vs pgvector (R1, R3)
+  grounding/         rubric attachment for mock probes (R2, R4, the spot-check)
+  speech/            STT on technical vocabulary (Phase 0) and the live-loop harness (Phase 2)
+  mock/              mock report consistency and prompt caching
 public/              dependency-free vanilla-JS frontend (no build step)
-retrieval.py         BM25 over the banks (the CI gate and the fallback)
-retrieval_dense.py   bge-small embeddings + BM25 hybrid (serves when its stack is installed)
-rag_ml/  rag_ai/     question banks, public stripped edition (schema in their READMEs)
-rag_exp/             real gathered interview questions - private bank, README explains
-rag_lists/           licensed GitHub question lists rewritten into rubrics - generated bank, README explains
-rag_docs/            rubrics from primary documentation on MLOps gaps - generated bank, README explains
-grader/              training + every measurement script with its committed results
+tools/               maintenance: README rendering, bank strip/review, private backup, Postgres import
 tests/               offline suite (CI) + a browser e2e smoke (local, Playwright)
 docs/                specs, measured reports, and the design/lab notebook
 docker/              compose deploy: nginx frontend + Python backend; overrides add Caddy TLS and Postgres
@@ -108,8 +119,8 @@ Nothing corpus-specific is hard-coded in the frontend — module lists come from
   - **Course knowledge base** - the app picks a real question from your track's
     course bank (MLE -> `rag_ml`, AIE -> `rag_ai`), filtered by module and your
     level, then ranked against your optional focus text — hybrid BM25 + embedding
-    retrieval (`retrieval_dense.py`) when the embedding stack is installed, plain
-    BM25 (`retrieval.py`) otherwise; one of the top matches is chosen at random so
+    retrieval (`coach/retrieval_dense.py`) when the embedding stack is installed, plain
+    BM25 (`coach/retrieval.py`) otherwise; one of the top matches is chosen at random so
     sessions stay varied. The module lists in the dropdown come from the server
     (`/api/meta`), so the frontend never hard-codes corpus contents.
 - Answer with the elapsed timer running — typed, or spoken via the 🎤 button
@@ -268,8 +279,8 @@ With `users.json` present, requests are routed per user instead of per server:
 
 **Smart cascade** (paid tier, `PAID_CASCADE=0` to disable): answers the
 distilled model grades reliably are served locally *without* spending quota.
-The routing rule is measured, not guessed — `grader/cascade_analysis.py`
-replays the 121 held-out gold rows (`grader/cascade_results.json`):
+The routing rule is measured, not guessed — `experiments/distill/cascade_analysis.py`
+replays the 121 held-out gold rows (`experiments/distill/cascade_results.json`):
 
 <!-- results:cascade -->
 | Rule (gold rows: 121) | kept local | within ±1 vs Claude | MAE |
@@ -325,10 +336,10 @@ http://127.0.0.1:8000
 
 The mock interview (section below; design history in
 `docs/plan.md`) and its transcription experiment need your
-resume as plain text. `resume_parser.py` converts PDF and Word files:
+resume as plain text. `coach/resume_parser.py` converts PDF and Word files:
 
 ```powershell
-.venv\Scripts\python resume_parser.py path\to\resume.pdf      # or .docx / .txt / .md
+.venv\Scripts\python coach/resume_parser.py path\to\resume.pdf      # or .docx / .txt / .md
 ```
 
 Output goes to `data/resume/<name>.txt` (gitignored) with a preview so you can
@@ -360,7 +371,7 @@ design, every ship/no-ship decision, and the negative results are mine.
 For knowledge-base questions, the server sends Claude the chunk's `model_answer`,
 `key_points` (used as the rubric), `common_mistakes`, and `followups` alongside your
 answer, so feedback is grounded in what the course actually teaches. See
-`rag_ml/README.md` and `rag_ai/README.md` for the chunk schema.
+`banks/rag_ml/README.md` and `banks/rag_ai/README.md` for the chunk schema.
 
 For follow-up questions, the same chunk is kept but its key points are provided as
 background context rather than a strict checklist (they belong to the original
@@ -420,14 +431,14 @@ either. Re-run the gates after changing either ranker or a corpus:
 .venv\Scripts\python tests\test_retrieval.py                   # BM25, fails below 90% Recall@5
 .venv\Scripts\python tests\test_retrieval.py --backend hybrid  # the shipped ranker, same gate
 .venv\Scripts\python tests\test_dense_retrieval.py             # offline: filter parity, RRF math
-.venv\Scripts\python grader\retrieval_eval.py                  # the full comparison + report
+.venv\Scripts\python experiments\retrieval\retrieval_eval.py                  # the full comparison + report
 ```
 
 ## Local ML grader (LLM distillation)
 
 Mock mode's grading brain is a small trained model that approximates the Claude
 grader - the LLM-judge distillation pattern at miniature scale. A pure-Python
-feature extractor (`grader/features.py`) turns an (answer, rubric) pair into
+feature extractor (`coach/features.py`) turns an (answer, rubric) pair into
 rubric-coverage features (stemmed idf-weighted token overlap + char n-gram
 cosine per key point, mistake similarity, question-echo, length/structure
 stats), and a scikit-learn regressor trained on those features predicts the
@@ -438,14 +449,14 @@ Build or rebuild it (free, no API calls):
 ```powershell
 # generate_answers needs the complete banks (lesson text) from the private repository:
 $env:RAG_FULL_DIR = "..\mle-aie-interview-coach-private"
-.venv\Scripts\python grader\generate_answers.py   # synthetic answers with construction-known labels
-.venv\Scripts\python grader\train.py              # train, evaluate, save grader\model.joblib
+.venv\Scripts\python experiments\distill\generate_answers.py   # synthetic answers with construction-known labels
+.venv\Scripts\python experiments\distill\train.py              # train, evaluate, save coach\assets\grader_model.joblib
 .venv\Scripts\python tests\test_grader.py         # sanity-check the artifact
 ```
 
 `grader/dataset.jsonl` (the synthetic answers) is private too — its
 content_extract tier quotes lesson text — so retraining needs that checkout;
-the shipped `grader/model.joblib` and the gold label files are public.
+the shipped `coach/assets/grader_model.joblib` and the gold label files are public.
 
 The training data is manufactured from the corpora themselves: reference
 answers (9), lesson-text extracts and key-point recalls (7), sentence subsets
@@ -460,16 +471,16 @@ Optionally upgrade the labels from construction-derived to real Claude scores
 without `--confirm`):
 
 ```powershell
-.venv\Scripts\python grader\label_teacher.py                # dry run: cost estimate only
-.venv\Scripts\python grader\label_teacher.py --confirm      # ~$10 at 300 labels with opus-4-8
-.venv\Scripts\python grader\label_teacher.py --confirm --model claude-sonnet-5   # cheaper
-.venv\Scripts\python grader\train.py                        # retrain on gold labels
+.venv\Scripts\python experiments\distill\label_teacher.py                # dry run: cost estimate only
+.venv\Scripts\python experiments\distill\label_teacher.py --confirm      # ~$10 at 300 labels with opus-4-8
+.venv\Scripts\python experiments\distill\label_teacher.py --confirm --model claude-sonnet-5   # cheaper
+.venv\Scripts\python experiments\distill\train.py                        # retrain on gold labels
 ```
 
 ### How good is it?
 
 The shipped model was distilled from 598 Claude gold labels
-(`grader/labels_teacher.jsonl` — kept in the repo; it joins `dataset.jsonl` by
+(`experiments/distill/labels_teacher.jsonl` — kept in the repo; it joins `dataset.jsonl` by
 `row_id`). On 121 held-out gold rows — answers to questions the model never saw
 in training — agreement with the Claude teacher:
 
@@ -490,7 +501,7 @@ below is the first bite at that gap.
 ### Per-key-point distillation (dense supervision)
 
 Overall scores cannot teach the student *which* rubric point it misjudged, so
-`grader/label_keypoints.py` asks the teacher for a hit / partial / miss verdict
+`experiments/distill/label_keypoints.py` asks the teacher for a hit / partial / miss verdict
 on every rubric key point of every gold-labeled row (598 rows × ~5 points, ~$8;
 one call returns a whole row's verdicts). The labels are themselves
 quality-measured: on a 25-row regrade, 95% exact verdict agreement and **zero**
@@ -515,12 +526,12 @@ The construction-label metrics `train.py` prints are optimistic (those labels
 partly share signal with the features); the gold-label section of its output is
 the honest one. The third check is real usage: every real (non-mock) graded
 session is logged to `data/sessions/real_sessions.jsonl` (kept out of git), and
-`grader/evaluate_on_real.py` reports Claude-vs-local agreement on your actual
+`experiments/distill/evaluate_on_real.py` reports Claude-vs-local agreement on your actual
 answers as they accumulate.
 
 ### Could a cheaper judge replace Claude? (measured)
 
-`grader/judge_agreement.py` re-grades the same 121 held-out gold rows through
+`experiments/distill/judge_agreement.py` re-grades the same 121 held-out gold rows through
 the same evaluation prompt with candidate judge models (DeepSeek V4, via their
 OpenAI-compatible API — needs `DEEPSEEK_API_KEY` in `.env`; ~$0.35, dry-run by
 default, `--confirm` to spend). August 2026 results:
@@ -549,18 +560,18 @@ distillation teacher — gold labels need the reproducibility — and serves
 The distilled grader above is 16 lexical features and a gradient-boosting
 regressor. Roadmap step 3 asked whether a small language model fine-tuned on
 the same 598 gold labels grades closer to the Claude teacher, and whether it
-can be served fast enough to matter. `grader/slm/` is the experiment; the
+can be served fast enough to matter. `experiments/slm/` is the experiment; the
 rule was fixed before the first run: an SLM replaces the sklearn grader as
 the local tier only if, on all five chunk-grouped splits, its QWK beats the
 sklearn arm's by at least 0.05 with a lower MAE, and vLLM serves it at
 p95 ≤ 300 ms per answer on the RTX 5080.
 
-Protocol: the same rows and the same chunk-grouped split as `grader/train.py`
+Protocol: the same rows and the same chunk-grouped split as `experiments/distill/train.py`
 (seed 42 is the shipped split with its 121 gold rows) plus four more seeds,
 every arm retrained per seed; the SLM arms see only the ~400 teacher-labelled
 training rows, early-stopped on a dev fold of whole chunks; the grade is one
 digit token, read back as 1 + E[digit] over ten logits, so nothing is parsed.
-Results (`grader/slm_results.json`; mean ± sd over five seeds on the held-out
+Results (`experiments/slm/slm_results.json`; mean ± sd over five seeds on the held-out
 gold rows, 106 to 125 per seed):
 
 <!-- results:slm -->
@@ -616,14 +627,14 @@ measures that damage under every transcription condition the app could ship,
 with a pre-registered decision rule (ship the cheapest condition with ≤5% of
 grades moved ≥1 point and ≤3% lenient term error rate on the human set).
 
-- `grader/stt_testset.py` builds `grader/stt_lexicon.json` (339 signal terms:
+- `experiments/speech/stt_testset.py` builds `coach/assets/stt_lexicon.json` (339 signal terms:
   metrics, models, libraries, concepts, letter-number mixes, with spoken
-  aliases) and `grader/stt_sentences.jsonl` (88 reading items: 68 term-dense
+  aliases) and `experiments/speech/stt_sentences.jsonl` (88 reading items: 68 term-dense
   sentences plus 20 whole rubric-graded answers, ~16 min to read).
 - `public/stt_record.html` records the human set — one take per item, with the
   browser Web Speech API run on the same microphone so today's voice path is
   condition 1 for free.
-- `grader/stt_eval.py` runs the conditions (dry-run cost first, `--confirm` to
+- `experiments/speech/stt_eval.py` runs the conditions (dry-run cost first, `--confirm` to
   spend) and reports WER, **term error rate** (strict = the written form came
   back; lenient = the meaning did, "light gbm" ≡ LightGBM) with a per-term
   "what it became" table, **downstream damage** (the distilled grader scores
@@ -648,7 +659,7 @@ min — clean pronunciation, so an optimistic bound; the human set decides):
 <!-- /results:stt_synth -->
 
 Full tables, per-term failures and the keyterm lists: `docs/stt_evaluation.md`
-(generated; `grader/stt_eval_results.json` is the machine copy).
+(generated; `experiments/speech/stt_eval_results.json` is the machine copy).
 
 What it says so far:
 
@@ -782,7 +793,7 @@ content hash (`data/mock_cache/`, gitignored), so re-practicing the same
 resume gets its role list instantly and replays a role with zero wait and
 zero LLM spend — a "fresh analysis" checkbox forces new questions.
 Interviewer turns are prompt-cache-shaped and verified with real calls
-(`grader/cache_check.py`: the second Claude turn read 1,123 cached tokens
+(`experiments/mock/cache_check.py`: the second Claude turn read 1,123 cached tokens
 and paid full price only for the ~374-token per-turn tail; DeepSeek's
 automatic cache hit 512 prefix tokens — the check also caught that
 `temperature` 400s on current Claude models, a latent turn-path bug). And
@@ -827,9 +838,9 @@ keyterm policy otherwise; `FINAL_STT` forces one); the report grades
 that final transcript, shows both, and prices the difference —
 "transcription cost you N terms / flipped M rubric verdicts".
 
-Measured, not assumed (`grader/loop_eval.py`: the 20 real Phase 0 answer
+Measured, not assumed (`experiments/speech/loop_eval.py`: the 20 real Phase 0 answer
 recordings replayed through the live loop, with a deterministic
-interviewer so only the audio path varies; `grader/loop_eval_results.json`,
+interviewer so only the audio path varies; `experiments/speech/loop_eval_results.json`,
 54 term occurrences per row, so one term is about 1.9 points):
 
 <!-- results:loop -->
@@ -856,7 +867,7 @@ could: a Silero v5 context-window omission that scored real speech at
 ~0.0, and a stall when a candidate keeps talking past an already-committed
 answer (now appended as an afterthought; the interviewer regenerates).
 A new cloud vendor is one class behind `make_stt`/`make_tts` plus one
-harness run — `grader/loop_eval.py --backend deepgram --confirm` prints
+harness run — `experiments/speech/loop_eval.py --backend deepgram --confirm` prints
 the cost and produces the same measured row. That path was exercised for
 real on Deepgram: five instrumented runs surfaced Nova-3's lazy
 finalization without interim results (fixed by assembling finals plus

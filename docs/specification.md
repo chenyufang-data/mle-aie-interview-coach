@@ -31,7 +31,7 @@ Three grading engines serve different users and cost points:
 | --- | --- | --- | --- |
 | Claude (teacher) | `claude-opus-4-8` | cents-to-dimes/answer | "Always Claude" requests, metered by daily quota |
 | DeepSeek workhorse | `deepseek-v4-flash` | ~$0.0005/answer | paid tier default, quota-free |
-| Distilled local grader | sklearn, `grader/model.joblib` | zero, offline, ms | free tier, cascade, all degradation paths |
+| Distilled local grader | sklearn, `coach/assets/grader_model.joblib` | zero, offline, ms | free tier, cascade, all degradation paths |
 
 The project doubles as an end-to-end ML case study: every component that
 ships carries a held-out metric, and designs that failed their metrics are
@@ -39,35 +39,45 @@ documented as deliberate negative results — a "route confident-good answers
 locally" cascade rule, a stacked scorer, and a full STT/TTS vendor swap
 (Deepgram) that was built, harnessed, measured, and rejected.
 
-## 2. Repository layout (153 tracked files)
+## 2. Repository layout (210 tracked files; reorganized 2026-09-26)
 
 ```
 mle-aie-interview-coach/
-├── server.py               (241 lines)   entrypoint + backwards-compat facade
-├── coach/                  (31 files)    the backend package (see §3, §6)
-├── retrieval.py            (127)         BM25 retrieval over question banks
-├── resume_parser.py        (173)         PDF/.docx/.txt → plain text (CLI + library)
-├── requirements.txt                      anthropic + scikit-learn (core install)
-├── requirements-stt.txt                  optional voice stack (whisper, kokoro, VAD…)
+├── server.py               (272 lines)   entrypoint + backwards-compat facade
+├── coach/                  (41 files)    the runtime: everything the server imports (see §3, §6)
+│   ├── retrieval.py        (127)         BM25 retrieval over question banks
+│   ├── retrieval_dense.py  (381)         bge-small + BM25 hybrid; numpy or pgvector vectors
+│   ├── resume_parser.py    (173)         PDF/.docx/.txt → plain text (CLI + library)
+│   ├── features.py         (260)         the distilled grader's features (§5)
+│   ├── stt_text.py         (480)         WER, term error rate, keyterm policy (§7)
+│   └── assets/                           grader_model.joblib, stt_lexicon.json, stt_failure_rates.json
+├── banks/                  (16 files)    the five question banks
+│   ├── rag_ml/                           MLE bank: 191 chunks over 15 modules
+│   ├── rag_ai/                           AIE bank: 222 chunks over 6 modules (91 course + 131 lesson-text expansions)
+│   ├── rag_exp/                          "Real Qs" bank: 57 chunks from real interview reports
+│   ├── rag_lists/                        "Lists" bank: licensed GitHub question lists rewritten into rubrics (generated locally)
+│   └── rag_docs/                         "Docs" bank: rubrics from primary documentation on the MLOps gaps (generated locally)
+├── ingest/                 (5 files)     bank builders: real questions, GitHub lists, primary docs, lesson-text expansion
+├── experiments/            (79 files)    every measurement with its data and committed results (§5, §7, §9)
+│   ├── distill/                          synthetic answers, teacher labels, training, cascade, judge study
+│   ├── slm/                              step 3: fine-tuned small graders vs sklearn, per-seed run files
+│   ├── retrieval/                        BM25 / dense / hybrid / Chroma / pgvector harness, set B
+│   ├── grounding/                        R2 set C and R4 probes, labels, results, spot-check
+│   ├── speech/                           Phase 0 STT test set and evaluation; the live-loop harness
+│   └── mock/                             report consistency, prompt-cache check
+├── tools/                  (6 files)     render_readme, strip_chunks, review_bank, backup_private, migrate_to_postgres, level1_up
+├── tests/                  (18 files)    regression suites + Playwright e2e (§8)
+├── public/                 (10 files)    dependency-free frontend
+├── docker/                 (4 files)     backend.Dockerfile, frontend.Dockerfile, nginx.conf, Caddyfile
+├── docs/                   (11 files)    contracts, this spec, the merged plan, deployment runbook, evaluation reports, screenshots
+├── data/                   (gitignored)  personal + runtime data; only data/README.md tracked
+├── requirements*.txt                     core install plus optional layers (voice, db, tools, retrieval eval)
+├── docker-compose*.yml                   two-service deployment; overrides add Caddy TLS and Postgres
 ├── example_resume.txt                    fictional resume so anyone can try the mock
 ├── README.md                             user guide + measured results
 ├── users.sample.json                     access-key template for freemium tiers
 ├── .env.sample                           documented environment variables
-├── docker-compose.yml                    two-service deployment
-├── docker-compose.prod.yml               Caddy TLS override for a public host (docs/deployment.md)
-├── .gitattributes                        LF for scripts and Docker files on every checkout
-├── docker/                 (4 files)     backend.Dockerfile, frontend.Dockerfile, nginx.conf, Caddyfile
-├── docs/                   (12 files)    contracts, this spec, the merged plan, deployment runbook, evaluation reports, screenshots
-├── data/                   (gitignored)  personal + runtime data; only data/README.md tracked
-├── public/                 (10 files)    dependency-free frontend
-├── grader/                 (47 files)    distillation subsystem + experiment harnesses (§5)
-├── tests/                  (14 files)    regression suites + Playwright e2e (§8)
-├── tools/                  (4 files)     level1_up, strip_chunks, backup_private, review_bank
-├── rag_ml/                               MLE bank: 191 chunks over 15 modules
-├── rag_ai/                               AIE bank: 222 chunks over 6 modules (91 course + 131 lesson-text expansions)
-├── rag_exp/                              "Real Qs" bank: 57 chunks from real interview reports
-├── rag_lists/                            "Lists" bank: licensed GitHub question lists rewritten into rubrics (generated locally)
-└── rag_docs/                             "Docs" bank: rubrics from primary documentation on the MLOps gaps (generated locally)
+└── .gitattributes                        LF for scripts and Docker files on every checkout
 ```
 
 The public banks are **stripped**: each chunk carries only `id`, the
@@ -75,10 +85,10 @@ The public banks are **stripped**: each chunk carries only `id`, the
 followups) and retrieval `metadata` (module, topic, tags, difficulty).
 The complete banks — with course-derived lesson text and source references —
 live in a private repository; `tools/strip_chunks.py` produces the public
-versions. `rag_exp/all_chunks.jsonl` itself is generated locally by
-`grader/ingest_questions.py`, `rag_lists/all_chunks.jsonl` by
-`grader/ingest_lists.py`, and `rag_docs/all_chunks.jsonl` by
-`grader/ingest_docs.py`; only their READMEs (and the `licenses/` folders,
+versions. `banks/rag_exp/all_chunks.jsonl` itself is generated locally by
+`ingest/ingest_questions.py`, `banks/rag_lists/all_chunks.jsonl` by
+`ingest/ingest_lists.py`, and `banks/rag_docs/all_chunks.jsonl` by
+`ingest/ingest_docs.py`; only their READMEs (and the `licenses/` folders,
 the redistributed source licenses) are tracked here.
 
 Runtime-only files (gitignored, never committed): `.env` (API keys),
@@ -142,7 +152,7 @@ Key behaviors:
 - **Smart cascade** — before any LLM call, paid rubric-question answers the
   student grades reliably are answered locally: rule `predicted <= 2.5 AND
   kp_frac_hit <= 0.25`, chosen by replaying gold rows
-  (`grader/cascade_analysis.py`): 12% coverage at 100% within-±1 agreement.
+  (`experiments/distill/cascade_analysis.py`): 12% coverage at 100% within-±1 agreement.
   The intuitive "route confident-good answers" rule measured 47% and was
   rejected.
 - **Engines** — `call_claude` (structured outputs via `output_config`
@@ -162,7 +172,7 @@ Key behaviors:
   honor the per-key `"log": false` opt-out; the UI discloses collection.
   Mock sessions log only with an explicit opt-in checkbox.
 
-## 4. Retrieval — `retrieval.py` + `retrieval_dense.py`
+## 4. Retrieval — `coach/retrieval.py` + `coach/retrieval_dense.py`
 
 Short per-question documents (module + topic + tags + question + key
 points), not raw lesson text, across three tracks: MLE (`rag_ml`, 191
@@ -177,9 +187,9 @@ not repeat. One of the top-5 hits is sampled at random for variety.
 
 Two rankers with identical interfaces and filter semantics:
 
-- `retrieval.py` — pure-Python BM25 (k1=1.5, b=0.75). 100% Recall@5 / 0.91
+- `coach/retrieval.py` — pure-Python BM25 (k1=1.5, b=0.75). 100% Recall@5 / 0.91
   MRR on the 23 curated cases; the CI gate and the fallback.
-- `retrieval_dense.py` — bge-small-en-v1.5 embeddings (fastembed, ONNX on
+- `coach/retrieval_dense.py` — bge-small-en-v1.5 embeddings (fastembed, ONNX on
   CPU, ~127 MB, 384-d) over a numpy matrix, fused with BM25 by
   reciprocal-rank fusion (k=60). **This hybrid serves the practice track**
   when its stack is available; `coach/kb.py` auto-detects at startup and
@@ -191,7 +201,7 @@ The swap was an experiment with pre-registered rules
 [retrieval_evaluation.md](retrieval_evaluation.md)). The curated set was
 saturated (every arm 23/23), so a 61-query paraphrase set built to defeat
 lexical matching carried the decision (current run on the grown banks,
-2026-09-06, `grader/retrieval_eval_results.json`): BM25 44/61, dense
+2026-09-06, `experiments/retrieval/retrieval_eval_results.json`): BM25 44/61, dense
 48/61, hybrid 51/61 (+11.5 points, MRR 0.67 vs 0.54), no regression on
 the curated set (MRR 0.93 vs 0.91), p95 under 3 ms. Dense alone missed
 the +10-point bar (+6.6). The same experiment measured that a vector
@@ -202,9 +212,11 @@ grounding stays on BM25 (`bm25@10`): the R4 experiment (`docs/plan.md`
 is a level mismatch between multi-claim probes and single-claim chunks,
 not retrieval.
 
-## 5. The grader subsystem — `grader/`
+## 5. The distillation subsystem — `experiments/distill/`
 
-The LLM-distillation pipeline, in dependency order:
+The LLM-distillation pipeline, in dependency order (the features live in
+`coach/features.py` because the server needs them at runtime; the trained
+artifact ships as `coach/assets/grader_model.joblib`):
 
 | File | Role |
 | --- | --- |
@@ -217,10 +229,10 @@ The LLM-distillation pipeline, in dependency order:
 | `cascade_analysis.py` | Replays the training split and measures candidate cascade rules on gold rows — the evidence behind the shipped thresholds. |
 | `judge_agreement.py` | Re-grades the 121 held-out gold rows with candidate judge models: DeepSeek Flash 0.59 MAE / 94% within-±1 / QWK 0.93 vs the teacher; regrade consistency 57% exact (vs Claude's 95%) — hence "runtime judge yes, teacher no". |
 | `evaluate_on_real.py` | The real-distribution check: compares local predictions against Claude scores on actual logged practice answers as they accumulate. |
-| `ingest_questions.py` | Builds `rag_exp/` from hand-collected interview experiences (gitignored spreadsheets/pastes under `data/interview_exp/`): parse → normalize → dedupe (lexical containment) → intent-merge HR-screen phrasings → classify by round → free dry-run preview with cost estimate → `--generate --confirm` teacher run writing rubric chunks. Idempotent (existing ids skip); the teacher prompt strips person/employer names. 57 chunks for ≈$1.77. |
-| `ingest_lists.py` | Builds `rag_lists/` from shallow clones of licensed GitHub question lists (`data/interview_exp/github/`, gitignored): parse (ombharatiya tiered `questions.md`, Kalyan `QA_*.md`) → select tiers (intermediate + advanced; Kalyan capped at 30, internals first) → dedupe (lexical 0.65 within the pool; question-vs-question containment ≥ 0.8 against every bank, 3-token floor; bge-small cosine ≥ 0.90 against banks and pool) → free dry run with cost estimate → `--generate --confirm --workers N` teacher run with the source answer as material to rewrite, never copy. Chunks carry `source`, `source_url` pinned to the clone commit, `license`, `attribution`, `original`; the source answer is not stored. Idempotent by id. |
-| `grounding_r4.py` | Grounding experiment R4 (retrieval plan §12.4): runs the pre-registered policies `bm25@10` / `agree` / `dense>=0.70` / `hybrid` over the fresh resume-only probes on three bank sets (all banks, without `rag_lists`, without `rag_docs`), writes the (probe, chunk) pool and a local labeling page; `--score` applies rule R4 mechanically (precision ≥ 90% at coverage ≥ 40%) and renders `docs/grounding_r4.md`; `--run NAME` suffixes the results and report so a re-run on grown banks (`docs/grounding_r4_grown.md`, labels in `grader/grounding_r4_labels_grown.json` with their source) sits beside the first run. |
-| `ingest_docs.py` | Builds `rag_docs/` from sections of primary documentation (retrieval plan §12.2 item 3, aimed at the R4 gap list): `--fetch` downloads each source in its table (raw GitHub file or HTML page), converts it to text, keeps the listed sections, pins GitHub sources to the commit read and saves the license texts; `--propose` has DeepSeek write 3-8 interview questions per section with the verbatim excerpt (grounding guard, lexical + bge-small dedupe against every bank), aimed at the probes the banks could not ground; `--page` / `--apply` are the author's keep/drop step; `--generate --confirm` has the Claude teacher write one rubric per keep and appends the chunk (excerpt stored only under an open license, pointer otherwise). |
+| `ingest_questions.py` | Builds `banks/rag_exp/` from hand-collected interview experiences (gitignored spreadsheets/pastes under `data/interview_exp/`): parse → normalize → dedupe (lexical containment) → intent-merge HR-screen phrasings → classify by round → free dry-run preview with cost estimate → `--generate --confirm` teacher run writing rubric chunks. Idempotent (existing ids skip); the teacher prompt strips person/employer names. 57 chunks for ≈$1.77. |
+| `ingest_lists.py` | Builds `banks/rag_lists/` from shallow clones of licensed GitHub question lists (`data/interview_exp/github/`, gitignored): parse (ombharatiya tiered `questions.md`, Kalyan `QA_*.md`) → select tiers (intermediate + advanced; Kalyan capped at 30, internals first) → dedupe (lexical 0.65 within the pool; question-vs-question containment ≥ 0.8 against every bank, 3-token floor; bge-small cosine ≥ 0.90 against banks and pool) → free dry run with cost estimate → `--generate --confirm --workers N` teacher run with the source answer as material to rewrite, never copy. Chunks carry `source`, `source_url` pinned to the clone commit, `license`, `attribution`, `original`; the source answer is not stored. Idempotent by id. |
+| `grounding_r4.py` | Grounding experiment R4 (retrieval plan §12.4): runs the pre-registered policies `bm25@10` / `agree` / `dense>=0.70` / `hybrid` over the fresh resume-only probes on three bank sets (all banks, without `rag_lists`, without `rag_docs`), writes the (probe, chunk) pool and a local labeling page; `--score` applies rule R4 mechanically (precision ≥ 90% at coverage ≥ 40%) and renders `docs/grounding_r4.md`; `--run NAME` suffixes the results and report so a re-run on grown banks (`docs/grounding_r4_grown.md`, labels in `experiments/grounding/grounding_r4_labels_grown.json` with their source) sits beside the first run. |
+| `ingest_docs.py` | Builds `banks/rag_docs/` from sections of primary documentation (retrieval plan §12.2 item 3, aimed at the R4 gap list): `--fetch` downloads each source in its table (raw GitHub file or HTML page), converts it to text, keeps the listed sections, pins GitHub sources to the commit read and saves the license texts; `--propose` has DeepSeek write 3-8 interview questions per section with the verbatim excerpt (grounding guard, lexical + bge-small dedupe against every bank), aimed at the probes the banks could not ground; `--page` / `--apply` are the author's keep/drop step; `--generate --confirm` has the Claude teacher write one rubric per keep and appends the chunk (excerpt stored only under an open license, pointer otherwise). |
 | `expand_chunks.py` | Lesson-text expansion (retrieval plan §12.2 item 1): DeepSeek proposes 0-4 finer sub-questions per PRIVATE-bank chunk, each with the verbatim supporting excerpt (grounding guard, lexical + bge-small dedupe, seed-topic preference, Claude fallback on truncated output); the author keeps/drops on a local page (`--page`, `--apply`); `--generate --confirm` has the Claude teacher write a rubric per keep and appends the chunk to the private bank (`expanded_from`, review `unreviewed`); `tools/strip_chunks.py` then regenerates the public edition. |
 | `stt_testset.py`, `stt_text.py`, `stt_lexicon.json`, `stt_sentences.jsonl` | Phase 0 STT experiment: test-set builder, pure-text metrics layer (normalization, WER, term error rate over a 339-term lexicon, keyterm-selection policy), the committed lexicon and 88-item test set. |
 | `stt_eval.py`, `stt_eval_results.json`, `make_failure_rates.py`, `stt_failure_rates.json` | Runs STT conditions over the recordings, measures WER/TER **and downstream grade damage**, renders `docs/stt_evaluation.md`; per-term failure rates feed the runtime keyterm policy. |
@@ -240,7 +252,7 @@ Design history and every measurement live in
 [plan.md](plan.md); this is the shipped shape.
 
 **Session flow** (`coach/mock/routes.py`, all under `/api/mock/`):
-`parse_file` (resume/JD upload → `resume_parser.py`) → `roles` (LLM proposes
+`parse_file` (resume/JD upload → `coach/resume_parser.py`) → `roles` (LLM proposes
 role profiles from resume + JD; defaults from `templates.py` when no JD) →
 `start` (builds the hidden interview plan) → `turn` (the interview) →
 `report`. Voice sessions add `keyterms`, `transcribe`, and the Level 1
@@ -278,7 +290,7 @@ tests.
   interviewer acted on, and the *final* text (Scribe batch + full-lexicon
   keyterms — the best Phase 0 condition) that the report grades.
 - Prompt shape — frozen persona system + append-only history, so provider
-  prompt caching applies; measured in `grader/cache_check.py` at ≈ −75%
+  prompt caching applies; measured in `experiments/mock/cache_check.py` at ≈ −75%
   Claude turn input cost.
 
 **Live voice** (`coach/voice/`, WebSocket on `VOICE_PORT` 8765): `loop.py`
@@ -298,9 +310,9 @@ the port is free (`server.py voice_availability`); `--voice` forces it and
 fails loudly, `--no-voice` skips it, and a plain install degrades to
 HTTP-only with the reason surfaced on the mock page.
 
-Measured (harness: `grader/loop_eval.py`, 20 real recordings as the
+Measured (harness: `experiments/speech/loop_eval.py`, 20 real recordings as the
 candidate): shipped local config live TER 9.3% lenient, first-audio
-p50 0.77 s / p95 1.73 s (bar: 2.0 s; `grader/loop_eval_results.json`); best cloud STT (Scribe
+p50 0.77 s / p95 1.73 s (bar: 2.0 s; `experiments/speech/loop_eval_results.json`); best cloud STT (Scribe
 Realtime) live TER 3.7% lenient, first-audio p50 0.48 / p95 0.63 s;
 barge-in interrupts mid-question in 0.32 s. The Deepgram stack
 (Nova-3 + Aura-2) was fully built and measured through the same harness:
@@ -371,7 +383,7 @@ Local-only: `tests/e2e_smoke.py` drives a real Chromium via Playwright
 (installed in `.venv`, deliberately not in requirements) through
 start → answer → grade → bookmark → replay; it self-skips when Playwright
 is absent. It exists because two frontend bugs survived code reading and
-fell immediately to a real browser. The `grader/` analysis scripts (§5) are
+fell immediately to a real browser. The `experiments/` analysis scripts (§5) are
 the deeper evaluation layer.
 
 ## 9. Deployment
@@ -429,7 +441,7 @@ the deeper evaluation layer.
    reputation: regrading identical mock sessions, Claude reproduced 73.3% of
    its own dimension scores exactly (MAE 0.3) vs Flash's 43.3% (MAE 0.8) —
    so Claude writes the scorecard while Flash runs the turns.
-8. **Prompt caching was measured, not assumed**: `grader/cache_check.py`
+8. **Prompt caching was measured, not assumed**: `experiments/mock/cache_check.py`
    confirmed the frozen-system + append-only-history shape actually hits the
    cache (≈ −75% Claude turn input cost) and caught a latent
    temperature-mismatch bug that had been silently breaking cache reuse.

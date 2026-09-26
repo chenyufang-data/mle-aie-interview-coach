@@ -1,7 +1,7 @@
 """Optional SLM grader (roadmap step 3): a fine-tuned small language model,
 served by vLLM, supplies the local tier's overall grade.
 
-The experiment in grader/slm/ measured Qwen3 base models with LoRA against
+The experiment in experiments/slm/ measured Qwen3 base models with LoRA against
 the distilled sklearn grader on the same held-out gold rows; the prompt and
 the one-digit decode below are the ones it trained and served with, so the
 runtime grades exactly what was measured. Everything else in the local
@@ -30,7 +30,7 @@ _unavailable_until = 0.0
 
 
 def build_prompt(chunk, answer):
-    """The training prompt (grader/slm/common.py uses this same function):
+    """The training prompt (experiments/slm/common.py uses this same function):
     instruction, question, rubric key points, the answer, then "Score:" -
     the next token is the digit."""
     interview = chunk["interview"]

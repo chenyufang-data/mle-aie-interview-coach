@@ -3,9 +3,9 @@
     .venv\\Scripts\\python tools\\backup_private.py
 
 Copies into PRIVATE_REPO_DIR (default: ../mle-aie-interview-coach-private):
-  - rag_exp/all_chunks.jsonl + README   (the built bank: rephrased
+  - banks/rag_exp/all_chunks.jsonl + README   (the built bank: rephrased
     questions and generated rubrics - no interviewee names)
-  - grader/grounding_r4_pool.jsonl      (the R4 labeling pool: it quotes
+  - experiments/grounding/grounding_r4_pool.jsonl      (the R4 labeling pool: it quotes
     questions and key points from rag_exp and rag_lists, so it is
     gitignored publicly and kept here)
   - data/interview_exp/pastes/*         (questions hand-gathered from
@@ -53,9 +53,9 @@ def main():
     changed = 0
     for bank in ("rag_exp", "rag_lists", "rag_docs"):
         for name in ("all_chunks.jsonl", "README.md"):
-            changed += sync(BASE_DIR / bank / name,
+            changed += sync(BASE_DIR / "banks" / bank / name,
                             PRIVATE_DIR / bank / name)
-    changed += sync(BASE_DIR / "grader" / "grounding_r4_pool.jsonl",
+    changed += sync(BASE_DIR / "experiments" / "grounding" / "grounding_r4_pool.jsonl",
                     PRIVATE_DIR / "grader" / "grounding_r4_pool.jsonl")
     pastes = BASE_DIR / "data" / "interview_exp" / "pastes"
     if pastes.is_dir():

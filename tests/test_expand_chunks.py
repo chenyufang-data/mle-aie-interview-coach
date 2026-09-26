@@ -1,4 +1,4 @@
-"""Offline tests for the lesson-text expansion tool (grader/expand_chunks.py).
+"""Offline tests for the lesson-text expansion tool (ingest/expand_chunks.py).
 
 Run:  .venv\\Scripts\\python tests\\test_expand_chunks.py
 
@@ -15,7 +15,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from grader import expand_chunks as ex  # noqa: E402
+from ingest import expand_chunks as ex  # noqa: E402
 
 LESSON = ("Rerankers re-score the top candidates with a cross-encoder. Rules of thumb "
           "from the deck: - rerank at most 50 candidates; - budget 30-80 ms per query. "

@@ -14,7 +14,7 @@ from urllib import parse as urlparse
 from coach.config import BASE_DIR
 from coach.web import json_response
 
-STT_SENTENCES_PATH = BASE_DIR / "grader" / "stt_sentences.jsonl"
+STT_SENTENCES_PATH = BASE_DIR / "experiments" / "speech" / "stt_sentences.jsonl"
 STT_HUMAN_DIR = Path(os.environ.get("STT_AUDIO_DIR", BASE_DIR / "data" / "stt_audio")) / "human"
 STT_MIME_EXT = {"audio/webm": ".webm", "audio/ogg": ".ogg", "audio/mp4": ".m4a", "audio/wav": ".wav"}
 
@@ -38,7 +38,7 @@ def stt_get(handler, path):
         return
     if path == "/api/stt/items":
         if not STT_SENTENCES_PATH.exists():
-            json_response(handler, 404, {"error": "grader/stt_sentences.jsonl is missing"})
+            json_response(handler, 404, {"error": "experiments/speech/stt_sentences.jsonl is missing"})
             return
         items = [json.loads(line) for line in
                  STT_SENTENCES_PATH.read_text(encoding="utf-8").splitlines() if line.strip()]

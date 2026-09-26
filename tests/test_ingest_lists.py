@@ -1,4 +1,4 @@
-"""Offline tests for the GitHub-list ingest (grader/ingest_lists.py).
+"""Offline tests for the GitHub-list ingest (ingest/ingest_lists.py).
 
 Run:  .venv\\Scripts\\python tests\\test_ingest_lists.py
 
@@ -11,7 +11,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from grader.ingest_lists import (  # noqa: E402
+from ingest.ingest_lists import (  # noqa: E402
     bank_overlap, build_chunk, candidate_id, cap_pool, module_for,
     parse_kalyan_file, parse_omb_questions, select_tiers,
 )

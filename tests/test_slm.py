@@ -1,10 +1,10 @@
-"""Offline tests for the SLM grader experiment's shared pieces (grader/slm).
+"""Offline tests for the SLM grader experiment's shared pieces (experiments/slm).
 
 Run:  .venv\\Scripts\\python tests\\test_slm.py
 
 No GPU, no private data: synthetic rows drive the split logic, the prompt
 builder, the digit-token grade decode, the metrics (checked against
-grader/train.py's), and the pre-registered rule. When the private checkout is
+experiments/distill/train.py's), and the pre-registered rule. When the private checkout is
 present, one extra check confirms seed 42 reproduces the shipped split.
 """
 
@@ -15,7 +15,7 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from grader.slm import common  # noqa: E402
+from experiments.slm import common  # noqa: E402
 
 
 def synthetic_rows(n_chunks=40, per_chunk=6):
@@ -83,7 +83,7 @@ def test_expected_grade_and_metrics():
     pred = y + np.array([0.4, -0.6, 1.2, 0, -2.0, 0.5, -0.4, 0.9, 0.1, -1.1])
     ours = common.metrics(y, pred)
     try:
-        from grader.train import metrics as train_metrics
+        from experiments.distill.train import metrics as train_metrics
     except ImportError:            # a venv without the trainer's dependencies
         train_metrics = None
     if train_metrics is not None:

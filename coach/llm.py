@@ -17,7 +17,7 @@ _client = None
 
 # Usage of the most recent chat call, engine-labeled, incl. the cache
 # counters (Anthropic: cache_read/creation_input_tokens; DeepSeek:
-# prompt_cache_hit/miss_tokens). grader/cache_check.py measures the
+# prompt_cache_hit/miss_tokens). experiments/mock/cache_check.py measures the
 # prompt-cache design against these; they are the only ground truth
 # that caching is actually working.
 LAST_USAGE = {}
@@ -122,7 +122,7 @@ def call_ollama(user_prompt, schema):
 def call_deepseek(user_prompt, schema, thinking=True):
     """Grade with DeepSeek via its OpenAI-compatible API.
 
-    Two quirks verified by grader/judge_agreement.py: DeepSeek's
+    Two quirks verified by experiments/distill/judge_agreement.py: DeepSeek's
     Anthropic-compat endpoint silently ignores output_config, so the schema
     rides in the prompt instead; and ~3% of json_object responses arrive as
     malformed JSON, so one parse-retry before giving up.
@@ -244,7 +244,7 @@ def call_chat(system, messages, engine, thinking=False, max_tokens=700,
     if cache:
         system, messages = _cache_marked(system, messages)
     # No temperature: sampling params are rejected (400) on current Claude
-    # models - found live by grader/cache_check.py.
+    # models - found live by experiments/mock/cache_check.py.
     response = get_client().messages.create(
         model=os.environ.get("ANTHROPIC_MODEL", DEFAULT_MODEL),
         max_tokens=max_tokens if not thinking else max(max_tokens, 4000),

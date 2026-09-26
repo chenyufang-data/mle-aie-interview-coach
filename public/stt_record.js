@@ -52,7 +52,7 @@ async function init() {
     state.recorded = payload.recorded || {};
   } catch (error) {
     els.progressText.textContent = "Could not load the sentence set.";
-    els.pageStatus.textContent = `${error.message}. Build it with: python grader/stt_testset.py, and open this page on localhost.`;
+    els.pageStatus.textContent = `${error.message}. Build it with: python experiments/speech/stt_testset.py, and open this page on localhost.`;
     return;
   }
   const first = state.items.findIndex((item) => !state.recorded[item.id]);
@@ -115,7 +115,7 @@ function updateProgress() {
   els.progressText.textContent = `${done} / ${total} recorded · item ${state.index + 1}`;
   els.remainingText.textContent = wordsLeft
     ? `~${Math.max(1, Math.round(wordsLeft / 140))} min of reading left`
-    : "All items recorded - run grader/stt_eval.py next";
+    : "All items recorded - run experiments/speech/stt_eval.py next";
   els.progressBar.style.width = `${(100 * done) / Math.max(1, total)}%`;
 }
 

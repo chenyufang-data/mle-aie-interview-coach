@@ -6,7 +6,7 @@
   deepgram    Nova-3 streaming over one session-long WebSocket, Finalize
               messages segmenting the stream per turn; keyterm prompting
               takes the same policy-50 list (recommended cloud backend -
-              UNMEASURED until grader/loop_eval.py --backend deepgram runs)
+              UNMEASURED until experiments/speech/loop_eval.py --backend deepgram runs)
   elevenlabs  Scribe v2 Realtime over one session-long WebSocket, MANUAL
               commits segmenting the stream per turn; keyterms per session
               (the policy-50 list - measured 9.7% vs 15.4% lenient TER)

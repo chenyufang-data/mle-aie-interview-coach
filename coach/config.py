@@ -8,27 +8,41 @@ PUBLIC_DIR = BASE_DIR / "public"
 ENV_PATH = BASE_DIR / ".env"
 
 # One question-bank corpus per track; all share the id/interview/metadata
-# schema. EXP (real gathered interview questions, grader/ingest_questions.py)
+# schema. EXP (real gathered interview questions, ingest/ingest_questions.py)
 # is PRIVATE - gitignored, mounted from private storage on deploys - so
 # kb.load_chunks simply skips it where the file is absent and the app runs
 # as a two-track install.
+BANKS_DIR = BASE_DIR / "banks"
+
+
+def bank_dir(name, root=None):
+    """Folder of one question bank (rag_ml, rag_ai, ...). This checkout keeps
+    its banks under banks/; a checkout of the private repository keeps the
+    complete banks at its root, so for another root the folder without
+    banks/ is used when banks/<name> is absent there."""
+    if root is None or Path(root).resolve() == BASE_DIR:
+        return BANKS_DIR / name
+    nested = Path(root) / "banks" / name
+    return nested if nested.is_dir() else Path(root) / name
+
+
 CORPUS_PATHS = {
-    "MLE": BASE_DIR / "rag_ml" / "all_chunks.jsonl",
-    "AIE": BASE_DIR / "rag_ai" / "all_chunks.jsonl",
-    "EXP": BASE_DIR / "rag_exp" / "all_chunks.jsonl",
+    "MLE": BANKS_DIR / "rag_ml" / "all_chunks.jsonl",
+    "AIE": BANKS_DIR / "rag_ai" / "all_chunks.jsonl",
+    "EXP": BANKS_DIR / "rag_exp" / "all_chunks.jsonl",
     # Public GitHub interview lists (MIT / Apache-2.0), rubrics by the
     # teacher; separate from the course banks so the grounding experiment
     # can measure with and without it (docs/plan.md §1.8).
-    "LISTS": BASE_DIR / "rag_lists" / "all_chunks.jsonl",
+    "LISTS": BANKS_DIR / "rag_lists" / "all_chunks.jsonl",
     # rag_docs: rubrics written from sections of primary documentation on
-    # the MLOps topics the course banks lack (grader/ingest_docs.py); same
+    # the MLOps topics the course banks lack (ingest/ingest_docs.py); same
     # private/generated treatment as rag_lists.
-    "DOCS": BASE_DIR / "rag_docs" / "all_chunks.jsonl",
+    "DOCS": BANKS_DIR / "rag_docs" / "all_chunks.jsonl",
 }
 DEFAULT_MODEL = "claude-opus-4-8"
 
-# Trained distilled grader for mock mode (grader/train.py artifact).
-GRADER_PATH = BASE_DIR / "grader" / "model.joblib"
+# Trained distilled grader for mock mode (experiments/distill/train.py artifact).
+GRADER_PATH = BASE_DIR / "coach" / "assets" / "grader_model.joblib"
 
 # Every real (non-mock) graded exchange is appended here: each row is a gold
 # (answer, teacher score) pair for evaluating and later retraining the
@@ -104,7 +118,7 @@ ALLOW_ANONYMOUS_LLM = os.environ.get("ALLOW_ANONYMOUS_LLM", "0") == "1"
 # Smart cascade for paid users: answers the student grades reliably are served
 # locally without spending an LLM call (Claude quota, or a DeepSeek request
 # when that is the paid workhorse). The rule is MEASURED, not guessed
-# (grader/cascade_analysis.py, 121 held-out gold rows): routing only
+# (experiments/distill/cascade_analysis.py, 121 held-out gold rows): routing only
 # clearly-below-rubric answers keeps ~12% of evaluations local at 100%
 # within-+/-1 teacher agreement (MAE 0.48). The tempting high-score route
 # measured at 47% agreement — polished-looking answers are exactly where
@@ -113,7 +127,7 @@ ALLOW_ANONYMOUS_LLM = os.environ.get("ALLOW_ANONYMOUS_LLM", "0") == "1"
 PAID_CASCADE = os.environ.get("PAID_CASCADE", "1") != "0"
 
 # Optional SLM grader for the local tier (roadmap step 3, coach/slm.py): a
-# vLLM server holding the fine-tuned Qwen3 model measured in grader/slm/.
+# vLLM server holding the fine-tuned Qwen3 model measured in experiments/slm/.
 # Off unless SLM_URL is set; a silent or slow server degrades to the sklearn
 # grade. The public demo box has no GPU and leaves this unset.
 SLM_URL = os.environ.get("SLM_URL", "").strip()
@@ -146,7 +160,7 @@ def voice_ws_path():
     path = os.environ.get("VOICE_WS_PATH", "").strip()
     return path if path.startswith("/") else None
 # Practice-question retrieval. "auto" (default) serves the hybrid BM25 +
-# bge-small retriever (retrieval_dense.py) when fastembed and the model are
+# bge-small retriever (coach/retrieval_dense.py) when fastembed and the model are
 # available and falls back to BM25 with a stated reason; "bm25" forces the
 # fallback; "hybrid" forces the stack and fails loudly. The swap was earned
 # by the pre-registered rule in docs/plan.md (results:
@@ -177,7 +191,7 @@ OLLAMA_URL = "http://127.0.0.1:11434/api/chat"
 
 # Paid-tier workhorse judge (tiered Claude mode only). With DEEPSEEK_API_KEY
 # in .env, paid evaluations default to DeepSeek V4 Flash - measured against
-# the Claude teacher on the 121 held-out gold rows (grader/judge_agreement.py):
+# the Claude teacher on the 121 held-out gold rows (experiments/distill/judge_agreement.py):
 # 94% within-+/-1, QWK 0.93, at ~1/200th of Opus-tier cost. Claude remains the
 # distillation teacher and serves "Always Claude" requests under the daily
 # quota. Without the key, paid routing behaves exactly as before (all Claude).

@@ -56,7 +56,7 @@ VOICE_DEBUG = bool(os.environ.get("VOICE_DEBUG"))
 # End-of-turn silence, measured not guessed: on the 20 real Phase 0 answer
 # recordings (each with a 1.0 s thinking pause injected mid-answer), the
 # live loop cut 50% of answers mid-thought at 1.2 s, 15% at 1.8 s, and 5%
-# at 2.0 s - the equivalence rule's bar (grader/loop_eval.py). The
+# at 2.0 s - the equivalence rule's bar (experiments/speech/loop_eval.py). The
 # afterthought path in on_answer() recovers the answers it still cuts.
 END_SILENCE_MS = int(os.environ.get("VOICE_END_SILENCE_MS", "2000"))
 # Text-aware hold on top of the silence rule: when the live transcript at

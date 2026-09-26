@@ -1,4 +1,4 @@
-"""Offline unit test for the dense/hybrid retrieval arms (grader/dense_retrieval.py).
+"""Offline unit test for the dense/hybrid retrieval arms (experiments/retrieval/dense_retrieval.py).
 
 Run:  .venv\\Scripts\\python tests\\test_dense_retrieval.py
 
@@ -6,7 +6,7 @@ No model download: a fake embedder maps text to a deterministic
 bag-of-words vector, which is enough to check what the experiment relies
 on - filter parity with retrieval.Retriever, the RRF fusion math, ranking
 and tie-breaking, and the top_scored/search contracts. The real model's
-numbers live in grader/retrieval_eval.py, not here.
+numbers live in experiments/retrieval/retrieval_eval.py, not here.
 """
 
 import hashlib
@@ -18,8 +18,8 @@ import numpy as np
 BASE_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BASE_DIR))
 
-from retrieval import Retriever, retrieval_text, tokenize  # noqa: E402
-from retrieval_dense import (DenseRetriever, HybridRetriever, filter_candidates,  # noqa: E402
+from coach.retrieval import Retriever, retrieval_text, tokenize  # noqa: E402
+from coach.retrieval_dense import (DenseRetriever, HybridRetriever, filter_candidates,  # noqa: E402
                              level_candidates, normalize_rows, rrf_fuse)
 
 DIM = 64

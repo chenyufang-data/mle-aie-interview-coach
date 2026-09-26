@@ -121,10 +121,10 @@ pass "GET /api/meta answered"
 EXPECT="MLE AIE"
 for pair in "LISTS:rag_lists" "DOCS:rag_docs"; do
   track="${pair%%:*}"; dir="${pair##*:}"
-  if [ -f "$dir/all_chunks.jsonl" ]; then
+  if [ -f "banks/$dir/all_chunks.jsonl" ]; then
     EXPECT="$EXPECT $track"
   else
-    warn "$dir/all_chunks.jsonl is not in this checkout (generated bank): the $track track is not expected"
+    warn "banks/$dir/all_chunks.jsonl is not in this checkout (generated bank): the $track track is not expected"
   fi
 done
 

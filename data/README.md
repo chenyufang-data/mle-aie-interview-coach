@@ -7,19 +7,19 @@ from the `coach-data` volume.
 
 ```
 data/
-├── resume/          resume text produced by resume_parser.py (data/resume/<name>.txt)
+├── resume/          resume text produced by coach/resume_parser.py (data/resume/<name>.txt)
 ├── interview_exp/   interview questions you gather (spreadsheets, notes) — the
-│                    source for the rag_exp/ question bank; keep adding to it
+│                    source for the banks/rag_exp/ question bank; keep adding to it
 │                    (github/: shallow clones of licensed question lists,
-│                    the source for rag_lists/ via grader/ingest_lists.py;
+│                    the source for banks/rag_lists/ via ingest/ingest_lists.py;
 │                    docs/: fetched sections of primary documentation, the
-│                    source for rag_docs/ via grader/ingest_docs.py)
+│                    source for banks/rag_docs/ via ingest/ingest_docs.py)
 ├── sessions/        practice logs written by server.py:
 │                      real_sessions.jsonl   LLM-graded answers (Claude rows = gold pairs
-│                                            for grader/evaluate_on_real.py)
+│                                            for experiments/distill/evaluate_on_real.py)
 │                      free_sessions.jsonl   free-tier answers, stored UNLABELED
 │                      mock_sessions.jsonl   mock-interview sessions (opt-in, planned)
-├── stt_audio/       Phase 0 transcription experiment (grader/stt_eval.py), one
+├── stt_audio/       Phase 0 transcription experiment (experiments/speech/stt_eval.py), one
 │                    folder per audio set:
 │                      human/            takes from public/stt_record.html
 │                      synth_<voice>/    ElevenLabs TTS readings of the same items
@@ -27,7 +27,7 @@ data/
 │                    transcripts.jsonl (every condition's output, the re-run cache)
 │                    and judge.jsonl (cached DeepSeek grades)
 ├── stt/             lexicon_extra.json — private terms (resume, employers,
-│                    product names) merged into grader/stt_lexicon.json when present
+│                    product names) merged into coach/assets/stt_lexicon.json when present
 ├── notes/           upstream/: the drafted pull requests of roadmap step 2
 ├── project_report.md  the author's own audit of the repository (personal; the
 │                    plan and the README are the public record)

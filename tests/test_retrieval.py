@@ -10,7 +10,7 @@ result is relevant when it matches the case's expected_module and shares a
 tag with expected_tags (whichever of the two the case specifies).
 
 The default (BM25, the curated cases) is the CI gate. --backend dense or
-hybrid runs the experiment arms from grader/dense_retrieval.py and skips
+hybrid runs the experiment arms from experiments/retrieval/dense_retrieval.py and skips
 cleanly when their optional dependencies (requirements-retrieval-eval.txt)
 are absent; the measured comparison lives in docs/retrieval_evaluation.md.
 """
@@ -23,7 +23,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BASE_DIR))
 
-from retrieval import Retriever
+from coach.retrieval import Retriever
 
 CORPUS_DIRS = {"ml": "rag_ml", "ai": "rag_ai"}
 CORPUS_ROLE = {"ml": "MLE", "ai": "AIE"}  # vector-cache names, as coach/config.py
@@ -43,7 +43,7 @@ def is_relevant(chunk, case):
 
 
 def load_chunks(corpus_dir):
-    with (BASE_DIR / corpus_dir / "all_chunks.jsonl").open(encoding="utf-8") as handle:
+    with (BASE_DIR / "banks" / corpus_dir / "all_chunks.jsonl").open(encoding="utf-8") as handle:
         return [json.loads(line) for line in handle if line.strip()]
 
 
@@ -51,7 +51,7 @@ def load_retrievers(backend):
     chunks = {name: load_chunks(path) for name, path in CORPUS_DIRS.items()}
     if backend == "bm25":
         return {name: Retriever(c) for name, c in chunks.items()}
-    from retrieval_dense import DenseRetriever, HybridRetriever, hybrid_availability, load_or_build
+    from coach.retrieval_dense import DenseRetriever, HybridRetriever, hybrid_availability, load_or_build
     embedder = hybrid_availability()
     if isinstance(embedder, str):
         print(f"SKIP: --backend {backend} cannot run here - {embedder}")

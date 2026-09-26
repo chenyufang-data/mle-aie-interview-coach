@@ -3,7 +3,7 @@
 import json
 import random
 
-from retrieval import Retriever
+from coach.retrieval import Retriever
 
 from coach import config
 from coach.config import CORPUS_PATHS
@@ -27,7 +27,7 @@ def _hybrid_embedder():
         config.RETRIEVAL_DISABLED_REASON = "RETRIEVAL_BACKEND=bm25"
         return None
     try:
-        from retrieval_dense import hybrid_availability
+        from coach.retrieval_dense import hybrid_availability
     except ImportError as exc:  # numpy missing: fastembed would be too
         outcome = f"missing dependency {getattr(exc, 'name', exc)!r}"
     else:
@@ -44,7 +44,7 @@ def _dense_retriever(role, chunks, embedder, vectors):
     """The dense half of the hybrid: the in-process numpy matrix, or the
     same vectors served by Postgres + pgvector when the Postgres state
     store is on (RETRIEVAL_VECTORS=auto, the measured default) or forced."""
-    from retrieval_dense import DenseRetriever
+    from coach.retrieval_dense import DenseRetriever
 
     mode = config.RETRIEVAL_VECTORS
     pool = None
@@ -59,7 +59,7 @@ def _dense_retriever(role, chunks, embedder, vectors):
                              "(set DATABASE_URL).")
     if pool is None:
         return DenseRetriever(chunks, embedder, vectors)
-    from retrieval_dense import PgVectorRetriever
+    from coach.retrieval_dense import PgVectorRetriever
 
     try:
         retriever = PgVectorRetriever(chunks, embedder, vectors, name=role, pool=pool)
@@ -91,7 +91,7 @@ def load_chunks():
         bm25 = Retriever(chunks)
         retriever = bm25
         if embedder is not None:
-            from retrieval_dense import HybridRetriever, load_or_build
+            from coach.retrieval_dense import HybridRetriever, load_or_build
 
             vectors, _, _ = load_or_build(role, chunks, embedder)
             retriever = HybridRetriever(bm25, _dense_retriever(role, chunks, embedder, vectors))

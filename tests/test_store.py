@@ -278,7 +278,7 @@ def check_pgvector(st):
     same vectors (the fake embedder of the dense tests), reuses a stored
     corpus by fingerprint and reloads it when the bank changes."""
     import test_dense_retrieval as dense_tests  # noqa: E402  (tests/ is on sys.path)
-    from retrieval_dense import DenseRetriever, PgVectorRetriever, vector_literal
+    from coach.retrieval_dense import DenseRetriever, PgVectorRetriever, vector_literal
 
     assert vector_literal([0.5, -1, 2]) == "[0.5,-1.0,2.0]"
     embedder = dense_tests.FakeEmbedder()

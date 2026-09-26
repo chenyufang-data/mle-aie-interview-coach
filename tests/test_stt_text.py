@@ -1,4 +1,4 @@
-"""Unit tests for the STT experiment's text layer (grader/stt_text.py).
+"""Unit tests for the STT experiment's text layer (coach/stt_text.py).
 
 Run:  .venv\\Scripts\\python tests\\test_stt_text.py
 """
@@ -8,7 +8,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from grader.stt_text import (Lexicon, apply_corrections_to_text,  # noqa: E402
+from coach.stt_text import (Lexicon, apply_corrections_to_text,  # noqa: E402
                              audit_corrections, batch_keyterms, correct_transcript,
                              naive_keyterms, normalize, select_keyterms,
                              summarize_terms, term_errors, wer)

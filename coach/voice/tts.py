@@ -35,7 +35,7 @@ DEFAULT_LOCAL_VOICE = os.environ.get("TTS_VOICE", "af_heart")
 SPEACHES_URL = os.environ.get("SPEACHES_URL", "http://127.0.0.1:8969/v1")
 SPEACHES_TTS_MODEL = os.environ.get(
     "SPEACHES_TTS_MODEL", "speaches-ai/Kokoro-82M-v1.0-ONNX")
-# ElevenLabs premade voices, by the account's key (see grader/stt_eval.py).
+# ElevenLabs premade voices, by the account's key (see experiments/speech/stt_eval.py).
 DEFAULT_ELEVEN_VOICE = os.environ.get("ELEVEN_TTS_VOICE", "XrExE9yKIg1WjnnlVkGX")
 DEEPGRAM_API = os.environ.get("DEEPGRAM_URL", "https://api.deepgram.com")
 DEFAULT_DEEPGRAM_VOICE = os.environ.get("DEEPGRAM_TTS_VOICE", "aura-2-thalia-en")

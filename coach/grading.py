@@ -2,12 +2,12 @@
 
 import random
 
-from retrieval import tokenize
+from coach.retrieval import tokenize
 
 from coach import config, llm, slm, users
 from coach.config import CASCADE_FRAC_HIT_MAX, CASCADE_PRED_MAX, GRADER_PATH
 
-# Trained distilled grader for mock mode (grader/train.py artifact); None
+# Trained distilled grader for mock mode (experiments/distill/train.py artifact); None
 # falls back to plain keyword matching. Reassigned by load_grader(); always
 # read as grading.GRADER.
 GRADER = None
@@ -19,7 +19,7 @@ def load_grader():
         return
     try:
         import joblib
-        from grader import features  # noqa: F401  (unpickling needs FeatureExtractor importable)
+        from coach import features  # noqa: F401  (unpickling needs FeatureExtractor importable)
 
         GRADER = joblib.load(GRADER_PATH)
     except Exception as exc:
@@ -35,7 +35,7 @@ def grading_route(user, force_llm=False):
     key), "budget" (the key's or the server's daily LLM budget is spent).
 
     Paid routing: DeepSeek Flash is the default workhorse (measured judge,
-    see grader/judge_agreement.py); Claude serves force_llm ("Always
+    see experiments/distill/judge_agreement.py); Claude serves force_llm ("Always
     Claude") requests and takes the Claude quota; an exhausted Claude
     quota degrades to DeepSeek, and only to the local grader when no
     DEEPSEEK_API_KEY is configured. Every LLM call, whichever engine,
@@ -151,7 +151,7 @@ def mock_evaluation(data, chunk, reason="mock"):
             grader_name = f"local ML grader ({GRADER['model_name']})"
             slm_grade = slm.grade(chunk, answer) if slm.available() else None
             if slm_grade is not None:
-                # Step 3's measured winner (grader/slm/) supplies the overall
+                # Step 3's measured winner (experiments/slm/) supplies the overall
                 # grade; rubric verdicts, subscores and the cascade stay with
                 # the sklearn artifact they were measured against.
                 predicted = slm_grade

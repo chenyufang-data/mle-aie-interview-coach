@@ -2,7 +2,7 @@
 
 Live (Scribe Realtime, <= 50 terms x 20 chars): stt_text.select_keyterms
 scored by (a) the failure rate measured WITHOUT keyterms on the Phase 0
-human set (grader/stt_failure_rates.json - statistics only, committed),
+human set (coach/assets/stt_failure_rates.json - statistics only, committed),
 (b) presence in this session's resume/role/project text, (c) rarity. The
 policy beat the naive first-50 on human audio: 9.7% vs 11.7% lenient TER.
 
@@ -18,14 +18,14 @@ import json
 
 from coach.config import BASE_DIR
 
-LEXICON_PATH = BASE_DIR / "grader" / "stt_lexicon.json"
-RATES_PATH = BASE_DIR / "grader" / "stt_failure_rates.json"
+LEXICON_PATH = BASE_DIR / "coach" / "assets" / "stt_lexicon.json"
+RATES_PATH = BASE_DIR / "coach" / "assets" / "stt_failure_rates.json"
 _CACHE = {}
 
 
 def lexicon():
     if "lex" not in _CACHE:
-        from grader.stt_text import Lexicon
+        from coach.stt_text import Lexicon
         _CACHE["lex"] = Lexicon.from_json(
             json.loads(LEXICON_PATH.read_text(encoding="utf-8")))
     return _CACHE["lex"]
@@ -45,13 +45,13 @@ def failure_rates():
 
 def priority_terms(texts):
     """Lexicon terms that appear in the session's own material."""
-    from grader.stt_text import normalize
+    from coach.stt_text import normalize
     tokens = normalize(" ".join(text for text in texts if text))
     return sorted(lexicon().occurrences(tokens))
 
 
 def session_keyterms(resume="", role=None, project=None, n=50):
-    from grader.stt_text import select_keyterms
+    from coach.stt_text import select_keyterms
     role = role or {}
     project = project or {}
     texts = [resume, role.get("title", ""), role.get("domain", ""),
@@ -64,7 +64,7 @@ def session_keyterms(resume="", role=None, project=None, n=50):
 
 
 def final_transcript_keyterms():
-    from grader.stt_text import batch_keyterms
+    from coach.stt_text import batch_keyterms
     return batch_keyterms(lexicon())
 
 
@@ -72,6 +72,6 @@ def capped_transcript_keyterms(n=100):
     """For batch engines with a smaller keyterm budget than Scribe's 1000
     (Deepgram Nova-3 keyterm prompting): the same failure-rate + rarity
     policy that beat naive selection live, sized to the budget."""
-    from grader.stt_text import select_keyterms
+    from coach.stt_text import select_keyterms
     rates, observed = failure_rates()
     return select_keyterms(lexicon(), rates, [], n=n, observed=observed)

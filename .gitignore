@@ -34,27 +34,33 @@ data/*
 !data/README.md
 tools/bin/
 
-# rag_exp/ is built from hand-collected interview experiences (plan section
-# 7b) and stays private - the infra plan mounts it from private storage,
-# never from the repository. Only the README is tracked.
-rag_exp/*
-!rag_exp/README.md
+# banks/rag_exp/ is built from hand-collected interview experiences (plan
+# section 7b) and stays private - the infra plan mounts it from private
+# storage, never from the repository. Only the README is tracked.
+banks/rag_exp/*
+!banks/rag_exp/README.md
 
-# rag_lists/ is built by grader/ingest_lists.py from licensed GitHub
+# banks/rag_lists/ is built by ingest/ingest_lists.py from licensed GitHub
 # question lists; the bank is generated locally and backed up privately
 # like rag_exp. The README (attribution) and license copies are tracked.
-rag_lists/*
-!rag_lists/README.md
-!rag_lists/licenses/
+banks/rag_lists/*
+!banks/rag_lists/README.md
+!banks/rag_lists/licenses/
 
-# rag_docs/ is built by grader/ingest_docs.py from sections of primary
+# banks/rag_docs/ is built by ingest/ingest_docs.py from sections of primary
 # documentation; generated locally and backed up privately like rag_lists.
 # The README (attribution) and license copies are tracked.
-rag_docs/*
-!rag_docs/README.md
-!rag_docs/licenses/
+banks/rag_docs/*
+!banks/rag_docs/README.md
+!banks/rag_docs/licenses/
 
-# The R4 grounding pool (grader/grounding_r4.py --pool) quotes question text
-# and key points from rag_exp and rag_lists, so it stays local and is backed
-# up privately by tools/backup_private.py like the banks themselves.
-grader/grounding_r4_pool.jsonl
+# The R4 grounding pool (experiments/grounding/grounding_r4.py --pool) quotes
+# question text and key points from rag_exp and rag_lists, so it stays local
+# and is backed up privately by tools/backup_private.py like the banks.
+experiments/grounding/grounding_r4_pool.jsonl
+
+# The synthetic training answers quote lesson text: they live in the private
+# checkout (grader/dataset.jsonl there); a local copy for the distill scripts
+# sits here and is never committed. Same for the SLM prompt records.
+experiments/distill/dataset.jsonl
+experiments/slm/slm_records.jsonl

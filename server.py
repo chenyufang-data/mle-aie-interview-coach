@@ -4,7 +4,7 @@ The backend lives in the coach/ package (one module per concern; see
 coach/__init__.py for the map). This file parses arguments, wires the
 modules together, and runs the HTTP server.
 
-It is also a backwards-compatible facade: the grader scripts and tests do
+It is also a backwards-compatible facade: the experiment scripts and tests do
 `import server` and use names like server.build_evaluation_prompt,
 server.GRADER, server.KB — the module-level __getattr__ below resolves any
 such name against the coach modules at access time, so even globals that
@@ -37,7 +37,7 @@ def parse_args():
         action="store_true",
         help="Free testing mode: no API key, no network, no cost. Questions come from the "
         "course knowledge base and grading uses the trained local ML grader "
-        "(grader/model.joblib), falling back to rubric keyword matching.",
+        "(coach/assets/grader_model.joblib), falling back to rubric keyword matching.",
     )
     backend.add_argument(
         "--ollama",
@@ -169,7 +169,7 @@ def main():
         brain = (
             f"trained ML grader ({grading.GRADER['model_name']})"
             if grading.GRADER is not None
-            else "keyword matching (train one with grader\\train.py)"
+            else "keyword matching (train one with experiments\\distill\\train.py)"
         )
         print(f"Backend: MOCK mode (free) - KB questions, grading via {brain}.")
     elif config.MODE == "ollama":

@@ -156,7 +156,7 @@ def test_rubric_round_filter():
     HR-screen behavioral / coding chunks (rag_exp round tags) even when
     they are the strongest lexical match, and course chunks (no round tag)
     stay eligible."""
-    from retrieval import Retriever
+    from coach.retrieval import Retriever
 
     def synth(chunk_id, question, round_tag=None):
         meta = {"module": "m", "topic": "t", "tags": [], "difficulty": "intermediate"}

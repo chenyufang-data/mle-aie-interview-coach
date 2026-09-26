@@ -1,6 +1,6 @@
 # Grounding experiment R4 — which policy attaches a bank rubric
 
-Generated 2026-09-06T03:45:15 by `grader/grounding_r4.py --score` --run grown. Probes: 77 resume-only mock probes (`grader/grounding_probes_resume_only.jsonl`). Labels: Claude (assistant), blind to policy attachment, at the author's request; 156 of 237 pair labels reused verbatim from the first run, 81 new. Rule R4 (frozen in docs/plan.md §1.9): precision ≥ 90% at coverage ≥ 40%; coverage = probes receiving a fair rubric / probes; precision = fair / attached. Thresholds: {'bm25': 10.0, 'dense': 0.5746, 'hybrid': 0.0284, 'dense_floor': 0.7}.
+Generated 2026-09-06T03:45:15 by `experiments/grounding/grounding_r4.py --score` --run grown. Probes: 77 resume-only mock probes (`experiments/grounding/grounding_probes_resume_only.jsonl`). Labels: Claude (assistant), blind to policy attachment, at the author's request; 156 of 237 pair labels reused verbatim from the first run, 81 new. Rule R4 (frozen in docs/plan.md §1.9): precision ≥ 90% at coverage ≥ 40%; coverage = probes receiving a fair rubric / probes; precision = fair / attached. Thresholds: {'bm25': 10.0, 'dense': 0.5746, 'hybrid': 0.0284, 'dense_floor': 0.7}.
 
 ## Bank set `all` (rag_ml, rag_ai, rag_exp, rag_lists, rag_docs)
 
@@ -88,7 +88,7 @@ Fair/attached by level:
 
 ## Author spot-check
 
-Generated 2026-09-08T00:58:13 by `grader/grounding_r4.py --spotcheck-apply` --run grown. Sample: 40 of 237 labeled pairs (seed 7), stratified by the assistant's label (20 unfair, 20 fair) and spread over banks and policies; reviewed by author on `data/review/grounding_r4_spotcheck_grown.html` with the assistant's label and reason shown and pre-selected on every pair (a review, not a blind check; bank and policy hidden): 40 of 40 decided pairs were explicitly confirmed or changed, 0 left at the prefilled label. Decided: 40/40.
+Generated 2026-09-08T00:58:13 by `experiments/grounding/grounding_r4.py --spotcheck-apply` --run grown. Sample: 40 of 237 labeled pairs (seed 7), stratified by the assistant's label (20 unfair, 20 fair) and spread over banks and policies; reviewed by author on `data/review/grounding_r4_spotcheck_grown.html` with the assistant's label and reason shown and pre-selected on every pair (a review, not a blind check; bank and policy hidden): 40 of 40 decided pairs were explicitly confirmed or changed, 0 left at the prefilled label. Decided: 40/40.
 
 | Measure | Value |
 |---|---|
@@ -110,4 +110,4 @@ Generated 2026-09-08T00:58:13 by `grader/grounding_r4.py --spotcheck-apply` --ru
 
 Disagreements (assistant → author): `ds|Senior|probe_2` × `18_logistic_regression_predict__11_other_imbalance_methods` fair → unfair (The probe asks candidates to defend a specific ablation and the resulting choice. The chunk tests general imbalance techniques and a leakage precaution.).
 
-Source: `grader/grounding_r4_spotcheck_grown.json`.
+Source: `experiments/grounding/grounding_r4_spotcheck_grown.json`.

@@ -14,28 +14,24 @@ COPY requirements.txt requirements-voice-cloud.txt requirements-db.txt ./
 RUN pip install --no-cache-dir -r requirements.txt -r requirements-voice-cloud.txt \
     -r requirements-db.txt
 
-# Runtime files only - training scripts, datasets, and gold labels stay out.
-# Top-level modules the runtime imports: retrieval (BM25), retrieval_dense
-# (hybrid BM25 + bge-small, coach/kb.py), resume_parser (/api/mock/parse_file).
-COPY server.py retrieval.py retrieval_dense.py resume_parser.py ./
+# Runtime files only - experiments, datasets, and gold labels stay out.
+# coach/ is the whole runtime: the retrievers, the resume parser, the
+# distilled grader's features, and coach/assets/ (the grader artifact plus the
+# lexicon and failure rates the voice keyterm policy reads).
+COPY server.py ./
 COPY coach/ coach/
 # The migration tool, so an existing data/ volume can be imported into the
 # Postgres store from inside the container (docker-compose.db.yml).
 COPY tools/migrate_to_postgres.py tools/
-# grader/: the distilled grader artifact plus the two modules the runtime
-# imports (features.py so the artifact unpickles; stt_text.py for the voice
-# keyterm policy) and the two inputs that policy reads (coach/voice/keyterms.py).
-COPY grader/__init__.py grader/features.py grader/stt_text.py grader/model.joblib \
-     grader/stt_lexicon.json grader/stt_failure_rates.json grader/
 # Question banks. rag_exp is PRIVATE and is never copied (the infra plan
 # mounts it). rag_lists and rag_docs are generated locally and gitignored,
 # so a CI checkout has only their README: the wildcard beside it lets the
 # build succeed either way (BuildKit rejects a wildcard that matches nothing
 # on its own) and the server skips a missing bank with a warning at startup.
-COPY rag_ml/all_chunks.jsonl rag_ml/
-COPY rag_ai/all_chunks.jsonl rag_ai/
-COPY rag_lists/README.md rag_lists/all_chunks.jsonl* rag_lists/
-COPY rag_docs/README.md rag_docs/all_chunks.jsonl* rag_docs/
+COPY banks/rag_ml/all_chunks.jsonl banks/rag_ml/
+COPY banks/rag_ai/all_chunks.jsonl banks/rag_ai/
+COPY banks/rag_lists/README.md banks/rag_lists/all_chunks.jsonl* banks/rag_lists/
+COPY banks/rag_docs/README.md banks/rag_docs/all_chunks.jsonl* banks/rag_docs/
 # The backend can also serve the static frontend, so this image works standalone;
 # behind the nginx frontend service these files are simply never requested.
 COPY public/ public/

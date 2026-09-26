@@ -124,7 +124,7 @@ render();
 
 
 def bank_path(name):
-    path = BASE_DIR / name / "all_chunks.jsonl"
+    path = BASE_DIR / "banks" / name / "all_chunks.jsonl"
     if not path.exists():
         sys.exit(f"no bank at {path}")
     return path

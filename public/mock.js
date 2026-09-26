@@ -134,7 +134,7 @@ function authHeaders() {
 }
 
 // Resume/JD file upload: the file is parsed server-side into plain text
-// (resume_parser.py; nothing stored) and fills the textarea, which stays
+// (coach/resume_parser.py; nothing stored) and fills the textarea, which stays
 // the single source of truth for what the interview actually uses.
 async function parseUpload(fileInput, textarea, status) {
   const file = fileInput.files && fileInput.files[0];

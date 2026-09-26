@@ -1,4 +1,4 @@
-"""Offline tests for the primary-documentation ingest (grader/ingest_docs.py).
+"""Offline tests for the primary-documentation ingest (ingest/ingest_docs.py).
 
 Run:  .venv\\Scripts\\python tests\\test_ingest_docs.py
 
@@ -13,7 +13,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from grader import ingest_docs as idoc  # noqa: E402
+from ingest import ingest_docs as idoc  # noqa: E402
 
 RST = """.. _tuning:
 

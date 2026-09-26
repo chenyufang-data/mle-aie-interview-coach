@@ -66,7 +66,7 @@ def handle_get(handler, path):
 def handle_post(handler, path, data):
     if path == "/api/mock/parse_file":
         # Resume/JD upload -> plain text. Deterministic and entirely local
-        # (resume_parser.py: pypdf for .pdf, stdlib for .docx/.txt/.md), so
+        # (coach/resume_parser.py: pypdf for .pdf, stdlib for .docx/.txt/.md), so
         # it is served before the engine gate - no tier or LLM needed, and
         # nothing is stored.
         _parse_file(handler, data)
@@ -239,7 +239,7 @@ def _parse_file(handler, data):
         return
     import base64
 
-    from resume_parser import extract_text_from_bytes
+    from coach.resume_parser import extract_text_from_bytes
     try:
         text = extract_text_from_bytes(base64.b64decode(file_b64), name)
     except ValueError as exc:

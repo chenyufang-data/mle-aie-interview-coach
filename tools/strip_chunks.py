@@ -9,7 +9,7 @@ same chunks with those fields removed: the `interview` block (question,
 model answer, key points, common mistakes, follow-ups) and the retrieval
 metadata (module, topic, tags, difficulty) are all the app, the retriever,
 the grader, and the tests need. Only training-data generation
-(`grader/generate_answers.py`, the content_extract tier) reads `content`,
+(`experiments/distill/generate_answers.py`, the content_extract tier) reads `content`,
 and it takes the private directory via `RAG_FULL_DIR`.
 
 The same function is used by the git-history rewrite that created the
@@ -51,7 +51,7 @@ def main():
     private = Path(sys.argv[1])
     for bank in BANKS:
         src = private / bank / "all_chunks.jsonl"
-        dst = BASE_DIR / bank / "all_chunks.jsonl"
+        dst = BASE_DIR / "banks" / bank / "all_chunks.jsonl"
         if not src.exists():
             print(f"missing {src}")
             return 1

@@ -12,6 +12,16 @@
 > stratified 40-pair sample on 2026-09-08 and agreed on 39 (Cohen's kappa
 > 0.95, see 1.9). Cell sizes are small everywhere (23 to 121 items), so
 > differences under about ten points are direction, not ranking.
+>
+> Paths follow the layout of 2026-09-26: the runtime is `coach/` (the
+> former root modules `retrieval.py`, `retrieval_dense.py`,
+> `resume_parser.py` and the former `grader/features.py`, `grader/stt_text.py`
+> moved in; the grader artifact is `coach/assets/grader_model.joblib`), the
+> banks are under `banks/`, the bank builders under `ingest/`, and the rest
+> of `grader/` is `experiments/<study>/`. Entries written before that date
+> have their paths rewritten to match; results files keep the script path
+> they were generated with. The private checkout keeps its own layout
+> (`grader/dataset.jsonl`, banks at its root).
 
 ---
 
@@ -27,9 +37,9 @@ the free tier and `--mock` mode grade offline.
 
 | Measurement | Result | Source |
 | --- | --- | --- |
-| Distilled grader vs Claude teacher, 121 held-out gold rows (split grouped by question, seed 42) | MAE 1.11, 70% within ±1, QWK 0.784 (keyword baseline 2.05 / 45% / 0.574) | README only; labels in `grader/labels_teacher.jsonl` (598 rows) |
-| Per-key-point classifier, 601 held-out points | 78% accuracy, macro-F1 0.67, hit-F1 0.87 (lexical threshold 70% / 0.62 / 0.76) | README only; labels in `grader/labels_keypoints.jsonl` |
-| DeepSeek Flash as judge vs teacher | MAE 0.59, 94% within ±1, QWK 0.93; regrade consistency 17/30 exact | raw rows `grader/judge_agreement_results.jsonl`, summary README only |
+| Distilled grader vs Claude teacher, 121 held-out gold rows (split grouped by question, seed 42) | MAE 1.11, 70% within ±1, QWK 0.784 (keyword baseline 2.05 / 45% / 0.574) | README only; labels in `experiments/distill/labels_teacher.jsonl` (598 rows) |
+| Per-key-point classifier, 601 held-out points | 78% accuracy, macro-F1 0.67, hit-F1 0.87 (lexical threshold 70% / 0.62 / 0.76) | README only; labels in `experiments/distill/labels_keypoints.jsonl` |
+| DeepSeek Flash as judge vs teacher | MAE 0.59, 94% within ±1, QWK 0.93; regrade consistency 17/30 exact | raw rows `experiments/distill/judge_agreement_results.jsonl`, summary README only |
 | Cascade rule (local grader answers when confident) | 12% of evaluations local at 100% within ±1 | README only |
 
 Cost of the labels: about $8 for the per-key-point pass. The training
@@ -51,7 +61,7 @@ keyterm prompting to local faster-whisper on the RTX 5080. Pre-registered
 rule: ship the cheapest condition with ≤ 5% of grades moved ≥ 1 point and
 ≤ 3% lenient term error rate on the human set.
 
-**Result** (`grader/stt_eval_results.json`, rendered in
+**Result** (`experiments/speech/stt_eval_results.json`, rendered in
 `docs/stt_evaluation.md`, human set):
 
 | Condition | WER | Term error, lenient | Grades moved ≥ 1 (raw / normalised) |
@@ -84,7 +94,7 @@ transcript.
 
 | Measurement | Result | Source |
 | --- | --- | --- |
-| Report consistency, same session regraded (5 sessions × 6 dimensions × 2) | Claude 73.3% exact, MAE 0.3; Flash 43.3%, MAE 0.8; hiring call stable for both (all "no hire", so uninformative) | `grader/report_consistency_results.json` (~$1.50) |
+| Report consistency, same session regraded (5 sessions × 6 dimensions × 2) | Claude 73.3% exact, MAE 0.3; Flash 43.3%, MAE 0.8; hiring call stable for both (all "no hire", so uninformative) | `experiments/mock/report_consistency_results.json` (~$1.50) |
 | Rubric grounding on the first live plan | 7/7 probes matched bank chunks at BM25 12.8 to 19.7 | plan notebook |
 
 Decision: DeepSeek Flash runs the turns, Claude writes the report when a
@@ -100,9 +110,9 @@ backends behind one switch: local (faster-whisper + Kokoro), ElevenLabs
 recorded and re-transcribed after the session with the full lexicon, so
 the report grades the final transcript and shows what the live one lost.
 
-Equivalence harness (`grader/loop_eval.py`): the 20 real Phase 0 answers
+Equivalence harness (`experiments/speech/loop_eval.py`): the 20 real Phase 0 answers
 replayed against a deterministic interviewer, so only the audio path
-varies (`grader/loop_eval_results.json`):
+varies (`experiments/speech/loop_eval_results.json`):
 
 | Backend | WER | Term error, lenient | First audio p50 / p95 | Grades moved |
 | --- | ---: | ---: | ---: | ---: |
@@ -129,7 +139,7 @@ preference test rides on that session and is likewise unrun.
 
 Content-hash cache of role and plan results (`coach/mock/plan_cache.py`);
 opt-in session logging (default off; resumes are personal data); prompt
-caching measured (`grader/cache_check_results.json`): the second Claude
+caching measured (`experiments/mock/cache_check_results.json`): the second Claude
 turn read 1,123 tokens from cache and paid full price on 374, about
 −75% turn input; DeepSeek's automatic cache hit 512 prefix tokens. Found
 live and fixed: `temperature` returns 400 on current Claude models. Missed
@@ -140,7 +150,7 @@ probes in the report link to "practice this exact question"
 
 Hand-collected interview experience posts (local-only spreadsheets that
 name third parties; never committed anywhere) go through
-`grader/ingest_questions.py`: dedupe, translate, rubric by the Claude
+`ingest/ingest_questions.py`: dedupe, translate, rubric by the Claude
 teacher. 57 chunks for $1.77; the bank is private (loader warn-skips when
 absent); the mock grounds only on technical, experience and system-design
 rounds. Retrieval suite stayed 23/23 with the third bank loaded.
@@ -164,7 +174,7 @@ fairness.
   no loss of hand-labeled precision.
 - R3 (the store): no shipping rule; report Chroma's overhead honestly.
 
-**Results** (`grader/retrieval_eval_results.json`, rendered in
+**Results** (`experiments/retrieval/retrieval_eval_results.json`, rendered in
 `docs/retrieval_evaluation.md`; current run on the grown banks):
 
 | Arm | Set A Recall@5 / MRR | Set B Recall@5 | p95 | R1 |
@@ -175,14 +185,14 @@ fairness.
 
 The first run (2026-09-04, before bank growth) was 41 / 47 / 49 of 61;
 growth raised every arm by one to three hits. Hybrid serves the practice
-track (`retrieval_dense.py`, `coach/kb.py`); BM25 is the fallback when
+track (`coach/retrieval_dense.py`, `coach/kb.py`); BM25 is the fallback when
 the model is missing. Memory grows by about 200 MB with the model loaded.
 
 - **R2 failed for a reason the plan did not expect.** Probe queries are
   long resume sentences, so BM25 already attaches a rubric to 77/77
   probes; coverage cannot rise. The real problem is precision of what is
   attached: BM25 55.8%, hybrid 61.0%, dense 64.9% on assistant labels
-  (`grader/grounding_eval_results.json`). Grounding stayed on BM25.
+  (`experiments/grounding/grounding_eval_results.json`). Grounding stayed on BM25.
 - **R3 not earned**, as predicted: Chroma returned the identical top-5 on
   84/84 queries, +0.75 ms p95, 5.6 MB on disk vs 1.2 MB for the numpy
   array. No vector database.
@@ -230,7 +240,7 @@ pairs with the assistant's reasons shown (2026-09-08): 39/40 agreement,
 Cohen's kappa 0.95, one fair-to-unfair change where a technique-list chunk
 had been attached to a decision probe (`docs/grounding_r4_grown.md`,
 "Author spot-check"); the standard is
-recorded in `grader/grounding_r4_labels*.json`.
+recorded in `experiments/grounding/grounding_r4_labels*.json`.
 
 | Policy, all banks | First run (204 pairs): fair / attached | After growth (237 pairs): fair / attached |
 | --- | --- | --- |
@@ -240,7 +250,7 @@ recorded in `grader/grounding_r4_labels*.json`.
 | hybrid | 24/77 (31.2%) | 26/77 (33.8%) |
 | probes with any fair candidate | 48/77 | 50/77 |
 
-Sources: `grader/grounding_r4_results.json`, `grader/grounding_r4_results_grown.json`;
+Sources: `experiments/grounding/grounding_r4_results.json`, `experiments/grounding/grounding_r4_results_grown.json`;
 reports `docs/grounding_r4.md`, `docs/grounding_r4_grown.md`. Every
 prediction written before the run was wrong (agree was predicted to pass;
 the grown AIE bank was predicted to lift AIE fairness above 60%, it
@@ -352,7 +362,7 @@ dropped on 2026-09-08 in favour of live voice on the box: a visitor can
 try it rather than watch it.)
 
 **Status 2026-09-07 (evening).** Done and pushed: the push itself (all
-prior commits on origin); the results files (`grader/train_results.json`,
+prior commits on origin); the results files (`experiments/distill/train_results.json`,
 `cascade_results.json`, `judge_agreement_summary.json` — the shipped
 artifact reproduces the README numbers exactly), `tools/render_readme.py`
 with the eight marker blocks and its CI check, and the nine stale items;
@@ -423,38 +433,38 @@ hold on the 20 real recordings, and the domain's renewal price.
    repo is already current.
 2. *Results files for the grader claims* (the only numbers a reader cannot
    recompute today).
-   - `grader/train.py` writes `grader/train_results.json` (dataset and
+   - `experiments/distill/train.py` writes `experiments/distill/train_results.json` (dataset and
      split sizes, per-model MAE / within ±1 / Spearman / QWK, key-point
      classifier metrics, timestamp, sklearn version) and stops
-     overwriting `grader/model.joblib` unless `--save` is passed. It must
+     overwriting `coach/assets/grader_model.joblib` unless `--save` is passed. It must
      run from the private checkout because `dataset.jsonl` lives there;
      the JSON holds numbers only and is copied to the public repo.
-   - `grader/judge_agreement.py --report` writes
-     `grader/judge_agreement_summary.json` from the committed raw rows
+   - `experiments/distill/judge_agreement.py --report` writes
+     `experiments/distill/judge_agreement_summary.json` from the committed raw rows
      (no API spend).
-   - `grader/cascade_analysis.py` writes `grader/cascade_results.json`
+   - `experiments/distill/cascade_analysis.py` writes `experiments/distill/cascade_results.json`
      (also private-checkout input).
    - `tools/render_readme.py` rewrites the README tables between marker
      comments from these files plus `retrieval_eval_results.json`,
      `loop_eval_results.json` and `stt_eval_results.json`; the CI workflow
      runs it with `--check` and fails on drift. Fix the nine stale items
-     from the report in the same pass (set B table, `rag_ai/README.md`,
+     from the report in the same pass (set B table, `banks/rag_ai/README.md`,
      `docs/backend.md`, module count, Python version, spec counts, the
      two dense thresholds, the TER range, the STT decision string).
    - Author spot-check of 40 stratified R4 pairs on
      `data/review/grounding_r4_grown.html`, with the agreement number
      written into `docs/grounding_r4_grown.md`. One hour; it turns
      "assistant labels" into "assistant labels, author agreement N%".
-     Commands: `grader/grounding_r4.py --spotcheck --run grown` draws the
+     Commands: `experiments/grounding/grounding_r4.py --spotcheck --run grown` draws the
      blind sample page (`data/review/grounding_r4_spotcheck_grown.html`),
-     and `grader/grounding_r4.py --spotcheck-apply PATH --run grown`
+     and `experiments/grounding/grounding_r4.py --spotcheck-apply PATH --run grown`
      scores the exported decisions and writes the section. The author
      chose `--prefill` (2026-09-08): the page shows the assistant's label
      and reason on every pair for confirmation or change, so the report
      will say "review, not blind" and count untouched pairs.
 3. *Complete the Docker image.* `docker/backend.Dockerfile` adds
-   `retrieval_dense.py`, `resume_parser.py`, `grader/stt_text.py` and
-   `grader/stt_lexicon.json`, the public `rag_lists` and `rag_docs`
+   `coach/retrieval_dense.py`, `coach/resume_parser.py`, `coach/stt_text.py` and
+   `coach/assets/stt_lexicon.json`, the public `rag_lists` and `rag_docs`
    banks, and the embedding model (bake `data/models/fastembed/` into the
    image, 127 MB, or persist it in the `coach-data` volume and let
    fastembed download on first start). `rag_exp` stays off the public demo
@@ -593,8 +603,8 @@ GPU.
 
 **Data.** Private `grader/dataset.jsonl` (3,866 rows: `answer`,
 `chunk_id`, `corpus`, `style`, `tier`, `row_id`; answers 58 words median,
-164 max) joined to `grader/labels_teacher.jsonl` (598 rows: overall 1 to
-10 plus four subscores) and `grader/labels_keypoints.jsonl` (per-key-point
+164 max) joined to `experiments/distill/labels_teacher.jsonl` (598 rows: overall 1 to
+10 plus four subscores) and `experiments/distill/labels_keypoints.jsonl` (per-key-point
 verdicts); the rubric (question, key points) comes from the private banks
 by `chunk_id`. Model input: question + key points + answer; output: the
 overall score, optionally subscores and verdicts as JSON. Split:
@@ -622,10 +632,10 @@ GPU wall-clock here and dollars per thousand answers at a cloud L4 price.
 1. Environment: install Ubuntu 24.04 under WSL2, enable GPU in Docker
    Desktop, install torch with CUDA 12.8-or-newer wheels, PEFT, TRL,
    transformers, evaluate; confirm the Blackwell card (sm_120) is seen.
-2. `grader/slm/prepare.py` builds the prompt records from the private
+2. `experiments/slm/prepare.py` builds the prompt records from the private
    files; `train.py` runs the arms with early stopping on a fold carved
    from the training side only; `eval.py` scores the held-out rows and
-   writes `grader/slm_results.json` (numbers only, public).
+   writes `experiments/slm/slm_results.json` (numbers only, public).
 3. Serve the best LoRA merged into the base with the `vllm/vllm-openai`
    image, measure latency, and add an `engine: "slm"` route behind an env
    var in `coach/grading.py` if the rule passes.
@@ -650,7 +660,7 @@ GPU wall-clock here and dollars per thousand answers at a cloud L4 price.
   split.
 
 **Prepare.** About 40 GB of disk for models and containers; the private
-checkout; a `grader/slm/` folder in the public repo with data paths
+checkout; a `experiments/slm/` folder in the public repo with data paths
 pointing at the private checkout; a Hugging Face account only if a gated
 model is chosen (the plan avoids one).
 
@@ -673,9 +683,9 @@ Desktop's WSL integration and a GPU container check followed the same
 evening; the author read the rule as written and told the assistant to run
 the step through without check-ins.
 
-**Result 2026-09-08 (evening), rule PASSED.** `grader/slm/` (protocol in
-its README; results in `grader/slm_results.json`, one run file per arm and
-seed under `grader/slm/runs/`). Five chunk-grouped seeds, gold rows, mean ±
+**Result 2026-09-08 (evening), rule PASSED.** `experiments/slm/` (protocol in
+its README; results in `experiments/slm/slm_results.json`, one run file per arm and
+seed under `experiments/slm/runs/`). Five chunk-grouped seeds, gold rows, mean ±
 sd: sklearn incumbent retrained per seed QWK 0.794 ± 0.022, MAE 1.08;
 DeBERTa-v3-base full fine-tune 0.792 ± 0.049, MAE 1.07 (level, noisier);
 Qwen3-1.7B-Base + LoRA 0.927 ± 0.010, MAE 0.58; Qwen3-4B-Base + LoRA
@@ -701,7 +711,7 @@ measured cost line, and the résumé line, which is the author's.
 **What differs between the arms (recorded 2026-09-09).** The four graders
 differ in kind, not only in size. The table is what each one is and how
 the experiment used it; the measured columns are from
-`grader/slm_results.json` (five seeds, mean ± sd on the gold rows).
+`experiments/slm/slm_results.json` (five seeds, mean ± sd on the gold rows).
 
 | | sklearn HGB | DeBERTa-v3-base | Qwen3-1.7B-Base | Qwen3-4B-Base |
 | --- | --- | --- | --- | --- |
@@ -765,8 +775,8 @@ honestly.
    workflow.
 4. `docker-compose.yml` gains a `db` service and volume; the demo box from
    step 1 switches over after a migration and a smoke test.
-5. `PgVectorRetriever` in `grader/dense_retrieval.py` and a `pgvector` arm
-   in `grader/retrieval_eval.py`. Rule: identical top-5 to the numpy arm
+5. `PgVectorRetriever` in `experiments/retrieval/dense_retrieval.py` and a `pgvector` arm
+   in `experiments/retrieval/retrieval_eval.py`. Rule: identical top-5 to the numpy arm
    on sets A and B and p95 ≤ 50 ms; ship it as the vector store only when
    `DATABASE_URL` is set and the rule passes. The numpy index stays the
    default for clones with no database.
@@ -811,8 +821,8 @@ the test job gets a `pgvector/pgvector:pg16` service and
 `tests/test_store.py` runs there; `docker-compose.db.yml` adds the `db`
 service (the base compose stays zero-service) and the container job runs
 the stack twice, files and Postgres. The pgvector arm
-(`PgVectorRetriever` in `retrieval_dense.py`, the `pgvector` arm and
-`R_PGVECTOR` in `grader/retrieval_eval.py`, harness re-run 2026-09-10):
+(`PgVectorRetriever` in `coach/retrieval_dense.py`, the `pgvector` arm and
+`R_PGVECTOR` in `experiments/retrieval/retrieval_eval.py`, harness re-run 2026-09-10):
 identical top-5 to the numpy arm on 23/23 A and 61/61 B queries, p95
 3.6 ms vs 2.1 ms (one round trip per query), 0.9 MB of table vs 1.3 MB
 of numpy — rule PASSED, so with the Postgres store on the hybrid's dense
@@ -891,7 +901,7 @@ days.
   figure is an estimate from the RTX 5080 throughput).
 - Re-measure the live loop's end-of-turn hold (`VOICE_HOLD_MS`, added
   2026-09-08 from one live session) on the 20 real Phase 0 recordings
-  with `grader/loop_eval.py`, so the README's cut-off rate is measured
+  with `experiments/speech/loop_eval.py`, so the README's cut-off rate is measured
   under the shipped rule rather than the silence-only one.
 - cyfang.org renews at $23.99 after the first year (bought 2026-09-08 at
   $4.99): turn auto-renew off or transfer before then.

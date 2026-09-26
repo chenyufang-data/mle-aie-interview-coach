@@ -1,4 +1,4 @@
-"""Offline tests for the rag_exp ingest (grader/ingest_questions.py).
+"""Offline tests for the rag_exp ingest (ingest/ingest_questions.py).
 
 Run:  .venv\\Scripts\\python tests\\test_ingest.py
 
@@ -12,7 +12,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from grader.ingest_questions import (  # noqa: E402
+from ingest.ingest_questions import (  # noqa: E402
     build_chunk, classify, merge_by_intent, merge_duplicates,
     split_record_cell, too_vague,
 )
@@ -131,7 +131,7 @@ def test_build_chunk():
     }
     chunk = build_chunk(cand, rubric)
     assert chunk["id"] == "exp_001_example"
-    # The exact interview/metadata fields coach.kb and retrieval.py rely on.
+    # The exact interview/metadata fields coach.kb and coach/retrieval.py rely on.
     assert set(chunk["interview"]) == {"question", "model_answer", "key_points",
                                       "common_mistakes", "followups"}
     for key in ("module", "topic", "tags", "difficulty"):

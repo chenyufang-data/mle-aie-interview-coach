@@ -2,11 +2,11 @@
 
 Run:  .venv\\Scripts\\python tests\\test_grader.py
 
-Loads grader/model.joblib and checks basic ordering invariants on a few
+Loads coach/assets/grader_model.joblib and checks basic ordering invariants on a few
 chunks: the reference answer must outscore an off-topic answer and a vague
 answer, and every prediction must clamp into 1..10. These are cheap
 guardrails against a broken artifact, not an accuracy benchmark - accuracy
-numbers come from grader/train.py's held-out split.
+numbers come from experiments/distill/train.py's held-out split.
 """
 
 import json
@@ -19,9 +19,9 @@ sys.path.insert(0, str(BASE_DIR))
 
 import joblib
 
-from grader import features  # noqa: F401  (unpickling needs FeatureExtractor importable)
+from coach import features  # noqa: F401  (unpickling needs FeatureExtractor importable)
 
-ARTIFACT_PATH = BASE_DIR / "grader" / "model.joblib"
+ARTIFACT_PATH = BASE_DIR / "coach" / "assets" / "grader_model.joblib"
 SAMPLES = 8
 VAGUE = ("Good question. I would follow best practices, try a few standard "
          "approaches, and evaluate carefully. It depends on the data.")
@@ -29,14 +29,14 @@ VAGUE = ("Good question. I would follow best practices, try a few standard "
 
 def main():
     if not ARTIFACT_PATH.exists():
-        print("No grader artifact - run grader\\generate_answers.py then grader\\train.py.")
+        print("No grader artifact - run experiments\\distill\\generate_answers.py then experiments\\distill\\train.py.")
         return 1
     artifact = joblib.load(ARTIFACT_PATH)
     extractor, model = artifact["extractor"], artifact["model"]
 
     chunks = []
     for folder in ("rag_ml", "rag_ai"):
-        with (BASE_DIR / folder / "all_chunks.jsonl").open(encoding="utf-8") as handle:
+        with (BASE_DIR / "banks" / folder / "all_chunks.jsonl").open(encoding="utf-8") as handle:
             chunks.extend(json.loads(line) for line in handle if line.strip())
 
     rng = random.Random(7)

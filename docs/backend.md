@@ -1,9 +1,9 @@
 # Backend requirements
 
-Scope: `server.py` + the `coach/` package, `retrieval.py`, the `grader/`
-package, and the two question
-banks (`rag_ml/`, `rag_ai/`, plus the optional `rag_exp/`, `rag_lists/` and
-`rag_docs/` tracks when their files are present). The backend owns all data,
+Scope: `server.py` + the `coach/` package (which holds the retrievers, the
+resume parser, the grader's features and `coach/assets/`), and the question
+banks (`banks/rag_ml/`, `banks/rag_ai/`, plus the optional `banks/rag_exp/`, `banks/rag_lists/` and
+`banks/rag_docs/` tracks when their files are present). The backend owns all data,
 retrieval, AI calls, and
 grading. It knows nothing about presentation.
 
@@ -18,7 +18,7 @@ grading. It knows nothing about presentation.
     Optional: `ANTHROPIC_MODEL` (default `claude-opus-4-8`), `PORT` (default 8000).
   - **`--ollama [model]`**: a local [Ollama](https://ollama.com) install with the
     chosen model pulled. No API key.
-  - **`--mock`**: nothing — fully offline. Uses `grader/model.joblib` (the trained
+  - **`--mock`**: nothing — fully offline. Uses `coach/assets/grader_model.joblib` (the trained
     local grader) if present, keyword rubric matching otherwise.
 - Environment overrides: `PORT` (default `8000`), `HOST` (default `127.0.0.1`;
   set to `0.0.0.0` inside a container), `REAL_SESSIONS_PATH` /
@@ -51,7 +51,7 @@ grading. It knows nothing about presentation.
 - Paid-tier judge routing: with `DEEPSEEK_API_KEY` in `.env` (optional
   `DEEPSEEK_MODEL`, default `deepseek-v4-flash`), paid evaluations and
   question generation default to DeepSeek Flash, **quota-free** — the judge
-  is measured, not assumed (`grader/judge_agreement.py`: 94% within-±1,
+  is measured, not assumed (`experiments/distill/judge_agreement.py`: 94% within-±1,
   QWK 0.93 vs the Claude teacher on the 121 held-out gold rows). Claude
   serves `"force_llm": true` ("Always Claude") requests, capped at
   `PAID_DAILY_QUOTA` calls per day (state in `data/usage.json`); an
@@ -63,7 +63,7 @@ grading. It knows nothing about presentation.
 - Smart cascade (`PAID_CASCADE`, default on): paid evaluations of rubric
   questions first ask the distilled model; when it is confident by the
   measured rule (predicted <= 2.5 AND `kp_frac_hit` <= 0.25 — see
-  `grader/cascade_analysis.py`, 100% within-±1 on gold rows), the local
+  `experiments/distill/cascade_analysis.py`, 100% within-±1 on gold rows), the local
   result is served and **no quota is taken**. `"force_llm": true` in the
   request body opts out. Follow-ups and non-KB questions never cascade.
 - Docker: `docker/backend.Dockerfile` packages exactly this scope — server,
@@ -96,7 +96,7 @@ Convention: startup-reassigned globals (`config.MODE`, `users.TIERS_ENABLED`,
   them, and expose module lists via `GET /api/meta` so the frontend stays
   corpus-agnostic.
 - Question selection: metadata filtering (module + difficulty-by-level) plus BM25
-  ranking (`retrieval.py`) over the requested track's bank, honouring the
+  ranking (`coach/retrieval.py`) over the requested track's bank, honouring the
   session's `exclude` list; or Claude-generated questions for general topics.
 - Evaluation: grade against the chunk's rubric (model answer, key points, common
   mistakes) with structured outputs; grade follow-ups with the parent question,
@@ -104,10 +104,10 @@ Convention: startup-reassigned globals (`config.MODE`, `users.TIERS_ENABLED`,
   checklist). In `--mock` mode, predict with the distilled local grader; its
   hit/miss rubric feedback uses a per-key-point classifier distilled from
   teacher hit/partial/miss verdicts when the artifact carries one
-  (`grader/label_keypoints.py` + `train.py`), with the 0.35 lexical threshold
+  (`experiments/distill/label_keypoints.py` + `train.py`), with the 0.35 lexical threshold
   as fallback.
 - Log every real (non-mock) graded session to `data/sessions/real_sessions.jsonl` —
-  these Claude-vs-local gold pairs feed `grader/evaluate_on_real.py`. Logging
+  these Claude-vs-local gold pairs feed `experiments/distill/evaluate_on_real.py`. Logging
   must never break the response (best-effort, wrapped in try/except).
 - Answer collection is disclosed and opt-out-able: the answer page shows a
   notice, and any key in `users.json` can set `"log": false` to be excluded
@@ -202,7 +202,7 @@ non-empty), `timeUsed`, and — when applicable — `chunk_id`, `source`
 Response (structured-output schema, enforced server-side; `graded_by` names
 the engine's model — e.g. `deepseek-v4-flash`, the Claude model id, or a
 `local ...` label — and drives the "Graded by" chip in the frontend; it also
-lands in the session log, where `grader/evaluate_on_real.py` keeps only
+lands in the session log, where `experiments/distill/evaluate_on_real.py` keeps only
 Claude-graded rows as gold pairs):
 
 ```json
@@ -270,7 +270,7 @@ and `--mock` mode serves a deterministic offline demo engine (also what
 - `POST /api/mock/keyterms` `{resume?, role?, project?}` → `{keyterms}`:
   the ≤ 50 realtime STT keyterms for this session, chosen deterministically
   by the measured §7a policy (failure rates from
-  `grader/stt_failure_rates.json` + presence in the session's own material
+  `coach/assets/stt_failure_rates.json` + presence in the session's own material
   + rarity; the policy measured 9.7% vs naive-50's 11.7% lenient TER).
 - `POST /api/mock/transcribe` `{audio_base64, mime}` → `{text, engine,
   seconds}`: final-transcript re-transcription of one recorded answer clip
@@ -318,7 +318,7 @@ SDK 2.65 types, plan §10).
 ### Developer routes: `/api/stt/*` (localhost only)
 
 Used by `public/stt_record.html` to record the Phase 0 STT test set
-(`grader/stt_sentences.jsonl`). They answer only loopback clients — behind
+(`experiments/speech/stt_sentences.jsonl`). They answer only loopback clients — behind
 nginx in Docker every request arrives from the proxy and gets 403 — because
 they write under `data/stt_audio/human/` (override the root with
 `STT_AUDIO_DIR`).

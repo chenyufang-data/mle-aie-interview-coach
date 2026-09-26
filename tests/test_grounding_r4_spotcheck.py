@@ -1,4 +1,4 @@
-"""Offline tests for the R4 author spot-check (grader/grounding_r4.py
+"""Offline tests for the R4 author spot-check (experiments/grounding/grounding_r4.py
 --spotcheck / --spotcheck-apply) on a synthetic pool in a temp directory.
 
 Run:  .venv\\Scripts\\python tests\\test_grounding_r4_spotcheck.py
@@ -15,7 +15,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from grader import grounding_r4 as r4  # noqa: E402
+from experiments.grounding import grounding_r4 as r4  # noqa: E402
 
 BANKS = ["ml", "ai", "exp", "lists", "docs"]
 SETS = ["all", "no_lists"]

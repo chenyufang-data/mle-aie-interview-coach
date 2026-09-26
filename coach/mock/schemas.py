@@ -2,7 +2,7 @@
 
 Every object level carries "additionalProperties": false — the Anthropic
 structured-outputs API rejects the schema with a 400 otherwise (verified in
-grader/label_keypoints.py's first run).
+experiments/distill/label_keypoints.py's first run).
 """
 
 

@@ -13,7 +13,7 @@ is the worst possible interviewer behaviour (plan section 3) - so the turn
 timeout is long, and the live loop sets end_silence_ms to the measured
 VOICE_END_SILENCE_MS default of 2000 (1.2 s cut 50% of the real Phase 0
 answers mid-thought, 1.8 s cut 15%, 2.0 s cuts 5% - see coach/voice/loop.py
-and grader/loop_eval.py). Barge-in is not a separate mechanism: the loop
+and experiments/speech/loop_eval.py). Barge-in is not a separate mechanism: the loop
 watches for speech_start while the agent is speaking. Silence alone still
 cuts a thinking pause mid-sentence (the author's first live session on
 the demo box, 2026-09-08: a 2-3 s pause to think, and the interviewer

@@ -6,7 +6,7 @@ scikit-learn>=1.4
 # Resume parsing (PDF); .docx is parsed with the standard library.
 pypdf>=4.0
 
-# Hybrid retrieval (BM25 + bge-small embeddings, retrieval_dense.py). Shipped
+# Hybrid retrieval (BM25 + bge-small embeddings, coach/retrieval_dense.py). Shipped
 # 2026-09-04 after the pre-registered rule in docs/plan.md
 # passed (docs/retrieval_evaluation.md): +13 points Recall@5 on paraphrased
 # queries, no regression on curated ones. ONNX on CPU, no torch; the ~127 MB

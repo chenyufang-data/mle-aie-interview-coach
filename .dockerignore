@@ -21,9 +21,11 @@ suggestion.md
 *.docx
 *.log
 
-# Training-only artifacts — not needed at runtime, keep the build context small.
-grader/dataset.jsonl
-grader/labels_teacher.jsonl
+# Experiments and the bank builders are not runtime; the private bank never
+# enters the build context at all.
+experiments
+ingest
+banks/rag_exp
 
 # Repo housekeeping.
 docs

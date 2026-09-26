@@ -11,7 +11,7 @@ from coach.llm import engine_model
 def log_real_session(data, result, user=None, engine=None):
     """Persist a real graded exchange. Never breaks a response.
 
-    graded_by matters downstream: grader/evaluate_on_real.py keeps only
+    graded_by matters downstream: experiments/distill/evaluate_on_real.py keeps only
     "claude" rows as gold pairs, so DeepSeek-graded sessions never leak into
     the teacher-agreement evaluation.
     """

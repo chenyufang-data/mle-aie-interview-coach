@@ -1,4 +1,4 @@
-# Extra dependencies for the Phase 0 STT experiment (grader/stt_eval.py) and
+# Extra dependencies for the Phase 0 STT experiment (experiments/speech/stt_eval.py) and
 # the voice loop's local audio stack (coach/voice, Levels 2-3). Not needed
 # by the text-mode app and not installed in the Docker image:
 #   pip install -r requirements-stt.txt

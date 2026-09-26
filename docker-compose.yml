@@ -21,7 +21,7 @@ services:
       USAGE_PATH: /data/usage.json
       # The bge-small embedding model (~127 MB, downloaded once) and the
       # document-vector cache live on the volume, so an image rebuild never
-      # re-downloads or re-embeds (retrieval_dense.py reads both).
+      # re-downloads or re-embeds (coach/retrieval_dense.py reads both).
       FASTEMBED_CACHE_DIR: /data/models/fastembed
       RETRIEVAL_INDEX_DIR: /data/index
       # Silero VAD for the live voice loop (2.3 MB, downloaded once) - the
