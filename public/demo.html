@@ -36,10 +36,8 @@
           </div>
         </div>
 
-        <!-- Browsers only autoplay muted video; the captions are burned in,
-             so it reads without sound and the controls unmute it. -->
-        <video class="demo-video" controls autoplay muted playsinline
-               preload="auto" poster="/demo_poster.jpg">
+        <video class="demo-video" controls playsinline preload="metadata"
+               poster="/demo_poster.jpg">
           <source src="/demo.mp4" type="video/mp4">
           Your browser cannot play this video. <a href="/demo.mp4">Download the MP4</a>.
         </video>
@@ -55,8 +53,7 @@
           <a class="secondary-action" href="https://github.com/chenyufang-data/mle-aie-interview-coach">Code and experiments on GitHub</a>
         </div>
 
-        <p class="demo-note">It starts muted with captions; unmute in the player
-          for the narration. The mock
+        <p class="demo-note">Captions are burned in, so it works muted. The mock
           interview on the live site needs a demo key; practice questions and
           local grading do not.</p>
       </section>
