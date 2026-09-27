@@ -262,6 +262,22 @@ h3 {
   background: var(--green-dark);
 }
 
+/* Home page: the link to the 2-minute demo video (demo.html). */
+.demo-link {
+  display: inline-block;
+  margin: -8px 0 22px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--green);
+  text-decoration: none;
+}
+
+.demo-link:hover,
+.demo-link:focus-visible {
+  color: var(--green-dark);
+  text-decoration: underline;
+}
+
 .mock-banner .eyebrow {
   color: #ffffff;
 }
