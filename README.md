@@ -2,6 +2,14 @@
 
 [![tests](https://github.com/chenyufang-data/mle-aie-interview-coach/actions/workflows/tests.yml/badge.svg)](https://github.com/chenyufang-data/mle-aie-interview-coach/actions/workflows/tests.yml)
 
+<p align="center">
+  <a href="https://coach.cyfang.org/demo.html">
+    <img src="docs/img/demo.gif" width="800" alt="Mock interview: a question from the résumé, a pasted answer, the interviewer's follow-up, and the scored report">
+  </a>
+  <br>
+  <sub><a href="https://coach.cyfang.org/demo.html">Watch the 2-minute demo with sound</a> · captions burned in</sub>
+</p>
+
 **Live demo: [coach.cyfang.org](https://coach.cyfang.org)** — practice
 questions and instant local grading need no key; the AI mock interview and
 the live voice mock run on a demo key (ask me for it) under daily budgets,

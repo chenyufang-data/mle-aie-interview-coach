@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Demo · MLE/AIE Interview Coach</title>
+    <meta name="description" content="A two-minute demo of the MLE/AIE Interview Coach: a résumé-driven mock interview with rubric-based feedback, and the measurements behind it.">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@700;800&family=JetBrains+Mono:wght@600&display=swap">
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+      .demo-shell { width: min(1000px, calc(100vw - 32px)); margin: 32px auto; }
+      .demo-page { display: grid; gap: 20px; }
+      .demo-video {
+        display: block;
+        width: 100%;
+        height: auto;
+        aspect-ratio: 16 / 9;
+        background: #0f1a17;
+        border-radius: 10px;
+        border: 1px solid var(--line);
+      }
+      .demo-lede { margin: 0; color: var(--muted); line-height: 1.55; max-width: 62ch; }
+      .demo-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+      .demo-actions a { text-decoration: none; display: inline-flex; align-items: center; }
+      .demo-note { margin: 0; font-size: 13px; color: var(--muted); }
+    </style>
+  </head>
+  <body>
+    <main class="demo-shell">
+      <section class="setup-page demo-page" aria-label="Demo video">
+        <div class="brand">
+          <div class="logo-mark">IC</div>
+          <div>
+            <p class="eyebrow">Interview Coach · 2-minute demo</p>
+            <h1>MLE/AIE practice</h1>
+          </div>
+        </div>
+
+        <video class="demo-video" controls playsinline preload="metadata"
+               poster="/demo_poster.jpg">
+          <source src="/demo.mp4" type="video/mp4">
+          Your browser cannot play this video. <a href="/demo.mp4">Download the MP4</a>.
+        </video>
+
+        <p class="demo-lede">A résumé-driven mock interview with rubric-based
+          feedback, then two engineering decisions that were measured before
+          they shipped: hybrid retrieval, and every grader, including a
+          LoRA-fine-tuned Qwen3-4B, scored against the Claude teacher.</p>
+
+        <div class="demo-actions">
+          <a class="primary-action" href="/">Try it live</a>
+          <a class="secondary-action" href="/mock.html">Start a mock interview</a>
+          <a class="secondary-action" href="https://github.com/chenyufang-data/mle-aie-interview-coach">Code and experiments on GitHub</a>
+        </div>
+
+        <p class="demo-note">Captions are burned in, so it works muted. The mock
+          interview on the live site needs a demo key; practice questions and
+          local grading do not.</p>
+      </section>
+    </main>
+  </body>
+</html>

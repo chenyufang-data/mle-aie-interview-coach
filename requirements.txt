@@ -1,7 +1,10 @@
 # Backend (Python API) dependencies only. The frontend has none: public/ is
 # dependency-free static JS, served by the backend or by nginx in Docker.
 anthropic>=0.119.0
-scikit-learn>=1.4
+# Pinned to the version coach/assets/grader_model.joblib was pickled with and
+# measured under (experiments/distill/train_results.json); a newer one warns
+# on load and is not guaranteed to reproduce the grades. Retrain to move it.
+scikit-learn==1.9.0
 
 # Resume parsing (PDF); .docx is parsed with the standard library.
 pypdf>=4.0
