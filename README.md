@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="https://coach.cyfang.org/demo.html">
-    <img src="docs/img/demo.gif" width="800" alt="Mock interview: a question from the résumé, a pasted answer, the interviewer's follow-up, and the scored report">
+    <img src="docs/img/demo.gif" width="800" alt="From the home page to a mock interview: paste a résumé, pick a role, answer the first question, get a follow-up and a scored report">
   </a>
   <br>
   <sub><a href="https://coach.cyfang.org/demo.html">Watch the 2-minute demo with sound</a> · captions burned in</sub>
