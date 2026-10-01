@@ -237,7 +237,11 @@ SCHEMA = (
         used integer NOT NULL DEFAULT 0,
         llm integer NOT NULL DEFAULT 0,
         voice double precision NOT NULL DEFAULT 0,
+        jev integer NOT NULL DEFAULT 0,
         PRIMARY KEY (row_id, day))""",
+    # Step 6 added the jev counter; a database created before it gets the
+    # column here (idempotent, a no-op once it exists).
+    "ALTER TABLE usage_counters ADD COLUMN IF NOT EXISTS jev integer NOT NULL DEFAULT 0",
     """CREATE TABLE IF NOT EXISTS session_log (
         id bigserial PRIMARY KEY,
         kind text NOT NULL,
@@ -372,14 +376,14 @@ class PostgresStore:
     # --- daily counters ----------------------------------------------
     @staticmethod
     def _rows_dict(rows, today):
-        return {row_id: {"date": today, "used": used, "llm": llm, "voice": voice}
-                for row_id, used, llm, voice in rows}
+        return {row_id: {"date": today, "used": used, "llm": llm, "voice": voice, "jev": jev}
+                for row_id, used, llm, voice, jev in rows}
 
     def usage_read(self, ids, today):
         day = date.fromisoformat(today)
         with self.pool.connection() as conn:
             rows = conn.execute(
-                "SELECT row_id, used, llm, voice FROM usage_counters "
+                "SELECT row_id, used, llm, voice, jev FROM usage_counters "
                 "WHERE row_id = ANY(%s) AND day = %s", (list(ids), day)).fetchall()
         return self._rows_dict(rows, today)
 
@@ -393,25 +397,27 @@ class PostgresStore:
                     "INSERT INTO usage_counters (row_id, day) VALUES (%s, %s) "
                     "ON CONFLICT DO NOTHING", [(row_id, day) for row_id in ids])
             rows = conn.execute(
-                "SELECT row_id, used, llm, voice FROM usage_counters "
+                "SELECT row_id, used, llm, voice, jev FROM usage_counters "
                 "WHERE row_id = ANY(%s) AND day = %s FOR UPDATE", (ids, day)).fetchall()
             txn = UsageTxn(self._rows_dict(rows, today))
             yield txn
             for row_id, row in txn.writes.items():
                 conn.execute(
-                    "UPDATE usage_counters SET used = %s, llm = %s, voice = %s "
+                    "UPDATE usage_counters SET used = %s, llm = %s, voice = %s, jev = %s "
                     "WHERE row_id = %s AND day = %s",
                     (int(row.get("used", 0)), int(row.get("llm", 0)),
-                     float(row.get("voice", 0) or 0), row_id, day))
+                     float(row.get("voice", 0) or 0), int(row.get("jev", 0) or 0),
+                     row_id, day))
 
     def usage_dump(self):
         """The newest day of every row, in the file's shape (tests, tools)."""
         with self.pool.connection() as conn:
             rows = conn.execute(
-                "SELECT DISTINCT ON (row_id) row_id, day, used, llm, voice "
+                "SELECT DISTINCT ON (row_id) row_id, day, used, llm, voice, jev "
                 "FROM usage_counters ORDER BY row_id, day DESC").fetchall()
-        return {row_id: {"date": day.isoformat(), "used": used, "llm": llm, "voice": voice}
-                for row_id, day, used, llm, voice in rows}
+        return {row_id: {"date": day.isoformat(), "used": used, "llm": llm, "voice": voice,
+                         "jev": jev}
+                for row_id, day, used, llm, voice, jev in rows}
 
     def upsert_usage(self, usage):
         """usage.json rows -> today's-state rows (the file is the newest)."""
@@ -425,11 +431,12 @@ class PostgresStore:
                 except ValueError:
                     continue
                 conn.execute(
-                    "INSERT INTO usage_counters (row_id, day, used, llm, voice) "
-                    "VALUES (%s, %s, %s, %s, %s) ON CONFLICT (row_id, day) DO UPDATE SET "
-                    "used = EXCLUDED.used, llm = EXCLUDED.llm, voice = EXCLUDED.voice",
+                    "INSERT INTO usage_counters (row_id, day, used, llm, voice, jev) "
+                    "VALUES (%s, %s, %s, %s, %s, %s) ON CONFLICT (row_id, day) DO UPDATE SET "
+                    "used = EXCLUDED.used, llm = EXCLUDED.llm, voice = EXCLUDED.voice, "
+                    "jev = EXCLUDED.jev",
                     (str(row_id), day, _cap(row.get("used")), _cap(row.get("llm")),
-                     float(row.get("voice", 0) or 0)))
+                     float(row.get("voice", 0) or 0), _cap(row.get("jev"))))
                 written += 1
         return written
 

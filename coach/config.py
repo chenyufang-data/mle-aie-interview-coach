@@ -134,6 +134,19 @@ SLM_URL = os.environ.get("SLM_URL", "").strip()
 SLM_MODEL = os.environ.get("SLM_MODEL", "slm")
 SLM_TIMEOUT_S = float(os.environ.get("SLM_TIMEOUT_S", "2"))
 SLM_BACKOFF_S = float(os.environ.get("SLM_BACKOFF_S", "30"))
+
+# Optional Jev grade for the local tier (roadmap step 6, coach/jev.py): with
+# TYPESAFE_API_KEY set (read at call time) and outside --mock mode, the free
+# tier's grade and rubric verdicts come from TypeSafe's Jev, calibrated on
+# the teacher labels. JEV_DAILY_CAP bounds the Jev calls per day for the
+# whole server (0 = unlimited; default 500, about 3.5 cents a day); a spent
+# cap, an error or a timeout keeps the sklearn grade. JEV_MODEL pins a
+# version; empty means the one the calibration was fitted for.
+JEV_MODEL = os.environ.get("JEV_MODEL", "").strip()
+JEV_TIMEOUT_S = float(os.environ.get("JEV_TIMEOUT_S", "3"))
+JEV_BACKOFF_S = float(os.environ.get("JEV_BACKOFF_S", "30"))
+JEV_DAILY_CAP = int(os.environ.get("JEV_DAILY_CAP", "500"))
+JEV_CALIBRATION_PATH = BASE_DIR / "coach" / "assets" / "jev_calibration.json"
 CASCADE_PRED_MAX = 2.5
 CASCADE_FRAC_HIT_MAX = 0.25
 

@@ -14,6 +14,7 @@ money prints a cost estimate and does nothing without `--confirm`.
 | --- | --- | --- | --- |
 | `distill/` | Can a scikit-learn model trained on Claude labels grade offline? Which answers can stay local? Could DeepSeek replace Claude as the judge? | `train_results.json`, `cascade_results.json`, `judge_agreement_summary.json` | README, "Local ML grader" |
 | `slm/` | Does a fine-tuned small language model beat the sklearn grader on the same gold rows? (roadmap step 3) | `slm_results.json`, `runs/` | `slm/README.md`, README |
+| `jev/` | Can an API decision model (TypeSafe's Jev) carry that quality to a box with no GPU? (roadmap step 6) | `jev_results.json`, `runs/responses.jsonl` | README, step 6 section |
 | `retrieval/` | Does dense or hybrid retrieval beat BM25 for practice questions? Does a vector store earn its place? (R1, R3, pgvector) | `retrieval_eval_results.json` | `docs/retrieval_evaluation.md` |
 | `grounding/` | Which policy attaches a fair bank rubric to a mock-interview probe? (R2, R4, the author spot-check) | `grounding_eval_results.json`, `grounding_r4_results*.json`, `grounding_r4_spotcheck_grown.json` | `docs/grounding_r4*.md` |
 | `speech/` | How much does transcription damage technical terms and grades (Phase 0)? How do the live-voice backends compare (Phase 2)? | `stt_eval_results.json`, `loop_eval_results.json` | `docs/stt_evaluation.md`, README |

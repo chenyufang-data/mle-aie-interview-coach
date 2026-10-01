@@ -5,6 +5,7 @@
     .venv\\Scripts\\python experiments\\jev\\jev_eval.py --run [--model jev-x]  dry run: the main + regrade cost
     .venv\\Scripts\\python experiments\\jev\\jev_eval.py --run --confirm        score every teacher row, then regrade
     .venv\\Scripts\\python experiments\\jev\\jev_eval.py --report               metrics + the rule -> jev_results.json
+    .venv\\Scripts\\python experiments\\jev\\jev_eval.py --export-calibration the runtime's map -> coach/assets/
 
 Needs TYPESAFE_API_KEY (.env) and the private checkout (the answers live in
 its grader/dataset.jsonl; --private-dir or COACH_PRIVATE_DIR). The questions
@@ -434,6 +435,31 @@ def report(rows, chunks, teacher):
     return out
 
 
+def export_calibration(rows, teacher):
+    """The map the server applies (coach/jev.py): isotonic, fitted on seed
+    42's training-side fit rows - the shipped split's labels, never a gold
+    row - and stored as its thresholds, which is all predict() uses."""
+    from sklearn.isotonic import IsotonicRegression
+    main = {}
+    for line in RESPONSES.open(encoding="utf-8"):
+        if line.strip():
+            rec = json.loads(line)
+            if rec["pass"] == "main":
+                main[rec["row_id"]] = rec
+    fit = [rows[i] for i in seed_parts(rows, teacher, 42)["fit"] if rows[i]["row_id"] in main]
+    x = [main[r["row_id"]]["grade"] for r in fit]
+    y = [teacher[r["row_id"]]["teacher_score"] for r in fit]
+    iso = IsotonicRegression(y_min=1.0, y_max=10.0, out_of_bounds="clip").fit(x, y)
+    models = sorted({main[r["row_id"]]["model"] for r in fit})
+    out = {"model": models[0] if len(models) == 1 else None,
+           "fitted_on": "seed 42 training-side teacher rows (experiments/slm/common.py fit fold)",
+           "n_fit": len(fit), "generated": datetime.now().isoformat(timespec="seconds"),
+           "x": [float(v) for v in iso.X_thresholds_], "y": [float(v) for v in iso.y_thresholds_]}
+    path = BASE_DIR / "coach" / "assets" / "jev_calibration.json"
+    common.write_json(path, out)
+    return path, out
+
+
 def print_report(out):
     print(f"models seen: {out['models_seen']}; unscored gold rows: {out['gold_rows_unscored']}")
     rows = [("sklearn (per seed)", out["incumbents"]["sklearn"]),
@@ -466,6 +492,7 @@ def main():
     mode.add_argument("--dev", action="store_true")
     mode.add_argument("--run", action="store_true")
     mode.add_argument("--report", action="store_true")
+    mode.add_argument("--export-calibration", action="store_true")
     parser.add_argument("--confirm", action="store_true", help="spend (TypeSafe credits)")
     parser.add_argument("--model", default=DEFAULT_MODEL)
     parser.add_argument("--private-dir", default=str(common.default_private_dir()))
@@ -474,6 +501,10 @@ def main():
     rows, chunks, teacher = load_everything(args.private_dir)
     if args.report:
         print_report(report(rows, chunks, teacher))
+        return 0
+    if args.export_calibration:
+        path, out = export_calibration(rows, teacher)
+        print(f"{path}: {len(out['x'])} thresholds from {out['n_fit']} rows, model {out['model']}")
         return 0
 
     import server  # the repo's .env loader, as the other paid scripts use it

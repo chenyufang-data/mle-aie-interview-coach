@@ -4,7 +4,7 @@ import random
 
 from coach.retrieval import tokenize
 
-from coach import config, llm, slm, users
+from coach import config, jev, llm, slm, users
 from coach.config import CASCADE_FRAC_HIT_MAX, CASCADE_PRED_MAX, GRADER_PATH
 
 # Trained distilled grader for mock mode (experiments/distill/train.py artifact); None
@@ -104,7 +104,7 @@ def cascade_confident(answer, chunk):
     return predicted <= CASCADE_PRED_MAX and frac_hit <= CASCADE_FRAC_HIT_MAX
 
 
-def mock_evaluation(data, chunk, reason="mock"):
+def mock_evaluation(data, chunk, reason="mock", user=None):
     label, hint = LOCAL_GRADING_LABELS[reason]
     answer = data.get("answer", "")
     answer_tokens = set(tokenize(answer))
@@ -156,6 +156,20 @@ def mock_evaluation(data, chunk, reason="mock"):
                 # the sklearn artifact they were measured against.
                 predicted = slm_grade
                 grader_name = slm.label()
+            elif user is not None and jev.available():
+                # Step 6 (experiments/jev/): Jev's calibrated grade, and its
+                # rubric verdicts (they passed their own clause); subscores
+                # and the cascade stay with sklearn. None = cap spent or the
+                # call failed: the sklearn grade above stands.
+                jev_result = jev.grade(chunk, answer, user)
+                if jev_result is not None:
+                    predicted = jev_result["grade"]
+                    grader_name = jev.label()
+                    if jev_result["verdicts"] and len(jev_result["verdicts"]) == len(key_points):
+                        v = jev_result["verdicts"]
+                        hits = [p for p, x in zip(key_points, v) if x == "hit"]
+                        partials = [p for p, x in zip(key_points, v) if x == "partial"]
+                        misses = [p for p, x in zip(key_points, v) if x == "miss"]
             overall = clamp_score(round(predicted))
             # Subscores from the dedicated multi-output models when the
             # artifact has them (each beats overall-as-proxy on gold rows).

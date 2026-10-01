@@ -84,6 +84,95 @@ def test_kp_eval_matches_train_definition():
     assert m["acc3"] == 0.75 and 0 < m["macro_f1"] <= 1 and 0 < m["hit_f1"] <= 1
 
 
+# ------------------------------------------------------- the runtime route
+
+def _runtime_setup():
+    import os
+    import tempfile
+    from coach import config, grading, store, users
+    store.use(store.FileStore())
+    tmp = Path(tempfile.mkdtemp(prefix="coach_jev_"))
+    config.USERS_PATH = tmp / "users.json"
+    config.USAGE_PATH = tmp / "usage.json"
+    config.MODE = "claude"
+    config.JEV_DAILY_CAP = 2
+    os.environ["TYPESAFE_API_KEY"] = "dummy-never-sent"
+    if grading.GRADER is None:
+        grading.load_grader()
+    return config, grading, users
+
+
+def _bank_chunk():
+    import json
+    path = Path(__file__).resolve().parents[1] / "banks" / "rag_ml" / "all_chunks.jsonl"
+    return json.loads(path.read_text(encoding="utf-8").splitlines()[0])
+
+
+def test_calibration_matches_isotonic_interp():
+    import numpy as np
+    from coach import jev
+    cal = jev.calibration()
+    assert cal and cal["model"] and len(cal["x"]) == len(cal["y"]) >= 2
+    assert cal["y"] == sorted(cal["y"]), "isotonic: non-decreasing"
+    for v in np.linspace(0.0, 11.0, 221):
+        assert abs(jev.calibrate(float(v)) - float(np.interp(v, cal["x"], cal["y"]))) < 1e-9
+
+
+def test_route_switches():
+    import os
+    from coach import jev
+    config, _, _ = _runtime_setup()
+    assert jev.enabled() and jev.model() == jev.calibration()["model"]
+    config.MODE = "mock"
+    assert not jev.enabled(), "--mock promises offline: never call Jev"
+    config.MODE = "claude"
+    key = os.environ.pop("TYPESAFE_API_KEY")
+    assert not jev.enabled()
+    os.environ["TYPESAFE_API_KEY"] = key
+
+
+def test_grading_uses_jev_then_falls_back():
+    from coach import jev
+    config, grading, users = _runtime_setup()
+    chunk = _bank_chunk()
+    n = len(chunk["interview"]["key_points"])
+    verdicts = (["hit", "partial", "miss"] * n)[:n]
+    calls = []
+
+    def fake_call(c, answer, timeout=None):
+        calls.append(answer)
+        return {"grade": 7.0, "grade_confidence": 0.8, "grade_probs": [0.0] * 10,
+                "kp": [{"choice": v, "confidence": 0.9, "probs": {}} for v in verdicts]}
+
+    real_call = jev.call
+    jev.call = fake_call
+    try:
+        anon = users.resolve_key(None)
+        data = {"answer": "Ridge shrinks all coefficients and keeps every feature."}
+        r = grading.mock_evaluation(data, chunk, "free", user=anon)
+        assert "Jev" in r["graded_by"], r["graded_by"]
+        assert r["overall_score"] == round(jev.calibrate(7.0))
+        hits = sum(v == "hit" for v in verdicts)
+        assert f"matched {hits} of {n}" in r["summary"]
+        assert grading.mock_evaluation(data, chunk, "free", user=anon)["graded_by"].startswith("Jev")
+        # third call: the cap of 2 is spent -> the sklearn grade, no call made
+        r3 = grading.mock_evaluation(data, chunk, "free", user=anon)
+        assert "local ML grader" in r3["graded_by"] and len(calls) == 2
+        # no user (the cascade path) never calls Jev
+        store_reset = __import__("coach.store", fromlist=["current"]).current().reset_usage
+        store_reset()
+        assert "local ML grader" in grading.mock_evaluation(data, chunk, "cascade")["graded_by"]
+        # a failing call falls back and pauses the route
+        def boom(*a, **k):
+            raise OSError("network down")
+        jev.call = boom
+        r4 = grading.mock_evaluation(data, chunk, "free", user=anon)
+        assert "local ML grader" in r4["graded_by"] and not jev.available()
+    finally:
+        jev.call = real_call
+        jev._unavailable_until = 0.0
+
+
 if __name__ == "__main__":
     for name, fn in list(globals().items()):
         if name.startswith("test_") and callable(fn):

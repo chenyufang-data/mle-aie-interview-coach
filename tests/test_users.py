@@ -262,6 +262,36 @@ def test_voice_budget():
         config.VOICE_DAILY_MINUTES = 0
 
 
+def test_jev_budget():
+    """Step 6: the server-wide JEV_DAILY_CAP refuses the call after the cap,
+    writes nothing on a refusal, and a keyed caller's row counts too."""
+    setup()
+    old_cap = config.JEV_DAILY_CAP
+    try:
+        config.JEV_DAILY_CAP = 2
+        anon = users.resolve_key(None)
+        assert users.jev_left() == 2
+        assert users.take_jev(anon) and users.take_jev(anon)
+        assert not users.take_jev(anon)
+        assert usage()[users.SERVER_ROW]["jev"] == 2 and users.jev_left() == 0
+        # the other counters are untouched by Jev calls
+        assert usage()[users.SERVER_ROW]["llm"] == 0
+        st = store.current()
+        st.reset_usage()
+        demo = users.resolve_key("demo-key")
+        assert users.take_jev(demo)
+        dump = usage()
+        assert dump[users.SERVER_ROW]["jev"] == 1
+        assert dump[users._usage_id("demo-key")]["jev"] == 1
+        # an LLM call afterwards keeps the jev count (rows are rewritten whole)
+        assert users.take_call(demo, "deepseek") is None
+        assert usage()[users._usage_id("demo-key")]["jev"] == 1
+        config.JEV_DAILY_CAP = 0
+        assert users.jev_left() is None and users.take_jev(anon)
+    finally:
+        config.JEV_DAILY_CAP = old_cap
+
+
 if __name__ == "__main__":
     for name, fn in list(globals().items()):
         if name.startswith("test_") and callable(fn):

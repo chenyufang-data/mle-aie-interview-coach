@@ -12,7 +12,7 @@ pieces it relies on are the Docker files, `docker-compose.prod.yml`,
 
 | Visitor | What they get | What they cannot do |
 | --- | --- | --- |
-| Anonymous | Bank questions on every public track, instant grading by the distilled local model | Reach any LLM: with `users.json` present, no key means the free tier |
+| Anonymous | Bank questions on every public track, instant grading: by Jev when `TYPESAFE_API_KEY` is set (step 6), else the distilled local model | Reach any LLM: with `users.json` present, no key means the free tier; exceed `JEV_DAILY_CAP` Jev grades a day for the whole box (then grading stays local) |
 | Demo key (`"tier": "paid", "daily_llm_calls": 60`) | AI questions, DeepSeek Flash grading, the full text mock with report | Exceed 60 LLM calls a day on that key, or `LLM_DAILY_CAP` for the whole box; reach Claude (no `ANTHROPIC_API_KEY` on the server) |
 | Demo key, live voice (`"daily_voice_minutes": 30`) | The live voice mock on Deepgram (Nova-3 streaming + Aura-2 TTS), each answer re-transcribed for the report | Exceed 30 voice minutes a day on that key, `VOICE_DAILY_MINUTES` for the whole box, or `VOICE_SESSION_MAX_MINUTES` in one session — the interviewer says goodbye and the socket closes within a minute of the allowance running out |
 | Anyone | 10 requests/second per address with a burst of 20 (nginx answers 429 beyond that); bodies capped per route (413) | Upload more than 16 MB of resume or 48 MB of audio |
@@ -45,11 +45,13 @@ READMEs — otherwise the image serves the two course banks.
    `daily_voice_minutes` caps the live voice mock per key (0 or absent =
    unlimited, right for the owner's key).
 
-2. **`.env` for the server**, six lines and no Anthropic key:
+2. **`.env` for the server**, eight lines and no Anthropic key:
 
    ```text
    DEEPSEEK_API_KEY=<the separate DeepSeek key created for the demo>
    LLM_DAILY_CAP=200
+   TYPESAFE_API_KEY=<a TypeSafe key created for the demo>
+   JEV_DAILY_CAP=500
    DEEPGRAM_API_KEY=<a Deepgram key created for the demo, in its own project>
    AUDIO_BACKEND=deepgram
    VOICE_DAILY_MINUTES=120
@@ -65,6 +67,10 @@ READMEs — otherwise the image serves the two course banks.
    and leave the account on the free credit with no card on file — at
    Nova-3 streaming plus Aura-2 prices a 30-minute allowance is about
    $0.35 a day at most, and `VOICE_DAILY_MINUTES` bounds the whole box.
+   The TypeSafe key gives the free tier Jev's grade and rubric verdicts
+   (README, step 6); at about $0.00007 a grade, `JEV_DAILY_CAP=500` is
+   about 3.5 cents a day, and the prepaid TypeSafe balance is the hard stop.
+   Leave the key out and the free tier grades with the local model.
 
 3. **A hostname.** Any registrar's A record, or a free DuckDNS name; Let's
    Encrypt works with both. The record must point at the VM's public IP

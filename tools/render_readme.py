@@ -21,6 +21,7 @@ and NAME picks one of the renderers below. Sources:
     stt_human   experiments/speech/stt_eval_results.json         (Phase 0, author-read set - the deciding one)
     loop        experiments/speech/loop_eval_results.json        (live voice loop, 20 real answers per backend)
     slm         experiments/slm/slm_results.json              (step 3: fine-tuned small graders vs sklearn, 5 seeds)
+    jev         experiments/jev/jev_results.json              (step 6: Jev beside sklearn, Qwen and DeepSeek)
 
 Only the text between the markers is touched; everything else in the README
 is prose and stays yours.
@@ -206,9 +207,48 @@ def render_slm():
     return out
 
 
+def render_jev():
+    """Step 6: Jev (zero-shot and calibrated) beside the graders it competes
+    with; five seeds except DeepSeek Flash, measured on seed 42 only."""
+    r = load("jev/jev_results.json")
+    inc, arms, v = r["incumbents"], r["arms"], r["verdict"]
+    slm = load("slm/slm_results.json")
+    regrade = r["regrade"]["exact"] if r.get("regrade") else None
+    judge = load("distill/judge_agreement_summary.json")
+    flash_regrade = judge["consistency"]["deepseek-v4-flash"]["exact"]
+    per_1k = lambda usd: f"${1000 * usd:.2f}" if usd >= 0.01 / 1000 else f"${1000 * usd:.3f}"
+    out = ["| Grader | QWK | MAE | within ±1 | regrade exact | p95 per answer | cost / 1k grades | runs on |",
+           "| --- | --- | --- | --- | --- | --- | --- | --- |"]
+
+    def five(a):
+        return (f"{a['mean']['qwk']:.3f} ± {a['sd']['qwk']:.3f}",
+                f"{a['mean']['mae']:.2f} ± {a['sd']['mae']:.2f}", pct(a["mean"]["within1"]))
+
+    q, m, w = five(inc["sklearn"])
+    out.append(f"| sklearn distilled grader | {q} | {m} | {w} | deterministic | ≈ 0 ms | $0 | any CPU |")
+    q, m, w = five(inc["qwen4b"])
+    l4 = slm["cost_estimate"]["usd_per_1k_answers_assuming_3x_slower_l4"]
+    out.append(f"| Qwen3-4B + LoRA (step 3) | {q} | {m} | {w} | deterministic | "
+               f"{inc['qwen4b']['p95_ms_vllm']:.0f} ms (vLLM) | ≈ ${l4:.3f} (L4 estimate) | a GPU |")
+    f = inc["deepseek-v4-flash (seed 42 only)"]
+    ds = r["cost"]["deepseek_flash"]["usd_per_grade"]
+    out.append(f"| DeepSeek V4 Flash, seed 42 only (judge study) | {f['QWK']:.3f} | {f['MAE']:.2f} | "
+               f"{pct(f['within1'])} | {pct(flash_regrade)} | not measured here | "
+               f"≈ {per_1k(ds)} | API |")
+    lat, cost = r["latency"]["p95_ms"], r["cost"]["jev_usd_per_grade"]
+    for name, label in (("jev", "Jev, zero-shot"), ("jev-calibrated", "Jev + isotonic calibration (per seed)")):
+        q, m, w = five(arms[name])
+        if name == v["best_arm"]:
+            q, m = bold(q), bold(m)
+        out.append(f"| {label} | {q} | {m} | {w} | {pct(regrade) if regrade is not None else '-'} | "
+                   f"{lat:.0f} ms | {per_1k(cost)} | API |")
+    return out
+
+
 RENDERERS = {
     "retrieval": render_retrieval,
     "slm": render_slm,
+    "jev": render_jev,
     "grader": render_grader,
     "keypoints": render_keypoints,
     "cascade": render_cascade,

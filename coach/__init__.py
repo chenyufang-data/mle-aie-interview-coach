@@ -19,6 +19,7 @@ other way round.
     grading   engine routing, smart cascade, the local distilled grader
     features  the distilled grader's lexical features (the artifact unpickles them)
     slm       optional fine-tuned small-model grade for the local tier (SLM_URL)
+    jev       optional Jev grade + rubric verdicts for the free tier (TYPESAFE_API_KEY)
     stt_text  WER, term error rate, lexicon and the keyterm policy (voice, reports)
     sessions  practice-session logging (gold pairs vs unlabeled free tier)
     web       tiny JSON request/response helpers

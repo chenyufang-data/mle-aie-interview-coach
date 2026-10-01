@@ -75,6 +75,7 @@ coach/               the runtime: everything the server imports (one module per 
   users.py           freemium access keys           store.py     files under data/ or Postgres (DATABASE_URL)
   retrieval.py       BM25 (CI gate + fallback)      retrieval_dense.py  bge-small + BM25 hybrid, pgvector
   features.py        the grader's lexical features  slm.py       optional fine-tuned SLM grade (SLM_URL)
+  jev.py             optional Jev grade + verdicts for the free tier (TYPESAFE_API_KEY, step 6)
   resume_parser.py   PDF/.docx/.txt to text         stt_text.py  WER, term error rate, keyterm policy
   mock/              mock interview (plan, turns, report)
   voice/             live voice loop: VAD, STT, TTS, barge-in, Level 1 sidecar
@@ -255,7 +256,9 @@ copy users.sample.json users.json   # then change the key; users.json is gitigno
 With `users.json` present, requests are routed per user instead of per server:
 
 - **Free (no key, or unknown key)**: course-bank questions and instant grading
-  by the distilled local model. Zero API cost, works offline.
+  by the distilled local model. Zero API cost, works offline. With
+  `TYPESAFE_API_KEY` set, the grade and rubric verdicts come from Jev instead
+  (step 6, measured below) within a daily cap, falling back to the local model.
 - **Paid (a key listed with `"tier": "paid"`, entered once via the account
   chip in the page header — it persists in that browser's localStorage)**:
   AI-generated questions and real LLM grading. With
@@ -624,6 +627,57 @@ per-row predictions are committed. Caveat: every arm was trained and
 measured on the synthetic answer constructions the grader has always used —
 how the gain transfers to real spoken answers is the next measurement, and
 the free-tier answer log is where it comes from.
+
+### A typed decision model as the free-tier scorer (step 6, measured)
+
+The Qwen grader needs a GPU the demo box does not have. Roadmap step 6 asked
+whether an API scorer could carry that quality to the box: Jev, from
+TypeSafe AI, a model that writes no text and instead answers typed questions
+about a state with probabilities. One call per answer sends the question,
+the reference answer, the rubric key points, the common mistakes and the
+candidate answer, and asks a ten-level Score for the grade plus one
+hit/partial/miss Choice per key point
+([`experiments/jev/`](experiments/jev/)). The questions and a four-clause
+rule were committed before the first gold call (`docs/plan.md`, step 6),
+the 598 teacher rows were each scored once, and every arm is read on the
+same five chunk-grouped seeds as step 3
+(`experiments/jev/jev_results.json`, mean ± sd on the gold rows):
+
+<!-- results:jev -->
+| Grader | QWK | MAE | within ±1 | regrade exact | p95 per answer | cost / 1k grades | runs on |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| sklearn distilled grader | 0.794 ± 0.022 | 1.08 ± 0.07 | 74% | deterministic | ≈ 0 ms | $0 | any CPU |
+| Qwen3-4B + LoRA (step 3) | 0.941 ± 0.007 | 0.52 ± 0.04 | 95% | deterministic | 30 ms (vLLM) | ≈ $0.007 (L4 estimate) | a GPU |
+| DeepSeek V4 Flash, seed 42 only (judge study) | 0.928 | 0.59 | 94% | 57% | not measured here | ≈ $0.55 | API |
+| Jev, zero-shot | 0.870 ± 0.011 | 0.83 ± 0.03 | 86% | 100% | 246 ms | $0.07 | API |
+| Jev + isotonic calibration (per seed) | **0.909 ± 0.007** | **0.65 ± 0.05** | 91% | 100% | 246 ms | $0.07 | API |
+<!-- /results:jev -->
+
+What it says. Zero-shot, with no training at all, Jev already grades closer
+to the teacher than the distilled sklearn grader. Calibrated with an
+isotonic map fitted on each seed's ~400 training-side labels (the labels
+the step 3 arms learned from), it clears the rule on every seed (QWK +0.08
+to +0.13 over sklearn, lower MAE each time), reproduces its own grade on
+all 30 rows of the judge study's regrade (DeepSeek Flash: 57%), answers in
+0.25 s at p95 from the author's machine, and costs about 7 cents per
+thousand grades, an eighth of DeepSeek Flash. It lands between sklearn and
+the fine-tuned Qwen, which stays the best grader where a GPU exists. Its
+key-point verdicts beat the distilled classifier by a wide margin on the
+601 held-out points (macro-F1 0.85 vs 0.67, hit-F1 0.94 vs 0.87). Its weak
+spot is garbled text, not confident wrongness: heavy paraphrases with
+dropped words and shuffled sentences land within ±1 of the teacher on 1 of
+8 (it reads literally), while the confidently-wrong tier lands on 90%
+(sklearn 67%). Its confidence is informative: within ±1 rises from 66% in
+the least confident quarter of answers to 99% in the most confident.
+Caveats: the same synthetic answers as step 3; a proprietary model, pinned
+to `jev-1.13.0`, with the calibration tied to that version.
+
+The rule passed, so the route ships: with `TYPESAFE_API_KEY` set (and
+outside `--mock`), the free tier's grade and its rubric verdicts come from
+Jev (`coach/jev.py`), the cascade and subscores stay with sklearn,
+`JEV_DAILY_CAP` (default 500 a day, about 3.5 cents) bounds the calls for
+the whole server, and a spent cap, an error or a timeout keeps the sklearn
+grade. `/api/meta` reports the route and the calls left today.
 
 ## STT on technical vocabulary (mock-interview Phase 0, measured)
 

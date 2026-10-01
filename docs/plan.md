@@ -960,6 +960,29 @@ timeout or exhausted cap falls back to the sklearn grade.
 **Cost and time.** Under $0.10 of the $10 balance; one day for the
 experiment, one for the route if it passes.
 
+**Result 2026-10-01, rule PASSED.** Pre-registration and harness pushed
+first (bfcf76b), then the dev check on 20 training-side rows (format sound,
+no revision; the API reported `jev-1.13.0`, pinned from then on), then 628
+calls: the 598 teacher rows and the 30 regrade rows, no failures, 1.07 M
+input tokens, $0.045 in total. On the five seeds' gold rows
+(`experiments/jev/jev_results.json`, mean ± sd): zero-shot QWK
+0.870 ± 0.011, MAE 0.83; calibrated 0.909 ± 0.007, MAE 0.65, 91% within ±1
+- above sklearn by +0.08 to +0.13 with lower MAE on every seed, below the
+Qwen 4B arm (0.941). Regrade: 30/30 exact (mean raw difference 0.04). p95
+246 ms sequential from this machine. Cost per grade $0.00007 against
+DeepSeek Flash's $0.00055. Key points on seed 42's 601 points: macro-F1
+0.851 (classifier 0.666), so the verdicts ship too. Not in the rule, found
+on the way: the heavy-paraphrase tier is its weak spot (1/8 within ±1; it
+reads garbled text literally), the confidently-wrong tier is not (19/21);
+within ±1 rises from 66% to 99% across the confidence quartiles (error
+AUROC 0.75), which makes a confidence-gated cascade a candidate for later.
+Shipped: `coach/jev.py` (the frozen questions moved there verbatim, checked
+on all 598 requests), the calibration fitted on seed 42's training-side
+rows (`coach/assets/jev_calibration.json`), the `jev` usage counter (file
+store and a Postgres column added idempotently), `JEV_DAILY_CAP`,
+`/api/meta` `jev`, tests, the README section. Open: switching it on on the
+box (a TypeSafe key in its `.env`), and a latency re-measure from there.
+
 ### Not on the roadmap, still open
 
 - The SLM grader's transfer to real answers: every step 3 arm was trained

@@ -110,13 +110,15 @@ def _today():
 def _row(usage, row_id, today):
     """Today's counters for a usage row; a stale or missing row starts at 0.
     "used" counts Claude calls (the quota), "llm" counts every LLM call,
-    "voice" counts seconds of live voice (metered in ticks, so a float)."""
+    "voice" counts seconds of live voice (metered in ticks, so a float),
+    "jev" counts Jev calls for the local tier (coach/jev.py)."""
     row = usage.get(row_id)
     if not row or row.get("date") != today:
-        return {"date": today, "used": 0, "llm": 0, "voice": 0.0}
+        return {"date": today, "used": 0, "llm": 0, "voice": 0.0, "jev": 0}
     return {"date": today, "used": int(row.get("used", 0)),
             "llm": int(row.get("llm", 0)),
-            "voice": float(row.get("voice", 0) or 0)}
+            "voice": float(row.get("voice", 0) or 0),
+            "jev": int(row.get("jev", 0) or 0)}
 
 
 def _ids(user):
@@ -167,6 +169,36 @@ def voice_left(user):
     if config.VOICE_DAILY_MINUTES:
         server_left = max(0.0, config.VOICE_DAILY_MINUTES * 60 - server_row["voice"])
     return {"key": key_left, "server": server_left}
+
+
+def jev_left():
+    """Jev calls left today for the whole server, or None when unlimited."""
+    if not config.JEV_DAILY_CAP:
+        return None
+    today = _today()
+    raw = store.current().usage_read([SERVER_ROW], today)
+    return max(0, config.JEV_DAILY_CAP - _row(raw, SERVER_ROW, today)["jev"])
+
+
+def take_jev(user):
+    """Reserve one Jev call (coach/jev.py) against the server-wide daily cap,
+    JEV_DAILY_CAP. Jev scores the local tier, which anonymous visitors use,
+    so the server row is the limit that matters; a keyed caller's own row
+    counts it too, for the record. True when the call may proceed; nothing
+    is written on a refusal."""
+    today = _today()
+    key_id, ids = _ids(user or {})
+    with store.current().usage_transaction(ids, today) as txn:
+        server_row = _row(txn.rows, SERVER_ROW, today)
+        if config.JEV_DAILY_CAP and server_row["jev"] >= config.JEV_DAILY_CAP:
+            return False
+        server_row["jev"] += 1
+        txn.write(SERVER_ROW, server_row)
+        if key_id:
+            key_row = _row(txn.rows, key_id, today)
+            key_row["jev"] += 1
+            txn.write(key_id, key_row)
+    return True
 
 
 def minutes_left(seconds):
