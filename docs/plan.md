@@ -890,6 +890,76 @@ step 1; the `infra/` folder in the repo.
 **Cost and time.** Under $30 if destroyed within a week. Three to five
 days.
 
+### Step 6 — Jev, a typed decision model, as a third local-tier scorer (pre-registered 2026-10-01)
+
+**Goal.** Measure Jev (TypeSafe AI, released 2026-09-15: unstructured state
+in, typed answers with probabilities out; no text generation) the way step 3
+measured the fine-tuned models, on the same rows and splits, and put it on
+the demo only if it earns it. The demo box has no GPU, so the Qwen arm that
+won step 3 cannot serve there; an API scorer that matched it would give
+anonymous visitors that grade quality. Jev writes no feedback, so it can
+only be a scorer for the local tier (whose feedback lists come from the
+rubric), never a replacement for the LLM engines.
+
+**Data and split.** The 598 teacher-labelled rows (private
+`grader/dataset.jsonl` joined to `experiments/distill/labels_teacher.jsonl`)
+and the five chunk-grouped seeds of step 3 (42 = the shipped split). Jev is
+not trained on the labels, so every teacher row is scored once and each
+seed's gold rows are read from that one pass. The rows that quote lesson
+text go to the API as they went to DeepSeek in the judge study (author's
+decision, 2026-10-01).
+
+**The questions, fixed before the first call** (`experiments/jev/`):
+- *State*: the question, the reference answer, the rubric key points, the
+  common mistakes and the candidate answer, as one JSON object - the
+  material the teacher graded with.
+- *Grade*: one Score question with ten levels, worst first, each describing
+  a situation (off-topic or a restatement; generic with no substance; one
+  correct but minimal point; a few points with a clear gap or error; about
+  half the rubric, shallow; most points touched but imprecise; the key
+  points correct with reasoning, minor gaps; nearly all points, accurate,
+  clear reasoning and practical judgement; complete, precise and
+  well-reasoned like a strong reference answer; all of that plus insight
+  beyond the reference). Grade = 1 + the probability-weighted level.
+- *Key points*: one Choice per rubric point (hit / partial / miss), with the
+  teacher's own definitions from `label_keypoints.py`, in the same call.
+- A dev check on 20 training-side teacher rows of seed 42 (step 3's dev
+  fold) is for format only: one revision is allowed if it shows a
+  structural fault, and it is recorded. No gold row is read before the
+  questions are frozen.
+
+**Arms.** `jev` (zero-shot: the grade above) and `jev-calibrated` (per seed,
+an isotonic map from Jev's grade to the teacher grade fitted on that seed's
+training-side teacher rows only, then applied to its gold rows - the same
+~400 labels the step 3 arms learned from). Incumbents from
+`experiments/slm/slm_results.json` (sklearn per seed, Qwen3-4B + LoRA) and,
+on seed 42 only, DeepSeek Flash from the judge study.
+
+**Rule (frozen 2026-10-01, before the first gold call).** The better Jev arm
+by mean QWK goes on the demo only if all four hold:
+1. *Quality*: QWK at least 0.05 above the sklearn arm's with a lower MAE, on
+   every seed (step 3's bar).
+2. *Stability*: regrading the judge study's 30 consistency rows reproduces
+   the rounded grade on at least 90% (DeepSeek Flash: 56.7%).
+3. *Speed*: p95 at most 1 s per answer, sequential calls from this machine
+   (re-measured from the box before the route is switched on there).
+4. *Cost*: measured cost per grade below DeepSeek Flash's at list price.
+
+Key points have their own clause: Jev's verdicts replace the classifier's
+in the route only if macro-F1 on seed 42's 601 held-out points is at least
+0.766 (classifier 0.666 + 0.10). Reported regardless: per-tier agreement
+(the confidently-wrong `mistake` tier is Jev's documented weakness),
+confidence against error, cost and latency.
+
+**If it passes.** `coach/jev.py` beside `coach/slm.py`: with
+`TYPESAFE_API_KEY` set, the local tier takes its grade (and, under the
+clause above, its key-point verdicts) from Jev; a server-wide daily cap
+(`JEV_DAILY_CAP`) and the per-key allowance bound the spend, and any error,
+timeout or exhausted cap falls back to the sklearn grade.
+
+**Cost and time.** Under $0.10 of the $10 balance; one day for the
+experiment, one for the route if it passes.
+
 ### Not on the roadmap, still open
 
 - The SLM grader's transfer to real answers: every step 3 arm was trained

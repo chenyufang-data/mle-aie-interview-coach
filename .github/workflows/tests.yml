@@ -77,6 +77,9 @@ jobs:
       # dev fold, prompt, digit-token grade decode, metrics vs train.py's,
       # the pre-registered rule (synthetic rows; private-data check skips).
       - run: python tests/test_slm.py
+      # Step 6 Jev grader experiment: the frozen request, response parsing,
+      # the calibrated arm and the pre-registered rule (offline, no key).
+      - run: python tests/test_jev.py
       # State store (step 4): the file backend's contract and race, then
       # the same contract, the whole tier/budget suite and the migration
       # tool against the Postgres service above.
