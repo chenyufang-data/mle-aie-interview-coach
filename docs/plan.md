@@ -980,8 +980,18 @@ Shipped: `coach/jev.py` (the frozen questions moved there verbatim, checked
 on all 598 requests), the calibration fitted on seed 42's training-side
 rows (`coach/assets/jev_calibration.json`), the `jev` usage counter (file
 store and a Postgres column added idempotently), `JEV_DAILY_CAP`,
-`/api/meta` `jev`, tests, the README section. Open: switching it on on the
-box (a TypeSafe key in its `.env`), and a latency re-measure from there.
+`/api/meta` `jev`, tests, the README section.
+
+**Live 2026-10-01.** The author added a TypeSafe key and `JEV_DAILY_CAP=500`
+to the box's `.env` and rebuilt; checked from outside the same day:
+`/api/meta` reports `jev` enabled on `jev-1.13.0` with 500 calls left, ten
+anonymous grades all came back "Jev typed decision model (jev-1.13.0,
+calibrated)" (good answers 6/10, a wrong one and a generic one 1/10) and
+took the allowance to 490, at 291 ms p50 and 427 ms worst end to end from
+the author's machine through the box - network both ways included, so the
+box's own Jev call is faster than that and well inside the 1 s clause. The
+paid side was untouched (demo key on DeepSeek, allowances intact); the
+store gained its `jev` column at startup. Step 6 closed.
 
 ### Not on the roadmap, still open
 
