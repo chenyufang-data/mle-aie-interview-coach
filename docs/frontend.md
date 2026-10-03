@@ -15,7 +15,18 @@ the backend's file handler. It owns presentation and session flow — nothing el
 
 ## Responsibilities (must)
 
-- **Setup page** (`index.html`): collect track (MLE / AIE), level, topic, and
+- **Home page** (`index.html` + `home.js`): a launcher with three buttons of the
+  same size, each in its page's color - *Concept drills* (green, the setup
+  page), *Coding drills* (blue, `coding.html`), *Mock interview* (gold,
+  `mock.html`) - over a faint squared-paper background that only this page
+  carries. When `meta.code.local` is false (the online demo) the Coding
+  drills button is labelled "In the local app". Old `/?practice=<id>` links
+  are forwarded to `practice.html`.
+- **Page colors**: `--accent` and its tint/ring tokens drive every accent;
+  `<body class="theme-blue">` (coding) and `theme-gold` (mock) re-point them,
+  the default is green. Semantic colors stay fixed (green for a hit or a
+  valid key, gold for partial, red for errors).
+- **Setup page** (`practice.html`, Concept drills): collect track (MLE / AIE), level, topic, and
   optional focus text. The "course knowledge base" topic groups are built at load
   time from `GET /api/meta` — module names and chunk counts come from the server.
   An optional access-key field (stored in `sessionStorage`, sent as the
@@ -59,6 +70,22 @@ frontend uses exactly three endpoints:
 | `GET /api/meta` | Setup page load — builds knowledge-base topic groups |
 | `POST /api/question` | Start of a session and "New question" |
 | `POST /api/evaluate` | Answer submission (first answers and follow-ups) |
+
+`public/coding.html` + `coding.js` is the Coding drills page (roadmap step
+7), local app only. It talks to `/api/code/*` (backend.md), sending the
+`X-Coach-Local` header on every call. Contents: a picker over the coding bank
+plus a field that takes any LeetCode number, title or link; for a LeetCode
+problem an "Open on LeetCode" button that opens the problem in its own window
+sized to sit beside the app - the page never shows LeetCode's statement; for
+the author's own exercises the statement and a starter skeleton built from
+the **Signature:** line; the bank's four-level hint ladder, one level per
+click; "Approach and target" and "Check yourself" (the rubric) behind
+disclosures; a review strip (keep / fix / retire + note) for the author's
+bank review; a code box (Tab / Shift+Tab indent, Enter keeps the indent,
+Ctrl+Enter runs, drafts per problem in `localStorage`) and Run with the
+output below. No timer here; the mock coding round gets one. When the
+server does not run code the page shows instead what Coding drills are, how
+to run them locally, the GitHub link and `coding_demo.gif`.
 
 `public/mock.html` + `mock.js` is the mock-interview page: setup (resume +
 JD or default template, style, length, voice mode) → role cards from

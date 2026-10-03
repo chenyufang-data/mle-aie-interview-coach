@@ -66,7 +66,7 @@ def main():
             errors = []
             page.on("pageerror", lambda e: errors.append(str(e)))
 
-            page.goto(BASE + "/", wait_until="networkidle")
+            page.goto(BASE + "/practice.html", wait_until="networkidle")
             page.wait_for_selector("#topic option", state="attached", timeout=5000)
             page.click("#startBtn")
             page.wait_for_url("**/interview.html", timeout=8000)
@@ -87,7 +87,7 @@ def main():
                 "!!localStorage.getItem('interviewCoachBookmarks')"), \
                 "bookmark did not persist"
 
-            page.goto(BASE + "/", wait_until="networkidle")
+            page.goto(BASE + "/practice.html", wait_until="networkidle")
             page.wait_for_selector("#savedSection:not([hidden])", timeout=5000)
             assert not page.evaluate(
                 "document.querySelector('#savedSection').open"), \

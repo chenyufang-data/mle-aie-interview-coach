@@ -8,11 +8,36 @@
   --ground: #eef2f0;
   --green: #176c5f;
   --green-dark: #0e5148;
-  --tint: rgba(23, 108, 95, 0.08);
   --gold: #b06d14;
   --red: #bd3f2f;
   --blue: #2f66b3;
   --shadow: 0 14px 40px rgba(10, 30, 25, 0.10);
+  /* Each page's accent: green for Concept drills (the default), blue for
+     Coding drills, gold for Mock interview (theme-* on <body>). The gold is
+     darker than --gold so white text on it clears 4.5:1 (5.7:1, level with
+     the blue); --gold stays for "partial" verdicts. */
+  --accent: var(--green);
+  --accent-dark: var(--green-dark);
+  --accent-tint: rgba(23, 108, 95, 0.08);
+  --accent-ring: rgba(23, 108, 95, 0.12);
+  --coding: #2f66b3;
+  --coding-dark: #234f8c;
+  --mock: #94590c;
+  --mock-dark: #6f430a;
+}
+
+.theme-blue {
+  --accent: var(--coding);
+  --accent-dark: var(--coding-dark);
+  --accent-tint: rgba(47, 102, 179, 0.08);
+  --accent-ring: rgba(47, 102, 179, 0.14);
+}
+
+.theme-gold {
+  --accent: var(--mock);
+  --accent-dark: var(--mock-dark);
+  --accent-tint: rgba(148, 89, 12, 0.08);
+  --accent-ring: rgba(148, 89, 12, 0.14);
 }
 
 * {
@@ -127,7 +152,7 @@ button:disabled {
   width: 44px;
   height: 44px;
   color: #ffffff;
-  background: var(--green);
+  background: var(--accent);
   border-radius: 8px;
   font-weight: 800;
 }
@@ -137,7 +162,7 @@ button:disabled {
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0;
-  color: var(--green);
+  color: var(--accent);
   text-transform: uppercase;
 }
 
@@ -183,13 +208,13 @@ h3 {
 }
 
 .account-chip:hover {
-  border-color: var(--green);
+  border-color: var(--accent);
 }
 
 .account-chip-paid {
-  border-color: var(--green);
-  color: var(--green-dark);
-  background: rgba(23, 108, 95, 0.08);
+  border-color: var(--accent);
+  color: var(--accent-dark);
+  background: var(--accent-tint);
 }
 
 /* display:grid below would defeat the hidden attribute's UA display:none,
@@ -243,59 +268,22 @@ h3 {
   color: var(--muted);
 }
 
-/* Entry to the mock interview: the setup page is the app's front door,
-   and before this banner the mock lived only behind a typed URL. */
-.mock-banner {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 22px;
-  padding: 18px 24px;
-  border-radius: 12px;
-  background: var(--green);
-  text-decoration: none;
-}
-
-.mock-banner:hover {
-  background: var(--green-dark);
-}
-
 /* Home page: the link to the 2-minute demo video (demo.html). */
 .demo-link {
   display: inline-block;
   margin: -8px 0 22px;
   font-size: 14px;
   font-weight: 700;
-  color: var(--green);
+  color: var(--accent);
   text-decoration: none;
 }
 
 .demo-link:hover,
 .demo-link:focus-visible {
-  color: var(--green-dark);
+  color: var(--accent-dark);
   text-decoration: underline;
 }
 
-.mock-banner .eyebrow {
-  color: #ffffff;
-}
-
-.mock-banner-text {
-  margin: 4px 0 0;
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 14px;
-}
-
-.mock-banner .secondary-action {
-  background: #ffffff;
-  color: var(--green-dark);
-}
-
-.mock-banner:hover .secondary-action {
-  background: #ffffff;
-}
 
 .setup-grid {
   display: grid;
@@ -361,8 +349,8 @@ textarea {
 select:focus,
 input:focus,
 textarea:focus {
-  border-color: var(--green);
-  box-shadow: 0 0 0 3px rgba(23, 108, 95, 0.12);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ring);
 }
 
 .segmented {
@@ -389,7 +377,7 @@ textarea:focus {
 
 .segment.active {
   color: #ffffff;
-  background: var(--green);
+  background: var(--accent);
 }
 
 .primary-action,
@@ -410,7 +398,7 @@ textarea:focus {
 .secondary-action {
   border: 0;
   color: #ffffff;
-  background: var(--green);
+  background: var(--accent);
 }
 
 /* One primary per view, sized to its label - full-width primaries made
@@ -492,7 +480,7 @@ textarea:focus {
 
 .primary-action:hover,
 .secondary-action:hover {
-  background: var(--green-dark);
+  background: var(--accent-dark);
 }
 
 .ghost-action,
@@ -504,8 +492,8 @@ textarea:focus {
 
 .ghost-action:hover,
 .back-link:hover {
-  border-color: var(--green);
-  color: var(--green);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .inline-status {
@@ -619,7 +607,7 @@ textarea:focus {
 }
 
 .saved-box summary:hover {
-  color: var(--green-dark);
+  color: var(--accent-dark);
 }
 
 .saved-box[open] summary {
@@ -663,7 +651,7 @@ textarea:focus {
 }
 
 .saved-open:hover {
-  color: var(--green-dark);
+  color: var(--accent-dark);
   text-decoration: underline;
 }
 
@@ -691,7 +679,7 @@ textarea:focus {
   font-size: 40px;
   line-height: 1;
   font-weight: 600;
-  color: var(--green-dark);
+  color: var(--accent-dark);
 }
 
 .timer-actions {
@@ -818,7 +806,7 @@ textarea:focus {
 .suggested-answer {
   margin: 16px 0 0;
   padding: 14px;
-  border-left: 4px solid var(--green);
+  border-left: 4px solid var(--accent);
   background: #f3f8f6;
   line-height: 1.5;
 }
@@ -841,7 +829,7 @@ textarea:focus {
   cursor: pointer;
   font-size: 14px;
   font-weight: 750;
-  color: var(--green);
+  color: var(--accent);
 }
 
 .hints[open] summary {
@@ -973,5 +961,508 @@ textarea:focus {
 
   .compact-action {
     width: 100%;
+  }
+}
+
+/* ---- Home launcher (roadmap step 7) --------------------------------------
+   Three modes, one big button each, in the color its page carries. */
+.home {
+  /* Home page only: faint squared paper and soft washes in the three
+     buttons' hues at the corners - CSS, no image download. The working
+     pages keep the plain ground where the user reads and types. */
+  background-color: var(--ground);
+  background-image:
+    radial-gradient(circle at 0% 0%, rgba(23, 108, 95, 0.13), transparent 42%),
+    radial-gradient(circle at 100% 0%, rgba(47, 102, 179, 0.10), transparent 38%),
+    radial-gradient(circle at 100% 100%, rgba(148, 89, 12, 0.11), transparent 44%),
+    linear-gradient(rgba(26, 34, 41, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(26, 34, 41, 0.045) 1px, transparent 1px);
+  background-size: auto, auto, auto, 24px 24px, 24px 24px;
+  background-attachment: fixed;
+}
+
+.home-shell {
+  display: grid;
+  min-height: calc(100vh - 64px);
+  align-items: center;
+  width: min(680px, calc(100vw - 32px));
+  /* stays a floating card over the home background at every width */
+  margin: 32px auto;
+}
+
+.home-page {
+  padding: 30px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  min-width: 0;
+}
+
+.launcher {
+  display: grid;
+  gap: 14px;
+}
+
+.launch {
+  position: relative;
+  display: grid;
+  align-content: center;
+  gap: 6px;
+  min-height: 112px;
+  padding: 20px 64px 20px 24px;
+  border-radius: 12px;
+  color: #ffffff;
+  text-decoration: none;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.launch::after {
+  content: "\2192";
+  position: absolute;
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 24px;
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+.launch:hover {
+  transform: translateY(-1px);
+}
+
+.launch:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+}
+
+.launch-title {
+  font-family: "Schibsted Grotesk", ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+}
+
+.launch-text {
+  font-size: 14.5px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.launch-concept { background: var(--green); }
+.launch-concept:hover { background: var(--green-dark); }
+.launch-coding { background: var(--coding); }
+.launch-coding:hover { background: var(--coding-dark); }
+.launch-mock { background: var(--mock); }
+.launch-mock:hover { background: var(--mock-dark); }
+
+.launch-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 999px;
+  font-family: ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: 0;
+  vertical-align: 3px;
+}
+
+.launch-badge[hidden] {
+  display: none;
+}
+
+.home-page .demo-link {
+  margin: 20px 0 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .launch { transition: none; }
+  .launch:hover { transform: none; }
+}
+
+/* Page header shared by the setup and coding pages: back link, title,
+   account chip. */
+.page-topbar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.page-topbar h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.muted-note {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* ---- Coding drills ---------------------------------------------------- */
+.coding-page {
+  padding: 28px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  min-width: 0;
+}
+
+.coding-page [hidden] {
+  display: none;
+}
+
+.picker-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+}
+
+.picker-row .field {
+  margin-bottom: 0;
+}
+
+.any-row {
+  display: flex;
+  gap: 8px;
+}
+
+.any-row .ghost-action {
+  flex: 0 0 auto;
+}
+
+.coding-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: 20px;
+  align-items: start;
+  margin-top: 6px;
+}
+
+.problem-panel {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  min-width: 0;
+}
+
+.problem-panel p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.problem-panel h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chips:empty {
+  display: none;
+}
+
+.chip {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--accent-tint);
+  color: var(--accent-dark);
+  font-size: 12px;
+  font-weight: 750;
+  text-transform: capitalize;
+}
+
+.leetcode-box {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+
+.statement {
+  display: grid;
+  gap: 10px;
+}
+
+.problem-panel code {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--surface);
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-size: 0.92em;
+  font-variant-ligatures: none;
+}
+
+.hint-list {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 10px;
+  padding-left: 20px;
+}
+
+.hint-list:empty {
+  display: none;
+}
+
+.hint-label {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.problem-panel pre,
+.run-output pre {
+  margin: 4px 0 0;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: var(--surface);
+  font: 13px/1.5 ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-variant-ligatures: none;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.reveal-box {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.reveal-box summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.reveal-box[open] summary {
+  margin-bottom: 8px;
+}
+
+.reveal-box h4 {
+  margin: 10px 0 2px;
+  font-size: 13px;
+}
+
+.reveal-box ul {
+  margin: 0;
+  padding-left: 20px;
+  line-height: 1.5;
+}
+
+.reveal-box p + p {
+  margin-top: 6px;
+}
+
+.review-box input[type="text"] {
+  margin: 8px 0;
+}
+
+.review-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.review-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.review-pick input {
+  width: auto;
+  height: auto;
+}
+
+.code-panel {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.code-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.code-tools {
+  display: flex;
+  gap: 8px;
+}
+
+.small-action {
+  min-width: 0;
+  min-height: 36px;
+  padding: 0 14px;
+}
+
+.code-box {
+  min-height: 440px;
+  padding: 12px 14px;
+  background: #fbfcfc;
+  font: 14px/1.55 ui-monospace, "Cascadia Code", Consolas, monospace;
+  /* no "->" drawn as an arrow: code shows the characters typed */
+  font-variant-ligatures: none;
+  tab-size: 4;
+  white-space: pre;
+  overflow: auto;
+}
+
+.code-box.stdin {
+  min-height: 90px;
+}
+
+.stdin-box summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.stdin-box[open] summary {
+  margin-bottom: 8px;
+}
+
+.run-output {
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.run-output h4 {
+  margin: 10px 0 0;
+  font-size: 13px;
+}
+
+.run-output pre {
+  max-height: 320px;
+  overflow: auto;
+}
+
+.run-status {
+  margin: 0;
+  font-weight: 750;
+}
+
+.run-status.ok {
+  color: var(--green-dark);
+}
+
+.run-status.error,
+.run-output .stderr {
+  color: var(--red);
+}
+
+.local-only {
+  display: grid;
+  gap: 16px;
+}
+
+.local-only .lead {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.55;
+  max-width: 65ch;
+}
+
+.intro-figure {
+  margin: 0;
+}
+
+.intro-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.local-steps {
+  margin: 0;
+  padding-left: 22px;
+  line-height: 1.7;
+}
+
+.local-steps code {
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-size: 0.92em;
+}
+
+@media (max-width: 960px) {
+  .coding-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Same narrow-screen rule as the setup and session pages: the working card
+   fills the screen edge to edge. */
+@media (max-width: 860px) {
+  .coding-page {
+    min-height: 100vh;
+    border: 0;
+    border-radius: 0;
+    padding: 20px;
+  }
+}
+
+@media (max-width: 640px) {
+  .home-shell {
+    margin: 16px auto;
+    min-height: calc(100vh - 32px);
+  }
+
+  .home-page {
+    padding: 20px;
+  }
+
+  .launch {
+    min-height: 96px;
+    padding: 16px 52px 16px 18px;
+  }
+
+  .launch::after {
+    right: 18px;
+  }
+
+  .page-topbar {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .page-topbar .account-mount {
+    grid-column: 1 / -1;
+  }
+
+  .picker-row {
+    grid-template-columns: 1fr;
+  }
+
+  .code-box {
+    min-height: 320px;
   }
 }

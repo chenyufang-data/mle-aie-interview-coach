@@ -92,6 +92,14 @@ def parse_args():
     return parser.parse_args()
 
 
+class CoachHTTPServer(ThreadingHTTPServer):
+    # http.server sets SO_REUSEADDR, which on Windows lets this server bind a
+    # port another program is already listening on (WSL's port relay, for
+    # one): both answer, requests go to either, and the start never fails.
+    # Elsewhere it only skips TIME_WAIT after a restart, so keep it there.
+    allow_reuse_address = os.name != "nt"
+
+
 def voice_availability(host):
     """None when the voice loop can run here, else a short reason.
 
@@ -173,6 +181,12 @@ def main():
         raise SystemExit(f"State store: {exc}")
     kb.load_chunks()
     users.load_users()
+    # Step 7 coding drills: local only (coach/coding.py) - this machine's
+    # Python runs the user's own code, so never on a shared bind.
+    config.CODE_LOCAL = (host in ("127.0.0.1", "localhost", "::1")
+                         and os.environ.get("CODE_RUN", "on").strip().lower()
+                         not in ("off", "0", "false", "no"))
+    config.CODE_RUN_TIMEOUT_S = float(os.environ.get("CODE_RUN_TIMEOUT_S", "10"))
     # Claude mode needs the local grader too when tiers are on: it serves
     # free-tier and over-quota requests.
     # The subscription engine falls back to it when a CLI call fails.
@@ -201,7 +215,7 @@ def main():
             "users.json (tiers and per-key daily budgets), or pass "
             "--allow-anonymous-llm / ALLOW_ANONYMOUS_LLM=1 on a private network.")
     try:
-        server = ThreadingHTTPServer((host, port), http.InterviewCoachHandler)
+        server = CoachHTTPServer((host, port), http.InterviewCoachHandler)
     except OSError as exc:
         # Windows reports a port another process (often a Docker container's
         # published port) holds as WinError 10013/10048, not "address in use".
@@ -224,6 +238,12 @@ def main():
     else:
         print(f"Retrieval: BM25 only - {config.RETRIEVAL_DISABLED_REASON}.")
     print(f"State store: {store.current().describe()}.")
+    if config.CODE_LOCAL:
+        from coach import coding
+        print(f"Coding drills: {len(coding.records())} problems from banks/rag_code; Run uses "
+              f"this Python ({config.CODE_RUN_TIMEOUT_S:g} s limit), localhost only.")
+    else:
+        print("Coding drills: off (local app only - a loopback HOST with CODE_RUN on).")
     if config.MODE == "mock":
         brain = (
             f"trained ML grader ({grading.GRADER['model_name']})"
@@ -240,7 +260,8 @@ def main():
               + (" - chosen automatically on localhost; LLM_CLI=off or --api uses the API keys."
                  if cli_auto else "."))
     else:
-        print(f"Backend: Anthropic API, model {os.environ.get('ANTHROPIC_MODEL', config.DEFAULT_MODEL)}.")
+        print(f"Backend: Anthropic API, model {os.environ.get('ANTHROPIC_MODEL', config.DEFAULT_MODEL)}.")
+
         if cli_note:
             print(f"Subscription: not used - {cli_note}.")
         if users.TIERS_ENABLED:

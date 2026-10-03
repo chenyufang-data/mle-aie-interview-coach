@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Concept drills | MLE/AIE Interview Coach</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@700;800&family=JetBrains+Mono:wght@600&display=swap">
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="app-shell setup-shell">
+      <section class="setup-page" aria-label="Concept drills setup">
+        <header class="page-topbar">
+          <a class="back-link" href="/">Home</a>
+          <div>
+            <p class="eyebrow">Concept drills</p>
+            <h1>Practice a question</h1>
+          </div>
+          <div id="accountChip" class="account-mount"></div>
+        </header>
+
+        <section class="form-section" aria-label="Interview setup">
+          <h3>Set up your question</h3>
+
+          <div class="field-row">
+            <div class="field">
+              <label>Track</label>
+              <div class="segmented" role="group" aria-label="Role track">
+                <button class="segment active" data-role="MLE" type="button">MLE</button>
+                <button class="segment" data-role="AIE" type="button">AIE</button>
+                <!-- Real gathered interview questions: private bank, only
+                     shown when the server reports it loaded. -->
+                <button class="segment" data-role="EXP" type="button" hidden>Real Qs</button>
+                <!-- Licensed GitHub question lists (rag_lists): same rule. -->
+                <button class="segment" data-role="LISTS" type="button" hidden>Lists</button>
+                <!-- Rubrics from primary documentation (rag_docs): same rule. -->
+                <button class="segment" data-role="DOCS" type="button" hidden>Docs</button>
+              </div>
+            </div>
+            <div class="field">
+              <label for="level">Level</label>
+              <select id="level">
+                <option>Entry-level</option>
+                <option selected>Mid-level</option>
+                <option>Senior</option>
+                <option>Staff</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="topic">Topic</label>
+              <select id="topic"></select>
+            </div>
+            <div class="field">
+              <label for="focus">Optional focus</label>
+              <input id="focus" type="text" placeholder="e.g. fraud ranking, RAG latency">
+            </div>
+          </div>
+
+          <div class="cta-row">
+            <button id="startBtn" class="primary-action" type="button">Start practice</button>
+            <p id="setupSummary" class="setup-summary">MLE · Mid-level</p>
+          </div>
+          <p id="setupStatus" class="inline-status" aria-live="polite"></p>
+        </section>
+
+        <!-- Questions starred during practice (localStorage; app.js hides
+             the section while the list is empty, collapsed by default). -->
+        <details class="form-section saved-box" id="savedSection" hidden>
+          <summary>Saved questions <span id="savedCount" class="saved-count"></span></summary>
+          <div id="savedList" class="saved-list"></div>
+        </details>
+      </section>
+    </main>
+
+    <script src="/account.js"></script>
+    <script src="/app.js"></script>
+  </body>
+</html>

@@ -6,7 +6,7 @@ from http.server import BaseHTTPRequestHandler
 
 import anthropic
 
-from coach import config, grading, jev, kb, sessions, store, stt_dev, users
+from coach import coding, config, grading, jev, kb, sessions, store, stt_dev, users
 from coach.mock import routes as mock_routes
 from coach.config import PAID_CASCADE, PAID_DAILY_QUOTA, PUBLIC_DIR
 from coach.llm import call_model, engine_model
@@ -55,6 +55,10 @@ class InterviewCoachHandler(BaseHTTPRequestHandler):
                         "model": jev.model() if jev.enabled() else None,
                         "server_cap": config.JEV_DAILY_CAP or None,
                         "server_left_today": users.jev_left() if jev.enabled() else None},
+                # Step 7: coding drills run only in the local app (a
+                # loopback bind); the demo shows what they are instead.
+                "code": {"local": config.CODE_LOCAL,
+                         "problems": len(coding.records()) if config.CODE_LOCAL else 0},
                 "user": {
                     "name": user["name"],
                     "tier": user["tier"],
@@ -87,6 +91,9 @@ class InterviewCoachHandler(BaseHTTPRequestHandler):
             return
         if path.startswith("/api/mock/"):
             mock_routes.handle_get(self, path)
+            return
+        if path.startswith("/api/code/"):
+            coding.handle_get(self, path)
             return
         if path == "/":
             path = "/index.html"
@@ -126,6 +133,9 @@ class InterviewCoachHandler(BaseHTTPRequestHandler):
                 return
             if self.path.startswith("/api/mock/"):
                 mock_routes.handle_post(self, self.path, data)
+                return
+            if self.path.startswith("/api/code/"):
+                coding.handle_post(self, self.path, data)
                 return
             if self.path == "/api/question":
                 if data.get("chunk_id"):

@@ -827,7 +827,7 @@ function renderReport(result) {
     </ul>
     ${(v.misses.length || v.partials.length) && v.chunk_id ? `
     <p class="muted-note">Practice this exact question in the coach${v.module ? ` (${escapeHtml(v.module)})` : ""}:
-      <a href="/?practice=${encodeURIComponent(v.chunk_id)}">${escapeHtml(v.bank_question || v.chunk_id)}</a></p>` : ""}`).join("");
+      <a href="/practice.html?practice=${encodeURIComponent(v.chunk_id)}">${escapeHtml(v.bank_question || v.chunk_id)}</a></p>` : ""}`).join("");
   const trans = result.transcription ? renderTranscription(result.transcription) : "";
 
   els.reportBody.innerHTML = `

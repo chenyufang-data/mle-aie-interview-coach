@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
@@ -7,9 +7,12 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@700;800&family=JetBrains+Mono:wght@600&display=swap">
     <link rel="stylesheet" href="/styles.css">
   </head>
-  <body>
-    <main class="app-shell setup-shell">
-      <section class="setup-page" aria-label="Interview setup">
+  <!-- The home page is a launcher (roadmap step 7): three modes, one button
+       each, in the color its page carries. The squared-paper background is
+       on this page only; the working pages keep the plain ground. -->
+  <body class="home">
+    <main class="app-shell home-shell">
+      <section class="home-page" aria-label="Interview Coach">
         <div class="brand setup-brand">
           <div class="logo-mark">IC</div>
           <div>
@@ -19,76 +22,26 @@
           <div id="accountChip" class="account-mount"></div>
         </div>
 
-        <a class="mock-banner" href="/mock.html">
-          <div>
-            <p class="eyebrow">AI Mock Interview</p>
-            <p class="mock-banner-text">A full deep-dive round against your own
-              resume — role detection, an adaptive interviewer, a scored report.
-              Text, or live voice.</p>
-          </div>
-          <span class="secondary-action compact-action">Start a mock</span>
-        </a>
+        <nav class="launcher" aria-label="Choose how to practice">
+          <a class="launch launch-concept" href="/practice.html">
+            <span class="launch-title">Concept drills</span>
+            <span class="launch-text">One ML or AI question at a time, graded against a rubric.</span>
+          </a>
+          <a class="launch launch-coding" href="/coding.html">
+            <span class="launch-title">Coding drills <span id="codingBadge" class="launch-badge" hidden>In the local app</span></span>
+            <span class="launch-text">LeetCode and ML-coding problems in your own code box, with a step-by-step hint ladder.</span>
+          </a>
+          <a class="launch launch-mock" href="/mock.html">
+            <span class="launch-title">Mock interview</span>
+            <span class="launch-text">A full round on your resume: an adaptive interviewer, then a scored report. Text or live voice.</span>
+          </a>
+        </nav>
 
         <a class="demo-link" href="/demo.html">&#9654; New here? Watch the 2-minute demo</a>
-
-        <section class="form-section" aria-label="Interview setup">
-          <h3>Practice a question</h3>
-
-          <div class="field-row">
-            <div class="field">
-              <label>Track</label>
-              <div class="segmented" role="group" aria-label="Role track">
-                <button class="segment active" data-role="MLE" type="button">MLE</button>
-                <button class="segment" data-role="AIE" type="button">AIE</button>
-                <!-- Real gathered interview questions: private bank, only
-                     shown when the server reports it loaded. -->
-                <button class="segment" data-role="EXP" type="button" hidden>Real Qs</button>
-                <!-- Licensed GitHub question lists (rag_lists): same rule. -->
-                <button class="segment" data-role="LISTS" type="button" hidden>Lists</button>
-                <!-- Rubrics from primary documentation (rag_docs): same rule. -->
-                <button class="segment" data-role="DOCS" type="button" hidden>Docs</button>
-              </div>
-            </div>
-            <div class="field">
-              <label for="level">Level</label>
-              <select id="level">
-                <option>Entry-level</option>
-                <option selected>Mid-level</option>
-                <option>Senior</option>
-                <option>Staff</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="field-row">
-            <div class="field">
-              <label for="topic">Topic</label>
-              <select id="topic"></select>
-            </div>
-            <div class="field">
-              <label for="focus">Optional focus</label>
-              <input id="focus" type="text" placeholder="e.g. fraud ranking, RAG latency">
-            </div>
-          </div>
-
-          <div class="cta-row">
-            <button id="startBtn" class="primary-action" type="button">Start practice</button>
-            <p id="setupSummary" class="setup-summary">MLE · Mid-level</p>
-          </div>
-          <p id="setupStatus" class="inline-status" aria-live="polite"></p>
-        </section>
-
-        <!-- Questions starred during practice (localStorage; app.js hides
-             the section while the list is empty, collapsed by default). -->
-        <details class="form-section saved-box" id="savedSection" hidden>
-          <summary>Saved questions <span id="savedCount" class="saved-count"></span></summary>
-          <div id="savedList" class="saved-list"></div>
-        </details>
       </section>
     </main>
 
     <script src="/account.js"></script>
-    <script src="/app.js"></script>
+    <script src="/home.js"></script>
   </body>
 </html>
-

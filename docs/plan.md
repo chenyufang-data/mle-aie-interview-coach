@@ -1088,26 +1088,33 @@ the home card is mostly the question-practice form, with the mock interview
 as a banner above it and no place for coding. It becomes three buttons of
 the same size, stacked vertically, each in its own color, each with a title
 and one line saying what it does:
-- *Question practice* (the site's green): opens the practice setup that is
+- *Concept drills* (the site's green): opens the practice setup that is
   the home page today - track, level, topic, focus, saved questions -
   moved to its own view.
-- *Coding practice* (the site's blue): opens the coding page (phase 3).
+- *Coding drills* (the site's blue): opens the coding page (phase 3).
 - *Mock interview* (a gold darkened from the site's, because white text on
   the current gold measures about 4.2:1 against the 4.5:1 guideline for
   the description line): opens the mock page, which gains a choice between
   the experience deep-dive (today's mock) and the coding round (phase 5).
 
+Names (author's choice, 2026-10-03): *Concept drills* / *Coding drills* /
+*Mock interview* - two focused-repetition modes and the full round.
+"Question practice" and "Coding practice" were dropped as vague. Each page
+keeps its button's color as its accent: green for Concept drills, blue for
+Coding drills, gold for Mock interview.
+
 The brand header with the account chip stays on top and the demo link
 below the buttons. The buttons are real links, focusable from the keyboard
 with a visible focus ring, full card width, still stacked at phone width.
-On the online demo, *Coding practice* is not released (no code runs
+On the online demo, *Coding drills* is not released (no code runs
 there): the button stays, labelled "In the local app", and opens a short
-page saying what the local coding practice does and how to run it - the
-demo shows the feature without a dead end.
+page saying what coding drills do and how to run them, with the link to the
+repository and an introducing GIF - the demo shows the feature without a
+dead end.
 
 *Background*: no photograph. A light motif on the home page only, in
 CSS or inline SVG of a few kilobytes and no image download: a faint
-squared-paper grid and two soft washes in the buttons' hues at the
+squared-paper grid and soft washes in the three buttons' hues at the
 corners, behind the card and never behind text. The working pages
 (practice, coding, mock) keep the plain ground, where the user reads and
 types.
@@ -1197,6 +1204,27 @@ with logging on, never for anonymous visitors; a retention line is added.
    rag_docs; the author's keep/fix/retire review is pending.
 3. *Coding page and home launcher* (local): picker, "Open on LeetCode",
    code box, local Run; the three-button home page and its background.
+   Done 2026-10-03: `coach/coding.py` serves `/api/code/*` (bank, problem,
+   resolve, run, review) only on a loopback bind and only to requests from
+   loopback that name a loopback Host and carry `X-Coach-Local`; Run uses
+   this Python (`-I`) in a temporary folder with a 10 s limit and no API
+   keys in its environment. `coding.html` (blue): bank picker or any
+   LeetCode number / title / link (no lookup online - a number outside the
+   bank asks for the link), "Open on LeetCode" in its own window beside the
+   app, the author's statement plus a starter skeleton from its
+   **Signature:** line (all 40 compile), the bank's hint ladder one level
+   per click, "Approach and target" and "Check yourself" behind
+   disclosures, and a keep / fix / retire strip writing
+   `data/review/rag_code.decisions.json` for the author's bank review while
+   testing. The home page is the launcher; the practice setup moved to
+   `practice.html` (old `/?practice=` links forward); the mock page turned
+   gold. On a non-local server the coding page shows the intro, the GitHub
+   link and `coding_demo.gif` (a scripted session on the local app that
+   never opens LeetCode's site), and the container test requires coding off
+   and Run refused. Found on the way: on Windows `http.server`'s
+   SO_REUSEADDR let the app bind a port WSL's relay already held, so two
+   servers answered one port; the server now binds exclusively there and a
+   taken port stops the start with the clear message.
 4. *Tutor*: ladder, guard, snapshots, watch-outs, coding report; text,
    then voice.
 5. *Mock coding round* (local): the interviewer presents a problem, the

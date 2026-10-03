@@ -123,8 +123,14 @@ Nothing corpus-specific is hard-coded in the frontend — module lists come from
 
 <p align="center">
   <img src="docs/img/home.png" width="640"
-       alt="The setup page: mock-interview banner, track/level/topic picker, saved questions">
+       alt="The home page: three buttons - Concept drills in green, Coding drills in blue, Mock interview in gold">
 </p>
+
+The home page has three modes, each page in its button's color:
+**Concept drills** (one question at a time, below), **Coding drills** (local
+app, below) and the **AI mock interview** ([section](#ai-mock-interview-text--live-voice)).
+
+**Concept drills**
 
 - Choose an interview track, level, and topic on the setup page.
 - Two question sources in the topic dropdown:
@@ -148,6 +154,21 @@ Nothing corpus-specific is hard-coded in the frontend — module lists come from
   (knowledge-base mode avoids repeating questions within a session). Follow-up answers
   are graded with the original question, your previous answer, and the course material
   as context, so the coach can tell whether you built on your earlier reasoning.
+
+**Coding drills** (local app; roadmap step 7, in progress)
+
+- Pick a problem from `banks/rag_code` - the LeetCode problems from my practice
+  notebooks and my own ML-coding and PyTorch exercises - or name any LeetCode
+  problem by number, title or link. "Open on LeetCode" opens the problem in its own
+  window beside the app; the app never shows or stores LeetCode's statements.
+- Write the solution in the app's code box and Run it: this machine's Python, in a
+  temporary folder, with a time limit and none of the server's API keys in its
+  environment. Running code is local-only - the server refuses it on any non-loopback
+  bind, and the online demo shows what the feature does instead.
+- A four-level hint ladder per problem (a clarifying question, a nudge, the approach
+  in words, one step of pseudocode - never the whole answer), then a self-check
+  rubric: key points, edge cases, common mistakes, clean code, what to say out loud,
+  follow-ups. A live tutor and a mock coding round come next (docs/plan.md, step 7).
 
 ## Setup
 

@@ -171,8 +171,23 @@ elif allow_bm25:
     print(f"WARN: retrieval backend is {backend!r} ({reason}); accepted because CONTAINER_TEST_ALLOW_BM25=1")
 else:
     print(f"FAIL: retrieval backend is {backend!r}, expected hybrid ({reason})"); failures += 1
+# Step 7: coding drills run the user's code with the server's Python, so a
+# container (HOST=0.0.0.0) must report them off.
+if (meta.get("code") or {}).get("local") is False:
+    print("PASS: coding drills off in the container (no code runs on a shared bind)")
+else:
+    print(f"FAIL: coding drills report {meta.get('code')!r}, expected local false"); failures += 1
 sys.exit(1 if failures else 0)
 PY
+
+# The code runner must refuse even a request that carries the coding page's
+# header: the container never executes submitted code.
+code="$(curl -sS -o /dev/null -w '%{http_code}' -H 'Content-Type: application/json'   -H 'X-Coach-Local: 1' -d '{"code": "print(1)"}' "$BASE_URL/api/code/run")"
+if [ "$code" = "403" ]; then
+  pass "POST /api/code/run refused (403)"
+else
+  fail "POST /api/code/run answered $code, expected 403"
+fi
 
 # One graded answer: fetch a bank question, then evaluate an answer to it
 # (in --mock mode the local distilled grader scores it offline).

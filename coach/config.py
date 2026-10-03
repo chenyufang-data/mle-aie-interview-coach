@@ -157,6 +157,14 @@ CLI_PROVIDER = ""
 CLI_MODEL = os.environ.get("LLM_CLI_MODEL", "").strip()
 CLI_EFFORT = os.environ.get("LLM_CLI_EFFORT", "low").strip() or "low"
 CLI_TIMEOUT_S = float(os.environ.get("LLM_CLI_TIMEOUT_S", "300"))
+# Roadmap step 7, coding drills (coach/coding.py): the bank built by
+# ingest/ingest_code.py and the local code runner. CODE_LOCAL is set by
+# server.main() - True only on a loopback bind with CODE_RUN not "off"; the
+# demo box binds 0.0.0.0 in its container, so it never runs code.
+CODE_BANK_PATH = Path(os.environ.get("CODE_BANK_PATH", BANKS_DIR / "rag_code" / "all_chunks.jsonl"))
+CODE_REVIEW_PATH = BASE_DIR / "data" / "review" / "rag_code.decisions.json"
+CODE_RUN_TIMEOUT_S = float(os.environ.get("CODE_RUN_TIMEOUT_S", "10"))
+CODE_LOCAL = False
 CASCADE_PRED_MAX = 2.5
 CASCADE_FRAC_HIT_MAX = 0.25
 

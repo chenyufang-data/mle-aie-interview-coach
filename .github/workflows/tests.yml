@@ -87,6 +87,10 @@ jobs:
       # title and link from LeetCode, pasted statements never reach the
       # prompt or the bank, the leak and hint checks (synthetic notebooks).
       - run: python tests/test_ingest_code.py
+      # Coding drills (coach/coding.py): LeetCode references with no online
+      # lookup, the local runner (limits, no API keys), the local-only guard
+      # and the review notes, plus the routes over real HTTP.
+      - run: python tests/test_coding.py
       # State store (step 4): the file backend's contract and race, then
       # the same contract, the whole tier/budget suite and the migration
       # tool against the Postgres service above.

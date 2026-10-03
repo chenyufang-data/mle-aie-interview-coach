@@ -11,6 +11,9 @@ services:
         required: false # not needed in --mock mode
     environment:
       HOST: 0.0.0.0
+      # nginx and the healthcheck reach the backend on 8000; a PORT in the
+      # .env (set for running the app outside Docker) must not move it.
+      PORT: "8000"
       REAL_SESSIONS_PATH: /data/sessions/real_sessions.jsonl
       FREE_SESSIONS_PATH: /data/sessions/free_sessions.jsonl
       # The opt-in mock log and the resume-analysis cache belong on the

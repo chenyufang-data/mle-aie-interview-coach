@@ -83,8 +83,9 @@ backend name. The implementation lives in `coach/`, one module per concern:
 `users` (tiers/quota, fail-closed), `llm` (Claude/DeepSeek/Ollama calls,
 blocking and streamed), `prompts` (system prompt, builders, schemas),
 `grading` (routing, cascade, local distilled grader), `sessions` (logging),
-`web` (JSON helpers), `stt_dev` (localhost-only recording routes), `http`
-(the handler). `coach/mock/` is the mock interview; `coach/voice/` is the
+`web` (JSON helpers), `stt_dev` (localhost-only recording routes), `coding`
+(coding drills: the coding bank, LeetCode references, the local runner),
+`http` (the handler). `coach/mock/` is the mock interview; `coach/voice/` is the
 live voice loop (below).
 Convention: startup-reassigned globals (`config.MODE`, `users.TIERS_ENABLED`,
 `grading.GRADER`, …) are read as module attributes, never `from`-imported.
@@ -139,6 +140,7 @@ when tiers are enabled.
           "DOCS": { "modules": ["..."], "chunks": 72 } },
   "retrieval": { "backend": "hybrid", "reason": null, "vectors": "numpy" },
   "store": { "backend": "file" },
+  "code": { "local": true, "problems": 138 },
   "user": { "name": "anonymous", "tier": "free", "tiers_enabled": true,
             "paid_quota": 30, "paid_left_today": 0,
             "paid_grader": "deepseek-v4-flash",
@@ -170,13 +172,47 @@ come from, `"numpy"` or `"pgvector"`; `store.backend` is `"file"` or
 `tiers_enabled` is false when `users.json` is absent or the server is not in
 Claude mode; the frontend hides its tier badge then.
 
+`code.local` says whether this server runs coding drills (a loopback bind
+with `CODE_RUN` not `off`); the container test requires it false.
+
+### Coding drills: `/api/code/*` (coach/coding.py, local app only)
+
+Roadmap step 7. Every route answers 403 unless the server binds loopback
+(`config.CODE_LOCAL`, set at startup) and the request comes from loopback,
+names a loopback `Host` (DNS rebinding) and carries `X-Coach-Local: 1`,
+which a page on another site cannot send without a CORS preflight this
+server never grants. The bank is `banks/rag_code` (ingest/ingest_code.py),
+re-read when the file changes, retired records hidden.
+
+- `GET /api/code/bank` → `{ problems: [{id, label, source, family, number,
+  title, difficulty, role, group, link}], time_limit }`.
+- `GET /api/code/problem?id=` → `{ problem }`: the summary plus `statement`
+  and `starter_code` (own exercises only - a LeetCode record has neither),
+  `approaches`, `complexity`, `hints` (levels 0-3), `rubric` (key_points,
+  edge_cases, common_mistakes, code_quality, communication, followups) and
+  the author's saved `review`.
+- `POST /api/code/resolve` `{ query }` → `{ problem }`: a bank entry by
+  LeetCode number, link or title, or any other problem by link or title
+  (`id: null`, link from LeetCode's slug rule, no hints or rubric). Nothing
+  is looked up online, so a number outside the bank is a 400 asking for the
+  link or title.
+- `POST /api/code/run` `{ code, stdin }` → `{ stdout, stderr, exit_code,
+  timed_out, seconds, time_limit }`: one run of the file with this Python
+  (`-I`) in a temporary folder, `CODE_RUN_TIMEOUT_S` (10 s) limit, output
+  capped at 64 KB, two runs at a time, and an environment of PATH and the
+  OS basics only - none of the API keys the server loaded from `.env`.
+- `POST /api/code/review` `{ id, status: keep|fix|retire|"", note }` →
+  saves the author's decision to `data/review/rag_code.decisions.json`, the
+  file `tools/review_bank.py rag_code --apply` reads; an empty status clears
+  it.
+
 ### `POST /api/question`
 
 Request: `role` (`"MLE"` | `"AIE"`), `level`, `topic`, `focus`,
 `source` (`"kb"` to draw from the course bank, otherwise AI-generated),
 `exclude` (list of already-served chunk ids). With `chunk_id` set, the
 exact bank chunk is returned instead (404 if unknown) — the mock
-report's rubric tie-in links a missed probe here via `/?practice=<id>`.
+report's rubric tie-in links a missed probe here via `/practice.html?practice=<id>`.
 
 Response:
 
@@ -255,7 +291,7 @@ and `--mock` mode serves a deterministic offline demo engine (also what
   hiring call), deterministic communication metrics, and
   distilled-classifier hit/partial/miss verdicts for rubric-grounded
   probes — each verdict row carries `bank_question` + `chunk_id` so the
-  page links misses to `/?practice=<chunk_id>`. Report engine defaults to
+  page links misses to `/practice.html?practice=<chunk_id>`. Report engine defaults to
   Claude when a key is present (regrade consistency), else the turn
   engine. `log_consent: true` (the UI's opt-in checkbox, default off)
   appends the session to `data/sessions/mock_sessions.jsonl`; `logged`

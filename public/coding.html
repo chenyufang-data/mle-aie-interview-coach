@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Coding drills | MLE/AIE Interview Coach</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@700;800&family=JetBrains+Mono:wght@600&display=swap">
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <!-- Coding drills (roadmap step 7). Local app only: the bank, the code box
+       and Run need a server on localhost (coach/coding.py). LeetCode problems
+       show number, title and a link - the statement stays on leetcode.com,
+       opened in its own window. Practice has no timer. -->
+  <body class="theme-blue">
+    <main class="app-shell coding-shell">
+      <section class="coding-page" aria-label="Coding drills">
+        <header class="page-topbar">
+          <a class="back-link" href="/">Home</a>
+          <div>
+            <p class="eyebrow">Coding drills</p>
+            <h1 id="problemTitle">Pick a problem</h1>
+          </div>
+          <div id="accountChip" class="account-mount"></div>
+        </header>
+
+        <!-- Shown when this server does not run code (the online demo). -->
+        <section id="localOnly" class="local-only" hidden>
+          <p class="lead">Coding drills run in the local app: a code box next to LeetCode,
+            your code run on your own machine, and a hint ladder that climbs from a
+            clarifying question to one step of pseudocode - never the whole answer.</p>
+          <figure class="intro-figure" id="introFigure">
+            <img src="/coding_demo.gif" alt="Coding drills in the local app: picking a problem, writing code, running it, and opening hints one level at a time" width="940" loading="lazy">
+          </figure>
+          <ol class="local-steps">
+            <li>Clone the repository and install it (Python 3.12).</li>
+            <li>Sign in to Claude Code or Codex, or put an API key in <code>.env</code>.</li>
+            <li>Run <code>python server.py</code> and open <code>http://127.0.0.1:8000/coding.html</code>.</li>
+          </ol>
+          <div class="cta-row">
+            <a class="primary-action" href="https://github.com/chenyufang-data/mle-aie-interview-coach#readme" target="_blank" rel="noopener">Get the code on GitHub</a>
+            <a class="ghost-action" href="/mock.html">Try the mock interview here</a>
+          </div>
+        </section>
+
+        <section id="workspace" class="coding-workspace" hidden>
+          <div class="picker-row">
+            <div class="field">
+              <label for="bankPicker">From your bank</label>
+              <select id="bankPicker"><option value="">Loading problems...</option></select>
+            </div>
+            <form id="anyForm" class="field any-form">
+              <label for="anyInput">Or any LeetCode problem</label>
+              <div class="any-row">
+                <input id="anyInput" type="text" placeholder="Number, title or link" autocomplete="off">
+                <button class="ghost-action" type="submit">Open</button>
+              </div>
+            </form>
+          </div>
+          <p id="pickStatus" class="inline-status" aria-live="polite"></p>
+
+          <div class="coding-columns">
+            <section id="problemPanel" class="problem-panel" aria-label="Problem">
+              <p class="empty-state">Pick a problem from your bank, or name any LeetCode problem.</p>
+            </section>
+
+            <section class="code-panel" aria-label="Your code">
+              <div class="code-head">
+                <label for="codeBox">Your code <span class="muted-note">Python</span></label>
+                <div class="code-tools">
+                  <button id="resetBtn" class="ghost-action small-action" type="button" title="Put the starter code back">Reset</button>
+                  <button id="runBtn" class="primary-action small-action" type="button" title="Run (Ctrl+Enter)">Run</button>
+                </div>
+              </div>
+              <textarea id="codeBox" class="code-box" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off"
+                placeholder="Write your solution, call it, print the result - then Run (Ctrl+Enter)."></textarea>
+              <details class="stdin-box">
+                <summary>Input for the program (stdin)</summary>
+                <textarea id="stdinBox" class="code-box stdin" spellcheck="false" wrap="off" rows="4"></textarea>
+              </details>
+              <section id="runOutput" class="run-output" aria-live="polite" hidden></section>
+              <p class="disclosure-note">Run uses this computer's Python in a temporary folder, with a time limit. Your code and drafts stay on this machine.</p>
+            </section>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="/account.js"></script>
+    <script src="/coding.js"></script>
+  </body>
+</html>
