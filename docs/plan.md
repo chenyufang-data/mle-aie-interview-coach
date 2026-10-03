@@ -993,6 +993,75 @@ box's own Jev call is faster than that and well inside the 1 s clause. The
 paid side was untouched (demo key on DeepSeek, allowances intact); the
 store gained its `jev` column at startup. Step 6 closed.
 
+### Local subscription engine (built 2026-10-03)
+
+`server.py --cli claude|codex` (`coach/cli_engine.py`) runs every LLM call
+through the CLI the user installed and signed in to - Claude Code on a
+Claude plan, Codex on a ChatGPT plan - instead of an API key: grading, AI
+questions, the text mock and its report, live voice. Checked against the
+vendors' terms first (2026-10-02): Anthropic forbids routing requests
+through Free/Pro/Max credentials on behalf of other users but allows an end
+user signing in to the unmodified Claude Code binary with their own plan;
+`codex exec` reuses the user's saved ChatGPT sign-in. Hence local only: the
+server refuses `--cli` on any address but loopback. Claude Code runs with
+`--tools ""` and `--safe-mode`, an explicit model and effort (Sonnet, low),
+no saved session, `--json-schema` for structured calls; Codex runs
+`exec` read-only in an empty folder with `--output-schema`. The mock report
+stays on the subscription (it used to switch to the Claude API whenever a
+key was present), and a failed call falls back to the local grader.
+Measured on the grading prompt: 10-11 s per evaluation, 0.7 s of it CLI
+start-up; live run through the app: AI question 7.3 s, evaluation 13.4 s,
+mock roles 16.4 s, plan + first question 19.6 s, a follow-up 2.4 s.
+Offline tests in `tests/test_cli_engine.py`. Not verified live: Codex on
+the author's machine, whose CLI (0.142.2) is older than the model its
+config selects. Not possible: offering it on the public demo (visitors'
+plans would pass through the server); OpenAI's "Sign in with ChatGPT"
+(2026-09-29) could allow ChatGPT plans there if OpenAI accepts the site.
+
+### Step 7 — Coding practice and coding interviews (outline, 2026-10-03)
+
+**Goal.** Add the coding round MLE and AIE loops include: practice a coding
+problem with real test results and feedback, and a coding phase inside the
+mock interview. This outline is deliberately short; each phase gets its
+detail, data and pre-registered rule when it starts.
+
+**What a coding question is.** A new bank, `banks/rag_code`, in the
+existing chunk schema plus: the problem statement, a function signature,
+visible examples, hidden tests, a reference solution, the expected time and
+space complexity, and a rubric (correctness, complexity, code quality,
+edge cases, communication). Three families for these roles: Python data
+structures and algorithms; ML from scratch (numpy: k-means, logistic
+regression, a metric, a train/test split without leakage); data and AI
+engineering tasks (pandas wrangling, a retrieval function, an eval loop).
+
+**Phases.**
+1. *Bank.* Write and source the first problems (licences checked as for
+   `rag_lists`), with tests and reference solutions; reviewed with
+   `tools/review_bank.py`.
+2. *Practice page.* A code editor on the practice page and a Run button
+   that shows each test's result.
+3. *Running code safely.* The decision this step turns on. Candidate:
+   Pyodide (Python in WebAssembly) runs the visible tests in the visitor's
+   browser, so the demo box never executes strangers' code; hidden tests
+   run in a locked-down sandbox only where that is safe (local first).
+4. *Grading.* Test results are the deterministic half; an LLM review (the
+   existing engines, the subscription engine locally) covers approach,
+   complexity, quality and edge cases against the rubric.
+5. *Coding round in the mock.* The interviewer presents a problem, the
+   candidate explains an approach, writes and runs code, and answers
+   follow-ups on complexity and edge cases; the report gains coding
+   dimensions.
+6. *Measured.* A gold set of solutions across quality tiers (optimal,
+   correct but slow, buggy, wrong approach, messy), labelled by the
+   teacher; graders compared under a rule fixed before the run, as in
+   steps 3 and 6 (Jev is documented as weaker on code, so it gets measured
+   here, not assumed).
+
+**Open questions.** Which families and how many problems to start with;
+whether hidden tests are worth a server sandbox on the demo or stay local;
+Python only or more languages; how much the voice loop matters for a
+coding round.
+
 ### Not on the roadmap, still open
 
 - The SLM grader's transfer to real answers: every step 3 arm was trained

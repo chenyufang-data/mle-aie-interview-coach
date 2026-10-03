@@ -76,6 +76,7 @@ coach/               the runtime: everything the server imports (one module per 
   retrieval.py       BM25 (CI gate + fallback)      retrieval_dense.py  bge-small + BM25 hybrid, pgvector
   features.py        the grader's lexical features  slm.py       optional fine-tuned SLM grade (SLM_URL)
   jev.py             optional Jev grade + verdicts for the free tier (TYPESAFE_API_KEY, step 6)
+  cli_engine.py      local-only engine on your own Claude Code / Codex subscription (--cli)
   resume_parser.py   PDF/.docx/.txt to text         stt_text.py  WER, term error rate, keyterm policy
   mock/              mock interview (plan, turns, report)
   voice/             live voice loop: VAD, STT, TTS, barge-in, Level 1 sidecar
@@ -241,6 +242,37 @@ Test the app without spending Anthropic API credits:
 
 Local evaluations are clearly labeled in the summary (e.g. `[Mock mode - local
 ML grader ...]`). Run without flags for the real Claude-graded experience.
+
+## Your own Claude or ChatGPT subscription (local only)
+
+No API key? If you have Claude Code signed in to a Claude Pro/Max plan, or the
+Codex CLI signed in to a ChatGPT plan, the app can run every LLM call through
+that CLI on your machine - grading, AI questions, the text mock and its
+report, and live voice:
+
+```powershell
+.venv\Scripts\python server.py --cli claude   # Claude Code (`claude -p`), Sonnet by default
+.venv\Scripts\python server.py --cli codex    # Codex (`codex exec`), your Codex default model
+```
+
+The app runs the CLI as a subprocess and never sees your credentials; calls
+count against your plan instead of an API bill. It is local by design: the
+server refuses `--cli` on any address but `127.0.0.1`, because a personal
+plan must not serve other people (Anthropic does not allow routing requests
+through Pro/Max credentials on behalf of others; a ChatGPT plan is personal).
+Claude Code runs with its tools off and your hooks, plugins, MCP servers and
+`CLAUDE.md` skipped (`--safe-mode`); Codex runs in a read-only sandbox in an
+empty folder. `LLM_CLI_MODEL` and `LLM_CLI_EFFORT` (default `low`) pick the
+model and effort, so your interactive defaults never apply here. A failed
+call (plan limit, sign-out, timeout) falls back to the local grader, labeled
+"Subscription call failed".
+
+Speed, measured on the grading prompt (Claude Code, Sonnet, low effort):
+10-11 s per evaluation, of which about 0.7 s is starting the CLI - the rest
+is generating ~1,400 tokens of feedback, which an API call with the same
+model takes too. Interviewer turns pay the same fixed start-up, which live
+voice hears as a later first word. The public demo cannot offer this: its
+visitors' subscriptions would have to pass through the server.
 
 ## Free and paid tiers (freemium demo)
 

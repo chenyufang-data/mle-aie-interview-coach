@@ -48,6 +48,10 @@ def grading_route(user, force_llm=False):
         return "local", "mock"
     if config.MODE == "ollama":
         return "ollama", None
+    if config.MODE == "cli":
+        # Local subscription engine (coach/cli_engine.py): one person, on
+        # loopback, on their own plan - no tiers, quotas or budgets apply.
+        return "cli", None
     if not users.TIERS_ENABLED:
         return "claude", None  # tiers disabled: single-user setup
     if user["tier"] != "paid":
@@ -79,6 +83,12 @@ LOCAL_GRADING_LABELS = {
         "Daily LLM allowance used",
         "This key's LLM allowance for today is spent (demo and shared keys are "
         "capped per day); grading is local until tomorrow.",
+    ),
+    "cli_error": (
+        "Subscription call failed",
+        "The Claude Code / Codex call did not return a grade (plan limit, sign-in "
+        "or a timeout), so the local grader stepped in. Check `claude auth status` "
+        "or `codex login status` and try again.",
     ),
     "cascade": (
         "Smart cascade",

@@ -80,6 +80,9 @@ jobs:
       # Step 6 Jev grader experiment: the frozen request, response parsing,
       # the calibrated arm and the pre-registered rule (offline, no key).
       - run: python tests/test_jev.py
+      # Local subscription engine (--cli): the commands it builds, output
+      # parsing, streaming, the loopback rule, routing (fake CLIs, offline).
+      - run: python tests/test_cli_engine.py
       # State store (step 4): the file backend's contract and race, then
       # the same contract, the whole tier/budget suite and the migration
       # tool against the Postgres service above.

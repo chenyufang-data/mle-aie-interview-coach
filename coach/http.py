@@ -200,12 +200,16 @@ class InterviewCoachHandler(BaseHTTPRequestHandler):
                             build_evaluation_prompt(data, chunk),
                             EVALUATION_SCHEMA, engine,
                         )
-                    except Exception:
-                        if engine != "deepseek":
+                    except Exception as exc:
+                        if engine not in ("deepseek", "cli"):
                             raise
-                        # DeepSeek down or malformed twice: degrade to the
-                        # local grader rather than surprise-spending Claude.
-                        engine, reason = "local", "llm_error"
+                        # DeepSeek down or malformed twice, or the user's
+                        # subscription CLI refused (plan limit, sign-in):
+                        # degrade to the local grader rather than
+                        # surprise-spending Claude.
+                        if engine == "cli":
+                            print(f"Subscription grading failed: {exc}", flush=True)
+                        engine, reason = "local", ("cli_error" if engine == "cli" else "llm_error")
                     else:
                         result["graded_by"] = engine_model(engine)
                         sessions.log_real_session(data, result, user, engine)

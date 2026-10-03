@@ -201,6 +201,10 @@ def call_chat(system, messages, engine, thinking=False, max_tokens=700,
     prompt size, so interviewer turns run with thinking off while the
     report keeps it on.
     """
+    if engine == "cli":
+        from coach import cli_engine
+        return cli_engine.complete(system, cli_engine.transcript(messages),
+                                   effort=cli_engine.effort_for(thinking))
     if engine == "ollama":
         payload = {
             "model": config.OLLAMA_MODEL,
@@ -263,7 +267,12 @@ def call_chat(system, messages, engine, thinking=False, max_tokens=700,
 
 def call_model(user_prompt, schema, engine, thinking=True):
     """Structured (JSON) call. `thinking` is honoured by DeepSeek only:
-    Claude's grading path and Ollama keep their own settings."""
+    Claude's grading path and Ollama keep their own settings; the CLI engine
+    uses its configured effort (LLM_CLI_EFFORT)."""
+    if engine == "cli":
+        from coach import cli_engine
+        return cli_engine.complete(SYSTEM_PROMPT, user_prompt, schema,
+                                   effort=config.CLI_EFFORT)
     if engine == "ollama":
         return call_ollama(user_prompt, schema)
     if engine == "deepseek":
@@ -273,6 +282,9 @@ def call_model(user_prompt, schema, engine, thinking=True):
 
 def engine_model(engine):
     """Human-readable model name behind a grading engine, for logs and UI."""
+    if engine == "cli":
+        from coach import cli_engine
+        return cli_engine.label()
     return {
         "claude": os.environ.get("ANTHROPIC_MODEL", DEFAULT_MODEL),
         "ollama": config.OLLAMA_MODEL,
@@ -308,6 +320,11 @@ def call_chat_stream(system, messages, engine, thinking=False, max_tokens=700,
     DeepSeek: SSE with stream=true (verified 2026-08-30; reasoning_content
     deltas are skipped - with thinking disabled there are none anyway).
     """
+    if engine == "cli":
+        from coach import cli_engine
+        yield from cli_engine.stream(system, cli_engine.transcript(messages),
+                                     effort=cli_engine.effort_for(thinking))
+        return
     if engine == "deepseek":
         payload = {
             "model": config.deepseek_model(),

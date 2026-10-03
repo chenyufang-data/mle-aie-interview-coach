@@ -147,6 +147,16 @@ JEV_TIMEOUT_S = float(os.environ.get("JEV_TIMEOUT_S", "3"))
 JEV_BACKOFF_S = float(os.environ.get("JEV_BACKOFF_S", "30"))
 JEV_DAILY_CAP = int(os.environ.get("JEV_DAILY_CAP", "500"))
 JEV_CALIBRATION_PATH = BASE_DIR / "coach" / "assets" / "jev_calibration.json"
+
+# Local subscription engine (server.py --cli claude|codex, coach/cli_engine.py):
+# every LLM call goes through the user's own signed-in Claude Code or Codex
+# CLI instead of an API key. CLI_PROVIDER is set by the flag; the model and
+# effort are explicit so the CLI's interactive defaults never apply
+# (LLM_CLI_MODEL empty = Sonnet for Claude Code, the Codex default for Codex).
+CLI_PROVIDER = ""
+CLI_MODEL = os.environ.get("LLM_CLI_MODEL", "").strip()
+CLI_EFFORT = os.environ.get("LLM_CLI_EFFORT", "low").strip() or "low"
+CLI_TIMEOUT_S = float(os.environ.get("LLM_CLI_TIMEOUT_S", "300"))
 CASCADE_PRED_MAX = 2.5
 CASCADE_FRAC_HIT_MAX = 0.25
 

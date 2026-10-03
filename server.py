@@ -47,6 +47,15 @@ def parse_args():
         help="Use a free local Ollama model instead of the Anthropic API (default: llama3.2). "
         "Requires Ollama running at localhost:11434.",
     )
+    backend.add_argument(
+        "--cli",
+        choices=("claude", "codex"),
+        help="Use your own subscription instead of an API key: every LLM call goes "
+        "through the Claude Code (claude) or Codex (codex) CLI you installed and "
+        "signed in to. Local only - refuses any HOST but loopback, because a "
+        "personal plan must not serve other people. LLM_CLI_MODEL / "
+        "LLM_CLI_EFFORT pick the model and effort (coach/cli_engine.py).",
+    )
     voice = parser.add_mutually_exclusive_group()
     voice.add_argument(
         "--voice",
@@ -123,8 +132,16 @@ def main():
     elif args.ollama:
         config.MODE = "ollama"
         config.OLLAMA_MODEL = args.ollama
+    elif args.cli:
+        config.MODE = "cli"
+        config.CLI_PROVIDER = args.cli
 
     config.load_env_file()
+    if config.MODE == "cli":
+        # read after the .env so the file's values apply
+        config.CLI_MODEL = os.environ.get("LLM_CLI_MODEL", "").strip()
+        config.CLI_EFFORT = os.environ.get("LLM_CLI_EFFORT", "low").strip() or "low"
+        config.CLI_TIMEOUT_S = float(os.environ.get("LLM_CLI_TIMEOUT_S", "300"))
     # The state store: the files under data/ by default, Postgres when the
     # environment (or the .env just loaded) sets DATABASE_URL. A configured
     # database that cannot serve stops the start - never a silent fallback
@@ -137,12 +154,26 @@ def main():
     users.load_users()
     # Claude mode needs the local grader too when tiers are on: it serves
     # free-tier and over-quota requests.
-    if config.MODE == "mock" or (config.MODE == "claude" and users.TIERS_ENABLED):
+    # The subscription engine falls back to it when a CLI call fails.
+    if (config.MODE in ("mock", "cli")
+            or (config.MODE == "claude" and users.TIERS_ENABLED)):
         grading.load_grader()
     # HOST=0.0.0.0 is required inside a container; the localhost default keeps
     # a bare `python server.py` private to this machine.
     host = os.environ.get("HOST", "127.0.0.1")
     port = int(os.environ.get("PORT", "8000"))
+    cli_status = None
+    if config.MODE == "cli":
+        from coach import cli_engine
+        if cli_engine.bind_refused(host):
+            raise SystemExit(
+                f"Refusing --cli on HOST={host}: the subscription engine uses your "
+                "personal Claude/ChatGPT plan and serves this machine only (the "
+                "vendors' terms do not allow serving other people with it). Run it "
+                "on 127.0.0.1, or use API keys for a shared server.")
+        ready, cli_status = cli_engine.check_ready(config.CLI_PROVIDER)
+        if not ready:
+            raise SystemExit(f"--cli {config.CLI_PROVIDER}: {cli_status}")
     if anonymous_llm_refused(host, args.allow_anonymous_llm):
         raise SystemExit(
             f"Refusing to bind HOST={host} without users.json: every request "
@@ -174,6 +205,10 @@ def main():
         print(f"Backend: MOCK mode (free) - KB questions, grading via {brain}.")
     elif config.MODE == "ollama":
         print(f"Backend: Ollama local model '{config.OLLAMA_MODEL}' (free) at localhost:11434.")
+    elif config.MODE == "cli":
+        from coach import cli_engine
+        print(cli_engine.environment_note())
+        print(f"Subscription: {cli_status}.")
     else:
         print(f"Backend: Anthropic API, model {os.environ.get('ANTHROPIC_MODEL', config.DEFAULT_MODEL)}.")
         if users.TIERS_ENABLED:

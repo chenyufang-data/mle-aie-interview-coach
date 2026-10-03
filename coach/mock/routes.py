@@ -265,6 +265,8 @@ def _default_report_engine(turn_engine):
     from coach.llm import get_api_key
     if turn_engine == "fake":
         return "fake"
+    if turn_engine == "cli":
+        return "cli"  # subscription mode never spends an API key behind the user's back
     if get_api_key():
         return "claude"
     return turn_engine
