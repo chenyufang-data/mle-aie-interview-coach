@@ -256,7 +256,10 @@ report, and live voice:
 ```
 
 The app runs the CLI as a subprocess and never sees your credentials; calls
-count against your plan instead of an API bill. It is local by design: the
+count against your plan instead of an API bill. The API-key variables in
+your `.env` are removed from the CLI's environment (Claude Code would
+otherwise prefer `ANTHROPIC_API_KEY` over your plan), and the server refuses
+to start if the CLI reports an API-key sign-in rather than a plan. It is local by design: the
 server refuses `--cli` on any address but `127.0.0.1`, because a personal
 plan must not serve other people (Anthropic does not allow routing requests
 through Pro/Max credentials on behalf of others; a ChatGPT plan is personal).

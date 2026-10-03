@@ -180,7 +180,15 @@ def main():
             "would grade with your Claude/DeepSeek keys anonymously. Add "
             "users.json (tiers and per-key daily budgets), or pass "
             "--allow-anonymous-llm / ALLOW_ANONYMOUS_LLM=1 on a private network.")
-    server = ThreadingHTTPServer((host, port), http.InterviewCoachHandler)
+    try:
+        server = ThreadingHTTPServer((host, port), http.InterviewCoachHandler)
+    except OSError as exc:
+        # Windows reports a port another process (often a Docker container's
+        # published port) holds as WinError 10013/10048, not "address in use".
+        raise SystemExit(
+            f"Cannot listen on {host}:{port} ({exc.strerror or exc}): another "
+            f"program, often a Docker container publishing that port, holds it. "
+            f"Set PORT to a free port in .env (e.g. PORT={port + 1}) or stop that program.")
     display_host = "127.0.0.1" if host == "0.0.0.0" else host
     print(f"MLE/AIE Interview Coach running at http://{display_host}:{port}")
     for role, info in kb.KB.items():

@@ -1012,55 +1012,160 @@ key was present), and a failed call falls back to the local grader.
 Measured on the grading prompt: 10-11 s per evaluation, 0.7 s of it CLI
 start-up; live run through the app: AI question 7.3 s, evaluation 13.4 s,
 mock roles 16.4 s, plan + first question 19.6 s, a follow-up 2.4 s.
-Offline tests in `tests/test_cli_engine.py`. Not verified live: Codex on
+Found the same day and fixed: under the server, the CLI inherited the
+`.env`'s `ANTHROPIC_API_KEY`, which Claude Code prefers over the plan, so
+the first live run through the app billed the API key, not the plan. The
+API-key variables are now removed from every CLI call, and startup refuses
+a CLI that reports an API-key sign-in (re-checked: "claude.ai, max";
+Opus 5.5 at medium grades in 21.6 s). Offline tests in
+`tests/test_cli_engine.py`. Not verified live: Codex on
 the author's machine, whose CLI (0.142.2) is older than the model its
 config selects. Not possible: offering it on the public demo (visitors'
 plans would pass through the server); OpenAI's "Sign in with ChatGPT"
 (2026-09-29) could allow ChatGPT plans there if OpenAI accepts the site.
 
-### Step 7 — Coding practice and coding interviews (outline, 2026-10-03)
+### Step 7 — Coding practice and coding interviews (settled 2026-10-03)
 
 **Goal.** Add the coding round MLE and AIE loops include: practice a coding
-problem with real test results and feedback, and a coding phase inside the
-mock interview. This outline is deliberately short; each phase gets its
-detail, data and pre-registered rule when it starts.
+problem with a tutor that hints instead of answering, and a coding round
+inside the mock interview. **Local version first**, with every function,
+used by the author for their own LeetCode practice; the online demo is
+trimmed from it only after the local tests pass and are pushed.
 
-**What a coding question is.** A new bank, `banks/rag_code`, in the
-existing chunk schema plus: the problem statement, a function signature,
-visible examples, hidden tests, a reference solution, the expected time and
-space complexity, and a rubric (correctness, complexity, code quality,
-edge cases, communication). Three families for these roles: Python data
-structures and algorithms; ML from scratch (numpy: k-means, logistic
-regression, a metric, a train/test split without leakage); data and AI
-engineering tasks (pandas wrangling, a retrieval function, an eval loop).
+**What LeetCode's terms rule out** (terms: no copying, redistributing or
+publishing its content; no crawling or scraping - leetcode.com/terms, read
+again before the bank is built):
+- No problem description inside the app - no text, excerpt or preview.
+  Framing the page is blocked by LeetCode's headers, and stripping them is
+  circumvention; a link preview means fetching LeetCode pages and showing
+  their text. The app shows the problem's number, title and an "Open on
+  LeetCode" button; the user reads the problem in a separate window.
+- No automated lookups. For "any LeetCode problem" the user types the
+  number and title, or pastes the URL (the slug is read from it as text);
+  the app never calls leetcode.com or its API.
+- No LeetCode test cases or editorials. Correctness in the app's code box
+  comes from test inputs the tutor writes itself, run locally; an LLM
+  review; and the user saying LeetCode accepted the code after submitting
+  it there themselves.
+- On the online demo, no task description at all for LeetCode problems -
+  not even the one-line paraphrases in the author's notes; title and link
+  only. The tutor may use such a line internally.
+
+**Engines.** Locally the subscription is the default for every use -
+practice, grading, the tutor, the mock interview, its report, voice: on a
+loopback bind with no mode flag, startup checks whether Claude Code or
+Codex is signed in and uses it (Claude Code first when both are;
+`LLM_CLI=codex` prefers Codex; `LLM_CLI=off` or `--api` keeps the API
+keys). The box never auto-selects it (not loopback, no CLI installed). The
+author's local setting: Claude Code on Opus 5.5 at medium effort
+(`LLM_CLI_MODEL=claude-opus-5-5`, `LLM_CLI_EFFORT=medium` in `.env`); the
+repository default stays Sonnet at low effort. The demo keeps the API
+engines with their daily allowances. Locally the app runs on port 8001
+(`PORT` in `.env`): 8000 is taken by another project's container on the
+author's machine, and a taken port now stops the start with a clear message.
+
+**The bank, `banks/rag_code`.** Seeded from the author's practice notebooks
+(98 LeetCode problems across the weekly and additional notebooks, plus
+their own ML-coding, PyTorch and SQL exercises).
+- LeetCode problems: number, title, approaches (our own labels, e.g. "hash
+  map"), role (`mle`, `aie` or `shared`) and the link
+  `https://leetcode.com/problems/<slug>/` - nothing else from LeetCode.
+- The author's own exercises: the full statement, since the text is theirs.
+- Per problem, written by us: a rubric (correctness, complexity, edge
+  cases, code quality, communication) and a hint bank for the ladder.
+
+**The coding page.** A problem picker (the bank, or any LeetCode problem by
+number, title or URL), the "Open on LeetCode" button, a code box, and Run.
+Locally Run executes the tutor's test inputs against the user's code in a
+subprocess with a time limit (the user's own code on their own machine);
+the demo runs no code. Practice has no timer; the mock coding round shows
+the same "Elapsed time" strip as the practice question page, with Pause
+and Reset.
+
+**No browser extension for now.** The separate LeetCode window removes the
+two things an extension needed (reading LeetCode's editor, the microphone
+in a side panel); voice runs in the app's own page, where the microphone
+already works. An extension stays a later option.
+
+**The tutor.**
+- *What it sees.* The problem (number, title, our labels; the statement
+  only for our own exercises), the latest code snapshot, the last run
+  result, the hint history and the conversation. A snapshot is taken when
+  the user sends a message, presses Run, or pauses for about 20 s - not on
+  every keystroke.
+- *When it talks.* When asked, by text or voice. After a failed run or a
+  long stall it offers ("want a hint?") and waits. Otherwise it stays quiet
+  and logs watch-outs for the report: a loop bound that can overrun, a
+  mutated input, an empty input not handled.
+- *The hint ladder, enforced by the server, not the prompt.* Level 0 a
+  clarifying question back; 1 a concept nudge; 2 the approach or data
+  structure; 3 pseudocode for one step; 4 the full solution. The server
+  sets the highest level a reply may reach and raises it one step per
+  request on the same blocker. Level 4 needs the "Show solution" button or
+  a second, confirmed "just tell me" - a button, not the model's judgement.
+  An output guard checks every reply below level 4 for code beyond about
+  three lines and for a full algorithm described in prose, and regenerates
+  or trims it (a regex for code, a cheap judge for prose). Hints point at
+  the user's own code ("`seen` is reset inside the loop on line 7").
+- *Voice.* The existing stack (`coach/voice`, the Phase 0 key terms, the
+  existing text-to-speech) with push-to-talk; in the mock every turn is
+  kept with timestamps next to the code snapshots.
+- *Speed.* Hint p95 at most 5 s locally and 3 s on the demo, measured in
+  the tutor phase (short replies measured so far: DeepSeek 1.0-1.5 s, the
+  Claude API 2.3-2.6 s, a subscription follow-up 2.4 s). The author's Opus
+  medium setting is slower than those; it is measured against the same
+  target.
+
+**After the problem.**
+- *Coding report*, every attempt: time to done, runs and failed runs,
+  hints used by level, the watch-outs logged and whether each was fixed,
+  the final complexity against the expected one - for LeetCode problems
+  the expected complexity is the tutor's estimate and labelled as such.
+- *Communication report*, mock only: the deterministic metrics of
+  `coach/mock/metrics.py` (talk time, silences, fillers) plus a rubric
+  verdict on clarifying questions, an approach stated before coding,
+  complexity stated, test and edge cases walked through, and thinking
+  aloud; then two or three suggestions.
+- *Solution*, after review: the user's own code with the tutor's review -
+  never the editorial.
+
+**Saved records** (behind `coach/store.py`, file and Postgres backends):
+`problems` (source `coach` | `leetcode`, number, title, approaches, role,
+link, starred, first seen), `attempts` (problem, user, times, mock or not,
+language, hints by level, outcome), `solutions` (code, approach label,
+complexity, review), `coding_reports`, and `communication_reports` for mock
+attempts. A solved problem is listed as "<title> (<approach>)"; problems
+solved only with level 3-4 hints come back first, a light spaced
+repetition. The consent rule applies: on the demo, records only for keys
+with logging on, never for anonymous visitors; a retention line is added.
 
 **Phases.**
-1. *Bank.* Write and source the first problems (licences checked as for
-   `rag_lists`), with tests and reference solutions; reviewed with
-   `tools/review_bank.py`.
-2. *Practice page.* A code editor on the practice page and a Run button
-   that shows each test's result.
-3. *Running code safely.* The decision this step turns on. Candidate:
-   Pyodide (Python in WebAssembly) runs the visible tests in the visitor's
-   browser, so the demo box never executes strangers' code; hidden tests
-   run in a locked-down sandbox only where that is safe (local first).
-4. *Grading.* Test results are the deterministic half; an LLM review (the
-   existing engines, the subscription engine locally) covers approach,
-   complexity, quality and edge cases against the rubric.
-5. *Coding round in the mock.* The interviewer presents a problem, the
-   candidate explains an approach, writes and runs code, and answers
-   follow-ups on complexity and edge cases; the report gains coding
-   dimensions.
-6. *Measured.* A gold set of solutions across quality tiers (optimal,
-   correct but slow, buggy, wrong approach, messy), labelled by the
-   teacher; graders compared under a rule fixed before the run, as in
-   steps 3 and 6 (Jev is documented as weaker on code, so it gets measured
-   here, not assumed).
+1. *Subscription by default locally*, and the author's model setting.
+2. *Bank*: `banks/rag_code` from the notebooks, with rubrics and hints;
+   reviewed with `tools/review_bank.py`.
+3. *Coding page* (local): picker, "Open on LeetCode", code box, local Run.
+4. *Tutor*: ladder, guard, snapshots, watch-outs, coding report; text,
+   then voice.
+5. *Mock coding round* (local): the interviewer presents a problem, the
+   candidate explains, codes and runs, answers follow-ups on complexity
+   and edge cases; the timer; the communication report.
+6. *Records* and a practice history page.
+7. *Local tests*: the author records several of their own sessions, kept
+   in `data/` and never committed; CI runs on invented fixtures. Pushed.
+8. *Online demo*, trimmed: the mock coding round only, on the bank, with
+   its rubrics and hints, no code execution, the API engines and their
+   allowances, title and link only for LeetCode problems.
+9. *Measured*, each rule fixed before its run: graders on a gold set of
+   solutions across quality tiers (Jev measured here, not assumed - it is
+   documented as weaker on code); a solution-leakage eval (adversarial
+   "just tell me" turns at levels 0-3, guard on and off, prose leaks
+   included); the communication-rubric judge against author labels on
+   recorded mock attempts.
 
-**Open questions.** Which families and how many problems to start with;
-whether hidden tests are worth a server sandbox on the demo or stay local;
-Python only or more languages; how much the voice loop matters for a
-coding round.
+**Open questions.** Python only or more languages in the code box; whether
+the demo later gets in-browser execution (Pyodide) for its own exercises;
+whether an extension is worth it later; whether the tutor should ever
+speak unasked beyond the offer after a failed run.
 
 ### Not on the roadmap, still open
 

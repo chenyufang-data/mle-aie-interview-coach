@@ -32,6 +32,7 @@ does.
 """
 
 import json
+import os
 import shutil
 import subprocess
 import tempfile
@@ -41,6 +42,18 @@ from coach import config
 
 PROVIDERS = ("claude", "codex")
 LOOPBACK = ("127.0.0.1", "localhost", "::1")
+
+# Variables that make each CLI bill an API account instead of the user's
+# signed-in plan. The server loads .env, where the app's own API keys live,
+# so a child process would inherit them - and Claude Code prefers an
+# ANTHROPIC_API_KEY in its environment over the subscription login. They are
+# removed from every CLI call (found 2026-10-03: a server run with the key in
+# .env reported "api_key" and billed the API, not the plan).
+API_KEY_VARS = {
+    "claude": ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN"),
+    "codex": ("OPENAI_API_KEY", "CODEX_API_KEY"),
+}
+SUBSCRIPTION_AUTH = ("claude.ai", "oauth_token")   # Claude Code authMethod values
 
 
 def provider():
@@ -64,6 +77,15 @@ def binary(name=None):
     return shutil.which(name or provider())
 
 
+def child_env(name=None):
+    """os.environ without the API-key variables of this CLI, so it runs on
+    the user's subscription login."""
+    env = dict(os.environ)
+    for var in API_KEY_VARS.get(name or provider(), ()):
+        env.pop(var, None)
+    return env
+
+
 def bind_refused(host):
     """True when this engine must not serve: anything but loopback."""
     return host not in LOOPBACK
@@ -80,22 +102,28 @@ def check_ready(name):
     args = [path, "auth", "status"] if name == "claude" else [path, "login", "status"]
     try:
         proc = subprocess.run(args, capture_output=True, text=True, encoding="utf-8",
-                              errors="replace", timeout=60)
+                              errors="replace", timeout=60, env=child_env(name))
     except (OSError, subprocess.TimeoutExpired) as exc:
         return False, f"could not run `{name}` ({exc})."
     if proc.returncode != 0:
         fix = "run `claude` and sign in" if name == "claude" else "run `codex login`"
         return False, f"`{name}` is not signed in: {fix}."
-    detail = ""
     if name == "claude":
         try:
             status = json.loads(proc.stdout)
-            detail = f" ({status.get('authMethod')}, {status.get('subscriptionType') or 'no plan'})"
         except ValueError:
-            pass
-    else:
-        detail = f" ({proc.stdout.strip() or proc.stderr.strip()})"
-    return True, f"`{name}` signed in{detail}"
+            status = {}
+        method = status.get("authMethod")
+        if method not in SUBSCRIPTION_AUTH:
+            return False, (f"`claude` is signed in with {method or 'an unknown method'}, not a "
+                           "Claude subscription; run `claude auth login` with your Claude account "
+                           "(or use the app's API-key mode instead of --cli).")
+        return True, f"`claude` signed in ({method}, {status.get('subscriptionType') or 'plan unknown'})"
+    said = (proc.stdout.strip() or proc.stderr.strip())
+    if "chatgpt" not in said.lower():
+        return False, (f"`codex` reports \"{said}\", not a ChatGPT sign-in; run `codex login` "
+                       "with your ChatGPT account (or use the app's API-key mode).")
+    return True, f"`codex` signed in ({said})"
 
 
 def transcript(messages):
@@ -147,7 +175,7 @@ def _run(args, stdin, cwd):
     try:
         proc = subprocess.run(args, input=stdin, capture_output=True, text=True,
                               encoding="utf-8", errors="replace", cwd=cwd,
-                              timeout=config.CLI_TIMEOUT_S)
+                              timeout=config.CLI_TIMEOUT_S, env=child_env())
     except subprocess.TimeoutExpired:
         raise RuntimeError(f"{label()} did not answer within {config.CLI_TIMEOUT_S:.0f} s") from None
     except OSError as exc:
@@ -215,7 +243,7 @@ def stream(system, prompt, effort=None):
             proc = subprocess.Popen(claude_args(system, None, effort, stream=True),
                                     stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE, text=True, encoding="utf-8",
-                                    errors="replace", cwd=workdir)
+                                    errors="replace", cwd=workdir, env=child_env())
         except OSError as exc:
             raise RuntimeError(f"could not start {label()}: {exc}") from None
         proc.stdin.write(prompt)

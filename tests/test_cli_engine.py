@@ -151,6 +151,50 @@ def test_claude_stream_yields_deltas():
         cli_engine.subprocess.Popen = real
 
 
+def test_api_keys_never_reach_the_cli():
+    """The server loads .env (the app's API keys) into its environment; a CLI
+    that inherited ANTHROPIC_API_KEY would bill the API, not the plan."""
+    os.environ["ANTHROPIC_API_KEY"] = "sk-ant-dummy"
+    os.environ["OPENAI_API_KEY"] = "sk-openai-dummy"
+    os.environ["CODEX_API_KEY"] = "codex-dummy"
+    use("claude")
+    env = cli_engine.child_env()
+    assert "ANTHROPIC_API_KEY" not in env and "PATH" in env
+    assert "OPENAI_API_KEY" not in cli_engine.child_env("codex")
+    assert "CODEX_API_KEY" not in cli_engine.child_env("codex")
+    seen = {}
+
+    def fake(args, **kw):
+        seen["env"] = kw.get("env")
+        return FakeProc(json.dumps({"is_error": False, "result": "ok"}))
+    real = with_fake_run(fake)
+    try:
+        cli_engine.complete("SYS", "hi")
+        assert seen["env"] is not None and "ANTHROPIC_API_KEY" not in seen["env"]
+    finally:
+        cli_engine.subprocess.run = real
+
+
+def test_check_ready_requires_a_subscription_login():
+    real_run, real_which = cli_engine.subprocess.run, cli_engine.shutil.which
+    cli_engine.shutil.which = lambda name: f"/bin/{name}"
+    try:
+        cli_engine.subprocess.run = lambda *a, **k: FakeProc(
+            json.dumps({"loggedIn": True, "authMethod": "api_key"}))
+        ok, msg = cli_engine.check_ready("claude")
+        assert not ok and "not a Claude subscription" in msg
+        cli_engine.subprocess.run = lambda *a, **k: FakeProc(
+            json.dumps({"loggedIn": True, "authMethod": "claude.ai", "subscriptionType": "max"}))
+        ok, msg = cli_engine.check_ready("claude")
+        assert ok and "claude.ai" in msg and "max" in msg
+        cli_engine.subprocess.run = lambda *a, **k: FakeProc("Logged in using an API key")
+        assert not cli_engine.check_ready("codex")[0]
+        cli_engine.subprocess.run = lambda *a, **k: FakeProc("Logged in using ChatGPT")
+        assert cli_engine.check_ready("codex")[0]
+    finally:
+        cli_engine.subprocess.run, cli_engine.shutil.which = real_run, real_which
+
+
 def test_transcript_and_loopback():
     text = cli_engine.transcript([{"role": "user", "content": "Tell me about X."},
                                   {"role": "assistant", "content": [{"type": "text", "text": "Sure."}]},
