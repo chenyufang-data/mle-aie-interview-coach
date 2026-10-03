@@ -1141,6 +1141,12 @@ with logging on, never for anonymous visitors; a retention line is added.
 
 **Phases.**
 1. *Subscription by default locally*, and the author's model setting.
+   Done 2026-10-03: with no mode flag on a loopback bind, startup picks a
+   signed-in Claude Code or Codex subscription (`cli_engine.auto_select`;
+   Claude Code first, `LLM_CLI=codex|off`, `--api`); other binds never
+   check. Checked on the author's machine: no flag picks Claude Code
+   (Opus 5.5, medium, "claude.ai, max"); `--api` and `LLM_CLI=off` keep the
+   API keys; `--mock` is untouched.
 2. *Bank*: `banks/rag_code` from the notebooks, with rubrics and hints;
    reviewed with `tools/review_bank.py`.
 3. *Coding page* (local): picker, "Open on LeetCode", code box, local Run.

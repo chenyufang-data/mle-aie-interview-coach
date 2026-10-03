@@ -54,7 +54,14 @@ def parse_args():
         "through the Claude Code (claude) or Codex (codex) CLI you installed and "
         "signed in to. Local only - refuses any HOST but loopback, because a "
         "personal plan must not serve other people. LLM_CLI_MODEL / "
-        "LLM_CLI_EFFORT pick the model and effort (coach/cli_engine.py).",
+        "LLM_CLI_EFFORT pick the model and effort (coach/cli_engine.py). Without any "
+        "mode flag, a server on localhost uses a signed-in CLI automatically.",
+    )
+    backend.add_argument(
+        "--api",
+        action="store_true",
+        help="Use the API keys in .env even when Claude Code or Codex is signed in "
+        "(the same as LLM_CLI=off).",
     )
     voice = parser.add_mutually_exclusive_group()
     voice.add_argument(
@@ -137,6 +144,20 @@ def main():
         config.CLI_PROVIDER = args.cli
 
     config.load_env_file()
+    # HOST=0.0.0.0 is required inside a container; the localhost default keeps
+    # a bare `python server.py` private to this machine.
+    host = os.environ.get("HOST", "127.0.0.1")
+    cli_status = cli_note = None
+    cli_auto = False
+    if config.MODE == "claude" and not args.api:
+        # Roadmap step 7, phase 1: on localhost with no mode flag, a signed-in
+        # Claude Code or Codex subscription is the default engine for every
+        # use (LLM_CLI picks the order or turns it off; --api forces the keys).
+        from coach import cli_engine
+        provider, cli_note = cli_engine.auto_select(host, os.environ.get("LLM_CLI", "auto"))
+        if provider:
+            config.MODE, config.CLI_PROVIDER = "cli", provider
+            cli_status, cli_note, cli_auto = cli_note, None, True
     if config.MODE == "cli":
         # read after the .env so the file's values apply
         config.CLI_MODEL = os.environ.get("LLM_CLI_MODEL", "").strip()
@@ -158,11 +179,7 @@ def main():
     if (config.MODE in ("mock", "cli")
             or (config.MODE == "claude" and users.TIERS_ENABLED)):
         grading.load_grader()
-    # HOST=0.0.0.0 is required inside a container; the localhost default keeps
-    # a bare `python server.py` private to this machine.
-    host = os.environ.get("HOST", "127.0.0.1")
     port = int(os.environ.get("PORT", "8000"))
-    cli_status = None
     if config.MODE == "cli":
         from coach import cli_engine
         if cli_engine.bind_refused(host):
@@ -171,7 +188,10 @@ def main():
                 "personal Claude/ChatGPT plan and serves this machine only (the "
                 "vendors' terms do not allow serving other people with it). Run it "
                 "on 127.0.0.1, or use API keys for a shared server.")
-        ready, cli_status = cli_engine.check_ready(config.CLI_PROVIDER)
+        if cli_status is None:
+            ready, cli_status = cli_engine.check_ready(config.CLI_PROVIDER)
+        else:
+            ready = True
         if not ready:
             raise SystemExit(f"--cli {config.CLI_PROVIDER}: {cli_status}")
     if anonymous_llm_refused(host, args.allow_anonymous_llm):
@@ -216,9 +236,13 @@ def main():
     elif config.MODE == "cli":
         from coach import cli_engine
         print(cli_engine.environment_note())
-        print(f"Subscription: {cli_status}.")
+        print(f"Subscription: {cli_status}"
+              + (" - chosen automatically on localhost; LLM_CLI=off or --api uses the API keys."
+                 if cli_auto else "."))
     else:
-        print(f"Backend: Anthropic API, model {os.environ.get('ANTHROPIC_MODEL', config.DEFAULT_MODEL)}.")
+        print(f"Backend: Anthropic API, model {os.environ.get('ANTHROPIC_MODEL', config.DEFAULT_MODEL)}.")
+        if cli_note:
+            print(f"Subscription: not used - {cli_note}.")
         if users.TIERS_ENABLED:
             paid = sum(1 for entry in users.USERS.values() if entry.get("tier") == "paid")
             brain = grading.GRADER["model_name"] if grading.GRADER is not None else "keyword matching"

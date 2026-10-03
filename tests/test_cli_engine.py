@@ -195,6 +195,40 @@ def test_check_ready_requires_a_subscription_login():
         cli_engine.subprocess.run, cli_engine.shutil.which = real_run, real_which
 
 
+def test_auto_select_is_the_local_default():
+    """Phase 1 of step 7: on localhost with no mode flag, a signed-in CLI on a
+    subscription is chosen; never on other binds; LLM_CLI orders or turns it off."""
+    real_which, real_ready = cli_engine.shutil.which, cli_engine.check_ready
+    calls = []
+    installed = {"claude", "codex"}
+    ready = {"claude": (True, "`claude` signed in (claude.ai, max)"),
+             "codex": (True, "`codex` signed in (Logged in using ChatGPT)")}
+    cli_engine.shutil.which = lambda name: f"/bin/{name}" if name in installed else None
+    cli_engine.check_ready = lambda name: calls.append(name) or ready[name]
+    try:
+        assert cli_engine.preference_order("off") == () and cli_engine.preference_order("") == ("claude", "codex")
+        assert cli_engine.preference_order("Codex") == ("codex", "claude")
+        assert cli_engine.auto_select("127.0.0.1", "auto")[0] == "claude"
+        assert cli_engine.auto_select("127.0.0.1", "codex")[0] == "codex"
+        provider, note = cli_engine.auto_select("127.0.0.1", "off")
+        assert provider is None and "LLM_CLI=off" in note
+        calls.clear()
+        assert cli_engine.auto_select("0.0.0.0", "auto") == (None, None) and calls == [], \
+            "a server on another address never checks, never picks, says nothing"
+        installed.discard("claude")
+        assert cli_engine.auto_select("localhost", "auto")[0] == "codex"
+        installed.add("claude")
+        ready["claude"] = (False, "`claude` is signed in with api_key, not a Claude subscription")
+        assert cli_engine.auto_select("127.0.0.1", "auto")[0] == "codex"
+        ready["codex"] = (False, "`codex` reports \"Logged in using an API key\"")
+        provider, note = cli_engine.auto_select("127.0.0.1", "auto")
+        assert provider is None and "api_key" in note and "API key" in note
+        installed.clear()
+        assert cli_engine.auto_select("127.0.0.1", "auto") == (None, None), "nothing installed: silent"
+    finally:
+        cli_engine.shutil.which, cli_engine.check_ready = real_which, real_ready
+
+
 def test_transcript_and_loopback():
     text = cli_engine.transcript([{"role": "user", "content": "Tell me about X."},
                                   {"role": "assistant", "content": [{"type": "text", "text": "Sure."}]},

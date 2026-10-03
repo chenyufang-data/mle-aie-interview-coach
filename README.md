@@ -251,9 +251,18 @@ that CLI on your machine - grading, AI questions, the text mock and its
 report, and live voice:
 
 ```powershell
+.venv\Scripts\python server.py                # signed in? used automatically on localhost
 .venv\Scripts\python server.py --cli claude   # Claude Code (`claude -p`), Sonnet by default
 .venv\Scripts\python server.py --cli codex    # Codex (`codex exec`), your Codex default model
+.venv\Scripts\python server.py --api          # the API keys in .env, even when signed in
 ```
+
+With no mode flag, a server on localhost checks at startup whether Claude
+Code or Codex is signed in with a subscription and uses it for everything
+(Claude Code first; `LLM_CLI=codex` in `.env` prefers Codex, `LLM_CLI=off`
+or `--api` keeps the API keys). The startup banner says which engine was
+chosen and why. A server bound to any other address - the demo box, a
+container - never picks a personal plan.
 
 The app runs the CLI as a subprocess and never sees your credentials; calls
 count against your plan instead of an API bill. The API-key variables in

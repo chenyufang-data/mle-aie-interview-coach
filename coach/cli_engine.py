@@ -91,6 +91,42 @@ def bind_refused(host):
     return host not in LOOPBACK
 
 
+def preference_order(setting):
+    """LLM_CLI -> the CLIs to try, in order; () means the subscription is off.
+    `auto` (the default) and `claude` try Claude Code first; `codex` tries
+    Codex first; `off` keeps the API keys."""
+    value = (setting or "auto").strip().lower()
+    if value in ("off", "none", "api", "0", "false", "no"):
+        return ()
+    if value == "codex":
+        return ("codex", "claude")
+    return ("claude", "codex")
+
+
+def auto_select(host, setting):
+    """The subscription engine as the local default (roadmap step 7, phase 1).
+
+    Returns (provider, message): the CLI to use and its sign-in status, or
+    (None, why-not). Only on a loopback bind - a server bound to anything
+    else (the demo box, a container) never picks a personal plan, and says
+    nothing about it. A CLI that is not installed is skipped silently; one
+    that is installed but not on a subscription is skipped with a reason."""
+    order = preference_order(setting)
+    if not order:
+        return None, "LLM_CLI=off: the API keys serve"
+    if bind_refused(host):
+        return None, None
+    reasons = []
+    for name in order:
+        if not binary(name):
+            continue
+        ok, message = check_ready(name)
+        if ok:
+            return name, message
+        reasons.append(message)
+    return None, ("; ".join(reasons) if reasons else None)
+
+
 def check_ready(name):
     """(ok, message) for startup: the CLI is installed and signed in."""
     path = binary(name)
