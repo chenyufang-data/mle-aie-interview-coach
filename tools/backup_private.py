@@ -5,6 +5,8 @@
 Copies into PRIVATE_REPO_DIR (default: ../mle-aie-interview-coach-private):
   - banks/rag_exp/all_chunks.jsonl + README   (the built bank: rephrased
     questions and generated rubrics - no interviewee names)
+  - banks/rag_lists, rag_docs, rag_code all_chunks.jsonl + README (the
+    generated banks, gitignored publicly)
   - experiments/grounding/grounding_r4_pool.jsonl      (the R4 labeling pool: it quotes
     questions and key points from rag_exp and rag_lists, so it is
     gitignored publicly and kept here)
@@ -51,7 +53,7 @@ def main():
         sys.exit(f"private checkout not found at {PRIVATE_DIR} "
                  "(set PRIVATE_REPO_DIR)")
     changed = 0
-    for bank in ("rag_exp", "rag_lists", "rag_docs"):
+    for bank in ("rag_exp", "rag_lists", "rag_docs", "rag_code"):
         for name in ("all_chunks.jsonl", "README.md"):
             changed += sync(BASE_DIR / "banks" / bank / name,
                             PRIVATE_DIR / bank / name)

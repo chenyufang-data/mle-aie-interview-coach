@@ -42,6 +42,10 @@ model answers, and grading rubrics:
   promptfoo, Kubernetes; licenses and attribution in `banks/rag_docs/`) on the MLOps
   decisions the course banks never covered, built by `ingest/ingest_docs.py`.
   Its own **Docs** track, same treatment as `banks/rag_lists/`.
+- `banks/rag_code/` (optional, generated; step 7, in progress) - coding problems for
+  coding practice and the mock coding round, built by `ingest/ingest_code.py`: for
+  LeetCode problems only the number, title and link plus our own rubric and hint
+  ladder; my own ML and PyTorch exercises in full. Not a question-practice track.
 
 The two course banks are derived from course material I studied; the public repository
 ships the interview questions, model answers, and rubrics only. The complete
@@ -81,12 +85,13 @@ coach/               the runtime: everything the server imports (one module per 
   mock/              mock interview (plan, turns, report)
   voice/             live voice loop: VAD, STT, TTS, barge-in, Level 1 sidecar
   assets/            runtime inputs: the distilled grader model, the STT lexicon and failure rates
-banks/               the five question banks (schema and provenance in each README)
+banks/               the question banks and the coding bank (schema and provenance in each README)
   rag_ml/  rag_ai/   course banks, public stripped edition
   rag_exp/           real gathered interview questions - private bank
   rag_lists/         licensed GitHub question lists rewritten into rubrics - generated locally
   rag_docs/          rubrics from primary documentation on MLOps gaps - generated locally
-ingest/              the scripts that build and grow the banks (lists, docs, real questions, expansion)
+  rag_code/          coding problems with rubrics and hint ladders - generated locally
+ingest/              the scripts that build and grow the banks (lists, docs, real questions, expansion, code)
 experiments/         every measurement, one folder per study, each with its data and results files
   distill/           the distilled grader: answers, teacher labels, training, cascade, judge study
   slm/               step 3: fine-tuned small models vs the sklearn grader

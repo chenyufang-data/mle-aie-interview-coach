@@ -1066,7 +1066,8 @@ author's machine, and a taken port now stops the start with a clear message.
 
 **The bank, `banks/rag_code`.** Seeded from the author's practice notebooks
 (98 LeetCode problems across the weekly and additional notebooks, plus
-their own ML-coding, PyTorch and SQL exercises).
+their own ML-coding and PyTorch exercises; the SQL drills wait - they
+paraphrase LeetCode's SQL problems with the same tables and columns).
 - LeetCode problems: number, title, approaches (our own labels, e.g. "hash
   map"), role (`mle`, `aie` or `shared`) and the link
   `https://leetcode.com/problems/<slug>/` - nothing else from LeetCode.
@@ -1177,7 +1178,23 @@ with logging on, never for anonymous visitors; a retention line is added.
    (Opus 5.5, medium, "claude.ai, max"); `--api` and `LLM_CLI=off` keep the
    API keys; `--mock` is untouched.
 2. *Bank*: `banks/rag_code` from the notebooks, with rubrics and hints;
-   reviewed with `tools/review_bank.py`.
+   reviewed with `tools/review_bank.py`. Built 2026-10-03 by
+   `ingest/ingest_code.py`: 138 records - 98 LeetCode problems (number,
+   title, link; 27 notebook cells hold LeetCode's statement pasted in, and
+   from those only the number, title line and link are read - the text is
+   never stored or sent) and 40 own exercises (34 ML, 6 PyTorch; the PT 04
+   answer key left out). Each record has approach labels, role, difficulty,
+   an estimated complexity, a rubric (key points, edge cases, mistakes,
+   code quality, what to say out loud), follow-ups and a four-level hint
+   ladder (clarifying question, concept nudge, approach in words, one step
+   of pseudocode). Written on the author's subscription (Claude Code, Opus
+   5.5 at medium effort; 138 calls, 137 of them in 9 min 47 s at four in parallel,
+   no API spend). Checks: no eight-word run shared with any pasted
+   statement (the six-word runs are stock phrases such as "O(n) time and
+   O(1) space"), no example or constraints block, no code in hint levels
+   0-2, labels not sentences - 0 of 138 flagged. Roles: 98 shared, 27 mle,
+   13 aie. The bank file is gitignored and backed up privately like
+   rag_docs; the author's keep/fix/retire review is pending.
 3. *Coding page and home launcher* (local): picker, "Open on LeetCode",
    code box, local Run; the three-button home page and its background.
 4. *Tutor*: ladder, guard, snapshots, watch-outs, coding report; text,

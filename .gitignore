@@ -54,6 +54,13 @@ banks/rag_docs/*
 !banks/rag_docs/README.md
 !banks/rag_docs/licenses/
 
+# banks/rag_code/ is built by ingest/ingest_code.py from the author's practice
+# notebooks (coding problems: LeetCode number, title and link plus our own
+# rubrics and hints, and the author's own exercises in full); generated
+# locally and backed up privately like rag_docs. The README is tracked.
+banks/rag_code/*
+!banks/rag_code/README.md
+
 # The R4 grounding pool (experiments/grounding/grounding_r4.py --pool) quotes
 # question text and key points from rag_exp and rag_lists, so it stays local
 # and is backed up privately by tools/backup_private.py like the banks.

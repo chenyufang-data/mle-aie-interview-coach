@@ -14,7 +14,8 @@ triage chunks, and the step that writes the decisions back.
       (additive, per plan §12.1). coach/kb.py skips status "retire";
       "fix" chunks stay live and are listed for a later teacher re-run.
 
-Any bank works (rag_ml, rag_ai, rag_exp, rag_lists, rag_docs); the page is
+Any bank works (rag_ml, rag_ai, rag_exp, rag_lists, rag_docs, rag_code; a
+coding card also shows its hint ladder and statement); the page is
 written under data/ so it is never committed.
 
   .venv\\Scripts\\python tools\\review_bank.py rag_ai --path ..\\mle-aie-interview-coach-private\\rag_ai\\all_chunks.jsonl --only unreviewed
@@ -59,12 +60,14 @@ details p{margin:6px 0}details ul{margin:4px 0 8px 18px;padding:0}
 .decide{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
 .decide label{display:inline-flex;gap:4px;align-items:center;padding:3px 10px;border:1px solid var(--line);border-radius:999px;cursor:pointer;font-size:13px}
 .decide input[type=text]{flex:1;min-width:200px;font:inherit;padding:4px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+pre{white-space:pre-wrap;font:13px/1.45 ui-monospace,monospace;margin:4px 0}.hints li{margin:4px 0}
+.qa{color:var(--retire);font-size:13px;margin:0 0 6px}
 .hidden{display:none}kbd{font:12px ui-monospace,monospace;border:1px solid var(--line);border-radius:4px;padding:0 4px}
 </style></head><body>
 <header><h1>Review __BANK__</h1>
 <span class="stat" id="stat"></span>
 <select id="module"><option value="">all modules</option></select>
-<select id="difficulty"><option value="">any difficulty</option><option>intermediate</option><option>advanced</option><option>beginner-intermediate</option><option>beginner</option></select>
+<select id="difficulty"><option value="">any difficulty</option><option>intermediate</option><option>advanced</option><option>beginner-intermediate</option><option>beginner</option><option>easy</option><option>medium</option><option>hard</option></select>
 <select id="show"><option value="">all</option><option value="undecided">undecided only</option><option value="fix">fix only</option><option value="retire">retire only</option></select>
 <input id="search" placeholder="search text" size="18">
 <button id="save" class="primary">Save decisions</button>
@@ -82,11 +85,18 @@ const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&g
 const list=(items)=>'<ul>'+(items||[]).map(x=>`<li>${esc(x)}</li>`).join('')+'</ul>';
 const byModule={};chunks.forEach(c=>{(byModule[c.metadata.module]=byModule[c.metadata.module]||[]).push(c)});
 const modSel=document.getElementById('module');Object.keys(byModule).forEach(m=>{const o=document.createElement('option');o.textContent=m;modSel.appendChild(o)});
+function codeBlock(k){const cx=k.complexity||{};
+ return `<div class="meta"><span>role ${esc(k.role)}</span><span>${esc((k.approaches||[]).join(' / '))}</span><span>time ${esc(cx.time)} · space ${esc(cx.space)} (${esc(cx.basis)})</span></div>
+ ${k.statement?`<details><summary>statement${k.starter_code?' and starter code':''}</summary><p>${esc(k.statement)}</p>${k.starter_code?`<pre>${esc(k.starter_code)}</pre>`:''}</details>`:''}
+ <details open><summary>hint ladder</summary><ol start="0" class="hints">${(k.hints||[]).map(h=>h.level>=3?`<li><pre>${esc(h.text)}</pre></li>`:`<li>${esc(h.text)}</li>`).join('')}</ol></details>
+ <details><summary>edge cases, code quality, communication</summary><b>Edge cases</b>${list(k.edge_cases)}<b>Code quality</b>${list(k.code_quality)}<b>Say out loud</b>${list(k.communication)}</details>`}
 function card(c){const d=load(c.id)||{};const m=c.metadata;
  return `<div class="card" data-id="${esc(c.id)}" data-status="${esc(d.status||'')}" data-module="${esc(m.module)}" data-difficulty="${esc(m.difficulty)}">
  <p class="q">${esc(c.interview.question)}</p>
  <div class="meta"><span>${esc(m.difficulty)}${m.tier?' · tier '+esc(m.tier):''}</span><span>${esc(m.round||'')}</span><span>${esc(m.topic||'')}</span>
  ${m.source_url?`<a href="${esc(m.source_url)}" target="_blank" rel="noopener">source</a>`:''}<span>${esc(c.id)}</span></div>
+ ${m.qa&&m.qa.length?`<p class="qa">Check: ${esc(m.qa.join('; '))}</p>`:''}
+ ${c.code?codeBlock(c.code):''}
  <ul class="kp">${(c.interview.key_points||[]).map(k=>`<li>${esc(k)}</li>`).join('')}</ul>
  <details><summary>more: model answer, mistakes, follow-ups${m.original&&m.original!==c.interview.question?', original wording':''}</summary>
  <p>${esc(c.interview.model_answer)}</p><b>Common mistakes</b>${list(c.interview.common_mistakes)}<b>Follow-ups</b>${list(c.interview.followups)}

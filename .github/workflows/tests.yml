@@ -83,6 +83,10 @@ jobs:
       # Local subscription engine (--cli): the commands it builds, output
       # parsing, streaming, the loopback rule, routing (fake CLIs, offline).
       - run: python tests/test_cli_engine.py
+      # Coding bank builder (step 7): notebook parsing keeps only number,
+      # title and link from LeetCode, pasted statements never reach the
+      # prompt or the bank, the leak and hint checks (synthetic notebooks).
+      - run: python tests/test_ingest_code.py
       # State store (step 4): the file backend's contract and race, then
       # the same contract, the whole tier/budget suite and the migration
       # tool against the Postgres service above.
