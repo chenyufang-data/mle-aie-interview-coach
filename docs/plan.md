@@ -1082,6 +1082,35 @@ the demo runs no code. Practice has no timer; the mock coding round shows
 the same "Elapsed time" strip as the practice question page, with Pause
 and Reset.
 
+**The home page becomes a launcher** (UI upgrade, added 2026-10-03). Today
+the home card is mostly the question-practice form, with the mock interview
+as a banner above it and no place for coding. It becomes three buttons of
+the same size, stacked vertically, each in its own color, each with a title
+and one line saying what it does:
+- *Question practice* (the site's green): opens the practice setup that is
+  the home page today - track, level, topic, focus, saved questions -
+  moved to its own view.
+- *Coding practice* (the site's blue): opens the coding page (phase 3).
+- *Mock interview* (a gold darkened from the site's, because white text on
+  the current gold measures about 4.2:1 against the 4.5:1 guideline for
+  the description line): opens the mock page, which gains a choice between
+  the experience deep-dive (today's mock) and the coding round (phase 5).
+
+The brand header with the account chip stays on top and the demo link
+below the buttons. The buttons are real links, focusable from the keyboard
+with a visible focus ring, full card width, still stacked at phone width.
+On the online demo, *Coding practice* is not released (no code runs
+there): the button stays, labelled "In the local app", and opens a short
+page saying what the local coding practice does and how to run it - the
+demo shows the feature without a dead end.
+
+*Background*: no photograph. A light motif on the home page only, in
+CSS or inline SVG of a few kilobytes and no image download: a faint
+squared-paper grid and two soft washes in the buttons' hues at the
+corners, behind the card and never behind text. The working pages
+(practice, coding, mock) keep the plain ground, where the user reads and
+types.
+
 **No browser extension for now.** The separate LeetCode window removes the
 two things an extension needed (reading LeetCode's editor, the microphone
 in a side panel); voice runs in the app's own page, where the microphone
@@ -1149,7 +1178,8 @@ with logging on, never for anonymous visitors; a retention line is added.
    API keys; `--mock` is untouched.
 2. *Bank*: `banks/rag_code` from the notebooks, with rubrics and hints;
    reviewed with `tools/review_bank.py`.
-3. *Coding page* (local): picker, "Open on LeetCode", code box, local Run.
+3. *Coding page and home launcher* (local): picker, "Open on LeetCode",
+   code box, local Run; the three-button home page and its background.
 4. *Tutor*: ladder, guard, snapshots, watch-outs, coding report; text,
    then voice.
 5. *Mock coding round* (local): the interviewer presents a problem, the
