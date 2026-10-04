@@ -59,7 +59,10 @@ class InterviewCoachHandler(BaseHTTPRequestHandler):
                 # Step 7: coding drills run only in the local app (a
                 # loopback bind); the demo shows what they are instead.
                 "code": {"local": config.CODE_LOCAL,
-                         "problems": len(coding.records()) if config.CODE_LOCAL else 0},
+                         "problems": len(coding.records()) if config.CODE_LOCAL else 0,
+                         # phase 6 records; a server without this field predates them
+                         "records": True,
+                         "stale": coding.code_changed_since_start() if config.CODE_LOCAL else False},
                 "user": {
                     "name": user["name"],
                     "tier": user["tier"],

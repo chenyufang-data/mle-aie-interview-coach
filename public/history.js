@@ -14,6 +14,8 @@ const els = {
   list: document.getElementById("problemList"),
 };
 const state = { data: null, filter: "all" };
+const STALE_TEXT = "Your running app is older than this page: restart it - Ctrl+C in its terminal, then "
+  + ".venv\\Scripts\\python server.py - and reload. Attempts finished on the old server were not saved.";
 
 function headers(extra) {
   return { ...Account.headers(), "X-Coach-Local": "1", ...(extra || {}) };
@@ -170,12 +172,18 @@ async function load() {
       els.localOnly.hidden = false;
       return;
     }
+    if (meta.code.stale || meta.code.records === undefined) {
+      els.status.textContent = STALE_TEXT;
+      els.status.classList.add("stale-banner");
+      if (meta.code.records === undefined) return;
+    }
     state.data = await api("/api/code/history");
     els.status.textContent = state.data.kept ? "" : "This server keeps no coding records for you.";
     els.body.hidden = !state.data.kept;
     if (state.data.kept) render();
   } catch (error) {
-    els.status.textContent = error.message;
+    // an app started before the history existed has no such route
+    els.status.textContent = error.status === 404 ? STALE_TEXT : error.message;
   }
 }
 

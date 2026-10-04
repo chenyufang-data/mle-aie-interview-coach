@@ -143,6 +143,23 @@ def test_run_gets_no_api_keys():
         del os.environ["ANTHROPIC_API_KEY"]
 
 
+def test_a_stale_server_knows_it():
+    """A code file newer than the server's start means it runs old code -
+    the pages then tell the user to restart (the author hit this: a server
+    started before phase 6 had no history route and saved nothing)."""
+    import time as clock
+    saved = config.STARTED_AT
+    try:
+        config.STARTED_AT = 0.0
+        assert coding.code_changed_since_start() is False, "unknown start: no claim"
+        config.STARTED_AT = clock.time() + 3600
+        assert coding.code_changed_since_start() is False
+        config.STARTED_AT = 1.0  # started long before any file was written
+        assert coding.code_changed_since_start() is True
+    finally:
+        config.STARTED_AT = saved
+
+
 class FakeHandler:
     def __init__(self, client="127.0.0.1", headers=None):
         self.client_address = (client, 50000)

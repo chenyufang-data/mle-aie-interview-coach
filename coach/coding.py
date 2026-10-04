@@ -289,6 +289,16 @@ def _engine(handler):
     return pick_engine(users.resolve_user(handler))
 
 
+def code_changed_since_start():
+    """True when the app's Python files changed on disk after this server
+    started: it still runs the old code, and a page served now (always the
+    new one) may call routes the old code lacks. Restart to load it."""
+    if not config.STARTED_AT:
+        return False
+    files = [config.BASE_DIR / "server.py", *(config.BASE_DIR / "coach").rglob("*.py")]
+    return any(f.stat().st_mtime > config.STARTED_AT + 1 for f in files if f.exists())
+
+
 def engine_label(engine):
     if engine == "fake":
         return "offline mode - the bank's hints, no model"

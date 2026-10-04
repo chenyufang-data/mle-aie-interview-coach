@@ -7,7 +7,9 @@ Run:  .venv\\Scripts\\python tests\\test_coding_round.py
 """
 
 import json
+import os
 import sys
+import tempfile
 import threading
 import urllib.error
 import urllib.request
@@ -17,6 +19,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from coach import coding_round, config, tutor  # noqa: E402
+
+# A finished round is saved (coach/records.py): keep test rounds out of the
+# user's data/records.
+os.environ["RECORDS_DIR"] = tempfile.mkdtemp(prefix="coach_records_test_")
 
 LEETCODE = {"id": "code_lc_0001_two_sum", "label": "LeetCode 1 · Two Sum", "title": "Two Sum",
             "source": "leetcode", "link": "https://leetcode.com/problems/two-sum/",
@@ -229,6 +235,7 @@ def test_routes_for_a_strict_round():
         assert status == 200 and done["report"]["mode"] == "mock" and done["report"]["strict"]
         assert done["report"]["communication"]["metrics"]["answers"] == 4
         assert "## Communication" in done["markdown"]
+        assert done["saved"] and (Path(os.environ["RECORDS_DIR"]) / "attempts.jsonl").exists()
     finally:
         server.shutdown()
         server.server_close()

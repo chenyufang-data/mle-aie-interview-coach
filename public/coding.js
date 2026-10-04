@@ -163,6 +163,7 @@ async function start() {
     return;
   }
   els.workspace.hidden = false;
+  if (meta.code.stale || meta.code.records === undefined) showStale();
   if (MOCK) setupMockMode();
   await loadBank();
   const params = new URLSearchParams(window.location.search);
@@ -174,6 +175,20 @@ async function start() {
     els.picker.value = wanted;
     openBank(wanted);
   }
+}
+
+// The page is always the newest file on disk; the server may still run the
+// code it started with. Say so, since its routes may be missing or old.
+const STALE_TEXT = "The app's code changed after this server started, so it is still running the old version. "
+  + "Restart it - Ctrl+C in its terminal, then .venv\\Scripts\\python server.py - and reload this page. "
+  + "Until then your attempts are not saved to your history.";
+
+function showStale() {
+  const banner = document.createElement("p");
+  banner.className = "stale-banner";
+  banner.setAttribute("role", "alert");
+  banner.textContent = STALE_TEXT;
+  els.workspace.prepend(banner);
 }
 
 function showLocalOnly() {

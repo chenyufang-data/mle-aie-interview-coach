@@ -174,6 +174,9 @@ CODE_BANK_PATH = Path(os.environ.get("CODE_BANK_PATH", BANKS_DIR / "rag_code" / 
 CODE_REVIEW_PATH = BASE_DIR / "data" / "review" / "rag_code.decisions.json"
 CODE_RUN_TIMEOUT_S = float(os.environ.get("CODE_RUN_TIMEOUT_S", "10"))
 CODE_LOCAL = False
+# When this server started (server.main); a code file newer than this means
+# the process still runs the old code (coach/coding.py code_changed_since_start).
+STARTED_AT = 0.0
 CASCADE_PRED_MAX = 2.5
 CASCADE_FRAC_HIT_MAX = 0.25
 

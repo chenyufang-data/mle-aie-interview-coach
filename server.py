@@ -14,6 +14,7 @@ current.
 
 import argparse
 import os
+import time
 from http.server import ThreadingHTTPServer
 
 from coach import (config, grading, http, kb, llm, prompts, sessions,  # noqa: F401
@@ -151,6 +152,7 @@ def main():
         config.MODE = "cli"
         config.CLI_PROVIDER = args.cli
 
+    config.STARTED_AT = time.time()
     config.load_env_file()
     # HOST=0.0.0.0 is required inside a container; the localhost default keeps
     # a bare `python server.py` private to this machine.

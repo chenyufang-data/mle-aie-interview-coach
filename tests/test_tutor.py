@@ -7,6 +7,7 @@ Run:  .venv\\Scripts\\python tests\\test_tutor.py
 """
 
 import json
+import os
 import sys
 import tempfile
 import threading
@@ -18,6 +19,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from coach import code_tests, coding, config, tutor  # noqa: E402
+
+# A finished attempt is saved (coach/records.py): keep test attempts out of
+# the user's data/records.
+os.environ["RECORDS_DIR"] = tempfile.mkdtemp(prefix="coach_records_test_")
 
 PROBLEM = {"id": "code_lc_0167_two_sum_ii", "label": "LeetCode 167 · Two Sum II", "source": "leetcode",
            "title": "Two Sum II", "link": "https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/",
@@ -318,6 +323,7 @@ def test_routes_in_mock_mode():
         status, done = call("/api/code/finish", {"attempt_id": aid, "code": "x = 1", "leetcode": "rejected"})
         assert status == 200 and done["report"]["leetcode"] == "rejected"
         assert done["report"]["failed_runs"] == 1 and "# Coding report: Word Search" in done["markdown"]
+        assert (Path(os.environ["RECORDS_DIR"]) / "attempts.jsonl").exists(), "saved to the temp folder"
         assert call("/api/code/finish", {"attempt_id": aid, "code": "", "leetcode": "maybe"})[0] == 400
         assert call("/api/code/speak", {"text": ""})[0] == 400
     finally:
