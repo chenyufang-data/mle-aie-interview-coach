@@ -58,27 +58,34 @@
           </div>
           <p id="pickStatus" class="inline-status" aria-live="polite"></p>
 
-          <div class="coding-columns">
-            <section id="problemPanel" class="problem-panel" aria-label="Problem">
+          <!-- Two columns, two rows: the tutor beside the code box (their
+               bottom rows - Hint / Send / Talk and I'm done - line up), then
+               the problem's extras beside the run output. -->
+          <div id="columns" class="coding-columns">
+            <section id="problemPanel" class="problem-panel" aria-label="Tutor">
               <p class="empty-state">Pick a problem from your bank, or name any LeetCode problem.</p>
             </section>
 
             <section class="code-panel" aria-label="Your code">
               <div class="code-head">
-                <label for="codeBox">Your code <span class="muted-note">Python</span></label>
+                <div id="problemTools" class="code-head-left"></div>
                 <div class="code-tools">
                   <button id="resetBtn" class="ghost-action small-action" type="button" title="Put the starter code back">Reset</button>
                   <button id="checkBtn" class="ghost-action small-action" type="button" title="Run the tutor's test cases (Ctrl+Shift+Enter)">Check</button>
                   <button id="runBtn" class="primary-action small-action" type="button" title="Run (Ctrl+Enter)">Run</button>
                 </div>
               </div>
-              <textarea id="codeBox" class="code-box" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off"
-                placeholder="Write your solution, call it, print the result - then Run (Ctrl+Enter). Check runs the tutor's tests."></textarea>
-              <details class="stdin-box">
-                <summary>Input for the program (stdin)</summary>
-                <textarea id="stdinBox" class="code-box stdin" spellcheck="false" wrap="off" rows="4"></textarea>
-              </details>
-              <section id="runOutput" class="run-output" aria-live="polite" hidden></section>
+              <!-- A Python editor without a library: the textarea takes the
+                   typing (its text is transparent); the highlighted copy and
+                   the line numbers sit under it and scroll with it. -->
+              <div id="editor" class="editor">
+                <div id="editorGutter" class="editor-gutter" aria-hidden="true"></div>
+                <div class="editor-main">
+                  <pre id="editorHighlight" class="editor-layer editor-highlight" aria-hidden="true"></pre>
+                  <textarea id="codeBox" class="editor-layer editor-input" aria-label="Your code (Python)" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off"
+                    placeholder="Write your solution, call it, print the result - then Run (Ctrl+Enter). Check runs the tutor's tests."></textarea>
+                </div>
+              </div>
               <div class="done-row">
                 <button id="doneBtn" class="secondary-action small-action" type="button">I'm done</button>
                 <div id="leetcodeAsk" class="leetcode-ask" hidden>
@@ -87,7 +94,18 @@
                   <button class="ghost-action small-action" type="button" data-outcome="rejected">Rejected</button>
                   <button class="ghost-action small-action" type="button" data-outcome="not-submitted">Not submitted</button>
                 </div>
+                <span id="editorStatus" class="editor-status" aria-live="polite"></span>
               </div>
+            </section>
+
+            <section id="problemExtras" class="problem-extras" aria-label="About this problem"></section>
+
+            <section class="output-panel" aria-label="Output">
+              <details class="stdin-box">
+                <summary>Input for the program (stdin)</summary>
+                <textarea id="stdinBox" class="code-box stdin" spellcheck="false" wrap="off" rows="4"></textarea>
+              </details>
+              <section id="runOutput" class="run-output" aria-live="polite" hidden></section>
               <p class="disclosure-note">Run and Check use this computer's Python in a temporary folder, with a time limit. Check runs test cases the tutor writes, with a hidden reference solution of its own - never LeetCode's tests. Your code and drafts stay on this machine.</p>
             </section>
           </div>

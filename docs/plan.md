@@ -1263,6 +1263,14 @@ with logging on, never for anonymous visitors; a retention line is added.
    (`LLM_CLI_QUICK_MODEL=sonnet`, new and off by default): p50 3.1 s, p95
    3.6 s - PASS. The author's setting stays Opus until they choose; the
    demo's 3 s target is for the API engines in phase 8.
+   After the author's first session (2026-10-03): "Open on LeetCode" and
+   the tags moved onto the bar above the code box, the tutor fills the left
+   column with its Hint / Send / Talk row level with I'm done, Send and Talk
+   got a tinted fill, and the code box became a Python editor without a
+   library (a transparent textarea over a highlighted copy and a line
+   gutter: syntax colours, indentation dots, tabs / odd indents / trailing
+   spaces flagged in the status line, smart Backspace and dedent), sized to
+   the window so Run and I'm done stay on screen with it.
 5. *Mock coding round* (local): the interviewer presents a problem, the
    candidate explains, codes and runs, answers follow-ups on complexity
    and edge cases; the timer; the communication report.

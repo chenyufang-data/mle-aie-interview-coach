@@ -27,7 +27,13 @@ const els = {
   anyInput: document.getElementById("anyInput"),
   pickStatus: document.getElementById("pickStatus"),
   panel: document.getElementById("problemPanel"),
+  tools: document.getElementById("problemTools"),
+  extras: document.getElementById("problemExtras"),
+  columns: document.getElementById("columns"),
   code: document.getElementById("codeBox"),
+  highlight: document.getElementById("editorHighlight"),
+  gutter: document.getElementById("editorGutter"),
+  editorStatus: document.getElementById("editorStatus"),
   stdin: document.getElementById("stdinBox"),
   run: document.getElementById("runBtn"),
   check: document.getElementById("checkBtn"),
@@ -183,19 +189,19 @@ async function loadBank() {
   }
 }
 
-async function openBank(id) {
+async function openBank(id, scroll) {
   if (!id) return;
   els.pickStatus.textContent = "";
   try {
     const data = await api(`/api/code/problem?id=${encodeURIComponent(id)}`);
     save("coding:last", id);
-    show(data.problem);
+    show(data.problem, scroll);
   } catch (error) {
     els.pickStatus.textContent = error.message;
   }
 }
 
-async function openAny(query) {
+async function openAny(query, scroll) {
   els.pickStatus.textContent = "";
   try {
     const data = await api("/api/code/resolve", { query });
@@ -205,7 +211,7 @@ async function openAny(query) {
     } else {
       els.picker.value = "";
     }
-    show(data.problem);
+    show(data.problem, scroll);
   } catch (error) {
     els.pickStatus.textContent = error.message;
   }
@@ -268,7 +274,7 @@ function starterFor(problem) {
   return (imports.length ? imports.join("\n") + "\n\n\n" : "") + body;
 }
 
-function show(problem) {
+function show(problem, scroll) {
   saveDraft();
   stopSpeaking();
   state.problem = problem;
@@ -277,7 +283,7 @@ function show(problem) {
   state.finished = false;
   els.title.textContent = problem.label;
   document.title = `${problem.label} | Coding drills`;
-  els.code.value = load(`coding:draft:${state.key}`, null) ?? starterFor(problem);
+  setCode(load(`coding:draft:${state.key}`, null) ?? starterFor(problem));
   state.snapshotCode = els.code.value;
   els.output.hidden = true;
   els.report.hidden = true;
@@ -285,26 +291,35 @@ function show(problem) {
   els.done.disabled = false;
   renderPanel();
   startAttempt(false);
+  // a problem picked by hand: bring the tutor and the code box (with Run
+  // above and I'm done below) onto the screen together
+  if (scroll) els.columns.scrollIntoView({ block: "start", behavior: "smooth" });
 }
 
 function renderPanel() {
   const p = state.problem;
   const chips = [p.difficulty, FAMILY_LABELS[p.family], p.role && p.role !== "shared" ? p.role.toUpperCase() : ""]
     .filter(Boolean).map((c) => `<span class="chip">${escapeHtml(c)}</span>`).join("");
-  const leetcode = p.source === "leetcode" ? `
-    <div class="leetcode-box">
-      <button id="openLeetcode" class="secondary-action" type="button">Open on LeetCode</button>
-      <p>The statement lives on LeetCode. It opens in its own window - put it beside this one.</p>
-      ${p.from_title ? `<p class="muted-note">Link built from the title. If LeetCode says the problem is missing, paste its link instead.</p>` : ""}
-    </div>` : "";
+  // above the code box: LeetCode's link (the statement stays on leetcode.com,
+  // in its own window) and the problem's tags
+  els.tools.innerHTML = (p.source === "leetcode"
+    ? `<button id="openLeetcode" class="secondary-action small-action" type="button"
+        title="The statement lives on LeetCode: it opens in its own window - put it beside this one">Open on LeetCode</button>`
+    : "") + `<span class="chips">${chips}</span>` +
+    (p.from_title ? `<span class="muted-note">Link built from the title - if LeetCode says it is missing, paste the link.</span>` : "");
   const statement = p.statement ? `<div class="statement">${paragraphs(p.statement)}</div>` : "";
   els.panel.innerHTML = `
-    <div class="chips">${chips}</div>
-    ${leetcode}${statement}
+    ${statement}
     <section class="tutor-box" aria-label="Tutor">
       <div class="tutor-head">
-        <h3>Tutor</h3>
-        <span id="tutorEngine" class="muted-note"></span>
+        <div class="tutor-title">
+          <h3>Tutor</h3>
+          <span id="tutorEngine" class="muted-note"></span>
+        </div>
+        <div class="tutor-head-tools">
+          <label class="speak-toggle"><input id="speakReplies" type="checkbox"> Speak replies</label>
+          <button id="solutionBtn" class="link-action" type="button">Show solution</button>
+        </div>
       </div>
       <div id="tutorLog" class="tutor-log" aria-live="polite"></div>
       <div id="tutorOffer" class="tutor-offer" hidden>
@@ -321,12 +336,11 @@ function renderPanel() {
         placeholder="Ask the tutor about your approach or your code (Enter sends, Shift+Enter for a new line)"></textarea>
       <div class="tutor-actions">
         <button id="hintBtn" class="secondary-action small-action" type="button"></button>
-        <button id="sendBtn" class="ghost-action small-action" type="button">Send</button>
-        <button id="talkBtn" class="ghost-action small-action" type="button" title="Click, speak, click again to send">Talk</button>
-        <label class="speak-toggle"><input id="speakReplies" type="checkbox"> Speak replies</label>
-        <button id="solutionBtn" class="link-action" type="button">Show solution</button>
+        <button id="sendBtn" class="soft-action" type="button">Send</button>
+        <button id="talkBtn" class="soft-action" type="button" title="Click, speak, click again to send">Talk</button>
       </div>
-    </section>
+    </section>`;
+  els.extras.innerHTML = `
     ${p.approaches ? `<details class="reveal-box">
       <summary>Approach and target</summary>
       <p><b>Approaches:</b> ${p.approaches.map(escapeHtml).join(" · ")}</p>
@@ -337,7 +351,7 @@ function renderPanel() {
       <summary>Check yourself (opens the rubric)</summary>
       ${RUBRIC_PARTS.map(([key, label]) => `<h4>${label}</h4>${list(p.rubric[key])}`).join("")}
     </details>` : ""}
-    ${p.id ? reviewHtml(p) : ""}`;
+    ${p.id ? reviewHtml(p) : ""}`.trim();
   const open = document.getElementById("openLeetcode");
   if (open) open.addEventListener("click", () => openLeetcode(p.link));
   bindTutor();
@@ -703,13 +717,175 @@ function lineStart(text, index) {
 function replaceRange(box, text, from, to, selectIt) {
   box.focus();
   box.setSelectionRange(from, to);
-  const done = typeof document.execCommand === "function" && document.execCommand("insertText", false, text);
+  const done = typeof document.execCommand === "function"
+    && document.execCommand(text ? "insertText" : "delete", false, text);
   if (!done) {
     box.setRangeText(text, from, to, "end");
     box.dispatchEvent(new Event("input"));
   }
   if (selectIt) box.setSelectionRange(from, from + text.length);
 }
+
+// ------------------------------------------------------------- editor
+// Python highlighting and visible whitespace with no library: the textarea
+// keeps the typing (its text is transparent) and a <pre> under it shows the
+// same text coloured; both share every metric and scroll together, and the
+// gutter numbers the lines the tutor refers to. Indentation shows as faint
+// dots; a tab, an indent that is not a multiple of 4 spaces (on a line that
+// starts a statement - not inside brackets or strings) and trailing spaces
+// are tinted, and the first one is named in the status line.
+const PY_KEYWORDS = new Set(("and as assert async await break class continue def del elif else " +
+  "except finally for from global if import in is lambda nonlocal not or pass raise return try " +
+  "while with yield").split(" "));
+const PY_CONSTANTS = new Set(["True", "False", "None"]);
+const PY_BUILTINS = new Set(("abs all any bin bool bytearray bytes callable chr classmethod complex " +
+  "dict dir divmod enumerate filter float format frozenset getattr hasattr hash hex id input int " +
+  "isinstance issubclass iter len list map max min next object oct open ord pow print property " +
+  "range repr reversed round set setattr slice sorted staticmethod str sum super tuple type vars " +
+  "zip Exception ValueError TypeError KeyError IndexError ZeroDivisionError StopIteration " +
+  "RuntimeError NotImplementedError AssertionError AttributeError").split(" "));
+const PY_TOKEN = new RegExp([
+  "(#[^\\n]*)",
+  "((?:\\b[rRbBuUfF]{1,2})?(?:\"\"\"[\\s\\S]*?(?:\"\"\"|$)|'''[\\s\\S]*?(?:'''|$)|\"(?:\\\\.|[^\"\\\\\\n])*\"?|'(?:\\\\.|[^'\\\\\\n])*'?))",
+  "(\\b0[xXoObB][\\da-fA-F_]+\\b|\\b\\d[\\d_]*\\.?[\\d_]*(?:[eE][+-]?\\d+)?j?|\\.\\d[\\d_]*(?:[eE][+-]?\\d+)?)",
+  "(@[A-Za-z_][\\w.]*)",
+  "([A-Za-z_]\\w*)",
+].join("|"), "g");
+
+function renderGap(text, atEnd, st, notes) {
+  let html = "";
+  const parts = text.split("\n");
+  parts.forEach((part, i) => {
+    if (i > 0) {
+      html += "\n";
+      st.line += 1;
+      st.lineStart = true;
+    }
+    const endsLine = i < parts.length - 1 || atEnd;
+    let rest = part;
+    if (st.lineStart) {
+      const lead = /^[ \t]*/.exec(rest)[0];
+      if (lead) {
+        const blank = lead.length === rest.length && endsLine;
+        const statement = st.depth === 0 && !blank;
+        let cls = "ws-lead";
+        if (statement && lead.includes("\t")) notes.tabs.push(st.line);
+        else if (statement && lead.length % 4) {
+          notes.odd.push([st.line, lead.length]);
+          cls += " ws-odd";
+        }
+        html += lead.split("\t").map((run) => (run ? `<span class="${cls}">${"·".repeat(run.length)}</span>` : ""))
+          .join('<span class="ws-tab">\t</span>');
+        rest = rest.slice(lead.length);
+      }
+      if (rest.length || !endsLine) st.lineStart = false;
+    }
+    if (rest) {
+      const trail = endsLine ? /[ \t]+$/.exec(rest) : null;
+      const body = trail ? rest.slice(0, trail.index) : rest;
+      for (const ch of body) {
+        if ("([{".includes(ch)) st.depth += 1;
+        else if (")]}".includes(ch)) st.depth = Math.max(0, st.depth - 1);
+      }
+      html += escapeHtml(body).replace(/\t/g, '<span class="ws-tab">\t</span>');
+      if (trail) {
+        notes.trailing.push(st.line);
+        html += `<span class="ws-trail">${trail[0].replace(/ /g, "·")}</span>`;
+      }
+    }
+  });
+  return html;
+}
+
+function highlightPython(src) {
+  const out = [];
+  const notes = { tabs: [], odd: [], trailing: [] };
+  const st = { lineStart: true, depth: 0, line: 1, prev: "" };
+  let last = 0;
+  PY_TOKEN.lastIndex = 0;
+  let m;
+  while ((m = PY_TOKEN.exec(src)) !== null) {
+    if (!m[0]) {
+      PY_TOKEN.lastIndex += 1;
+      continue;
+    }
+    if (m.index > last) out.push(renderGap(src.slice(last, m.index), false, st, notes));
+    const text = m[0];
+    let cls = "";
+    if (m[1]) cls = "tk-com";
+    else if (m[2]) cls = "tk-str";
+    else if (m[3]) cls = "tk-num";
+    else if (m[4]) cls = "tk-dec";
+    else if (PY_CONSTANTS.has(text)) cls = "tk-const";
+    else if (PY_KEYWORDS.has(text)) cls = "tk-kw";
+    else if (st.prev === "def") cls = "tk-fn";
+    else if (st.prev === "class") cls = "tk-cls";
+    else if (text === "self" || text === "cls") cls = "tk-self";
+    else if (PY_BUILTINS.has(text)) cls = "tk-builtin";
+    out.push(cls ? `<span class="${cls}">${escapeHtml(text)}</span>` : escapeHtml(text));
+    st.prev = m[5] ? text : "";
+    st.lineStart = false;
+    st.line += (text.match(/\n/g) || []).length;
+    last = m.index + text.length;
+  }
+  if (last < src.length) out.push(renderGap(src.slice(last), true, st, notes));
+  // one more line so the last one is never clipped when scrolled to the end
+  return { html: out.join("") + "\n ", notes };
+}
+
+let editorFrame = null;
+function renderEditor() {
+  editorFrame = null;
+  const { html, notes } = highlightPython(els.code.value);
+  els.highlight.innerHTML = html;
+  state.editorNotes = notes;
+  updateCaret();
+}
+
+function scheduleEditor() {
+  if (!editorFrame) editorFrame = requestAnimationFrame(renderEditor);
+}
+
+function updateCaret() {
+  const src = els.code.value;
+  const before = src.slice(0, els.code.selectionStart);
+  const line = (before.match(/\n/g) || []).length + 1;
+  const col = before.length - before.lastIndexOf("\n");
+  const notes = state.editorNotes || { tabs: [], odd: [], trailing: [] };
+  const flagged = new Set([...notes.tabs, ...notes.odd.map(([n]) => n)]);
+  const total = (src.match(/\n/g) || []).length + 1;
+  let gutter = "";
+  for (let n = 1; n <= total; n += 1) {
+    const cls = n === line ? "current" : flagged.has(n) ? "flag" : "";
+    gutter += (cls ? `<span class="${cls}">${n}</span>` : n) + "\n";
+  }
+  els.gutter.innerHTML = gutter;
+  let warn = "";
+  if (notes.tabs.length) warn = `Tab on line ${notes.tabs[0]} - indent with spaces`;
+  else if (notes.odd.length) warn = `Line ${notes.odd[0][0]} is indented ${notes.odd[0][1]} spaces, not a multiple of 4`;
+  else if (notes.trailing.length) {
+    warn = `Trailing spaces on line${notes.trailing.length > 1 ? "s" : ""} ${notes.trailing.slice(0, 3).join(", ")}`;
+  }
+  els.editorStatus.innerHTML = (warn ? `<span class="warn">${escapeHtml(warn)}</span> &middot; ` : "")
+    + `Ln ${line}, Col ${col} &middot; Python &middot; 4 spaces`;
+  syncScroll();
+}
+
+function syncScroll() {
+  els.highlight.scrollTop = els.code.scrollTop;
+  els.highlight.scrollLeft = els.code.scrollLeft;
+  els.gutter.scrollTop = els.code.scrollTop;
+}
+
+function setCode(text) {
+  els.code.value = text;
+  renderEditor();
+}
+
+els.code.addEventListener("scroll", syncScroll);
+document.addEventListener("selectionchange", () => {
+  if (document.activeElement === els.code) updateCaret();
+});
 
 // Tab / Shift+Tab indent and dedent (4 spaces), Enter keeps the indent and
 // adds a level after a colon, Ctrl+Enter runs, Ctrl+Shift+Enter checks.
@@ -743,11 +919,27 @@ els.code.addEventListener("keydown", (event) => {
     return;
   }
   escaped = false;
+  // Backspace inside the indentation removes one level (4 spaces)
+  if (event.key === "Backspace" && !event.ctrlKey && !event.metaKey && !event.altKey) {
+    const { selectionStart: s, selectionEnd: e, value } = box;
+    const before = value.slice(lineStart(value, s), s);
+    if (s === e && before.length && /^ +$/.test(before)) {
+      event.preventDefault();
+      replaceRange(box, "", s - (before.length % 4 || 4), s, false);
+    }
+    return;
+  }
+  // Enter keeps the indent, adds a level after a colon, and drops one after
+  // return / pass / break / continue / raise
   if (event.key === "Enter" && !event.shiftKey && !event.altKey) {
     event.preventDefault();
     const { selectionStart: s, selectionEnd: e, value } = box;
     const line = value.slice(lineStart(value, s), s);
-    const indent = /^\s*/.exec(line)[0] + (/:\s*$/.test(line) ? "    " : "");
+    let indent = /^[ \t]*/.exec(line)[0];
+    if (/:\s*(#.*)?$/.test(line)) indent += "    ";
+    else if (/^\s*(return\b.*|pass|break|continue|raise\b.*)\s*$/.test(line)) {
+      indent = indent.slice(0, Math.max(0, indent.length - 4));
+    }
     replaceRange(box, "\n" + indent, s, e, false);
   }
 });
@@ -755,6 +947,7 @@ els.code.addEventListener("keydown", (event) => {
 // Drafts every 400 ms of quiet; a snapshot for the tutor after about 20 s;
 // a hint offer after a long stall while the code is not passing.
 els.code.addEventListener("input", () => {
+  scheduleEditor();
   clearTimeout(draftTimer);
   draftTimer = setTimeout(saveDraft, 400);
   clearTimeout(state.idleTimer);
@@ -772,7 +965,7 @@ els.code.addEventListener("input", () => {
 els.reset.addEventListener("click", () => {
   if (!state.problem) return;
   if (state.undo !== null) {
-    els.code.value = state.undo;
+    setCode(state.undo);
     state.undo = null;
     clearTimeout(state.undoTimer);
     els.reset.textContent = "Reset";
@@ -780,7 +973,7 @@ els.reset.addEventListener("click", () => {
     return;
   }
   state.undo = els.code.value;
-  els.code.value = starterFor(state.problem);
+  setCode(starterFor(state.problem));
   saveDraft();
   els.reset.textContent = "Undo reset";
   state.undoTimer = setTimeout(() => {
@@ -931,11 +1124,12 @@ els.leetcodeAsk.querySelectorAll("button").forEach((button) => {
 });
 els.run.addEventListener("click", runCode);
 els.check.addEventListener("click", () => checkCode(false));
-els.picker.addEventListener("change", () => openBank(els.picker.value));
+els.picker.addEventListener("change", () => openBank(els.picker.value, true));
 els.anyForm.addEventListener("submit", (event) => {
   event.preventDefault();
-  if (els.anyInput.value.trim()) openAny(els.anyInput.value.trim());
+  if (els.anyInput.value.trim()) openAny(els.anyInput.value.trim(), true);
 });
 window.addEventListener("beforeunload", saveDraft);
 
+renderEditor();
 start();

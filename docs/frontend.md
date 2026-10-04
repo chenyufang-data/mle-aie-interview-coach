@@ -73,7 +73,7 @@ frontend uses exactly three endpoints:
 | `POST /api/evaluate` | Answer submission (first answers and follow-ups) |
 
 `public/coding.html` + `coding.js` is the Coding drills page (roadmap step
-7), local app only. It talks to `/api/code/*` (backend.md), sending the
+7), local app only. Layout: the tutor fills the left column beside the code box, "Open on LeetCode" and the problem's tags sit on the bar above the code box, the tutor's Hint / Send / Talk row lines up with I'm done, and the problem's extras sit under the tutor beside the run output; the editor's height follows the window so Run and I'm done stay on screen with it. It talks to `/api/code/*` (backend.md), sending the
 `X-Coach-Local` header on every call. Contents: a picker over the coding bank
 plus a field that takes any LeetCode number, title or link; for a LeetCode
 problem an "Open on LeetCode" button that opens the problem in its own window
@@ -88,9 +88,16 @@ the fallback), and Show solution behind an in-page confirmation; after a
 failed run or check, or about 90 s without typing while not passing, the
 panel offers "want a hint?" and waits; "Approach and target" and "Check
 yourself" (the rubric) behind disclosures; a review strip (keep / fix /
-retire + note) for the author's bank review; a code box (Tab / Shift+Tab
-indent, Enter keeps the indent, Ctrl+Enter runs, Ctrl+Shift+Enter checks,
-drafts per problem in `localStorage`), Run, Check (the tutor's test cases as
+retire + note) for the author's bank review; a Python editor built without
+a library - a transparent textarea over a highlighted `<pre>` and a line
+gutter, sharing every metric and scrolling together: keywords, strings,
+comments, numbers, builtins and def/class names coloured; indentation shown
+as faint dots, with a tab, an indent that is not a multiple of 4 spaces on a
+line that starts a statement, and trailing spaces tinted and named in the
+status line (`Ln, Col`); Tab / Shift+Tab indent, Enter keeps the indent (one
+more after a colon, one less after return / pass / break / continue /
+raise), Backspace in the indentation removes a level, Ctrl+Enter runs,
+Ctrl+Shift+Enter checks, drafts per problem in `localStorage`; Run, Check (the tutor's test cases as
 a table of input, expected and yours), and "I'm done" (LeetCode problems ask
 whether LeetCode accepted it) with the coding report below and a `.md`
 download. The page snapshots the code after about 20 s without typing; the

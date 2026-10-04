@@ -162,9 +162,10 @@ app, below) and the **AI mock interview** ([section](#ai-mock-interview-text--li
   notebooks and my own ML-coding and PyTorch exercises - or name any LeetCode
   problem by number, title or link. "Open on LeetCode" opens the problem in its own
   window beside the app; the app never shows or stores LeetCode's statements.
-- Write the solution in the app's code box and Run it: this machine's Python, in a
-  temporary folder, with a time limit and none of the server's API keys in its
-  environment. Running code is local-only - the server refuses it on any non-loopback
+- Write the solution in the app's Python editor - syntax colours, line numbers and visible
+  whitespace (tabs, odd indents and trailing spaces flagged), built without a library - and
+  Run it: this machine's Python, in a temporary folder, with a time limit and none of the
+  server's API keys in its environment. Running code is local-only - the server refuses it on any non-loopback
   bind, and the online demo shows what the feature does instead.
 - A tutor that hints instead of answering (`coach/tutor.py`), by text or push-to-talk
   voice. The **server** enforces the hint ladder - a clarifying question, a nudge, the

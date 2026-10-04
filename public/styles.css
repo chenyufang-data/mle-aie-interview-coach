@@ -1141,21 +1141,52 @@ textarea:focus {
   flex: 0 0 auto;
 }
 
+/* Row 1: the tutor beside the code box, stretched to the same height so
+   their bottom rows (Hint / Send / Talk, I'm done) line up. Row 2: the
+   problem's extras beside the stdin box and the run output. */
 .coding-columns {
   display: grid;
   grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-  gap: 20px;
-  align-items: start;
+  grid-template-areas: "tutor code" "extras output";
+  gap: 16px 20px;
+  align-items: stretch;
   margin-top: 6px;
 }
 
 .problem-panel {
-  display: grid;
-  gap: 14px;
-  padding: 18px;
+  grid-area: tutor;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
   border: 1px solid var(--line);
   border-radius: 10px;
   background: var(--panel);
+  min-width: 0;
+}
+
+.problem-extras {
+  grid-area: extras;
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.problem-extras:empty {
+  display: none;
+}
+
+.problem-extras .reveal-box:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.output-panel {
+  grid-area: output;
+  display: grid;
+  align-content: start;
+  gap: 10px;
   min-width: 0;
 }
 
@@ -1301,9 +1332,13 @@ textarea:focus {
 }
 
 .code-panel {
-  display: grid;
+  grid-area: code;
+  display: flex;
+  flex-direction: column;
   gap: 10px;
   min-width: 0;
+  /* the tutor panel's padding + border: I'm done lands level with Hint */
+  padding-bottom: 17px;
 }
 
 .code-head {
@@ -1311,6 +1346,15 @@ textarea:focus {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  flex-wrap: wrap;
+}
+
+.code-head-left {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
 }
 
 .code-tools {
@@ -1324,8 +1368,26 @@ textarea:focus {
   padding: 0 14px;
 }
 
+/* A filled, tinted button: an action that is not the main one, and still
+   reads as a button next to plain text. */
+.soft-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  background: var(--accent-ring);
+  color: var(--accent-dark);
+  font-weight: 800;
+}
+
+.soft-action:hover {
+  background: var(--accent-tint);
+}
+
 .code-box {
-  min-height: 440px;
   padding: 12px 14px;
   background: #fbfcfc;
   font: 14px/1.55 ui-monospace, "Cascadia Code", Consolas, monospace;
@@ -1338,6 +1400,139 @@ textarea:focus {
 
 .code-box.stdin {
   min-height: 90px;
+}
+
+/* ---- The code editor: a transparent textarea over a highlighted copy.
+   Both layers share every metric (font, size, line height, padding, tab
+   size, no wrapping, the same reserved scrollbar gutter), so each typed
+   character sits exactly on its coloured twin. Colours only - no bold or
+   italic, which could change a glyph's width. */
+.editor {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  /* tall enough to work in, short enough that Run above it and I'm done
+     below it stay on the same screen */
+  min-height: clamp(420px, calc(100vh - 360px), 760px);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfc;
+  overflow: hidden;
+}
+
+.editor:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+.editor-gutter,
+.editor-layer {
+  font: 14px/1.55 ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-variant-ligatures: none;
+  letter-spacing: 0;
+  tab-size: 4;
+  white-space: pre;
+}
+
+.editor-gutter {
+  flex: 0 0 auto;
+  /* sized by the editor, never by its numbers - it scrolls with the code */
+  contain: size;
+  width: 3.6em;
+  padding: 12px 10px 60px 8px;
+  overflow: hidden;
+  border-right: 1px solid var(--line);
+  background: #f1f4f3;
+  color: #8f9b9f;
+  text-align: right;
+  user-select: none;
+}
+
+.editor-gutter .current {
+  color: var(--ink);
+}
+
+.editor-gutter .flag {
+  color: var(--gold);
+}
+
+.editor-main {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.editor-layer {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 12px 14px;
+  border: 0;
+  scrollbar-gutter: stable;
+}
+
+.editor-highlight {
+  padding-bottom: 60px;
+  overflow: hidden;
+  color: var(--ink);
+  pointer-events: none;
+}
+
+textarea.editor-input {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: transparent;
+  caret-color: var(--ink);
+  line-height: 1.55;
+  overflow: auto;
+  resize: none;
+}
+
+textarea.editor-input:focus {
+  border: 0;
+  box-shadow: none;
+}
+
+textarea.editor-input::selection {
+  background: rgba(47, 102, 179, 0.24);
+}
+
+textarea.editor-input::placeholder {
+  color: var(--muted);
+}
+
+.tk-kw { color: #7c3aed; }
+.tk-str { color: #116149; }
+.tk-com { color: #6a737d; }
+.tk-num,
+.tk-const { color: #a14f00; }
+.tk-builtin { color: #1f5fa8; }
+.tk-fn,
+.tk-cls { color: #a3245f; }
+.tk-self,
+.tk-dec { color: #6b46c1; }
+/* whitespace: faint dots for indentation; tabs, odd indents and trailing
+   spaces tinted, with the first one named in the status line */
+.ws-lead { color: rgba(26, 34, 41, 0.22); }
+.ws-odd { background: rgba(176, 109, 20, 0.18); }
+.ws-tab { background: rgba(189, 63, 47, 0.16); box-shadow: inset 0 -2px 0 rgba(189, 63, 47, 0.5); }
+.ws-trail { background: rgba(189, 63, 47, 0.14); color: rgba(189, 63, 47, 0.5); }
+
+.editor-status {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.editor-status .warn {
+  color: var(--gold);
+  font-weight: 700;
 }
 
 .stdin-box summary {
@@ -1433,32 +1628,56 @@ textarea:focus {
   color: var(--accent-dark);
 }
 
+/* The tutor fills the left column: the log takes the free height, the
+   message box and the buttons sit at the bottom. */
 .tutor-box {
-  display: grid;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
   gap: 10px;
+  min-height: 0;
+}
+
+.statement + .tutor-box {
   padding-top: 12px;
   border-top: 1px solid var(--line);
 }
 
 .tutor-head {
   display: flex;
-  align-items: baseline;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 10px;
+  gap: 6px 12px;
   flex-wrap: wrap;
+}
+
+.tutor-title {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
 }
 
 .tutor-head h3 {
   margin: 0;
 }
 
+.tutor-head-tools {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 2px;
+}
+
 .tutor-log {
   display: flex;
+  flex: 1 1 0;
   flex-direction: column;
   gap: 8px;
-  max-height: 380px;
+  min-height: 180px;
   overflow-y: auto;
   padding: 2px;
+  /* a long conversation scrolls inside; it never makes the row taller */
+  contain: size;
 }
 
 .tutor-log .bubble {
@@ -1535,9 +1754,6 @@ textarea:focus {
   gap: 8px;
 }
 
-.tutor-actions .link-action {
-  margin-left: auto;
-}
 
 .speak-toggle {
   display: inline-flex;
@@ -1730,6 +1946,13 @@ textarea:focus {
 @media (max-width: 960px) {
   .coding-columns {
     grid-template-columns: 1fr;
+    grid-template-areas: "code" "output" "tutor" "extras";
+  }
+
+  .tutor-log {
+    flex: none;
+    max-height: 340px;
+    contain: none;
   }
 }
 
@@ -1775,7 +1998,7 @@ textarea:focus {
     grid-template-columns: 1fr;
   }
 
-  .code-box {
-    min-height: 320px;
+  .editor {
+    min-height: 340px;
   }
 }
