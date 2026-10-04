@@ -21,6 +21,9 @@ services:
       # vanished on every rebuild).
       MOCK_SESSIONS_PATH: /data/sessions/mock_sessions.jsonl
       MOCK_CACHE_DIR: /data/mock_cache
+      # Coding records (step 7) when the file backend is used; with the
+      # Postgres store they live in its code_problems / code_attempts tables.
+      RECORDS_DIR: /data/records
       USAGE_PATH: /data/usage.json
       # The bge-small embedding model (~127 MB, downloaded once) and the
       # document-vector cache live on the volume, so an image rebuild never

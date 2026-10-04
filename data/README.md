@@ -29,6 +29,13 @@ data/
 ├── stt/             lexicon_extra.json — private terms (resume, employers,
 │                    product names) merged into coach/assets/stt_lexicon.json when present
 ├── notes/           upstream/: the drafted pull requests of roadmap step 2
+├── records/         coding records (coach/records.py, step 7): problems.json (per owner:
+│                    problems practised, starred, first/last seen) and attempts.jsonl
+│                    (each finished attempt: solution, coding report, communication report)
+├── code_tests/      the tutor's test suites per problem (hidden reference solution
+│                    included), cached by coach/code_tests.py
+├── review/          bank review pages and decisions (tools/review_bank.py; the coding
+│                    page's review strip writes rag_code.decisions.json)
 ├── project_report.md  the author's own audit of the repository (personal; the
 │                    plan and the README are the public record)
 └── usage.json       per-key daily Claude quota + LLM-budget counters (rows keyed by a
@@ -36,11 +43,12 @@ data/
 ```
 
 Paths are overridable with `REAL_SESSIONS_PATH`, `FREE_SESSIONS_PATH`,
-`MOCK_SESSIONS_PATH`, `MOCK_CACHE_DIR`, `USAGE_PATH` (see `docs/backend.md`).
+`MOCK_SESSIONS_PATH`, `MOCK_CACHE_DIR`, `RECORDS_DIR`, `USAGE_PATH` (see `docs/backend.md`).
 Secrets stay at the repo root, not here: `.env` (API keys) and `users.json`
 (access keys) — both gitignored.
 
-With `DATABASE_URL` set (`coach/store.py`), `usage.json`, `sessions/` and
-`mock_cache/` are not written: that state lives in Postgres, and
-`tools/migrate_to_postgres.py` imports what is here (dry run first). The
+With `DATABASE_URL` set (`coach/store.py`), `usage.json`, `sessions/`,
+`mock_cache/` and `records/` are not written: that state lives in Postgres, and
+`tools/migrate_to_postgres.py` imports what is here (dry run first; coding records
+are not part of the import yet). The
 models and the vector cache stay in this folder either way.

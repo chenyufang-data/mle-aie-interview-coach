@@ -42,6 +42,7 @@ def temp_paths():
     config.FREE_SESSIONS_PATH = tmp / "sessions" / "free_sessions.jsonl"
     config.MOCK_SESSIONS_PATH = tmp / "sessions" / "mock_sessions.jsonl"
     os.environ["MOCK_CACHE_DIR"] = str(tmp / "mock_cache")
+    os.environ["RECORDS_DIR"] = str(tmp / "records")
     return tmp
 
 
@@ -50,7 +51,8 @@ def wipe(st):
     temp folder)."""
     if st.backend == "postgres":
         with st.pool.connection() as conn:
-            conn.execute("TRUNCATE access_keys, usage_counters, session_log, plan_cache")
+            conn.execute("TRUNCATE access_keys, usage_counters, session_log, plan_cache, "
+                         "code_problems, code_attempts")
 
 
 def check_contract(st):
@@ -121,6 +123,39 @@ def check_contract(st):
     assert counts["cached_plans"] == 0 and isinstance(st.describe(), str)
 
 
+def check_records(st):
+    """Coding records (step 7 phase 6), identical for both backends."""
+    assert st.list_problems("me") == [] and st.list_attempts("me") == []
+    st.upsert_problem("me", "lc-1", {"title": "Two Sum", "source": "leetcode", "number": 1})
+    first = st.list_problems("me")[0]
+    assert first["key"] == "lc-1" and first["title"] == "Two Sum" and first["starred"] is False
+    assert st.set_starred("me", "lc-1", True) and not st.set_starred("me", "nope", True)
+    time.sleep(1.1)
+    st.upsert_problem("me", "lc-1", {"title": "Two Sum (renamed)", "source": "leetcode", "number": 1})
+    again = st.list_problems("me")[0]
+    assert again["title"] == "Two Sum (renamed)" and again["starred"] is True, "starred survives"
+    assert again["first_seen"] == first["first_seen"] and again["last_seen"] > first["last_seen"]
+    st.upsert_problem("other", "lc-1", {"title": "Two Sum"})
+    assert len(st.list_problems("me")) == 1 and st.list_problems("other")[0]["starred"] is False
+    record = {"id": "a1", "owner": "me", "problem_key": "lc-1", "mode": "practice",
+              "outcome": "solved", "solution": {"code": "x = 1", "review": ["fine"]},
+              "communication_report": None}
+    assert st.add_attempt(record) is True and st.add_attempt(record) is False
+    time.sleep(1.1)
+    assert st.add_attempt({**record, "id": "a2", "mode": "mock", "outcome": "unsolved"})
+    assert st.add_attempt({**record, "id": "b1", "owner": "other"})
+    assert [a["id"] for a in st.list_attempts("me")] == ["a2", "a1"], "newest first"
+    assert [a["id"] for a in st.list_attempts("me", "lc-1")] == ["a2", "a1"]
+    assert st.list_attempts("me", "lc-2") == []
+    got = st.get_attempt("me", "a1")
+    assert got["solution"]["code"] == "x = 1" and got["finished_at"]
+    assert st.get_attempt("other", "a1") is None, "an owner sees only their own"
+    assert st.clear_records("me") == 2
+    assert st.list_problems("me") == [] and st.list_attempts("me") == []
+    assert len(st.list_attempts("other")) == 1 and st.list_problems("other")
+    st.clear_records("other")
+
+
 def check_race(st):
     """20 threads race for a key capped at 5 calls a day: exactly 5 win and
     the counters say 5 - the file store by its process lock, the Postgres
@@ -155,6 +190,7 @@ def test_file_store():
     temp_paths()
     st = store.use(store.FileStore())
     check_contract(st)
+    check_records(st)
     check_race(st)
     # the file backend wrote the same files as before the store existed
     assert config.USAGE_PATH.exists() and config.FREE_SESSIONS_PATH.exists()
@@ -327,6 +363,7 @@ def test_postgres_store():
     st = store.use(store.PostgresStore(url))
     wipe(st)
     check_contract(st)
+    check_records(st)
     check_race(st)
     check_pgvector(st)
     # revocation: the key stops resolving on the next reload

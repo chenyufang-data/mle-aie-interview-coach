@@ -238,6 +238,21 @@ def handle_get(handler, path):
         json_response(handler, 200, {"problems": [summary(r) for r in records()],
                                      "time_limit": config.CODE_RUN_TIMEOUT_S})
         return
+    if path in ("/api/code/history", "/api/code/record"):
+        # imported under another name: a plain `records` here would shadow
+        # this module's records() for the whole function (UnboundLocalError)
+        from coach import records as history_records, users
+        user = users.resolve_user(handler)
+        if path == "/api/code/history":
+            json_response(handler, 200, history_records.history(user))
+            return
+        query = urlparse.parse_qs(urlparse.urlsplit(handler.path).query)
+        detail_row = history_records.attempt_detail(user, (query.get("id") or [""])[0])
+        if detail_row is None:
+            json_response(handler, 404, {"error": "No such attempt in your history."})
+            return
+        json_response(handler, 200, {"attempt": detail_row})
+        return
     if path == "/api/code/problem":
         query = urlparse.parse_qs(urlparse.urlsplit(handler.path).query)
         record = by_id((query.get("id") or [""])[0])
@@ -440,7 +455,22 @@ def handle_post(handler, path, data):
                 report.update(mode="mock", strict=attempt["strict"],
                               communication=coding_round.communication(attempt, engine))
                 markdown += coding_round.communication_markdown(report["communication"]) + "\n"
-            json_response(handler, 200, {"report": report, "markdown": markdown})
+            from coach import records as history_records
+            saved = history_records.save(attempt, report, users.resolve_user(handler))
+            json_response(handler, 200, {"report": report, "markdown": markdown,
+                                         "saved": saved is not None})
+        elif path == "/api/code/star":
+            from coach import records as history_records
+            ok = history_records.star(users.resolve_user(handler), str(data.get("key") or ""),
+                              bool(data.get("starred")))
+            if not ok:
+                raise LookupError("That problem is not in your history.")
+            json_response(handler, 200, {"starred": bool(data.get("starred"))})
+        elif path == "/api/code/history/clear":
+            from coach import records as history_records
+            if data.get("confirm") is not True:
+                raise ValueError("Confirm to delete your coding history.")
+            json_response(handler, 200, {"deleted": history_records.clear(users.resolve_user(handler))})
         elif path == "/api/code/transcribe":
             import base64
             from coach.voice import final_transcript

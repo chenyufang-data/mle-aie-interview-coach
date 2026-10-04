@@ -98,6 +98,9 @@ jobs:
       # The mock coding round (coach/coding_round.py): phases, the interview-
       # conditions lock, follow-ups, check-ins, the communication report.
       - run: python tests/test_coding_round.py
+      # Coding records (coach/records.py): consent, outcomes, the review
+      # queue, the routes; the store contract runs on both backends below.
+      - run: python tests/test_records.py
       # State store (step 4): the file backend's contract and race, then
       # the same contract, the whole tier/budget suite and the migration
       # tool against the Postgres service above.

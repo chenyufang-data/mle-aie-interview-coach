@@ -81,6 +81,8 @@ coach/               the runtime: everything the server imports (one module per 
   features.py        the grader's lexical features  slm.py       optional fine-tuned SLM grade (SLM_URL)
   jev.py             optional Jev grade + verdicts for the free tier (TYPESAFE_API_KEY, step 6)
   cli_engine.py      local-only engine on your own Claude Code / Codex subscription (--cli)
+  coding.py          coding drills: bank, LeetCode references, local runner, routes (step 7)
+  tutor.py  code_tests.py  coding_round.py  records.py   the tutor, its tests, the mock round, history
   resume_parser.py   PDF/.docx/.txt to text         stt_text.py  WER, term error rate, keyterm policy
   mock/              mock interview (plan, turns, report)
   voice/             live voice loop: VAD, STT, TTS, barge-in, Level 1 sidecar
@@ -191,6 +193,11 @@ app, below) and the **AI mock interview** ([section](#ai-mock-interview-text--li
   where you trace your code by hand. Afterwards: the coding report plus a communication
   report - measured numbers, then yes / partly / no with timestamped evidence on clarifying
   questions, approach before code, complexity, testing and thinking aloud.
+- **History** (`history.html`): every finished attempt is saved locally (`coach/records.py`,
+  behind the same store as everything else - `data/records/` or Postgres) and listed by
+  problem as "<title> (<approach>)" with each attempt's report and code. A review queue brings
+  problems back: not solved or the solution shown at once, solved with a one-step hint after two
+  days, small hints after a week, clean solves after three weeks.
 
 ## Setup
 
@@ -464,7 +471,12 @@ Three kinds of data, three treatments:
   training scripts at that checkout.
 - **Never committed** — `.env`, `users.json`, and everything under `data/`
   (resume text, gathered interview questions, practice logs, quota state,
-  recordings). See `data/README.md`.
+  recordings, coding records). See `data/README.md`.
+
+Coding records (step 7) are kept until you delete them on the history page.
+The local app keeps them for its one user; a shared server (the online demo)
+keeps them only for an access key with logging on, under a digest of the key -
+never for an anonymous visitor.
 
 This project was built with Claude Code as a pair programmer; the evaluation
 design, every ship/no-ship decision, and the negative results are mine.

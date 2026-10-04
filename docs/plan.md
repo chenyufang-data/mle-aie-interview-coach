@@ -1319,6 +1319,27 @@ with logging on, never for anonymous visitors; a retention line is added.
    counting; a plain answer now stays within what is unlocked, and only
    help moves the ladder.
 6. *Records* and a practice history page.
+   Done 2026-10-03: `coach/records.py` over two new store primitives sets
+   (both backends; the store contract tests run them on files and on
+   Postgres), the records routes and `history.html`. A finished attempt
+   stores the plan's records - the problem (source, number, title, our
+   approach labels, role, link, starred, first and last seen) and the
+   attempt (mode and conditions, times, hints by level, outcome, the
+   solution - the user's own code, the approach it takes, its complexity,
+   the tutor's review - the coding report and, for a mock round, the
+   communication report); the plan's solutions / coding_reports /
+   communication_reports are fields of the attempt, one of each per
+   attempt. Outcome from the user's own evidence: the tutor's tests all
+   passing or LeetCode accepting it (their word); "shown" when the
+   solution was opened. The review queue by the latest attempt: not solved
+   or shown - due at once; solved only with a level-3 hint - after two
+   days; smaller hints - a week; clean - three weeks; listed in that order,
+   oldest first. A solved problem reads "<title> (<approach>)". Consent:
+   the local app keeps records for its one user; a shared server only for
+   a key with logging on, under a digest of the key, never anonymous; the
+   README's data section carries the retention line (kept until deleted on
+   the history page). Not part of `tools/migrate_to_postgres.py` yet - no
+   file deployment holds records.
 7. *Local tests*: the author records several of their own sessions, kept
    in `data/` and never committed; CI runs on invented fixtures. Pushed.
 8. *Online demo*, trimmed: the mock coding round only, on the bank, with

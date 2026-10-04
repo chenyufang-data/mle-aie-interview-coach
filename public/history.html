@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Coding history | MLE/AIE Interview Coach</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@700;800&family=JetBrains+Mono:wght@600&display=swap">
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <!-- Coding history (roadmap step 7, phase 6): the problems you practised,
+       what each attempt left behind, and the ones worth another go. Local
+       app only, like the coding page (coach/records.py). -->
+  <body class="theme-blue">
+    <main class="app-shell coding-shell">
+      <section class="coding-page history-page" aria-label="Coding history">
+        <header class="page-topbar">
+          <a class="back-link" href="/coding.html">Coding drills</a>
+          <div>
+            <p class="eyebrow">Coding drills</p>
+            <h1>Your history</h1>
+          </div>
+          <div id="accountChip" class="account-mount"></div>
+        </header>
+
+        <p id="historyStatus" class="inline-status" aria-live="polite">Loading your history...</p>
+
+        <div id="historyBody" hidden>
+          <div id="statTiles" class="report-tiles history-stats"></div>
+
+          <section class="history-section" aria-labelledby="queueTitle">
+            <h2 id="queueTitle">Come back to these</h2>
+            <p class="section-hint">Not solved, or solved with the solution shown: right away. Solved with a one-step hint: after two days. With smaller hints: after a week. Without hints: after three weeks. In that order, oldest first.</p>
+            <div id="queueList" class="queue-list"></div>
+          </section>
+
+          <section class="history-section" aria-labelledby="allTitle">
+            <div class="history-head">
+              <h2 id="allTitle">All problems</h2>
+              <div class="segmented history-filter" role="group" aria-label="Show">
+                <button class="segment active" data-filter="all" type="button">All</button>
+                <button class="segment" data-filter="solved" type="button">Solved</button>
+                <button class="segment" data-filter="open" type="button">Not solved</button>
+                <button class="segment" data-filter="starred" type="button">Starred</button>
+                <button class="segment" data-filter="mock" type="button">Mock</button>
+              </div>
+            </div>
+            <div id="problemList" class="history-list"></div>
+          </section>
+
+          <section class="history-section retention" aria-label="Your data">
+            <p class="muted-note">Your records stay on this computer - <code>data/records/</code>, or the database when
+              <code>DATABASE_URL</code> is set - until you delete them here. Nothing is uploaded; the online demo keeps
+              records only for an access key with logging on, never for an anonymous visitor.</p>
+            <div class="review-row">
+              <button id="clearBtn" class="ghost-action small-action" type="button">Delete my coding history</button>
+              <span id="clearConfirm" hidden>
+                <span>Delete every problem and attempt? This cannot be undone.</span>
+                <button id="clearYes" class="ghost-action small-action danger" type="button">Delete</button>
+                <button id="clearNo" class="link-action" type="button">Keep it</button>
+              </span>
+            </div>
+          </section>
+        </div>
+
+        <section id="historyLocalOnly" class="local-only" hidden>
+          <p class="lead">Your coding history lives in the local app, next to the coding drills.</p>
+          <div class="cta-row">
+            <a class="primary-action" href="https://github.com/chenyufang-data/mle-aie-interview-coach#readme" target="_blank" rel="noopener">Get the code on GitHub</a>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="/account.js"></script>
+    <script src="/history.js"></script>
+  </body>
+</html>

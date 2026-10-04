@@ -72,6 +72,14 @@ def _cap(value):
         return 0
 
 
+def _now_iso():
+    return datetime.now().astimezone().isoformat(timespec="seconds")
+
+
+def _iso(value):
+    return value.isoformat(timespec="seconds") if hasattr(value, "isoformat") else value
+
+
 def _record_time(record):
     """The record's own timestamp when it carries one (imports keep their
     order), else None so the database stamps now()."""
@@ -165,6 +173,95 @@ class FileStore:
         return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()
                 if line.strip()]
 
+    # --- coding records (step 7, phase 6) ------------------------------
+    # problems.json: {owner: {problem_key: problem}}; attempts.jsonl: one
+    # finished attempt per line. One lock for both (single process).
+    def _problems_path(self):
+        return config.records_dir() / "problems.json"
+
+    def _attempts_path(self):
+        return config.records_dir() / "attempts.jsonl"
+
+    def _read_problems(self):
+        try:
+            return json.loads(self._problems_path().read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return {}
+
+    def _write_problems(self, data):
+        path = self._problems_path()
+        path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = path.with_suffix(".tmp")
+        tmp.write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8")
+        tmp.replace(path)
+
+    def _read_attempts(self):
+        path = self._attempts_path()
+        if not path.exists():
+            return []
+        return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()
+                if line.strip()]
+
+    def upsert_problem(self, owner, key, problem):
+        """First seen is kept, starred is kept, the rest follows `problem`."""
+        now = _now_iso()
+        with self._lock:
+            data = self._read_problems()
+            mine = data.setdefault(owner, {})
+            old = mine.get(key) or {}
+            mine[key] = {**problem, "key": key, "starred": bool(old.get("starred", False)),
+                         "first_seen": old.get("first_seen", now), "last_seen": now}
+            self._write_problems(data)
+
+    def set_starred(self, owner, key, starred):
+        with self._lock:
+            data = self._read_problems()
+            problem = data.get(owner, {}).get(key)
+            if problem is None:
+                return False
+            problem["starred"] = bool(starred)
+            self._write_problems(data)
+            return True
+
+    def add_attempt(self, record):
+        """Returns True when new (an attempt id lands once)."""
+        with self._lock:
+            if any(r.get("id") == record["id"] for r in self._read_attempts()):
+                return False
+            path = self._attempts_path()
+            path.parent.mkdir(parents=True, exist_ok=True)
+            row = {**record, "finished_at": record.get("finished_at") or _now_iso()}
+            with path.open("a", encoding="utf-8") as handle:
+                handle.write(json.dumps(row, ensure_ascii=False) + "\n")
+            return True
+
+    def list_problems(self, owner):
+        return list(self._read_problems().get(owner, {}).values())
+
+    def list_attempts(self, owner, problem_key=None):
+        """Newest first."""
+        rows = [r for r in self._read_attempts() if r.get("owner") == owner
+                and (problem_key is None or r.get("problem_key") == problem_key)]
+        return sorted(rows, key=lambda r: r.get("finished_at", ""), reverse=True)
+
+    def get_attempt(self, owner, attempt_id):
+        return next((r for r in self._read_attempts()
+                     if r.get("owner") == owner and r.get("id") == attempt_id), None)
+
+    def clear_records(self, owner):
+        """Delete one owner's problems and attempts; returns how many attempts."""
+        with self._lock:
+            data = self._read_problems()
+            data.pop(owner, None)
+            self._write_problems(data)
+            rows = self._read_attempts()
+            kept = [r for r in rows if r.get("owner") != owner]
+            path = self._attempts_path()
+            if path.exists():
+                path.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in kept),
+                                encoding="utf-8")
+            return len(rows) - len(kept)
+
     # --- plan cache --------------------------------------------------
     def _cache_path(self, digest):
         return config.mock_cache_dir() / f"{digest}.json"
@@ -253,6 +350,26 @@ SCHEMA = (
         digest text PRIMARY KEY,
         payload jsonb NOT NULL,
         updated_at timestamptz NOT NULL DEFAULT now())""",
+    # Step 7 phase 6: coding records. A problem per owner (starred, first and
+    # last seen); a finished attempt carries its solution, coding report and
+    # communication report in `record` (one of each per attempt).
+    """CREATE TABLE IF NOT EXISTS code_problems (
+        owner text NOT NULL,
+        problem_key text NOT NULL,
+        problem jsonb NOT NULL,
+        starred boolean NOT NULL DEFAULT false,
+        first_seen timestamptz NOT NULL DEFAULT now(),
+        last_seen timestamptz NOT NULL DEFAULT now(),
+        PRIMARY KEY (owner, problem_key))""",
+    """CREATE TABLE IF NOT EXISTS code_attempts (
+        id text PRIMARY KEY,
+        owner text NOT NULL,
+        problem_key text NOT NULL,
+        mode text NOT NULL,
+        outcome text NOT NULL,
+        finished_at timestamptz NOT NULL DEFAULT now(),
+        record jsonb NOT NULL)""",
+    "CREATE INDEX IF NOT EXISTS code_attempts_owner ON code_attempts (owner, finished_at DESC)",
 )
 
 
@@ -461,6 +578,60 @@ class PostgresStore:
             return [record for (record,) in conn.execute(
                 "SELECT record FROM session_log WHERE kind = %s ORDER BY id",
                 (kind,)).fetchall()]
+
+    # --- coding records (step 7, phase 6) ------------------------------
+    def upsert_problem(self, owner, key, problem):
+        with self.pool.connection() as conn:
+            conn.execute(
+                "INSERT INTO code_problems (owner, problem_key, problem) VALUES (%s, %s, %s) "
+                "ON CONFLICT (owner, problem_key) DO UPDATE SET problem = EXCLUDED.problem, "
+                "last_seen = now()", (owner, key, self._jsonb(problem)))
+
+    def set_starred(self, owner, key, starred):
+        with self.pool.connection() as conn:
+            return conn.execute(
+                "UPDATE code_problems SET starred = %s WHERE owner = %s AND problem_key = %s",
+                (bool(starred), owner, key)).rowcount == 1
+
+    def add_attempt(self, record):
+        with self.pool.connection() as conn:
+            return conn.execute(
+                "INSERT INTO code_attempts (id, owner, problem_key, mode, outcome, record) "
+                "VALUES (%s, %s, %s, %s, %s, %s) ON CONFLICT (id) DO NOTHING",
+                (record["id"], record["owner"], record["problem_key"], record["mode"],
+                 record["outcome"], self._jsonb(record))).rowcount == 1
+
+    def list_problems(self, owner):
+        with self.pool.connection() as conn:
+            rows = conn.execute(
+                "SELECT problem_key, problem, starred, first_seen, last_seen FROM code_problems "
+                "WHERE owner = %s ORDER BY last_seen DESC", (owner,)).fetchall()
+        return [{**problem, "key": key, "starred": starred, "first_seen": _iso(first),
+                 "last_seen": _iso(last)} for key, problem, starred, first, last in rows]
+
+    def list_attempts(self, owner, problem_key=None):
+        query = "SELECT record, finished_at FROM code_attempts WHERE owner = %s"
+        args = [owner]
+        if problem_key is not None:
+            query += " AND problem_key = %s"
+            args.append(problem_key)
+        with self.pool.connection() as conn:
+            rows = conn.execute(query + " ORDER BY finished_at DESC, id", args).fetchall()
+        return [{**record, "finished_at": _iso(finished)} for record, finished in rows]
+
+    def get_attempt(self, owner, attempt_id):
+        with self.pool.connection() as conn:
+            row = conn.execute(
+                "SELECT record, finished_at FROM code_attempts WHERE owner = %s AND id = %s",
+                (owner, attempt_id)).fetchone()
+        return {**row[0], "finished_at": _iso(row[1])} if row else None
+
+    def clear_records(self, owner):
+        with self.pool.connection() as conn:
+            with conn.transaction():
+                conn.execute("DELETE FROM code_problems WHERE owner = %s", (owner,))
+                return conn.execute("DELETE FROM code_attempts WHERE owner = %s",
+                                    (owner,)).rowcount
 
     # --- plan cache --------------------------------------------------
     def cache_get(self, digest):

@@ -283,6 +283,25 @@ The mock coding round (phase 5, `coach/coding_round.py`) is an attempt with
   timeline) and two or three `suggestions`; the markdown gains a
   "Communication" section.
 
+Records (phase 6, `coach/records.py` over `coach/store.py`): `finish` saves
+the attempt when this user's records are kept - the local app: always, owner
+`local`; a shared server: only an access key with logging on, owner = a
+digest of the key; never an anonymous visitor (`saved` in the reply). The
+file backend writes `data/records/problems.json` and `attempts.jsonl`
+(`RECORDS_DIR`); Postgres the `code_problems` and `code_attempts` tables,
+created at startup. An attempt carries its solution (code, approach,
+complexity, review), coding report and communication report.
+
+- `GET /api/code/history` → `{ kept, stats, queue (problem keys due, in
+  order), problems: [{ key, title, label, link, problem_id, approaches,
+  starred, first_seen, last_seen, attempts, mock_attempts, solved, approach,
+  status, status_text, due, latest, history }] }`. Status by the latest
+  attempt: unsolved / shown (due at once), heavy - solved only with a
+  level-3 hint (after 2 days), hinted (7), clean (21).
+- `GET /api/code/record?id=` → `{ attempt }`, the whole stored attempt.
+- `POST /api/code/star` `{ key, starred }`.
+- `POST /api/code/history/clear` `{ confirm: true }` → `{ deleted }`.
+
 ### `POST /api/question`
 
 Request: `role` (`"MLE"` | `"AIE"`), `level`, `topic`, `focus`,

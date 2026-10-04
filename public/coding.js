@@ -1293,7 +1293,7 @@ async function finish(outcome) {
     const data = await attemptCall("/api/code/finish", { code: els.code.value, leetcode: outcome || null });
     state.finished = true;
     hideOffer();
-    renderReport(data.report, data.markdown);
+    renderReport(data.report, data.markdown, data.saved);
   } catch (error) {
     els.report.hidden = false;
     els.report.innerHTML = `<p class="run-status error">${escapeHtml(error.message)}</p>`;
@@ -1303,7 +1303,7 @@ async function finish(outcome) {
   }
 }
 
-function renderReport(report, markdown) {
+function renderReport(report, markdown, saved) {
   const minutes = Math.floor(report.seconds / 60);
   const seconds = String(report.seconds % 60).padStart(2, "0");
   const used = report.hints_by_level.map((n, level) => n ? `${LEVEL_NAMES[level]} &times;${n}` : "")
@@ -1320,7 +1320,10 @@ function renderReport(report, markdown) {
   els.report.innerHTML = `
     <div class="report-head">
       <h2>${MOCK ? "Coding round report" : "Coding report"}</h2>
-      <button id="downloadReport" class="ghost-action small-action" type="button">Download (.md)</button>
+      <div class="queue-actions">
+        ${saved ? `<a class="link-action" href="/history.html">Saved to your history</a>` : ""}
+        <button id="downloadReport" class="ghost-action small-action" type="button">Download (.md)</button>
+      </div>
     </div>
     <div class="report-tiles">${tiles.map(([k, v]) => `<div class="report-tile"><span>${k}</span><b>${v}</b></div>`).join("")}</div>
     ${report.solution_shown ? `<p class="muted-note">You opened the full solution on this one.</p>` : ""}

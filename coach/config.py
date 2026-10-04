@@ -69,6 +69,12 @@ MOCK_SESSIONS_PATH = Path(
 )
 
 
+def records_dir():
+    """Coding records (roadmap step 7, phase 6) for the file backend:
+    problems.json and attempts.jsonl."""
+    return Path(os.environ.get("RECORDS_DIR", BASE_DIR / "data" / "records"))
+
+
 def mock_cache_dir():
     """Folder of the mock's resume-analysis cache (coach/mock/plan_cache.py):
     personal data, gitignored, trimmed to the newest entries. Read at call
