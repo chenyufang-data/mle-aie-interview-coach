@@ -24,6 +24,9 @@
   --coding-dark: #234f8c;
   --mock: #94590c;
   --mock-dark: #6f430a;
+  /* The IC brand mark: one magenta on every page, apart from the page
+     accents (white on it measures 5.9:1). */
+  --brand: #b5179e;
 }
 
 .theme-blue {
@@ -152,7 +155,7 @@ button:disabled {
   width: 44px;
   height: 44px;
   color: #ffffff;
-  background: var(--accent);
+  background: var(--brand);
   border-radius: 8px;
   font-weight: 800;
 }

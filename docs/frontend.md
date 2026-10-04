@@ -25,7 +25,8 @@ the backend's file handler. It owns presentation and session flow — nothing el
 - **Page colors**: `--accent` and its tint/ring tokens drive every accent;
   `<body class="theme-blue">` (coding) and `theme-gold` (mock) re-point them,
   the default is green. Semantic colors stay fixed (green for a hit or a
-  valid key, gold for partial, red for errors).
+  valid key, gold for partial, red for errors), and so does the IC brand
+  mark (`--brand`, magenta) on every page.
 - **Setup page** (`practice.html`, Concept drills): collect track (MLE / AIE), level, topic, and
   optional focus text. The "course knowledge base" topic groups are built at load
   time from `GET /api/meta` — module names and chunk counts come from the server.
