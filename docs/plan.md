@@ -1274,6 +1274,50 @@ with logging on, never for anonymous visitors; a retention line is added.
 5. *Mock coding round* (local): the interviewer presents a problem, the
    candidate explains, codes and runs, answers follow-ups on complexity
    and edge cases; the timer; the communication report.
+   Design (2026-10-03): the mock page offers two rounds, the experience
+   deep-dive and the coding round; the coding round is the coding page in
+   gold (`coding.html?mode=mock`) with the elapsed-time strip, an
+   interviewer in place of the tutor, and no Show solution. Phases are
+   enforced in code, the model choosing content within them: *discuss*
+   (the interviewer presents the problem - number and title for LeetCode,
+   the statement for the author's own exercises - answers clarifying
+   questions and asks for the approach and its complexity before any
+   code), *coding* (from the first real code; quiet unless asked), *review*
+   (after "I'm done": a walk through an example, then two follow-ups from
+   the bank or the model) and the close, with the coding report and the
+   communication report. Help requests use the same server-enforced ladder
+   and guard and count in the report. *Interview conditions* (an option,
+   added at the author's request after comparing real interview tools):
+   Run and Check stay locked until "I'm done" - the server refuses them -
+   then Check runs once; the editor's whitespace notes are hidden; the
+   interviewer speaks only when asked (no check-ins). Without it, Run and
+   Check work throughout and the interviewer checks in after a long quiet
+   stretch while coding. The communication report: the deterministic
+   metrics of `coach/mock/metrics.py` over the candidate's turns (words,
+   fillers, pace when timed), time to first code and the longest quiet
+   stretch from the timeline, then a judged verdict (yes / partly / no with
+   the evidence) on clarifying questions, an approach stated before coding,
+   complexity stated, tests and edge cases walked through, and thinking
+   aloud, with two or three suggestions.
+   Done 2026-10-03: `coach/coding_round.py`, `/api/code/interviewer`, the
+   round on the coding page and the round choice on the mock page. A
+   strict round on LeetCode 1, played end to end on the author's
+   subscription in a headless browser: the interviewer answered the
+   clarifying questions and asked for the approach and its complexity
+   before code; the phase moved to coding at the first real code; Run and
+   Check stayed refused until "I'm done", then Check ran once (9 of 9);
+   the walk-through request, the bank's two follow-ups and the close; the
+   reports, with verdicts citing timestamps (yes on clarifying, approach
+   first and complexity; partly on testing - an edge case named but not
+   traced; no on thinking aloud) and a suggestion that caught an answer to
+   the wrong follow-up. Interviewer replies 2.7-3.7 s. Fixed on the way:
+   the interviewer said "go ahead and run it" under interview conditions
+   (its prompt now states them); pace came from typed answers (now from
+   spoken ones only); the approach and the rubric showed during the round
+   (now after it); and a ladder leak shared with the tutor - a reply the
+   model labelled "not a help request" could reach the next rung without
+   counting; a plain answer now stays within what is unlocked, and only
+   help moves the ladder.
 6. *Records* and a practice history page.
 7. *Local tests*: the author records several of their own sessions, kept
    in `data/` and never committed; CI runs on invented fixtures. Pushed.

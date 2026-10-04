@@ -95,6 +95,9 @@ jobs:
       # ladder the server enforces, the output guard, watch-outs, the report,
       # the test harness and the routes - a scripted stand-in plays the model.
       - run: python tests/test_tutor.py
+      # The mock coding round (coach/coding_round.py): phases, the interview-
+      # conditions lock, follow-ups, check-ins, the communication report.
+      - run: python tests/test_coding_round.py
       # State store (step 4): the file backend's contract and race, then
       # the same contract, the whole tier/budget suite and the migration
       # tool against the Postgres service above.

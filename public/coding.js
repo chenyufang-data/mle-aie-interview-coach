@@ -17,6 +17,10 @@ const RUBRIC_PARTS = [
 ];
 const SNAPSHOT_IDLE_MS = 20000;
 const STALL_MS = 90000;
+// coding.html?mode=mock is the mock interview's coding round (phase 5)
+const MOCK = new URLSearchParams(window.location.search).get("mode") === "mock";
+const CHECK_IN_MS = 150000;
+const PHASE_NAMES = { discuss: "Discussing", coding: "Coding", review: "Review", closed: "Finished" };
 
 const els = {
   title: document.getElementById("problemTitle"),
@@ -42,6 +46,16 @@ const els = {
   done: document.getElementById("doneBtn"),
   leetcodeAsk: document.getElementById("leetcodeAsk"),
   report: document.getElementById("reportPanel"),
+  editor: document.getElementById("editor"),
+  roundSetup: document.getElementById("roundSetup"),
+  strict: document.getElementById("strictBox"),
+  surprise: document.getElementById("surpriseBtn"),
+  startRound: document.getElementById("startRoundBtn"),
+  roundTimer: document.getElementById("roundTimer"),
+  timerDisplay: document.getElementById("timerDisplay"),
+  timerToggle: document.getElementById("timerToggleBtn"),
+  timerReset: document.getElementById("timerResetBtn"),
+  phaseChip: document.getElementById("phaseChip"),
 };
 
 const state = {
@@ -49,6 +63,9 @@ const state = {
   attempt: null, tutorLabel: "", checks: false, nextLevel: 0, busy: false,
   snapshotCode: null, idleTimer: null, stallTimer: null, passing: false, finished: false,
   recorder: null, chunks: [], speaking: [],
+  // the mock coding round
+  round: null, phase: null, strict: false, locked: false, promptAt: 0, checkInTimer: null,
+  timer: { started: 0, carried: 0, running: false, tick: null },
 };
 
 // ------------------------------------------------------------- storage
@@ -96,7 +113,7 @@ async function attemptCall(path, body) {
   try {
     return await api(path, { ...body, attempt_id: state.attempt });
   } catch (error) {
-    if (error.status !== 404 || !state.problem) throw error;
+    if (error.status !== 404 || !state.problem || MOCK) throw error;
     await startAttempt(true);
     return api(path, { ...body, attempt_id: state.attempt });
   }
@@ -146,6 +163,7 @@ async function start() {
     return;
   }
   els.workspace.hidden = false;
+  if (MOCK) setupMockMode();
   await loadBank();
   const params = new URLSearchParams(window.location.search);
   const wanted = params.get("id") || load("coding:last", null);
@@ -274,15 +292,51 @@ function starterFor(problem) {
   return (imports.length ? imports.join("\n") + "\n\n\n" : "") + body;
 }
 
+// The mock interview's coding round: gold, set up first, then the round.
+function setupMockMode() {
+  document.body.classList.replace("theme-blue", "theme-gold");
+  document.querySelector(".page-topbar .eyebrow").textContent = "Mock interview · coding round";
+  document.querySelector(".page-topbar .back-link").setAttribute("href", "/mock.html");
+  els.title.textContent = "Pick the problem";
+  document.title = "Coding round | Mock interview";
+  els.roundSetup.hidden = false;
+  els.columns.hidden = true;
+  els.done.textContent = "I'm done coding";
+  els.surprise.addEventListener("click", surprise);
+  els.startRound.addEventListener("click", startRound);
+  els.timerToggle.addEventListener("click", toggleTimer);
+  els.timerReset.addEventListener("click", () => {
+    state.timer.carried = 0;
+    state.timer.started = Date.now();
+    renderTimer();
+  });
+}
+
+function surprise() {
+  const options = [...els.picker.options].filter((o) => o.value);
+  if (!options.length) return;
+  const pick = options[Math.floor(Math.random() * options.length)];
+  els.picker.value = pick.value;
+  openBank(pick.value);
+}
+
 function show(problem, scroll) {
   saveDraft();
   stopSpeaking();
   state.problem = problem;
-  state.key = problemKey(problem);
+  state.key = (MOCK ? "mock:" : "") + problemKey(problem);
   state.passing = false;
   state.finished = false;
   els.title.textContent = problem.label;
-  document.title = `${problem.label} | Coding drills`;
+  document.title = MOCK ? `${problem.label} | Coding round` : `${problem.label} | Coding drills`;
+  if (MOCK) {
+    // a round starts from the starter, never from a practice draft; the
+    // round itself begins with Start the round
+    setCode(starterFor(problem));
+    renderTools();
+    els.startRound.disabled = false;
+    return;
+  }
   setCode(load(`coding:draft:${state.key}`, null) ?? starterFor(problem));
   state.snapshotCode = els.code.value;
   els.output.hidden = true;
@@ -296,29 +350,36 @@ function show(problem, scroll) {
   if (scroll) els.columns.scrollIntoView({ block: "start", behavior: "smooth" });
 }
 
-function renderPanel() {
+// above the code box: LeetCode's link (the statement stays on leetcode.com,
+// in its own window) and the problem's tags
+function renderTools() {
   const p = state.problem;
   const chips = [p.difficulty, FAMILY_LABELS[p.family], p.role && p.role !== "shared" ? p.role.toUpperCase() : ""]
     .filter(Boolean).map((c) => `<span class="chip">${escapeHtml(c)}</span>`).join("");
-  // above the code box: LeetCode's link (the statement stays on leetcode.com,
-  // in its own window) and the problem's tags
   els.tools.innerHTML = (p.source === "leetcode"
     ? `<button id="openLeetcode" class="secondary-action small-action" type="button"
         title="The statement lives on LeetCode: it opens in its own window - put it beside this one">Open on LeetCode</button>`
     : "") + `<span class="chips">${chips}</span>` +
     (p.from_title ? `<span class="muted-note">Link built from the title - if LeetCode says it is missing, paste the link.</span>` : "");
+  const open = document.getElementById("openLeetcode");
+  if (open) open.addEventListener("click", () => openLeetcode(p.link));
+}
+
+function renderPanel() {
+  const p = state.problem;
+  renderTools();
   const statement = p.statement ? `<div class="statement">${paragraphs(p.statement)}</div>` : "";
   els.panel.innerHTML = `
     ${statement}
     <section class="tutor-box" aria-label="Tutor">
       <div class="tutor-head">
         <div class="tutor-title">
-          <h3>Tutor</h3>
+          <h3>${MOCK ? "Interviewer" : "Tutor"}</h3>
           <span id="tutorEngine" class="muted-note"></span>
         </div>
         <div class="tutor-head-tools">
           <label class="speak-toggle"><input id="speakReplies" type="checkbox"> Speak replies</label>
-          <button id="solutionBtn" class="link-action" type="button">Show solution</button>
+          <button id="solutionBtn" class="link-action" type="button"${MOCK ? " hidden" : ""}>Show solution</button>
         </div>
       </div>
       <div id="tutorLog" class="tutor-log" aria-live="polite"></div>
@@ -333,13 +394,27 @@ function renderPanel() {
         <button id="solutionNo" class="link-action" type="button">Keep trying</button>
       </div>
       <textarea id="tutorInput" class="tutor-input" rows="2"
-        placeholder="Ask the tutor about your approach or your code (Enter sends, Shift+Enter for a new line)"></textarea>
+        placeholder="${MOCK ? "Talk to the interviewer: restate the problem, ask, explain your approach (Enter sends)"
+          : "Ask the tutor about your approach or your code (Enter sends, Shift+Enter for a new line)"}"></textarea>
       <div class="tutor-actions">
         <button id="hintBtn" class="secondary-action small-action" type="button"></button>
         <button id="sendBtn" class="soft-action" type="button">Send</button>
         <button id="talkBtn" class="soft-action" type="button" title="Click, speak, click again to send">Talk</button>
       </div>
     </section>`;
+  if (MOCK) {
+    els.extras.innerHTML = p.id ? reviewHtml(p) : "";
+    if (p.id) bindReview(p);
+  } else {
+    renderExtras();
+  }
+  bindTutor();
+}
+
+// Under the tutor: the approach, the rubric and the author's review strip.
+// In the mock round the approach and the rubric wait until the round ends.
+function renderExtras() {
+  const p = state.problem;
   els.extras.innerHTML = `
     ${p.approaches ? `<details class="reveal-box">
       <summary>Approach and target</summary>
@@ -352,9 +427,6 @@ function renderPanel() {
       ${RUBRIC_PARTS.map(([key, label]) => `<h4>${label}</h4>${list(p.rubric[key])}`).join("")}
     </details>` : ""}
     ${p.id ? reviewHtml(p) : ""}`.trim();
-  const open = document.getElementById("openLeetcode");
-  if (open) open.addEventListener("click", () => openLeetcode(p.link));
-  bindTutor();
   if (p.id) bindReview(p);
 }
 
@@ -408,13 +480,18 @@ function updateTutorControls() {
   if (!engine) return;
   engine.textContent = state.tutorLabel ? `on ${state.tutorLabel}` : "";
   const hint = document.getElementById("hintBtn");
-  hint.textContent = `Hint · ${LEVEL_NAMES[state.nextLevel]}`;
+  hint.textContent = MOCK ? "Ask for a hint" : `Hint · ${LEVEL_NAMES[state.nextLevel]}`;
+  const over = MOCK && state.phase === "closed";
   ["hintBtn", "sendBtn", "talkBtn", "solutionBtn"].forEach((id) => {
-    document.getElementById(id).disabled = state.busy || !state.attempt;
+    document.getElementById(id).disabled = state.busy || !state.attempt || over;
   });
-  els.check.disabled = !state.checks;
-  els.check.title = state.checks ? "Run the tutor's test cases (Ctrl+Shift+Enter)"
-    : "Check needs a model to write tests: run the server with your subscription or an API key";
+  hint.disabled = hint.disabled || (MOCK && state.phase === "review");
+  els.run.disabled = state.locked;
+  els.run.title = state.locked ? "Locked until you say you're done (interview conditions)" : "Run (Ctrl+Enter)";
+  els.check.disabled = !state.checks || state.locked;
+  els.check.title = state.locked ? "Locked until you say you're done (interview conditions)"
+    : state.checks ? "Run the tutor's test cases (Ctrl+Shift+Enter)"
+      : "Check needs a model to write tests: run the server with your subscription or an API key";
 }
 
 // ------------------------------------------------------------- tutor
@@ -435,8 +512,8 @@ function renderLog() {
   const entries = logEntries();
   log.innerHTML = entries.length ? entries.map((e) => e.role === "user"
     ? `<div class="bubble mine">${escapeHtml(e.text)}</div>`
-    : `<div class="bubble tutor">${e.level !== undefined ? `<span class="level-tag">${e.level === 4 ? "Solution" : `Level ${e.level} · ${LEVEL_NAMES[e.level]}`}</span>` : ""}${richText(e.text)}</div>`
-  ).join("") : `<p class="muted-note">Ask anything, or press Hint. The tutor answers with a question first and climbs one step per hint - it never hands over the solution unless you press Show solution.</p>`;
+    : `<div class="bubble tutor">${e.level !== undefined && e.level !== null && (!MOCK || e.help) ? `<span class="level-tag">${e.level === 4 ? "Solution" : `${MOCK ? "Hint" : "Level"} ${e.level} · ${LEVEL_NAMES[e.level]}`}</span>` : ""}${richText(e.text)}</div>`
+  ).join("") : `<p class="muted-note">${MOCK ? "The interviewer opens the round." : "Ask anything, or press Hint. The tutor answers with a question first and climbs one step per hint - it never hands over the solution unless you press Show solution."}</p>`;
   log.scrollTop = log.scrollHeight;
 }
 
@@ -471,7 +548,7 @@ function bindTutor() {
   });
 }
 
-async function askTutor(kind, confirmed) {
+async function askTutor(kind, confirmed, extra) {
   if (state.busy || !state.attempt) return;
   const input = document.getElementById("tutorInput");
   const message = kind === "message" ? input.value.trim() : "";
@@ -485,6 +562,10 @@ async function askTutor(kind, confirmed) {
     input.value = "";
   } else if (kind === "solution") {
     pushLog({ role: "user", text: "Show me the full solution." });
+  } else if (MOCK && kind === "done") {
+    pushLog({ role: "user", text: "I'm done coding." });
+  } else if (MOCK && kind === "hint") {
+    pushLog({ role: "user", text: "Could I get a hint?" });
   }
   const log = document.getElementById("tutorLog");
   const thinking = document.createElement("div");
@@ -493,16 +574,36 @@ async function askTutor(kind, confirmed) {
   log.appendChild(thinking);
   log.scrollTop = log.scrollHeight;
   try {
-    const data = await attemptCall("/api/code/tutor", {
-      code: els.code.value, message, kind, confirmed: Boolean(confirmed),
-    });
+    // the mock round times each answer from the interviewer's last line
+    // (or by the recording, when spoken) for the communication report
+    const data = MOCK
+      ? await api("/api/code/interviewer", {
+        attempt_id: state.attempt, code: els.code.value, message, kind,
+        ms: extra && extra.ms ? extra.ms : Date.now() - state.promptAt,
+        voice: Boolean(extra && extra.voice),
+      })
+      : await attemptCall("/api/code/tutor", {
+        code: els.code.value, message, kind, confirmed: Boolean(confirmed),
+      });
     thinking.remove();
     state.nextLevel = data.next_level ?? state.nextLevel;
-    rememberAttempt();
-    pushLog({ role: "tutor", text: data.reply, level: data.level });
     state.snapshotCode = els.code.value;
-    if (data.offer_solution) document.getElementById("solutionBtn").classList.add("attention");
-    speakReply(data.reply);
+    if (MOCK) {
+      if (!data.skipped) pushLog({ role: "tutor", text: data.reply, level: data.level, help: data.help });
+      state.promptAt = Date.now();
+      setPhase(data.phase);
+      if (data.unlocked) {
+        setLocked(false);
+        checkCode(false);
+      }
+      if (data.finished) endRound();
+      else armCheckIn();
+    } else {
+      rememberAttempt();
+      pushLog({ role: "tutor", text: data.reply, level: data.level });
+      if (data.offer_solution) document.getElementById("solutionBtn").classList.add("attention");
+    }
+    if (!data.skipped) speakReply(data.reply);
   } catch (error) {
     thinking.remove();
     pushLog({ role: "tutor", text: `(${error.message})` });
@@ -510,6 +611,115 @@ async function askTutor(kind, confirmed) {
     state.busy = false;
     updateTutorControls();
   }
+}
+
+// ------------------------------------------------------- mock round
+async function startRound() {
+  const p = state.problem;
+  if (!p || state.round) return;
+  els.startRound.disabled = true;
+  try {
+    const data = await api("/api/code/attempt", {
+      mode: "mock", strict: els.strict.checked,
+      ...(p.id ? { problem_id: p.id } : { problem: { title: p.title, link: p.link, number: p.number } }),
+    });
+    Object.assign(state, {
+      round: data.attempt_id, attempt: data.attempt_id, tutorLabel: data.tutor,
+      checks: data.checks, strict: data.strict, nextLevel: 0,
+    });
+    save(`coding:log:${state.key}`, null, sessionStorage);
+    els.roundSetup.hidden = true;
+    document.querySelector(".picker-row").hidden = true;
+    els.pickStatus.textContent = "";
+    els.columns.hidden = false;
+    els.roundTimer.hidden = false;
+    els.output.hidden = true;
+    els.editor.classList.toggle("quiet", state.strict);
+    renderEditor();
+    renderPanel();
+    setPhase(data.phase);
+    setLocked(state.strict);
+    pushLog({ role: "tutor", text: data.opening });
+    state.promptAt = Date.now();
+    startTimer();
+    updateTutorControls();
+    speakReply(data.opening);
+    armCheckIn();
+    els.roundTimer.scrollIntoView({ block: "start", behavior: "smooth" });
+  } catch (error) {
+    els.pickStatus.textContent = error.message;
+    els.startRound.disabled = false;
+  }
+}
+
+function setPhase(phase) {
+  if (!phase) return;
+  state.phase = phase;
+  els.phaseChip.textContent = PHASE_NAMES[phase] || phase;
+  els.done.hidden = phase === "review" || phase === "closed";
+}
+
+function setLocked(locked) {
+  state.locked = Boolean(locked);
+  updateTutorControls();
+}
+
+// Without interview conditions, a long quiet stretch while coding gets a
+// check-in from the interviewer; with them, it never speaks unasked.
+function armCheckIn() {
+  clearTimeout(state.checkInTimer);
+  if (!MOCK || state.strict || !state.round || state.phase === "review" || state.phase === "closed") return;
+  state.checkInTimer = setTimeout(() => {
+    if (state.phase === "coding" && !state.busy) askTutor("checkin");
+  }, CHECK_IN_MS);
+}
+
+function endRound() {
+  clearTimeout(state.checkInTimer);
+  stopTimer();
+  renderExtras();
+  updateTutorControls();
+  if (state.problem.source === "leetcode") els.leetcodeAsk.hidden = false;
+  else finish(null);
+}
+
+function renderTimer() {
+  const t = state.timer;
+  const seconds = Math.floor((t.carried + (t.running ? Date.now() - t.started : 0)) / 1000);
+  els.timerDisplay.textContent = `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
+}
+
+function startTimer() {
+  clearInterval(state.timer.tick);
+  state.timer = { started: Date.now(), carried: 0, running: true, tick: setInterval(renderTimer, 500) };
+  els.timerToggle.textContent = "Pause";
+  renderTimer();
+}
+
+function toggleTimer() {
+  const t = state.timer;
+  if (t.running) {
+    t.carried += Date.now() - t.started;
+    t.running = false;
+    els.timerToggle.textContent = "Resume";
+  } else {
+    t.started = Date.now();
+    t.running = true;
+    els.timerToggle.textContent = "Pause";
+  }
+  renderTimer();
+}
+
+function stopTimer() {
+  const t = state.timer;
+  if (t.running) {
+    t.carried += Date.now() - t.started;
+    t.running = false;
+  }
+  clearInterval(t.tick);
+  renderTimer();
+  els.timerToggle.disabled = true;
+  els.timerReset.disabled = true;
 }
 
 function offerHelp(text) {
@@ -557,6 +767,7 @@ async function toggleTalk() {
   recorder.addEventListener("stop", async () => {
     stream.getTracks().forEach((track) => track.stop());
     state.recorder = null;
+    state.recordedMs = Date.now() - state.recordStart;
     button.textContent = "Talk";
     button.classList.remove("recording");
     const blob = new Blob(state.chunks, { type: recorder.mimeType || "audio/webm" });
@@ -571,7 +782,8 @@ async function toggleTalk() {
       const text = (data.text || "").trim();
       if (text) {
         document.getElementById("tutorInput").value = text;
-        askTutor("message");
+        // spoken: the answer's time is the recording's length
+        askTutor("message", false, { ms: state.recordedMs, voice: true });
       } else {
         pushLog({ role: "tutor", text: "(I did not catch that - try again a little closer to the microphone.)" });
       }
@@ -583,6 +795,7 @@ async function toggleTalk() {
     }
   });
   recorder.start();
+  state.recordStart = Date.now();
   button.textContent = "Stop and send";
   button.classList.add("recording");
 }
@@ -703,7 +916,7 @@ function bindReview(p) {
 // ----------------------------------------------------------- code box
 let draftTimer = null;
 function saveDraft() {
-  if (!state.key) return;
+  if (!state.key || MOCK) return;
   const value = els.code.value;
   save(`coding:draft:${state.key}`, value && value !== starterFor(state.problem) ? value : null);
 }
@@ -851,7 +1064,10 @@ function updateCaret() {
   const before = src.slice(0, els.code.selectionStart);
   const line = (before.match(/\n/g) || []).length + 1;
   const col = before.length - before.lastIndexOf("\n");
-  const notes = state.editorNotes || { tabs: [], odd: [], trailing: [] };
+  // interview conditions: no whitespace notes (the editor is "quiet")
+  const quiet = els.editor.classList.contains("quiet");
+  const notes = quiet ? { tabs: [], odd: [], trailing: [] }
+    : state.editorNotes || { tabs: [], odd: [], trailing: [] };
   const flagged = new Set([...notes.tabs, ...notes.odd.map(([n]) => n)]);
   const total = (src.match(/\n/g) || []).length + 1;
   let gutter = "";
@@ -954,8 +1170,14 @@ els.code.addEventListener("input", () => {
   state.idleTimer = setTimeout(() => {
     if (!state.attempt || els.code.value === state.snapshotCode) return;
     state.snapshotCode = els.code.value;
-    attemptCall("/api/code/snapshot", { code: els.code.value, reason: "pause" }).catch(() => {});
+    attemptCall("/api/code/snapshot", { code: els.code.value, reason: "pause" })
+      .then((data) => { if (MOCK) setPhase(data.phase); })
+      .catch(() => {});
   }, SNAPSHOT_IDLE_MS);
+  if (MOCK) {
+    armCheckIn();
+    return;
+  }
   clearTimeout(state.stallTimer);
   state.stallTimer = setTimeout(() => {
     if (!state.passing) offerHelp("You have been on this a while - want a hint?");
@@ -984,6 +1206,7 @@ els.reset.addEventListener("click", () => {
 
 // ----------------------------------------------------------------- run
 async function runCode() {
+  if (state.locked) return;
   if (!els.code.value.trim()) {
     els.output.hidden = false;
     els.output.innerHTML = `<p class="run-status">Write some code first.</p>`;
@@ -1021,13 +1244,14 @@ function afterRun(result) {
     updateTutorControls();
   }
   state.snapshotCode = els.code.value;
-  if (result.offer_hint) offerHelp("That did not work - want a hint?");
+  if (MOCK) setPhase(result.phase);
+  else if (result.offer_hint) offerHelp("That did not work - want a hint?");
   else hideOffer();
   observe();
 }
 
 async function checkCode(fresh) {
-  if (!state.checks || !els.code.value.trim()) return;
+  if (state.locked || !state.checks || !els.code.value.trim()) return;
   els.check.disabled = true;
   els.check.textContent = "Checking...";
   els.output.hidden = false;
@@ -1095,7 +1319,7 @@ function renderReport(report, markdown) {
   els.report.hidden = false;
   els.report.innerHTML = `
     <div class="report-head">
-      <h2>Coding report</h2>
+      <h2>${MOCK ? "Coding round report" : "Coding report"}</h2>
       <button id="downloadReport" class="ghost-action small-action" type="button">Download (.md)</button>
     </div>
     <div class="report-tiles">${tiles.map(([k, v]) => `<div class="report-tile"><span>${k}</span><b>${v}</b></div>`).join("")}</div>
@@ -1104,18 +1328,42 @@ function renderReport(report, markdown) {
     ${report.approach ? `<p><b>Approach:</b> ${escapeHtml(report.approach)}</p>` : ""}
     ${report.watch_outs.length ? `<h3>Watch-outs</h3><ul class="watch-list">${report.watch_outs.map((w) =>
       `<li class="${w.status}"><span class="watch-status">${w.status}</span> ${escapeHtml(w.text)}${w.line ? ` <span class="muted-note">(line ${w.line})</span>` : ""}</li>`).join("")}</ul>` : ""}
-    ${report.review.length ? `<h3>Review of your code</h3>${list(report.review)}` : ""}`;
+    ${report.review.length ? `<h3>Review of your code</h3>${list(report.review)}` : ""}
+    ${report.communication ? communicationHtml(report.communication) : ""}`;
   document.getElementById("downloadReport").addEventListener("click", () => {
     const link = document.createElement("a");
     link.href = URL.createObjectURL(new Blob([markdown], { type: "text/markdown" }));
-    link.download = `coding-report-${(state.problem.title || "problem").toLowerCase().replace(/[^a-z0-9]+/g, "-")}.md`;
+    link.download = `${MOCK ? "coding-round" : "coding-report"}-${(state.problem.title || "problem").toLowerCase().replace(/[^a-z0-9]+/g, "-")}.md`;
     link.click();
   });
   els.report.scrollIntoView({ block: "start", behavior: "smooth" });
 }
 
+// The mock round's communication report: measured numbers first, then the
+// judged verdicts with their evidence, then suggestions.
+function communicationHtml(c) {
+  const m = c.metrics || {};
+  const clock = (s) => (s === null || s === undefined ? "-" : `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, "0")}`);
+  const tiles = [
+    ["Your turns", m.answers ? `${m.answers} <small>(${m.spoken_turns || 0} spoken)</small>` : "0"],
+    ["Fillers / 100 words", m.answers ? m.filler_per_100_words : "-"],
+    ["Time to first code", clock(m.time_to_first_code_s)],
+    ["Longest quiet stretch", `${m.longest_quiet_s ?? 0} s`],
+  ];
+  if (m.words_per_minute) tiles.push(["Pace", `${Math.round(m.words_per_minute)} wpm`]);
+  return `<h3>Communication</h3>
+    <div class="report-tiles">${tiles.map(([k, v]) => `<div class="report-tile"><span>${k}</span><b>${v}</b></div>`).join("")}</div>
+    ${c.verdicts.length ? `<ul class="verdict-list">${c.verdicts.map((v) =>
+      `<li><span class="verdict ${escapeHtml(v.verdict)}">${escapeHtml(v.verdict)}</span><b>${escapeHtml(v.label)}</b><br><span class="muted-note">${escapeHtml(v.evidence)}</span></li>`).join("")}</ul>` : ""}
+    ${c.suggestions.length ? `<h3>For the next round</h3>${list(c.suggestions)}` : ""}`;
+}
+
 els.done.addEventListener("click", () => {
   if (!state.problem || !state.attempt) return;
+  if (MOCK) {
+    askTutor("done");
+    return;
+  }
   if (state.problem.source === "leetcode") els.leetcodeAsk.hidden = false;
   else finish(null);
 });

@@ -84,8 +84,10 @@ def test_new_blocker_restarts_and_questions_do_not_climb():
         tutor.tutor_turn(attempt, "", "", "hint", "cli")
         assert tutor.blocker(attempt) == "start" and tutor.ladder_caps(attempt) == (1, 2, 1)
         question = tutor.tutor_turn(attempt, GOOD, "what does line 5 compute?", "message", "cli")
-        # a question may use what is unlocked plus one step at most, and is not a hint
-        assert question["level"] == 2 and attempt["hints_by_level"][2] == 0
+        # a plain question stays within what is unlocked (level 1 here), is not
+        # a hint, and leaves the ladder where it was
+        assert question["level"] == 1 and sum(attempt["hints_by_level"]) == 2
+        assert tutor.ladder_caps(attempt) == (1, 2, 1)
         tutor.record_run(attempt, GOOD, {"cases": [{"name": "large", "ok": False}], "passed": 2,
                                          "total": 3}, kind="check")
         assert tutor.blocker(attempt) == "case:large"

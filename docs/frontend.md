@@ -102,7 +102,7 @@ a table of input, expected and yours), and "I'm done" (LeetCode problems ask
 whether LeetCode accepted it) with the coding report below and a `.md`
 download. The page snapshots the code after about 20 s without typing; the
 attempt id and the tutor log live in `sessionStorage`. No timer here; the
-mock coding round gets one. When the
+mock coding round gets one. `coding.html?mode=mock` is that round, in gold: pick a problem (or Surprise me), choose interview conditions (on by default: Run and Check locked until "I'm done coding", the editor's whitespace notes hidden, no check-ins), Start the round; then the elapsed-time strip with the phase chip (Discussing, Coding, Review, Finished), the interviewer panel (Ask for a hint, Send, Talk; no Show solution; answers timed from the interviewer's last line, or by the recording), the approach and rubric held back until the round ends, and after the close the coding report with a Communication section (measured tiles, verdicts with evidence, suggestions). The mock page offers the two rounds side by side. When the
 server does not run code the page shows instead what Coding drills are, how
 to run them locally, the GitHub link and `coding_demo.gif`.
 

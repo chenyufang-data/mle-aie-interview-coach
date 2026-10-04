@@ -58,6 +58,33 @@
           </div>
           <p id="pickStatus" class="inline-status" aria-live="polite"></p>
 
+          <!-- Mock coding round (coding.html?mode=mock): set up, then the
+               round runs with the timer and an interviewer instead of the tutor. -->
+          <section id="roundSetup" class="round-setup" hidden>
+            <label class="round-option">
+              <input id="strictBox" type="checkbox" checked>
+              <span><b>Interview conditions</b> - Run and Check stay locked until you say you're done,
+                the editor's whitespace notes are hidden, and the interviewer speaks only when asked.
+                Like the strict rounds where you trace your code by hand.</span>
+            </label>
+            <div class="round-actions">
+              <button id="surpriseBtn" class="ghost-action small-action" type="button">Surprise me</button>
+              <button id="startRoundBtn" class="primary-action" type="button" disabled>Start the round</button>
+            </div>
+          </section>
+
+          <section id="roundTimer" class="timer-strip round-timer" aria-label="Timer" hidden>
+            <div>
+              <p class="eyebrow">Elapsed time</p>
+              <div id="timerDisplay" class="timer-display">00:00</div>
+            </div>
+            <span id="phaseChip" class="phase-chip">Discussing</span>
+            <div class="timer-actions">
+              <button id="timerToggleBtn" class="secondary-action small-action" type="button">Pause</button>
+              <button id="timerResetBtn" class="ghost-action small-action" type="button">Reset</button>
+            </div>
+          </section>
+
           <!-- Two columns, two rows: the tutor beside the code box (their
                bottom rows - Hint / Send / Talk and I'm done - line up), then
                the problem's extras beside the run output. -->

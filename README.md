@@ -182,7 +182,15 @@ app, below) and the **AI mock interview** ([section](#ai-mock-interview-text--li
   one, and a review of your own code. The bank's self-check rubric stays a click away.
 - Measured (`experiments/coding/`): on the subscription, hint p50 3.3 s / p95 5.2 s on
   Opus 5.5 - 0.2 s over the plan's 5 s target - and p95 3.6 s with quick replies on
-  Sonnet (`LLM_CLI_QUICK_MODEL=sonnet`). A mock coding round comes next (step 7).
+  Sonnet (`LLM_CLI_QUICK_MODEL=sonnet`).
+- **Mock coding round** (`coding.html?mode=mock`, from the mock page): an interviewer instead
+  of the tutor, the elapsed-time strip, and phases kept in code - discuss (restate, clarify,
+  approach and complexity before code), coding, review (walk through an example, two
+  follow-ups). *Interview conditions* lock Run and Check until you are done, hide the
+  whitespace notes and keep the interviewer quiet unless asked - like the strict rounds
+  where you trace your code by hand. Afterwards: the coding report plus a communication
+  report - measured numbers, then yes / partly / no with timestamped evidence on clarifying
+  questions, approach before code, complexity, testing and thinking aloud.
 
 ## Setup
 
@@ -893,7 +901,8 @@ final transcripts side by side.
 ## AI mock interview (text + live voice)
 
 `/mock.html` runs the experience/project deep-dive round the way a real one
-works: around a target role, against your own resume.
+works: around a target role, against your own resume. (The coding round is on
+the coding page - see "Coding drills" above.)
 
 1. **Setup** — paste or upload your resume (no resume at hand? use the
    fictional `example_resume.txt` in the repo root; the last analyzed

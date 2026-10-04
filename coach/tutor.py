@@ -440,67 +440,90 @@ def tutor_turn(attempt, code, message, kind, engine, confirmed=False):
         return {"confirm_solution": True}
     snapshot(attempt, code, kind)
     caps = ladder_caps(attempt)
-    reached, next_cap, now_cap = caps
+    _reached, next_cap, _now_cap = caps
     cap = 4 if kind == "solution" else next_cap
     started = time.perf_counter()
-    guard = {"regenerated": False, "trimmed": False, "issues": []}
     if engine == "fake":
-        out = fake_reply(attempt, kind, caps, message)
+        out, guard = fake_reply(attempt, kind, caps, message), dict(NO_GUARD)
     else:
-        call = make_caller(engine)
+        out, guard = guarded_reply(attempt, engine, system_prompt(),
+                                   reply_prompt(attempt, code, message, kind, caps),
+                                   cap, next_cap if kind == "hint" else None,
+                                   quick=kind != "solution")
+    if kind == "solution":
+        attempt["solution_shown"] = True
+    return settle_turn(attempt, out, guard, kind, message, cap, started)
 
-        verdicts = []
 
-        def judge(text):
-            verdict = call(JUDGE_SYSTEM, "Hint:\n" + text, JUDGE_SCHEMA, quick=True)
-            verdicts.append(verdict.get("why", ""))
-            return bool(verdict.get("complete_algorithm"))
+NO_GUARD = {"regenerated": False, "trimmed": False, "issues": []}
 
-        prompt = reply_prompt(attempt, code, message, kind, caps)
-        out = call(system_prompt(), prompt, REPLY_SCHEMA, quick=kind != "solution")
+
+def guarded_reply(attempt, engine, system, prompt, cap, rung=None, quick=True):
+    """One model reply, passed through the output guard: regenerated once
+    with the reason quoted, then replaced by the bank's hint for the rung
+    (`rung`: the level a Hint press was on; else the reply's own level)."""
+    call = make_caller(engine)
+    verdicts = []
+
+    def judge(text):
+        verdict = call(JUDGE_SYSTEM, "Hint:\n" + text, JUDGE_SCHEMA, quick=True)
+        verdicts.append(verdict.get("why", ""))
+        return bool(verdict.get("complete_algorithm"))
+
+    guard = dict(NO_GUARD)
+    out = call(system, prompt, REPLY_SCHEMA, quick=quick)
+    level = min(max(int(out.get("level_used", 0)), 0), cap)
+    issues = guard_issues(out.get("reply", ""), level, judge)
+    if issues:
+        guard.update(regenerated=True, issues=issues)
+        why = f" - {verdicts[-1]}" if verdicts else ""
+        retry = (prompt + f"\n\nYour previous reply revealed too much ({'; '.join(issues)}{why}). "
+                 f"Rewrite it at level {level}, shorter, within its limits: one idea, "
+                 "and leave the working-out to the candidate.")
+        out = call(system, retry, REPLY_SCHEMA, quick=True)
         level = min(max(int(out.get("level_used", 0)), 0), cap)
         issues = guard_issues(out.get("reply", ""), level, judge)
         if issues:
-            guard.update(regenerated=True, issues=issues)
-            why = f" - {verdicts[-1]}" if verdicts else ""
-            retry = (prompt + f"\n\nYour previous reply revealed too much ({'; '.join(issues)}{why}). "
-                     f"Rewrite it at level {level}, shorter, within its limits: one idea, "
-                     "and leave the working-out to the candidate.")
-            out = call(system_prompt(), retry, REPLY_SCHEMA, quick=True)
-            level = min(max(int(out.get("level_used", 0)), 0), cap)
-            issues = guard_issues(out.get("reply", ""), level, judge)
-            if issues:
-                # replaced by the bank's hint for the rung this request was on
-                guard.update(trimmed=True, issues=guard["issues"] + issues)
-                rung = next_cap if kind == "hint" else min(level, 3)
-                out = {"reply": fallback_hint(attempt["problem"], rung),
-                       "level_used": rung, "help_request": out.get("help_request", True)}
-        attempt["guard_events"].append({"t": round(time.time() - attempt["started"], 1),
-                                        **guard})
+            guard.update(trimmed=True, issues=guard["issues"] + issues)
+            fallback = rung if rung is not None else min(level, 3)
+            out = {"reply": fallback_hint(attempt["problem"], fallback),
+                   "level_used": fallback, "help_request": out.get("help_request", True)}
+    attempt["guard_events"].append({"t": round(time.time() - attempt["started"], 1), **guard})
+    return out, guard
+
+
+def settle_turn(attempt, out, guard, kind, message, cap, started, role="tutor", ms=None,
+                voice=False):
+    """Book a reply: cap its level, move the ladder (at most one step above
+    the highest level given on this blocker), count help, log both sides."""
+    reached, next_cap, now_cap = ladder_caps(attempt)
     level = min(max(int(out.get("level_used", 0)), 0), cap)
     if kind == "hint":
         level = min(level, next_cap)
     block = blocker(attempt)
     helped = kind in ("hint", "solution") or bool(out.get("help_request"))
-    if level <= 3 and level > reached:
+    if not helped:
+        # a plain answer stays within what is already unlocked; only help
+        # moves the ladder (the model's own "not a help request" label
+        # must not buy a free step)
+        level = min(level, now_cap)
+    elif level <= 3 and level > reached:
         attempt["ladder"][block] = level
-    if kind == "solution":
-        attempt["solution_shown"] = True
     if helped:
         attempt["hints_by_level"][level] += 1
-    seconds = round(time.perf_counter() - started, 2)
     now = round(time.time() - attempt["started"], 1)
     if kind != "hint":
         attempt["messages"].append({"role": "user", "text": message if kind == "message"
-                                    else "(asked for the full solution)", "t": now})
-    attempt["messages"].append({"role": "tutor", "text": out["reply"], "level": level,
-                                "blocker": block, "t": now, "kind": kind})
+                                    else "(asked for the full solution)", "t": now,
+                                    "ms": ms, "voice": voice})
+    attempt["messages"].append({"role": role, "text": out["reply"], "level": level,
+                                "help": helped, "blocker": block, "t": now, "kind": kind})
     del attempt["messages"][:-MAX_MESSAGES]
     reached_now = attempt["ladder"].get(block, -1)
     return {"reply": out["reply"], "level": level, "level_name": LEVEL_NAMES[level],
-            "blocker": block, "next_level": min(reached_now + 1, 3),
+            "help": helped, "blocker": block, "next_level": min(reached_now + 1, 3),
             "offer_solution": kind == "message" and bool(JUST_TELL_ME.search(message or "")),
-            "guard": guard, "seconds": seconds}
+            "guard": guard, "seconds": round(time.perf_counter() - started, 2)}
 
 
 def observe(attempt, code, engine, force=False):

@@ -1943,6 +1943,153 @@ textarea.editor-input::placeholder {
   color: var(--green-dark);
 }
 
+/* The mock page's round choice: the deep-dive here, the coding round on
+   the coding page. */
+.round-choice {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 0 0 22px;
+}
+
+.round-pick {
+  display: grid;
+  gap: 3px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.round-pick small {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.round-pick.active {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+a.round-pick:hover,
+a.round-pick:focus-visible {
+  border-color: var(--accent);
+}
+
+@media (max-width: 640px) {
+  .round-choice {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---- The mock coding round (phase 5) ------------------------------------ */
+.round-setup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px 20px;
+  margin: 4px 0 8px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--accent-tint);
+}
+
+.round-option {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  max-width: 70ch;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.round-option input {
+  width: auto;
+  height: auto;
+  margin-top: 4px;
+}
+
+.round-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.round-timer {
+  margin: 4px 0 10px;
+  padding: 12px 18px;
+}
+
+.round-timer .timer-display {
+  font-size: 30px;
+}
+
+.phase-chip {
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--accent-ring);
+  color: var(--accent-dark);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+/* interview conditions: the editor keeps its colours, not its whitespace notes */
+.editor.quiet .ws-lead,
+.editor.quiet .ws-trail {
+  color: transparent;
+  background: none;
+}
+
+.editor.quiet .ws-odd,
+.editor.quiet .ws-tab {
+  background: none;
+  box-shadow: none;
+}
+
+.verdict-list {
+  list-style: none;
+  padding-left: 0 !important;
+  display: grid;
+  gap: 8px;
+}
+
+.verdict {
+  display: inline-block;
+  min-width: 58px;
+  margin-right: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 800;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.verdict.yes {
+  background: rgba(23, 108, 95, 0.12);
+  color: var(--green-dark);
+}
+
+.verdict.partly {
+  background: rgba(176, 109, 20, 0.14);
+  color: var(--gold);
+}
+
+.verdict.no {
+  background: rgba(189, 63, 47, 0.12);
+  color: var(--red);
+}
+
 @media (max-width: 960px) {
   .coding-columns {
     grid-template-columns: 1fr;

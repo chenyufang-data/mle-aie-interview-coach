@@ -334,7 +334,7 @@ def handle_post(handler, path, data):
     if reason:
         json_response(handler, 403, {"error": reason})
         return
-    from coach import code_tests, tutor, users
+    from coach import code_tests, coding_round, tutor, users
     from coach.mock.engine import MockUnavailable
     try:
         if path == "/api/code/resolve":
@@ -343,11 +343,17 @@ def handle_post(handler, path, data):
             code = _code(data)
             if not code.strip():
                 raise ValueError("Write some code first.")
+            attempt = _attempt(data) if data.get("attempt_id") else None
+            if attempt is not None:
+                coding_round.advance(attempt, code)
+                if coding_round.locked(attempt):
+                    raise PermissionError("Run is locked until you say you're done "
+                                          "(interview conditions).")
             result = run_code(code, str(data.get("stdin") or ""))
-            if data.get("attempt_id"):
-                attempt = _attempt(data)
+            if attempt is not None:
                 entry = tutor.record_run(attempt, code, result)
-                result.update(offer_hint=entry["failed"], next_level=tutor.ladder_caps(attempt)[1])
+                result.update(offer_hint=entry["failed"], next_level=tutor.ladder_caps(attempt)[1],
+                              phase=attempt.get("phase"))
             json_response(handler, 200, result)
         elif path == "/api/code/review":
             saved = save_review(str(data.get("id") or ""), str(data.get("status") or ""),
@@ -356,18 +362,32 @@ def handle_post(handler, path, data):
         elif path == "/api/code/attempt":
             problem = problem_for(data)
             engine = _engine(handler)
-            attempt = tutor.new_attempt(problem, users.resolve_user(handler)["name"])
+            user = users.resolve_user(handler)["name"]
+            if data.get("mode") == "mock":
+                attempt, opening = coding_round.start(problem, user, bool(data.get("strict")))
+                json_response(handler, 200, {"attempt_id": attempt["id"], "mode": "mock",
+                                             "strict": attempt["strict"], "phase": "discuss",
+                                             "opening": opening, "tutor": engine_label(engine),
+                                             "checks": engine != "fake"})
+                return
+            attempt = tutor.new_attempt(problem, user)
             json_response(handler, 200, {"attempt_id": attempt["id"],
                                          "tutor": engine_label(engine),
                                          "checks": engine != "fake"})
         elif path == "/api/code/snapshot":
-            tutor.snapshot(_attempt(data), _code(data), str(data.get("reason") or "pause")[:20])
-            json_response(handler, 200, {"ok": True})
+            attempt = _attempt(data)
+            tutor.snapshot(attempt, _code(data), str(data.get("reason") or "pause")[:20])
+            coding_round.advance(attempt, _code(data))
+            json_response(handler, 200, {"ok": True, "phase": attempt.get("phase")})
         elif path == "/api/code/check":
             attempt = _attempt(data)
             code = _code(data)
             if not code.strip():
                 raise ValueError("Write some code first.")
+            coding_round.advance(attempt, code)
+            if coding_round.locked(attempt):
+                raise PermissionError("Check is locked until you say you're done "
+                                      "(interview conditions).")
             engine = _engine(handler)
             if engine == "fake":
                 raise MockUnavailable("Checking needs a model to write the tests: run the "
@@ -382,11 +402,22 @@ def handle_post(handler, path, data):
             result = code_tests.run_suite(suite, code)
             entry = tutor.record_run(attempt, code, result, kind="check")
             result.update(offer_hint=entry["failed"], entry=suite["entry"],
-                          next_level=tutor.ladder_caps(attempt)[1],
+                          next_level=tutor.ladder_caps(attempt)[1], phase=attempt.get("phase"),
                           suite_written=suite.get("written"), seconds_to_tests=written)
             json_response(handler, 200, result)
+        elif path == "/api/code/interviewer":
+            attempt = _attempt(data)
+            ms = data.get("ms")
+            reply = coding_round.interviewer_turn(
+                attempt, _code(data), str(data.get("message") or "")[:2000],
+                str(data.get("kind") or "message"), _engine(handler),
+                ms=int(ms) if isinstance(ms, (int, float)) and 0 < ms < 3_600_000 else None,
+                voice=bool(data.get("voice")))
+            json_response(handler, 200, reply)
         elif path == "/api/code/tutor":
             attempt = _attempt(data)
+            if attempt.get("mode") == "mock":
+                raise tutor.TutorError("This is an interview round - talk to the interviewer.")
             reply = tutor.tutor_turn(attempt, _code(data), str(data.get("message") or "")[:2000],
                                      str(data.get("kind") or "message"), _engine(handler),
                                      confirmed=bool(data.get("confirmed")))
@@ -402,9 +433,14 @@ def handle_post(handler, path, data):
             outcome = data.get("leetcode")
             if outcome not in (None, "accepted", "rejected", "not-submitted"):
                 raise ValueError("Unknown LeetCode outcome.")
-            report = tutor.finish(attempt, _code(data), _engine(handler), outcome)
-            json_response(handler, 200, {"report": report,
-                                         "markdown": tutor.report_markdown(report)})
+            engine = _engine(handler)
+            report = tutor.finish(attempt, _code(data), engine, outcome)
+            markdown = tutor.report_markdown(report)
+            if attempt.get("mode") == "mock":
+                report.update(mode="mock", strict=attempt["strict"],
+                              communication=coding_round.communication(attempt, engine))
+                markdown += coding_round.communication_markdown(report["communication"]) + "\n"
+            json_response(handler, 200, {"report": report, "markdown": markdown})
         elif path == "/api/code/transcribe":
             import base64
             from coach.voice import final_transcript
@@ -431,7 +467,7 @@ def handle_post(handler, path, data):
         json_response(handler, 400, {"error": str(exc)})
     except LookupError as exc:
         json_response(handler, 404, {"error": str(exc)})
-    except MockUnavailable as exc:
+    except (MockUnavailable, PermissionError) as exc:
         json_response(handler, 403, {"error": str(exc)})
     except RuntimeError as exc:
         json_response(handler, 503, {"error": str(exc)})

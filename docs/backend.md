@@ -254,6 +254,35 @@ starts a new one.
   one sentence with the live loop's TTS (Kokoro by default); on failure the
   page uses the browser's voice.
 
+The mock coding round (phase 5, `coach/coding_round.py`) is an attempt with
+`mode: "mock"`:
+
+- `POST /api/code/attempt` `{ problem_id | problem, mode: "mock", strict }` →
+  `{ attempt_id, mode, strict, phase: "discuss", opening, tutor, checks }`;
+  `opening` is the interviewer's first line (number and title for a
+  LeetCode problem, the statement for the author's own).
+- `POST /api/code/interviewer` `{ attempt_id, code, message, kind:
+  message|hint|done|checkin, ms, voice }` → `{ reply, phase, help, level,
+  next_level, guard, unlocked?, finished?, skipped? }`. Phases in code:
+  `discuss` until two lines of real code (snapshots, runs and messages
+  advance it), `coding`, `review` after `done` (a walk-through request, then
+  two follow-ups - the bank's, else the model's), `closed` with
+  `finished: true`. Help requests climb the tutor's ladder and guard; a
+  plain answer stays within what is unlocked. `checkin` answers only
+  without interview conditions and while coding (else `skipped`). `ms` and
+  `voice` time the answer for the communication report (pace from spoken
+  answers only).
+- Under interview conditions (`strict`), `POST /api/code/run` and `/check`
+  answer 403 until `done`; `done` returns `unlocked: true`. `/api/code/tutor`
+  refuses a mock attempt.
+- `POST /api/code/finish` on a mock attempt adds `report.communication`:
+  `metrics` (coach/mock/metrics.py over the candidate's turns, spoken turns,
+  time to first code, coding time, the longest quiet stretch, check-ins),
+  `verdicts` (clarifying questions, approach before code, complexity stated,
+  tests walked, thinking aloud: yes / partly / no with evidence from the
+  timeline) and two or three `suggestions`; the markdown gains a
+  "Communication" section.
+
 ### `POST /api/question`
 
 Request: `role` (`"MLE"` | `"AIE"`), `level`, `topic`, `focus`,
