@@ -59,6 +59,34 @@ def test_claude_command():
     assert streaming[3] == "stream-json" and "--include-partial-messages" in streaming
     use("claude", "opus")
     assert cli_engine.claude_args("S")[cli_engine.claude_args("S").index("--model") + 1] == "opus"
+    quick = cli_engine.claude_args("S", model_name="sonnet")
+    assert quick[quick.index("--model") + 1] == "sonnet", "a per-call model wins"
+
+
+def test_quick_calls_take_low_effort_and_the_quick_model():
+    """The coding tutor's quick replies: low effort, LLM_CLI_QUICK_MODEL when set;
+    every other structured call keeps the configured effort and model."""
+    from coach import llm
+    use("claude", "opus")
+    seen = []
+    real = cli_engine.complete
+    cli_engine.complete = lambda system, prompt, schema=None, effort=None, model_name=None: \
+        seen.append((system, effort, model_name)) or {}
+    saved = (config.CLI_EFFORT, config.CLI_QUICK_MODEL)
+    try:
+        config.CLI_EFFORT, config.CLI_QUICK_MODEL = "medium", "sonnet"
+        llm.call_model("p", SCHEMA, "cli", system="TUTOR", quick=True)
+        llm.call_model("p", SCHEMA, "cli")
+        llm.call_model("p", SCHEMA, "cli", thinking=False)
+        config.CLI_QUICK_MODEL = ""
+        llm.call_model("p", SCHEMA, "cli", quick=True)
+    finally:
+        cli_engine.complete = real
+        config.CLI_EFFORT, config.CLI_QUICK_MODEL = saved
+    assert seen[0] == ("TUTOR", "low", "sonnet")
+    assert seen[1][1:] == ("medium", None) and seen[1][0] == llm.SYSTEM_PROMPT
+    assert seen[2][1:] == ("medium", None), "the mock's thinking=False calls are unchanged"
+    assert seen[3][1:] == ("low", None)
 
 
 def test_codex_command():
@@ -254,7 +282,7 @@ def test_routing_in_cli_mode():
         assert "on your subscription" in llm.engine_model("cli")
         calls = []
         real = cli_engine.complete
-        cli_engine.complete = lambda system, prompt, schema=None, effort=None: (
+        cli_engine.complete = lambda system, prompt, schema=None, effort=None, model_name=None: (
             calls.append((schema is not None, effort)) or {"overall_score": 6})
         try:
             assert llm.call_model("grade", SCHEMA, "cli") == {"overall_score": 6}

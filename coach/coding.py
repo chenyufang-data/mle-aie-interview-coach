@@ -151,13 +151,19 @@ def _clip(text):
     return text if len(text) <= OUTPUT_LIMIT else text[:OUTPUT_LIMIT] + "\n... (output cut)"
 
 
+def child_env():
+    """The environment for code this app runs: the OS basics, no API keys."""
+    env = {k: os.environ[k] for k in CHILD_ENV_KEYS if os.environ.get(k)}
+    env.update(PYTHONIOENCODING="utf-8", PYTHONUTF8="1", PYTHONDONTWRITEBYTECODE="1")
+    return env
+
+
 def run_code(code, stdin=""):
     """Run the user's Python file once; output, exit code, time."""
     with _runs, tempfile.TemporaryDirectory(prefix="coach-run-") as tmp:
         path = Path(tmp) / "solution.py"
         path.write_text(code, encoding="utf-8")
-        env = {k: os.environ[k] for k in CHILD_ENV_KEYS if os.environ.get(k)}
-        env.update(PYTHONIOENCODING="utf-8", PYTHONUTF8="1", PYTHONDONTWRITEBYTECODE="1")
+        env = child_env()
         started = time.perf_counter()
         try:
             proc = subprocess.run([sys.executable, "-I", str(path)], input=stdin or "",
@@ -243,26 +249,189 @@ def handle_get(handler, path):
     json_response(handler, 404, {"error": "Not found."})
 
 
+def _code(data):
+    code = data.get("code") or ""
+    if not isinstance(code, str):
+        raise ValueError("Code must be text.")
+    if len(code) > CODE_LIMIT:
+        raise ValueError("That file is too long to run here.")
+    return code
+
+
+def _attempt(data):
+    from coach import tutor
+    attempt = tutor.get_attempt(str(data.get("attempt_id") or ""))
+    if attempt is None:
+        raise LookupError("This practice session has ended (the server restarted). "
+                          "Pick the problem again to start a new one.")
+    return attempt
+
+
+def _engine(handler):
+    """The tutor's engine: the subscription locally, the fake in --mock."""
+    from coach import users
+    from coach.mock.engine import pick_engine
+    return pick_engine(users.resolve_user(handler))
+
+
+def engine_label(engine):
+    if engine == "fake":
+        return "offline mode - the bank's hints, no model"
+    from coach.llm import engine_model
+    if engine == "cli" and config.CLI_QUICK_MODEL:
+        return f"{engine_model(engine)}; quick replies on {config.CLI_QUICK_MODEL}"
+    return engine_model(engine)
+
+
+def stt_engine():
+    """Push-to-talk follows the live loop's STT backend (local Whisper by
+    default) rather than the mock report's cloud-first order."""
+    from coach.voice import final_transcript
+    backend = os.environ.get("STT_BACKEND", os.environ.get("AUDIO_BACKEND", "local"))
+    engine = {"local": "whisper_local", "deepgram": "nova3_batch_kt",
+              "elevenlabs": "scribe_batch_kt"}.get(backend)
+    if engine == "whisper_local":
+        try:
+            import faster_whisper  # noqa: F401
+        except ImportError:
+            engine = None
+    return engine or final_transcript.available_engine()
+
+
+def speak(text):
+    """One sentence of the tutor's reply as WAV, with the live loop's TTS."""
+    import asyncio
+    import base64
+    import io
+    import wave
+    from coach.voice import tts as tts_module
+    backend = os.environ.get("TTS_BACKEND", os.environ.get("AUDIO_BACKEND", "local"))
+    engine = tts_module.make_tts(backend)
+    pcm, rate = asyncio.run(engine.synth(text))
+    buffer = io.BytesIO()
+    with wave.open(buffer, "wb") as wav:
+        wav.setnchannels(1)
+        wav.setsampwidth(2)
+        wav.setframerate(rate)
+        wav.writeframes(pcm)
+    return {"audio_base64": base64.b64encode(buffer.getvalue()).decode("ascii"),
+            "mime": "audio/wav", "engine": engine.label}
+
+
+def problem_for(data):
+    """A bank problem by id, or any LeetCode problem by its link or title."""
+    if data.get("problem_id"):
+        record = by_id(str(data["problem_id"]))
+        if record is None:
+            raise LookupError("No such problem in the bank.")
+        return detail(record)
+    named = data.get("problem") or {}
+    return resolve(named.get("link") or named.get("title") or "")
+
+
 def handle_post(handler, path, data):
     reason = refusal(handler)
     if reason:
         json_response(handler, 403, {"error": reason})
         return
+    from coach import code_tests, tutor, users
+    from coach.mock.engine import MockUnavailable
     try:
         if path == "/api/code/resolve":
             json_response(handler, 200, {"problem": resolve(data.get("query"))})
         elif path == "/api/code/run":
-            code = data.get("code") or ""
-            if not isinstance(code, str) or not code.strip():
+            code = _code(data)
+            if not code.strip():
                 raise ValueError("Write some code first.")
-            if len(code) > CODE_LIMIT:
-                raise ValueError("That file is too long to run here.")
-            json_response(handler, 200, run_code(code, str(data.get("stdin") or "")))
+            result = run_code(code, str(data.get("stdin") or ""))
+            if data.get("attempt_id"):
+                attempt = _attempt(data)
+                entry = tutor.record_run(attempt, code, result)
+                result.update(offer_hint=entry["failed"], next_level=tutor.ladder_caps(attempt)[1])
+            json_response(handler, 200, result)
         elif path == "/api/code/review":
             saved = save_review(str(data.get("id") or ""), str(data.get("status") or ""),
                                 str(data.get("note") or ""))
             json_response(handler, 200, {"review": saved})
+        elif path == "/api/code/attempt":
+            problem = problem_for(data)
+            engine = _engine(handler)
+            attempt = tutor.new_attempt(problem, users.resolve_user(handler)["name"])
+            json_response(handler, 200, {"attempt_id": attempt["id"],
+                                         "tutor": engine_label(engine),
+                                         "checks": engine != "fake"})
+        elif path == "/api/code/snapshot":
+            tutor.snapshot(_attempt(data), _code(data), str(data.get("reason") or "pause")[:20])
+            json_response(handler, 200, {"ok": True})
+        elif path == "/api/code/check":
+            attempt = _attempt(data)
+            code = _code(data)
+            if not code.strip():
+                raise ValueError("Write some code first.")
+            engine = _engine(handler)
+            if engine == "fake":
+                raise MockUnavailable("Checking needs a model to write the tests: run the "
+                                      "server with your subscription or an API key.")
+            if data.get("fresh"):
+                code_tests.forget_suite(attempt["problem_key"], code)
+            started = time.perf_counter()
+            caller = tutor.make_caller(engine)
+            suite = code_tests.build_suite(attempt["problem"], attempt["problem_key"], code,
+                                           lambda system, prompt, schema: caller(system, prompt, schema))
+            written = round(time.perf_counter() - started, 1)
+            result = code_tests.run_suite(suite, code)
+            entry = tutor.record_run(attempt, code, result, kind="check")
+            result.update(offer_hint=entry["failed"], entry=suite["entry"],
+                          next_level=tutor.ladder_caps(attempt)[1],
+                          suite_written=suite.get("written"), seconds_to_tests=written)
+            json_response(handler, 200, result)
+        elif path == "/api/code/tutor":
+            attempt = _attempt(data)
+            reply = tutor.tutor_turn(attempt, _code(data), str(data.get("message") or "")[:2000],
+                                     str(data.get("kind") or "message"), _engine(handler),
+                                     confirmed=bool(data.get("confirmed")))
+            json_response(handler, 200, reply)
+        elif path == "/api/code/observe":
+            attempt = _attempt(data)
+            items = tutor.observe(attempt, _code(data), _engine(handler))
+            # the tutor stays quiet while the user works: only a count here,
+            # the watch-outs themselves are in the report
+            json_response(handler, 200, {"logged": len(items)})
+        elif path == "/api/code/finish":
+            attempt = _attempt(data)
+            outcome = data.get("leetcode")
+            if outcome not in (None, "accepted", "rejected", "not-submitted"):
+                raise ValueError("Unknown LeetCode outcome.")
+            report = tutor.finish(attempt, _code(data), _engine(handler), outcome)
+            json_response(handler, 200, {"report": report,
+                                         "markdown": tutor.report_markdown(report)})
+        elif path == "/api/code/transcribe":
+            import base64
+            from coach.voice import final_transcript
+            audio_b64 = data.get("audio_base64") or ""
+            if not audio_b64 or len(audio_b64) > 12_000_000:
+                raise ValueError("Send one clip of up to about two minutes.")
+            terms = []
+            attempt = tutor.get_attempt(str(data.get("attempt_id") or ""))
+            if attempt:
+                terms = list(attempt["problem"].get("approaches") or [])
+                terms.append(attempt["problem"].get("title") or "")
+            result = final_transcript.transcribe_final(
+                base64.b64decode(audio_b64), data.get("mime") or "audio/webm",
+                engine=stt_engine(), terms=[t for t in terms if t])
+            json_response(handler, 200, result)
+        elif path == "/api/code/speak":
+            text = str(data.get("text") or "").strip()
+            if not text or len(text) > 1200:
+                raise ValueError("Send one sentence to speak.")
+            json_response(handler, 200, speak(text))
         else:
             json_response(handler, 404, {"error": "Not found."})
-    except ValueError as exc:
+    except (ValueError, tutor.TutorError) as exc:
         json_response(handler, 400, {"error": str(exc)})
+    except LookupError as exc:
+        json_response(handler, 404, {"error": str(exc)})
+    except MockUnavailable as exc:
+        json_response(handler, 403, {"error": str(exc)})
+    except RuntimeError as exc:
+        json_response(handler, 503, {"error": str(exc)})

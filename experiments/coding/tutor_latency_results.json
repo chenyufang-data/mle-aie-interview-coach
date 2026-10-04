@@ -1,0 +1,771 @@
+{
+ "study": "step 7 phase 4 - tutor reply latency",
+ "rule": "hint p95 <= 5.0 s locally (docs/plan.md step 7, Speed)",
+ "verdicts": {
+  "Claude Code (claude-opus-5-5) on your subscription": {
+   "verdict": "FAIL",
+   "hint_p95_s": 5.2,
+   "measured": "2026-10-03T20:09:19"
+  },
+  "Claude Code (claude-opus-5-5) on your subscription; quick replies on sonnet": {
+   "verdict": "PASS",
+   "hint_p95_s": 3.64,
+   "measured": "2026-10-03T20:11:34"
+  }
+ },
+ "runs": [
+  {
+   "measured": "2026-10-03T20:06:20",
+   "note": "run 1: first prompt (level 2 = the key idea in one or two sentences, no word budget)",
+   "engine": "Claude Code (claude-opus-5-5) on your subscription",
+   "quick_effort": "low",
+   "summary": {
+    "replies": 25,
+    "p50_s": 3.8,
+    "p95_s": 16.93,
+    "max_s": 18.22,
+    "hint_p50_s": 3.57,
+    "hint_p95_s": 17.43,
+    "regenerated": 4,
+    "trimmed": 2,
+    "levels": [
+     5,
+     5,
+     6,
+     9,
+     0
+    ]
+   },
+   "verdict": "FAIL",
+   "rows": [
+    {
+     "problem": "code_lc_0001_two_sum",
+     "kind": "hint",
+     "level": 0,
+     "seconds": 3.46,
+     "words": 34,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0001_two_sum",
+     "kind": "hint",
+     "level": 1,
+     "seconds": 3.08,
+     "words": 55,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0001_two_sum",
+     "kind": "hint",
+     "level": 2,
+     "seconds": 9.45,
+     "words": 41,
+     "regenerated": true,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0001_two_sum",
+     "kind": "hint",
+     "level": 3,
+     "seconds": 4.0,
+     "words": 75,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0001_two_sum",
+     "kind": "message",
+     "level": 2,
+     "seconds": 6.3,
+     "words": 71,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0033_search_in_rotated_sorted_array",
+     "kind": "hint",
+     "level": 0,
+     "seconds": 2.82,
+     "words": 31,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0033_search_in_rotated_sorted_array",
+     "kind": "hint",
+     "level": 1,
+     "seconds": 3.45,
+     "words": 63,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0033_search_in_rotated_sorted_array",
+     "kind": "hint",
+     "level": 2,
+     "seconds": 3.03,
+     "words": 47,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0033_search_in_rotated_sorted_array",
+     "kind": "hint",
+     "level": 3,
+     "seconds": 4.1,
+     "words": 73,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0033_search_in_rotated_sorted_array",
+     "kind": "message",
+     "level": 3,
+     "seconds": 5.26,
+     "words": 72,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0042_trapping_rain_water",
+     "kind": "hint",
+     "level": 0,
+     "seconds": 2.9,
+     "words": 49,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0042_trapping_rain_water",
+     "kind": "hint",
+     "level": 1,
+     "seconds": 3.32,
+     "words": 71,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0042_trapping_rain_water",
+     "kind": "hint",
+     "level": 2,
+     "seconds": 17.39,
+     "words": 77,
+     "regenerated": true,
+     "trimmed": true
+    },
+    {
+     "problem": "code_lc_0042_trapping_rain_water",
+     "kind": "hint",
+     "level": 3,
+     "seconds": 3.64,
+     "words": 80,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0042_trapping_rain_water",
+     "kind": "message",
+     "level": 3,
+     "seconds": 4.97,
+     "words": 85,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_ml_01_numerically_stable_softmax",
+     "kind": "hint",
+     "level": 0,
+     "seconds": 3.39,
+     "words": 48,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_ml_01_numerically_stable_softmax",
+     "kind": "hint",
+     "level": 1,
+     "seconds": 3.76,
+     "words": 58,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_ml_01_numerically_stable_softmax",
+     "kind": "hint",
+     "level": 2,
+     "seconds": 18.22,
+     "words": 60,
+     "regenerated": true,
+     "trimmed": false
+    },
+    {
+     "problem": "code_ml_01_numerically_stable_softmax",
+     "kind": "hint",
+     "level": 3,
+     "seconds": 3.8,
+     "words": 72,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_ml_01_numerically_stable_softmax",
+     "kind": "message",
+     "level": 3,
+     "seconds": 4.85,
+     "words": 78,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_ml_29_reservoir_sampling",
+     "kind": "hint",
+     "level": 0,
+     "seconds": 3.0,
+     "words": 53,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_ml_29_reservoir_sampling",
+     "kind": "hint",
+     "level": 1,
+     "seconds": 3.49,
+     "words": 81,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_ml_29_reservoir_sampling",
+     "kind": "hint",
+     "level": 2,
+     "seconds": 15.08,
+     "words": 54,
+     "regenerated": true,
+     "trimmed": true
+    },
+    {
+     "problem": "code_ml_29_reservoir_sampling",
+     "kind": "hint",
+     "level": 3,
+     "seconds": 3.92,
+     "words": 91,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_ml_29_reservoir_sampling",
+     "kind": "message",
+     "level": 3,
+     "seconds": 4.14,
+     "words": 82,
+     "regenerated": false,
+     "trimmed": false
+    }
+   ]
+  },
+  {
+   "measured": "2026-10-03T20:09:19",
+   "note": "run 2: word budget per level (level 2 at most 40 words, what to track - not the procedure); the retry quotes the judge's reason",
+   "engine": "Claude Code (claude-opus-5-5) on your subscription",
+   "quick_effort": "low",
+   "summary": {
+    "replies": 25,
+    "p50_s": 3.39,
+    "p95_s": 5.51,
+    "max_s": 6.63,
+    "hint_p50_s": 3.27,
+    "hint_p95_s": 5.2,
+    "regenerated": 0,
+    "trimmed": 0,
+    "levels": [
+     5,
+     6,
+     6,
+     8,
+     0
+    ]
+   },
+   "verdict": "FAIL",
+   "rows": [
+    {
+     "problem": "code_lc_0001_two_sum",
+     "kind": "hint",
+     "level": 0,
+     "seconds": 6.63,
+     "words": 28,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0001_two_sum",
+     "kind": "hint",
+     "level": 1,
+     "seconds": 3.52,
+     "words": 43,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0001_two_sum",
+     "kind": "hint",
+     "level": 2,
+     "seconds": 2.76,
+     "words": 48,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0001_two_sum",
+     "kind": "hint",
+     "level": 3,
+     "seconds": 3.27,
+     "words": 50,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0001_two_sum",
+     "kind": "message",
+     "level": 3,
+     "seconds": 4.8,
+     "words": 92,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0033_search_in_rotated_sorted_array",
+     "kind": "hint",
+     "level": 0,
+     "seconds": 2.83,
+     "words": 36,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0033_search_in_rotated_sorted_array",
+     "kind": "hint",
+     "level": 1,
+     "seconds": 3.39,
+     "words": 49,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0033_search_in_rotated_sorted_array",
+     "kind": "hint",
+     "level": 2,
+     "seconds": 3.73,
+     "words": 45,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0033_search_in_rotated_sorted_array",
+     "kind": "hint",
+     "level": 3,
+     "seconds": 4.54,
+     "words": 73,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0033_search_in_rotated_sorted_array",
+     "kind": "message",
+     "level": 3,
+     "seconds": 3.85,
+     "words": 56,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0042_trapping_rain_water",
+     "kind": "hint",
+     "level": 0,
+     "seconds": 3.3,
+     "words": 29,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0042_trapping_rain_water",
+     "kind": "hint",
+     "level": 1,
+     "seconds": 2.75,
+     "words": 42,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0042_trapping_rain_water",
+     "kind": "hint",
+     "level": 2,
+     "seconds": 2.92,
+     "words": 48,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0042_trapping_rain_water",
+     "kind": "hint",
+     "level": 3,
+     "seconds": 5.12,
+     "words": 59,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0042_trapping_rain_water",
+     "kind": "message",
+     "level": 1,
+     "seconds": 5.55,
+     "words": 47,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_ml_01_numerically_stable_softmax",
+     "kind": "hint",
+     "level": 0,
+     "seconds": 2.88,
+     "words": 32,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_ml_01_numerically_stable_softmax",
+     "kind": "hint",
+     "level": 1,
+     "seconds": 2.85,
+     "words": 38,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_ml_01_numerically_stable_softmax",
+     "kind": "hint",
+     "level": 2,
+     "seconds": 3.72,
+     "words": 42,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_ml_01_numerically_stable_softmax",
+     "kind": "hint",
+     "level": 3,
+     "seconds": 3.27,
+     "words": 41,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_ml_01_numerically_stable_softmax",
+     "kind": "message",
+     "level": 2,
+     "seconds": 5.36,
+     "words": 55,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_ml_29_reservoir_sampling",
+     "kind": "hint",
+     "level": 0,
+     "seconds": 2.72,
+     "words": 34,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_ml_29_reservoir_sampling",
+     "kind": "hint",
+     "level": 1,
+     "seconds": 3.6,
+     "words": 45,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_ml_29_reservoir_sampling",
+     "kind": "hint",
+     "level": 2,
+     "seconds": 2.73,
+     "words": 41,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_ml_29_reservoir_sampling",
+     "kind": "hint",
+     "level": 3,
+     "seconds": 3.08,
+     "words": 66,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_ml_29_reservoir_sampling",
+     "kind": "message",
+     "level": 3,
+     "seconds": 4.43,
+     "words": 54,
+     "regenerated": false,
+     "trimmed": false
+    }
+   ]
+  },
+  {
+   "measured": "2026-10-03T20:11:34",
+   "note": "run 3, comparison arm: same prompts as run 2, quick replies on Sonnet (LLM_CLI_QUICK_MODEL=sonnet); the author's setting stays Opus unless they choose this",
+   "engine": "Claude Code (claude-opus-5-5) on your subscription; quick replies on sonnet",
+   "quick_effort": "low",
+   "summary": {
+    "replies": 25,
+    "p50_s": 3.07,
+    "p95_s": 3.66,
+    "max_s": 4.66,
+    "hint_p50_s": 3.06,
+    "hint_p95_s": 3.64,
+    "regenerated": 0,
+    "trimmed": 0,
+    "levels": [
+     5,
+     8,
+     5,
+     7,
+     0
+    ]
+   },
+   "verdict": "PASS",
+   "rows": [
+    {
+     "problem": "code_lc_0001_two_sum",
+     "kind": "hint",
+     "level": 0,
+     "seconds": 3.45,
+     "words": 35,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0001_two_sum",
+     "kind": "hint",
+     "level": 1,
+     "seconds": 2.44,
+     "words": 38,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0001_two_sum",
+     "kind": "hint",
+     "level": 2,
+     "seconds": 3.36,
+     "words": 45,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0001_two_sum",
+     "kind": "hint",
+     "level": 3,
+     "seconds": 3.13,
+     "words": 64,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0001_two_sum",
+     "kind": "message",
+     "level": 1,
+     "seconds": 3.24,
+     "words": 46,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0033_search_in_rotated_sorted_array",
+     "kind": "hint",
+     "level": 0,
+     "seconds": 2.83,
+     "words": 35,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0033_search_in_rotated_sorted_array",
+     "kind": "hint",
+     "level": 1,
+     "seconds": 3.07,
+     "words": 48,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0033_search_in_rotated_sorted_array",
+     "kind": "hint",
+     "level": 2,
+     "seconds": 3.21,
+     "words": 51,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0033_search_in_rotated_sorted_array",
+     "kind": "hint",
+     "level": 3,
+     "seconds": 3.02,
+     "words": 55,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0033_search_in_rotated_sorted_array",
+     "kind": "message",
+     "level": 3,
+     "seconds": 3.33,
+     "words": 48,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0042_trapping_rain_water",
+     "kind": "hint",
+     "level": 0,
+     "seconds": 2.66,
+     "words": 25,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0042_trapping_rain_water",
+     "kind": "hint",
+     "level": 1,
+     "seconds": 2.98,
+     "words": 45,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0042_trapping_rain_water",
+     "kind": "hint",
+     "level": 2,
+     "seconds": 3.41,
+     "words": 42,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0042_trapping_rain_water",
+     "kind": "hint",
+     "level": 3,
+     "seconds": 3.66,
+     "words": 74,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_lc_0042_trapping_rain_water",
+     "kind": "message",
+     "level": 1,
+     "seconds": 2.32,
+     "words": 54,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_ml_01_numerically_stable_softmax",
+     "kind": "hint",
+     "level": 0,
+     "seconds": 2.73,
+     "words": 33,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_ml_01_numerically_stable_softmax",
+     "kind": "hint",
+     "level": 1,
+     "seconds": 2.22,
+     "words": 39,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_ml_01_numerically_stable_softmax",
+     "kind": "hint",
+     "level": 2,
+     "seconds": 2.81,
+     "words": 47,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_ml_01_numerically_stable_softmax",
+     "kind": "hint",
+     "level": 3,
+     "seconds": 3.21,
+     "words": 51,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_ml_01_numerically_stable_softmax",
+     "kind": "message",
+     "level": 1,
+     "seconds": 3.06,
+     "words": 49,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_ml_29_reservoir_sampling",
+     "kind": "hint",
+     "level": 0,
+     "seconds": 3.06,
+     "words": 35,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_ml_29_reservoir_sampling",
+     "kind": "hint",
+     "level": 1,
+     "seconds": 2.75,
+     "words": 45,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_ml_29_reservoir_sampling",
+     "kind": "hint",
+     "level": 2,
+     "seconds": 3.07,
+     "words": 45,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_ml_29_reservoir_sampling",
+     "kind": "hint",
+     "level": 3,
+     "seconds": 3.64,
+     "words": 58,
+     "regenerated": false,
+     "trimmed": false
+    },
+    {
+     "problem": "code_ml_29_reservoir_sampling",
+     "kind": "message",
+     "level": 3,
+     "seconds": 4.66,
+     "words": 50,
+     "regenerated": false,
+     "trimmed": false
+    }
+   ]
+  }
+ ]
+}

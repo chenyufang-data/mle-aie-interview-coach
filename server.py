@@ -170,6 +170,7 @@ def main():
         # read after the .env so the file's values apply
         config.CLI_MODEL = os.environ.get("LLM_CLI_MODEL", "").strip()
         config.CLI_EFFORT = os.environ.get("LLM_CLI_EFFORT", "low").strip() or "low"
+        config.CLI_QUICK_MODEL = os.environ.get("LLM_CLI_QUICK_MODEL", "").strip()
         config.CLI_TIMEOUT_S = float(os.environ.get("LLM_CLI_TIMEOUT_S", "300"))
     # The state store: the files under data/ by default, Postgres when the
     # environment (or the .env just loaded) sets DATABASE_URL. A configured

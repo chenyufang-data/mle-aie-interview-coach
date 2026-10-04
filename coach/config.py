@@ -156,6 +156,9 @@ JEV_CALIBRATION_PATH = BASE_DIR / "coach" / "assets" / "jev_calibration.json"
 CLI_PROVIDER = ""
 CLI_MODEL = os.environ.get("LLM_CLI_MODEL", "").strip()
 CLI_EFFORT = os.environ.get("LLM_CLI_EFFORT", "low").strip() or "low"
+# Quick turns (the coding tutor's replies) may use a faster model; empty = the
+# same model as everything else.
+CLI_QUICK_MODEL = os.environ.get("LLM_CLI_QUICK_MODEL", "").strip()
 CLI_TIMEOUT_S = float(os.environ.get("LLM_CLI_TIMEOUT_S", "300"))
 # Roadmap step 7, coding drills (coach/coding.py): the bank built by
 # ingest/ingest_code.py and the local code runner. CODE_LOCAL is set by

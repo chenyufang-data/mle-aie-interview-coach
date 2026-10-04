@@ -21,6 +21,7 @@ BODY_LIMITS = {
     "/api/mock/parse_file": 16_000_000,
     "/api/mock/transcribe": 48_000_000,
     "/api/stt/record": 48_000_000,
+    "/api/code/transcribe": 16_000_000,
 }
 
 

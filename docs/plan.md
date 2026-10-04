@@ -1227,6 +1227,42 @@ with logging on, never for anonymous visitors; a retention line is added.
    taken port stops the start with the clear message.
 4. *Tutor*: ladder, guard, snapshots, watch-outs, coding report; text,
    then voice.
+   Done 2026-10-03: `coach/tutor.py`, `coach/code_tests.py` and the tutor
+   panel on the coding page. The ladder is enforced by the server per
+   blocker (start, the first failing test case, the exception type, a
+   timeout, passing): at most one level above the highest given on that
+   blocker per help request, a new blocker restarts at 0, level 4 only
+   through Show solution plus an in-page confirmation (a typed "just tell
+   me" only offers the button). The output guard counts code lines against
+   the level's limit and sends a long level-2 or step-like reply to a judge
+   call; a failing reply is regenerated once with the reason quoted, then
+   replaced by the bank's hint for that rung. *Check*: the tutor writes a
+   suite per problem and entry point - a hidden reference solution, 6-10
+   input expressions, a comparison - kept only when the reference passes
+   it and cached in `data/code_tests/`; expected outputs come from running
+   the reference, never from the model; never LeetCode's tests. The case
+   descriptions name the input only (an early suite said which bug a case
+   catches - fixed). Watch-outs come from a silent review after runs and
+   checks (earlier items by number, the first wording kept) and appear only
+   in the report. The coding report: time to done, runs and failed runs,
+   the last check, hints by level, watch-outs open or fixed, the final
+   complexity against the expected one ("estimate" for LeetCode), the
+   approach, a review of the user's own code, the user's word on LeetCode;
+   a `.md` download. *Voice*: push-to-talk on local Whisper (a Kokoro
+   sentence round-tripped word for word, 3.3 s cold) and replies spoken by
+   Kokoro sentence by sentence (0.2 s per short sentence warm), the
+   browser's voice as the fallback. *Speed*, measured against the target
+   above (`experiments/coding/tutor_latency.py`, 25 replies: five problems
+   x four hints plus a typed question): run 1 FAIL, hint p95 17.4 s - the
+   guard catching level-2 replies that spelled out whole solutions (the
+   judge was right: Trapping Rain Water got the formula, both passes and
+   the sum) at two or three extra calls each; run 2, after a word budget
+   per level (level 2: what to track, at most 40 words): no guard events,
+   hint p50 3.3 s, p95 5.2 s - FAIL by 0.2 s on the author's Opus 5.5 at
+   low effort; run 3, the same prompts with quick replies on Sonnet
+   (`LLM_CLI_QUICK_MODEL=sonnet`, new and off by default): p50 3.1 s, p95
+   3.6 s - PASS. The author's setting stays Opus until they choose; the
+   demo's 3 s target is for the API engines in phase 8.
 5. *Mock coding round* (local): the interviewer presents a problem, the
    candidate explains, codes and runs, answers follow-ups on complexity
    and edge cases; the timer; the communication report.

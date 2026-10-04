@@ -72,12 +72,12 @@ def get_client():
     return _client
 
 
-def call_claude(user_prompt, schema):
+def call_claude(user_prompt, schema, system=None, thinking=True):
     response = get_client().messages.create(
         model=os.environ.get("ANTHROPIC_MODEL", DEFAULT_MODEL),
         max_tokens=16000,
-        system=SYSTEM_PROMPT,
-        thinking={"type": "adaptive"},
+        system=system or SYSTEM_PROMPT,
+        thinking={"type": "adaptive"} if thinking else {"type": "disabled"},
         messages=[{"role": "user", "content": user_prompt}],
         output_config={"format": {"type": "json_schema", "schema": schema}},
     )
@@ -89,13 +89,13 @@ def call_claude(user_prompt, schema):
     return json.loads(text)
 
 
-def call_ollama(user_prompt, schema):
+def call_ollama(user_prompt, schema, system=None):
     payload = {
         "model": config.OLLAMA_MODEL,
         "stream": False,
         "format": schema,
         "messages": [
-            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "system", "content": system or SYSTEM_PROMPT},
             {"role": "user", "content": user_prompt},
         ],
     }
@@ -119,7 +119,7 @@ def call_ollama(user_prompt, schema):
     return json.loads(content)
 
 
-def call_deepseek(user_prompt, schema, thinking=True):
+def call_deepseek(user_prompt, schema, thinking=True, system=None):
     """Grade with DeepSeek via its OpenAI-compatible API.
 
     Two quirks verified by experiments/distill/judge_agreement.py: DeepSeek's
@@ -135,7 +135,7 @@ def call_deepseek(user_prompt, schema, thinking=True):
     payload = {
         "model": config.deepseek_model(),
         "messages": [
-            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "system", "content": system or SYSTEM_PROMPT},
             {"role": "user", "content": user_prompt
              + "\n\nRespond with ONLY a JSON object matching this JSON schema:\n"
              + json.dumps(schema)},
@@ -265,19 +265,24 @@ def call_chat(system, messages, engine, thinking=False, max_tokens=700,
     return next((block.text for block in response.content if block.type == "text"), "").strip()
 
 
-def call_model(user_prompt, schema, engine, thinking=True):
+def call_model(user_prompt, schema, engine, thinking=True, system=None, quick=False):
     """Structured (JSON) call. `thinking` is honoured by DeepSeek only:
     Claude's grading path and Ollama keep their own settings; the CLI engine
-    uses its configured effort (LLM_CLI_EFFORT)."""
+    uses its configured effort (LLM_CLI_EFFORT). `system` replaces the
+    grading system prompt (the coding tutor brings its own); `quick` marks a
+    short conversational reply - Claude without thinking, the CLI at low
+    effort, DeepSeek with thinking off."""
     if engine == "cli":
         from coach import cli_engine
-        return cli_engine.complete(SYSTEM_PROMPT, user_prompt, schema,
-                                   effort=config.CLI_EFFORT)
+        return cli_engine.complete(system or SYSTEM_PROMPT, user_prompt, schema,
+                                   effort="low" if quick else config.CLI_EFFORT,
+                                   model_name=(config.CLI_QUICK_MODEL or None) if quick else None)
     if engine == "ollama":
-        return call_ollama(user_prompt, schema)
+        return call_ollama(user_prompt, schema, system=system)
     if engine == "deepseek":
-        return call_deepseek(user_prompt, schema, thinking=thinking)
-    return call_claude(user_prompt, schema)
+        return call_deepseek(user_prompt, schema, thinking=thinking and not quick,
+                             system=system)
+    return call_claude(user_prompt, schema, system=system, thinking=not quick)
 
 
 def engine_model(engine):

@@ -179,12 +179,12 @@ def transcript(messages):
 
 # ----------------------------------------------------------- the commands
 
-def claude_args(system, schema=None, effort=None, stream=False):
+def claude_args(system, schema=None, effort=None, stream=False, model_name=None):
     args = [binary("claude") or "claude", "-p",
             "--output-format", "stream-json" if stream else "json",
             "--system-prompt", system,
             "--tools", "", "--safe-mode", "--no-session-persistence",
-            "--model", model() or "sonnet"]
+            "--model", model_name or model() or "sonnet"]
     if effort:
         args += ["--effort", effort]
     if schema is not None:
@@ -194,12 +194,12 @@ def claude_args(system, schema=None, effort=None, stream=False):
     return args
 
 
-def codex_args(workdir, out_path, schema_path=None, effort=None):
+def codex_args(workdir, out_path, schema_path=None, effort=None, model_name=None):
     args = [binary("codex") or "codex", "exec", "--skip-git-repo-check", "--ephemeral",
             "--sandbox", "read-only", "-C", str(workdir), "--color", "never",
             "-o", str(out_path)]
-    if model():
-        args += ["-m", model()]
+    if model_name or model():
+        args += ["-m", model_name or model()]
     if effort:
         args += ["-c", f'model_reasoning_effort="{effort}"']
     if schema_path is not None:
@@ -224,12 +224,14 @@ def _last_line(text):
     return lines[-1][:300] if lines else "no output"
 
 
-def complete(system, prompt, schema=None, effort=None):
-    """One call: the parsed object when `schema` is given, else the text."""
+def complete(system, prompt, schema=None, effort=None, model_name=None):
+    """One call: the parsed object when `schema` is given, else the text.
+    `model_name` overrides the configured model for this call (the coding
+    tutor's quick replies, LLM_CLI_QUICK_MODEL)."""
     workdir = Path(tempfile.mkdtemp(prefix="coach_cli_"))
     try:
         if provider() == "claude":
-            proc = _run(claude_args(system, schema, effort), prompt, workdir)
+            proc = _run(claude_args(system, schema, effort, model_name=model_name), prompt, workdir)
             try:
                 body = json.loads(proc.stdout)
             except ValueError:
@@ -251,7 +253,8 @@ def complete(system, prompt, schema=None, effort=None):
         text = f"{system}\n\n{prompt}"
         if schema is not None:
             text += "\n\nReply with the JSON object only."
-        proc = _run(codex_args(workdir, out_path, schema_path, effort), text, workdir)
+        proc = _run(codex_args(workdir, out_path, schema_path, effort, model_name=model_name),
+                    text, workdir)
         if proc.returncode != 0 or not out_path.exists():
             raise RuntimeError(f"{label()} failed: {_last_line(proc.stderr)}")
         answer = out_path.read_text(encoding="utf-8").strip()

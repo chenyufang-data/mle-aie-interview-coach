@@ -68,19 +68,30 @@
                 <label for="codeBox">Your code <span class="muted-note">Python</span></label>
                 <div class="code-tools">
                   <button id="resetBtn" class="ghost-action small-action" type="button" title="Put the starter code back">Reset</button>
+                  <button id="checkBtn" class="ghost-action small-action" type="button" title="Run the tutor's test cases (Ctrl+Shift+Enter)">Check</button>
                   <button id="runBtn" class="primary-action small-action" type="button" title="Run (Ctrl+Enter)">Run</button>
                 </div>
               </div>
               <textarea id="codeBox" class="code-box" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off"
-                placeholder="Write your solution, call it, print the result - then Run (Ctrl+Enter)."></textarea>
+                placeholder="Write your solution, call it, print the result - then Run (Ctrl+Enter). Check runs the tutor's tests."></textarea>
               <details class="stdin-box">
                 <summary>Input for the program (stdin)</summary>
                 <textarea id="stdinBox" class="code-box stdin" spellcheck="false" wrap="off" rows="4"></textarea>
               </details>
               <section id="runOutput" class="run-output" aria-live="polite" hidden></section>
-              <p class="disclosure-note">Run uses this computer's Python in a temporary folder, with a time limit. Your code and drafts stay on this machine.</p>
+              <div class="done-row">
+                <button id="doneBtn" class="secondary-action small-action" type="button">I'm done</button>
+                <div id="leetcodeAsk" class="leetcode-ask" hidden>
+                  <span>Did LeetCode accept it?</span>
+                  <button class="ghost-action small-action" type="button" data-outcome="accepted">Accepted</button>
+                  <button class="ghost-action small-action" type="button" data-outcome="rejected">Rejected</button>
+                  <button class="ghost-action small-action" type="button" data-outcome="not-submitted">Not submitted</button>
+                </div>
+              </div>
+              <p class="disclosure-note">Run and Check use this computer's Python in a temporary folder, with a time limit. Check runs test cases the tutor writes, with a hidden reference solution of its own - never LeetCode's tests. Your code and drafts stay on this machine.</p>
             </section>
           </div>
+          <section id="reportPanel" class="report-panel" aria-label="Coding report" hidden></section>
         </section>
       </section>
     </main>

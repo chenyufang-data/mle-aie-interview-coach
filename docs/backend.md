@@ -206,6 +206,54 @@ re-read when the file changes, retired records hidden.
   file `tools/review_bank.py rag_code --apply` reads; an empty status clears
   it.
 
+The tutor (phase 4, `coach/tutor.py`, `coach/code_tests.py`) works on an
+*attempt*: one problem in the coding page, kept in server memory (records
+are phase 6) for up to 12 hours. Engine as for the mock
+(`coach/mock/engine.py`): the subscription locally, the bank's hints in
+`--mock`; quick replies run at low effort, on `LLM_CLI_QUICK_MODEL` when set.
+A route naming an attempt the server no longer has answers 404 and the page
+starts a new one.
+
+- `POST /api/code/attempt` `{ problem_id }` or `{ problem: {title, link} }` →
+  `{ attempt_id, tutor (engine label), checks (whether Check can run) }`.
+- `POST /api/code/run` with `attempt_id` also records the run and returns
+  `offer_hint` (it failed) and `next_level` (the Hint button's next rung).
+- `POST /api/code/snapshot` `{ attempt_id, code, reason }`: the page sends
+  one after about 20 s without typing; runs and messages snapshot too.
+- `POST /api/code/check` `{ attempt_id, code, fresh }` → the tutor's tests:
+  `{ cases: [{name, why, args, expected, got | error, ok}], passed, total,
+  fatal, timed_out, entry, offer_hint, next_level }`. The suite is written
+  once per problem and entry point (a hidden reference solution, 6-10 input
+  expressions, a comparison), kept only if the reference passes it, and
+  cached in `data/code_tests/`; expected outputs come from running the
+  reference, never from the model; `fresh` writes a new one. Never LeetCode's
+  tests. 403 in `--mock` (no model to write tests).
+- `POST /api/code/tutor` `{ attempt_id, code, kind: hint|message|solution,
+  message, confirmed }` → `{ reply, level, level_name, blocker, next_level,
+  offer_solution, guard, seconds }`. The ladder is enforced here: levels 0-3
+  climb at most one step per help request on the current blocker (start,
+  the first failing case, the exception type, a timeout, passing) and
+  restart at 0 on a new one; `solution` without `confirmed` returns
+  `{ confirm_solution: true }`; typing "just tell me" only sets
+  `offer_solution`. Replies below level 4 pass the output guard (code lines
+  over the level's limit; a judge call for a long level-2 or step-like
+  reply), regenerated once and then replaced by the bank's hint.
+- `POST /api/code/observe` `{ attempt_id, code }` → `{ logged }`: the silent
+  review after a run or check (skipped when the code is unchanged or the
+  last one was under 25 s ago); the watch-outs appear only in the report.
+- `POST /api/code/finish` `{ attempt_id, code, leetcode:
+  accepted|rejected|not-submitted|null }` → `{ report, markdown }`: time to
+  done, runs and failed runs, the last check, hints by level, solution
+  shown, watch-outs (open / fixed), the final complexity against the bank's
+  (labelled "estimate" for LeetCode), the approach and a review of the
+  user's code.
+- `POST /api/code/transcribe` `{ audio_base64, mime, attempt_id }` →
+  `{ text, engine, seconds }`: push-to-talk, on the live loop's STT backend
+  (local Whisper by default, the problem's terms leading its prompt).
+- `POST /api/code/speak` `{ text }` → `{ audio_base64 (WAV), mime, engine }`:
+  one sentence with the live loop's TTS (Kokoro by default); on failure the
+  page uses the browser's voice.
+
 ### `POST /api/question`
 
 Request: `role` (`"MLE"` | `"AIE"`), `level`, `topic`, `focus`,

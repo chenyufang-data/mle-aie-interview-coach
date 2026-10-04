@@ -99,6 +99,7 @@ experiments/         every measurement, one folder per study, each with its data
   grounding/         rubric attachment for mock probes (R2, R4, the spot-check)
   speech/            STT on technical vocabulary (Phase 0) and the live-loop harness (Phase 2)
   mock/              mock report consistency and prompt caching
+  coding/            step 7: the coding tutor's reply latency
 public/              dependency-free vanilla-JS frontend (no build step)
 tools/               maintenance: README rendering, bank strip/review, private backup, Postgres import
 tests/               offline suite (CI) + a browser e2e smoke (local, Playwright)
@@ -165,10 +166,22 @@ app, below) and the **AI mock interview** ([section](#ai-mock-interview-text--li
   temporary folder, with a time limit and none of the server's API keys in its
   environment. Running code is local-only - the server refuses it on any non-loopback
   bind, and the online demo shows what the feature does instead.
-- A four-level hint ladder per problem (a clarifying question, a nudge, the approach
-  in words, one step of pseudocode - never the whole answer), then a self-check
-  rubric: key points, edge cases, common mistakes, clean code, what to say out loud,
-  follow-ups. A live tutor and a mock coding round come next (docs/plan.md, step 7).
+- A tutor that hints instead of answering (`coach/tutor.py`), by text or push-to-talk
+  voice. The **server** enforces the hint ladder - a clarifying question, a nudge, the
+  approach, one step of pseudocode - climbing at most one level per request on what
+  your last run says is wrong, and the full solution only behind a button and a
+  confirmation. An output guard checks every reply for code beyond its level and, with
+  a judge call, for a whole algorithm in prose, and regenerates or replaces it. Hints
+  point at your own lines ("`seen` is reset inside the loop on line 7").
+- **Check** runs test cases the tutor writes (`coach/code_tests.py`) - never
+  LeetCode's: a hidden reference solution computes the expected outputs, and a suite
+  is kept only if that reference passes it.
+- "I'm done" writes a coding report: time, runs, the tutor's tests, hints by level,
+  watch-outs it logged silently (open or fixed), your complexity against the expected
+  one, and a review of your own code. The bank's self-check rubric stays a click away.
+- Measured (`experiments/coding/`): on the subscription, hint p50 3.3 s / p95 5.2 s on
+  Opus 5.5 - 0.2 s over the plan's 5 s target - and p95 3.6 s with quick replies on
+  Sonnet (`LLM_CLI_QUICK_MODEL=sonnet`). A mock coding round comes next (step 7).
 
 ## Setup
 

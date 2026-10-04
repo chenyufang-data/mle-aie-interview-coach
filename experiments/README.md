@@ -19,6 +19,7 @@ money prints a cost estimate and does nothing without `--confirm`.
 | `grounding/` | Which policy attaches a fair bank rubric to a mock-interview probe? (R2, R4, the author spot-check) | `grounding_eval_results.json`, `grounding_r4_results*.json`, `grounding_r4_spotcheck_grown.json` | `docs/grounding_r4*.md` |
 | `speech/` | How much does transcription damage technical terms and grades (Phase 0)? How do the live-voice backends compare (Phase 2)? | `stt_eval_results.json`, `loop_eval_results.json` | `docs/stt_evaluation.md`, README |
 | `mock/` | Is the mock report stable when regraded? Does the turn shape hit the prompt cache? | `report_consistency_results.json`, `cache_check_results.json` | README, "AI mock interview" |
+| `coding/` | Does the coding tutor answer within the plan's latency target (hint p95 at most 5 s locally)? (roadmap step 7) | `tutor_latency_results.json` | `docs/plan.md` step 7, README |
 
 Private inputs stay out of this repository: the synthetic answers the
 grader trains on (`grader/dataset.jsonl` in the private checkout; a local

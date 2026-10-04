@@ -42,13 +42,16 @@ def available_engine():
         return None
 
 
-def transcribe_final(audio_bytes, mime="audio/webm"):
-    """{"text", "engine", "seconds"} for one answer clip."""
+def transcribe_final(audio_bytes, mime="audio/webm", engine=None, terms=()):
+    """{"text", "engine", "seconds"} for one answer clip. `engine` overrides
+    the order above (the coding tutor's push-to-talk follows the live
+    loop's STT backend instead); `terms` lead local Whisper's prompt, e.g.
+    the problem's own vocabulary."""
     from coach.voice.keyterms import (capped_transcript_keyterms,
                                       final_transcript_keyterms)
     started = time.perf_counter()
     mime = (mime or "audio/webm").split(";")[0].strip().lower()
-    engine = available_engine()
+    engine = engine or available_engine()
     if engine == "scribe_batch_kt":
         from elevenlabs import ElevenLabs
         client = ElevenLabs(api_key=os.environ["ELEVENLABS_API_KEY"], timeout=120)
@@ -88,7 +91,7 @@ def transcribe_final(audio_bytes, mime="audio/webm"):
     model, _device = whisper_singleton()
     # initial_prompt is Whisper's weaker keyterm biasing (Phase 0 condition
     # 6): keep it under the ~224-token prompt window.
-    prompt = ", ".join(final_transcript_keyterms())[:800]
+    prompt = ", ".join(list(terms) + list(final_transcript_keyterms()))[:800]
     segments, _info = model.transcribe(
         samples, language="en", beam_size=5, initial_prompt=prompt,
         condition_on_previous_text=False, vad_filter=False)

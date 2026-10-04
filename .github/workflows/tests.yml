@@ -91,6 +91,10 @@ jobs:
       # lookup, the local runner (limits, no API keys), the local-only guard
       # and the review notes, plus the routes over real HTTP.
       - run: python tests/test_coding.py
+      # The coding tutor (coach/tutor.py, coach/code_tests.py): the hint
+      # ladder the server enforces, the output guard, watch-outs, the report,
+      # the test harness and the routes - a scripted stand-in plays the model.
+      - run: python tests/test_tutor.py
       # State store (step 4): the file backend's contract and race, then
       # the same contract, the whole tier/budget suite and the migration
       # tool against the Postgres service above.

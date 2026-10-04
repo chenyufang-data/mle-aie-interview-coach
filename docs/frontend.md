@@ -79,12 +79,23 @@ plus a field that takes any LeetCode number, title or link; for a LeetCode
 problem an "Open on LeetCode" button that opens the problem in its own window
 sized to sit beside the app - the page never shows LeetCode's statement; for
 the author's own exercises the statement and a starter skeleton built from
-the **Signature:** line; the bank's four-level hint ladder, one level per
-click; "Approach and target" and "Check yourself" (the rubric) behind
-disclosures; a review strip (keep / fix / retire + note) for the author's
-bank review; a code box (Tab / Shift+Tab indent, Enter keeps the indent,
-Ctrl+Enter runs, drafts per problem in `localStorage`) and Run with the
-output below. No timer here; the mock coding round gets one. When the
+the **Signature:** line; the tutor panel (phase 4) - a conversation log,
+a message box (Enter sends), Hint (labelled with the next rung, e.g.
+"Hint · a nudge", from the server's `next_level`), Talk (push-to-talk:
+MediaRecorder, then `/api/code/transcribe`, sent as a message), "Speak
+replies" (each sentence through `/api/code/speak`, the browser's voice as
+the fallback), and Show solution behind an in-page confirmation; after a
+failed run or check, or about 90 s without typing while not passing, the
+panel offers "want a hint?" and waits; "Approach and target" and "Check
+yourself" (the rubric) behind disclosures; a review strip (keep / fix /
+retire + note) for the author's bank review; a code box (Tab / Shift+Tab
+indent, Enter keeps the indent, Ctrl+Enter runs, Ctrl+Shift+Enter checks,
+drafts per problem in `localStorage`), Run, Check (the tutor's test cases as
+a table of input, expected and yours), and "I'm done" (LeetCode problems ask
+whether LeetCode accepted it) with the coding report below and a `.md`
+download. The page snapshots the code after about 20 s without typing; the
+attempt id and the tutor log live in `sessionStorage`. No timer here; the
+mock coding round gets one. When the
 server does not run code the page shows instead what Coding drills are, how
 to run them locally, the GitHub link and `coding_demo.gif`.
 
